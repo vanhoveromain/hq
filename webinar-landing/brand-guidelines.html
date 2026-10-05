@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QED Webinars — Brand Guidelines</title>
+  <meta name="description" content="Brand guidelines for QED Webinars: logo, colour, typography, components, voice and accessibility rules.">
+  <meta name="theme-color" content="#2C4D5C">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232C4D5C'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%2327C490'/%3E%3C/svg%3E">
+  <style>
+    /* Guidelines-only layout */
+    .bg-layout > * { min-width: 0; }
+    .bg-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--space-2xl); padding: var(--space-2xl) 0 var(--section-y); }
+    .bg-toc { position: sticky; top: 96px; align-self: start; }
+    .bg-toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; }
+    .bg-toc li { counter-increment: toc; }
+    .bg-toc a { display: flex; gap: 10px; padding: 8px 12px; border-left: 2px solid var(--color-border); color: var(--color-dark-teal); font-size: var(--fs-small); font-weight: 500; }
+    .bg-toc a::before { content: counter(toc, decimal-leading-zero); color: var(--color-light-gray); font-weight: 600; }
+    .bg-toc a:hover, .bg-toc a.is-active { border-color: var(--color-green); background: var(--color-white); }
+    @media (max-width: 900px) {
+      .bg-layout { grid-template-columns: minmax(0, 1fr); }
+      .bg-toc { position: static; overflow-x: auto; }
+      .bg-toc ol { display: flex; gap: var(--space-xs); }
+      .bg-toc a { border-left: 0; border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+    }
+    .bg-section { padding-bottom: var(--space-3xl); margin-bottom: var(--space-3xl); border-bottom: 1px solid var(--color-border); scroll-margin-top: 90px; }
+    .bg-section:last-child { border: 0; }
+    .bg-section > p { max-width: var(--max-width-text); color: var(--color-muted); }
+    .panel { background: var(--color-white); border-radius: var(--radius-lg); padding: var(--space-xl); box-shadow: var(--shadow-sm); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-lg); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+
+    .pillars { counter-reset: p; }
+    .pillar { border-top: 3px solid var(--color-green); }
+    .pillar h4 { margin-bottom: 4px; }
+    .pillar p { margin: 0; font-size: var(--fs-small); color: var(--color-muted); }
+
+    .logo-stage { display: grid; place-items: center; min-height: 180px; border-radius: var(--radius-lg); position: relative; }
+    .logo-stage .wordmark { font-size: 3rem; }
+    .logo-stage .wordmark__sub { font-size: 0.85rem; }
+    .logo-stage--clear { outline: 2px dashed rgba(39,196,144,0.6); outline-offset: -24px; }
+    .logo-stage figcaption { position: absolute; bottom: 10px; left: 14px; font-size: var(--fs-caption); }
+
+    .swatch { border: 0; padding: 0; text-align: left; cursor: pointer; background: var(--color-white); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); font-family: var(--font); color: var(--color-dark-teal); transition: transform var(--dur) var(--ease), box-shadow var(--dur); }
+    .swatch:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .swatch__chip { height: 110px; display: flex; align-items: flex-end; padding: 10px 12px; font-size: var(--fs-caption); font-weight: 500; }
+    .swatch__body { padding: 12px 14px 14px; }
+    .swatch__body strong { display: block; font-weight: 600; font-size: var(--fs-small); }
+    .swatch__body code { font-size: var(--fs-caption); color: var(--color-muted); }
+    .swatch__body p { margin: 6px 0 0; font-size: var(--fs-caption); color: var(--color-muted); line-height: 1.4; }
+    .ratio-bar { display: flex; height: 44px; border-radius: var(--radius-lg); overflow: hidden; margin-top: var(--space-lg); }
+    .ratio-bar span { display: grid; place-items: center; font-size: var(--fs-caption); font-weight: 500; }
+
+    .type-row { display: grid; grid-template-columns: 160px 1fr; gap: var(--space-lg); align-items: baseline; padding: var(--space-md) 0; border-bottom: 1px solid var(--color-border); }
+    .type-row:last-child { border: 0; }
+    .type-row__meta { font-size: var(--fs-caption); color: var(--color-muted); line-height: 1.5; }
+    .type-row__meta b { display: block; color: var(--color-dark-teal); font-size: var(--fs-small); }
+    .type-row__sample { overflow-wrap: anywhere; }
+    @media (max-width: 600px) { .type-row { grid-template-columns: 1fr; gap: 4px; } }
+    .type-input { width: 100%; font: 400 1rem var(--font); padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); margin-bottom: var(--space-md); color: var(--color-dark-teal); }
+    .type-input:focus { outline: none; border-color: var(--color-green); }
+    .weights { display: flex; flex-wrap: wrap; gap: var(--space-xl); font-size: 2rem; }
+    .weights span small { display: block; font-size: var(--fs-caption); color: var(--color-muted); font-weight: 400; }
+
+    .spacing-row { display: flex; align-items: center; gap: var(--space-md); padding: 6px 0; font-size: var(--fs-small); }
+    .spacing-row code { width: 110px; color: var(--color-muted); font-size: var(--fs-caption); }
+    .spacing-row i { display: block; height: 16px; background: var(--color-green); border-radius: 2px; }
+
+    .demo-row { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; }
+    .demo-dark { background: var(--color-dark-teal); border-radius: var(--radius-lg); padding: var(--space-xl); }
+
+    .cc { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); align-items: stretch; }
+    @media (max-width: 700px) { .cc { grid-template-columns: 1fr; } }
+    .cc__controls label { display: block; font-size: var(--fs-small); font-weight: 500; margin: var(--space-md) 0 6px; }
+    .cc__controls select { width: 100%; font: 400 1rem var(--font); padding: 12px; border: 2px solid var(--color-border); border-radius: var(--radius); color: var(--color-dark-teal); background: #fff; }
+    .cc__preview { border-radius: var(--radius-lg); padding: var(--space-xl); display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--color-border); min-height: 200px; }
+    .cc__preview strong { font-size: 1.5rem; font-weight: 600; }
+    .cc__result { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; margin-top: var(--space-lg); font-size: var(--fs-small); }
+    .cc__ratio { font-size: 1.75rem; font-weight: 600; margin-right: var(--space-md); }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: var(--fs-caption); font-weight: 600; margin-left: 4px; }
+    .badge--pass { background: var(--color-green-soft); color: var(--color-green-text); }
+    .badge--fail { background: #fdecea; color: #b3261e; }
+
+    .voice-table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+    .voice-table th, .voice-table td { text-align: left; padding: 12px 14px; vertical-align: top; }
+    .voice-table th { font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted); font-weight: 500; }
+    .voice-table tbody tr:nth-child(odd) { background: var(--color-row-bg); }
+    .dodont { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+    @media (max-width: 700px) { .dodont { grid-template-columns: 1fr; } }
+    .dodont ul { margin: 0; padding-left: 1.1rem; font-size: var(--fs-small); }
+    .dodont li { margin-bottom: 8px; }
+    .do { border-top: 4px solid var(--color-green); }
+    .dont { border-top: 4px solid #b3261e; }
+    pre.code { background: var(--color-navy); color: #e7f3ef; padding: var(--space-lg); border-radius: var(--radius-lg); overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0; }
+    .code-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="top">
+    <nav class="container nav" aria-label="Main">
+      <a href="index.html" class="wordmark" aria-label="QED Webinars — home">QED<span class="wordmark__dot"></span><span class="wordmark__sub">Webinars</span></a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
+      <div class="nav__menu" id="nav-menu">
+        <ul class="nav__links">
+          <li><a href="#essence">Essence</a></li>
+          <li><a href="#colour">Colour</a></li>
+          <li><a href="#type">Typography</a></li>
+          <li><a href="#components">Components</a></li>
+          <li><a href="index.html" class="btn btn--primary">View landing page</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero" style="padding-bottom:clamp(4rem,3rem+4vw,6rem)">
+    <div class="container">
+      <span class="eyebrow">Brand guidelines · v1.0</span>
+      <h1>QED Webinars <span class="accent">brand book</span></h1>
+      <p class="hero__lead">The rules that make every QED webinar touchpoint — landing pages, invitations, slides, lower thirds and reports — instantly recognisable, premium and accessible.</p>
+    </div>
+    <svg class="hero__wave" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true"><path fill="currentColor" d="M0,60 C240,100 480,10 720,30 C960,50 1200,100 1440,40 L1440,90 L0,90 Z"/></svg>
+  </section>
+
+  <div class="container bg-layout">
+    <nav class="bg-toc" aria-label="Guidelines sections">
+      <ol>
+        <li><a href="#essence">Essence</a></li>
+        <li><a href="#logo">Logo</a></li>
+        <li><a href="#colour">Colour</a></li>
+        <li><a href="#type">Typography</a></li>
+        <li><a href="#layout">Layout &amp; space</a></li>
+        <li><a href="#components">Components</a></li>
+        <li><a href="#voice">Voice &amp; tone</a></li>
+        <li><a href="#a11y">Accessibility</a></li>
+        <li><a href="#tokens">Design tokens</a></li>
+      </ol>
+    </nav>
+
+    <main id="main">
+      <!-- 01 ESSENCE -->
+      <section class="bg-section" id="essence">
+        <span class="eyebrow">01 · Brand essence</span>
+        <h2>Precise. Engaging. Effortless.</h2>
+        <p>QED Webinars is the online and hybrid arm of QED, a Brussels event agency. Our audience is senior and time-poor: institutions, associations and executives. The brand must feel <strong>premium but never flashy, institutional but never boring</strong>.</p>
+        <p><strong>Promise:</strong> Webinars that stand out — flawlessly produced, genuinely engaging, and handled end-to-end or à la carte.</p>
+        <div class="grid-4" style="margin-top:var(--space-xl)">
+          <div class="panel pillar"><h4>Precise</h4><p>Rehearsed, on time, no surprises. Our design is ordered and calm.</p></div>
+          <div class="panel pillar"><h4>Engaging</h4><p>We turn viewers into participants. Green marks the moments that matter.</p></div>
+          <div class="panel pillar"><h4>Expert</h4><p>Rooted in the EU quarter. We speak with quiet authority.</p></div>
+          <div class="panel pillar"><h4>Flexible</h4><p>Pick-and-choose services. Modular layouts that adapt to any format.</p></div>
+        </div>
+      </section>
+
+      <!-- 02 LOGO -->
+      <section class="bg-section" id="logo">
+        <span class="eyebrow">02 · Logo</span>
+        <h2>The wordmark</h2>
+        <p>The QED wordmark is followed by the green “live dot” — a nod to the on-air signal — and the <em>Webinars</em> descriptor. Use the official QED logo files when available; this web wordmark is the sub-brand lock-up for digital use.</p>
+        <div class="grid-2" style="margin-top:var(--space-xl)">
+          <figure class="logo-stage logo-stage--clear" style="background:var(--color-white);margin:0">
+            <span class="wordmark">QED<span class="wordmark__dot"></span><span class="wordmark__sub">Webinars</span></span>
+            <figcaption style="color:var(--color-muted)">Primary · on light. Dashed line = minimum clear space</figcaption>
+          </figure>
+          <figure class="logo-stage" style="background:var(--color-dark-teal);margin:0">
+            <span class="wordmark wordmark--light">QED<span class="wordmark__dot"></span><span class="wordmark__sub">Webinars</span></span>
+            <figcaption style="color:rgba(255,255,255,0.8)">Reversed · on Dark Teal</figcaption>
+          </figure>
+        </div>
+        <div class="dodont" style="margin-top:var(--space-lg)">
+          <div class="panel do"><h4>Do</h4><ul><li>Keep clear space equal to the height of the “E” on all sides.</li><li>Use colour on light backgrounds and white on dark ones.</li><li>Minimum width: 96px on screen, 25mm in print.</li></ul></div>
+          <div class="panel dont"><h4>Don't</h4><ul><li>Stretch, rotate, outline or add shadows.</li><li>Recolour the wordmark or move the live dot.</li><li>Place it on busy imagery without a dark overlay.</li></ul></div>
+        </div>
+      </section>
+
+      <!-- 03 COLOUR -->
+      <section class="bg-section" id="colour">
+        <span class="eyebrow">03 · Colour</span>
+        <h2>A calm teal, a decisive green</h2>
+        <p>Dark Teal carries the brand; QED Green signals action and “live”. Everything else stays neutral. <strong>Click any swatch to copy its HEX.</strong></p>
+
+        <h3 style="margin-top:var(--space-xl)">Primary</h3>
+        <div class="grid-4">
+          <button class="swatch" data-copy="#2C4D5C"><div class="swatch__chip" style="background:#2C4D5C;color:#fff">Primary</div><div class="swatch__body"><strong>Dark Teal</strong><code>#2C4D5C · 44 77 92</code><p>Text, headings, hero &amp; dark sections.</p></div></button>
+          <button class="swatch" data-copy="#27C490"><div class="swatch__chip" style="background:#27C490;color:#0A2640">Accent</div><div class="swatch__body"><strong>QED Green</strong><code>#27C490 · 39 196 144</code><p>CTAs, live indicators, highlights.</p></div></button>
+          <button class="swatch" data-copy="#F5F5F5"><div class="swatch__chip" style="background:#F5F5F5;color:#2C4D5C;border-bottom:1px solid #e0e0e0">Canvas</div><div class="swatch__body"><strong>Off-White</strong><code>#F5F5F5</code><p>Default page background.</p></div></button>
+          <button class="swatch" data-copy="#FFFFFF"><div class="swatch__chip" style="background:#fff;color:#2C4D5C;border-bottom:1px solid #e0e0e0">Surface</div><div class="swatch__body"><strong>White</strong><code>#FFFFFF</code><p>Cards and panels on the canvas.</p></div></button>
+        </div>
+
+        <h3 style="margin-top:var(--space-xl)">Supporting</h3>
+        <div class="grid-4">
+          <button class="swatch" data-copy="#0A2640"><div class="swatch__chip" style="background:#0A2640;color:#fff">Complement</div><div class="swatch__body"><strong>Navy</strong><code>#0A2640</code><p>Footer, code, second dark surface only.</p></div></button>
+          <button class="swatch" data-copy="#127A57"><div class="swatch__chip" style="background:#127A57;color:#fff">Text accent</div><div class="swatch__body"><strong>Green Text</strong><code>#127A57</code><p>Green for small text &amp; links on light (AA).</p></div></button>
+          <button class="swatch" data-copy="#E6F8F1"><div class="swatch__chip" style="background:#E6F8F1;color:#127A57">Tint</div><div class="swatch__body"><strong>Green Soft</strong><code>#E6F8F1</code><p>Icon wells, selected states, badges.</p></div></button>
+          <button class="swatch" data-copy="#454545"><div class="swatch__chip" style="background:#454545;color:#fff">Neutral</div><div class="swatch__body"><strong>Mid Gray</strong><code>#454545</code><p>Secondary text, captions, metadata.</p></div></button>
+        </div>
+
+        <h3 style="margin-top:var(--space-xl)">Proportion</h3>
+        <p>Keep the brand calm: mostly neutral canvas, a strong teal presence, and green used sparingly so it always means “act” or “live”.</p>
+        <div class="ratio-bar" aria-label="Colour proportions">
+          <span style="flex:55;background:#F5F5F5;color:#2C4D5C">Off-White 55%</span>
+          <span style="flex:20;background:#fff;color:#2C4D5C">White 20%</span>
+          <span style="flex:17;background:#2C4D5C;color:#fff">Teal 17%</span>
+          <span style="flex:8;background:#27C490;color:#0A2640">8%</span>
+        </div>
+      </section>
+
+      <!-- 04 TYPOGRAPHY -->
+      <section class="bg-section" id="type">
+        <span class="eyebrow">04 · Typography</span>
+        <h2>One family: Poppins</h2>
+        <p>Hierarchy comes from size and weight, never from a second typeface. Minimum weight is Regular 400; no italics for emphasis — use Medium or SemiBold instead.</p>
+
+        <div class="panel" style="margin-top:var(--space-xl)">
+          <div class="weights">
+            <span style="font-weight:400">Aa<small>Regular 400 · body</small></span>
+            <span style="font-weight:500">Aa<small>Medium 500 · UI, labels</small></span>
+            <span style="font-weight:600">Aa<small>SemiBold 600 · headings</small></span>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:var(--space-lg)">
+          <label for="type-input" class="sr-only">Type your own sample text</label>
+          <input id="type-input" class="type-input" placeholder="Type to preview your own headline…">
+          <div class="type-row"><div class="type-row__meta"><b>H1 · Hero</b>36–52px · 600 · -0.02em</div><div class="type-row__sample" style="font-size:var(--fs-h1);font-weight:600;line-height:1.15;letter-spacing:-0.02em" data-type-sample>Webinars that stand out</div></div>
+          <div class="type-row"><div class="type-row__meta"><b>H2 · Section</b>28–36px · 600</div><div class="type-row__sample" style="font-size:var(--fs-h2);font-weight:600;line-height:1.25" data-type-sample>Webinars that stand out</div></div>
+          <div class="type-row"><div class="type-row__meta"><b>H3 · Subsection</b>20–24px · 600</div><div class="type-row__sample" style="font-size:var(--fs-h3);font-weight:600" data-type-sample>Webinars that stand out</div></div>
+          <div class="type-row"><div class="type-row__meta"><b>H4 · Card title</b>18px · 500</div><div class="type-row__sample" style="font-size:1.125rem;font-weight:500" data-type-sample>Webinars that stand out</div></div>
+          <div class="type-row"><div class="type-row__meta"><b>Body</b>16–18px · 400 · 1.6</div><div class="type-row__sample">From the first concept to the post-event report, QED designs, produces and runs online and hybrid sessions.</div></div>
+          <div class="type-row"><div class="type-row__meta"><b>Small / Caption</b>14 / 12px · 400 · Mid Gray</div><div class="type-row__sample" style="font-size:var(--fs-small);color:var(--color-muted)">Brussels · Live, hybrid &amp; on-demand</div></div>
+          <div class="type-row"><div class="type-row__meta"><b>Eyebrow / Label</b>12px · 500 · uppercase · 0.1em</div><div class="type-row__sample"><span class="eyebrow" style="margin:0">Webinar organisation</span></div></div>
+        </div>
+        <p style="margin-top:var(--space-lg)"><strong>Headline formula:</strong> “[Noun] that <span class="accent">[accent word]</span>” — one accent word per headline, highlighted in green (or with a green underline on dark backgrounds).</p>
+      </section>
+
+      <!-- 05 LAYOUT -->
+      <section class="bg-section" id="layout">
+        <span class="eyebrow">05 · Layout &amp; space</span>
+        <h2>Room to breathe</h2>
+        <p>A 4px base unit, a 1200px container and generous section spacing. White cards sit on the Off-White canvas — never the reverse. Sections flow into each other with a soft wave divider.</p>
+        <div class="grid-2" style="margin-top:var(--space-xl)">
+          <div class="panel">
+            <h4>Spacing scale</h4>
+            <div class="spacing-row"><code>--space-xs 4</code><i style="width:4px"></i></div>
+            <div class="spacing-row"><code>--space-sm 8</code><i style="width:8px"></i></div>
+            <div class="spacing-row"><code>--space-md 16</code><i style="width:16px"></i></div>
+            <div class="spacing-row"><code>--space-lg 24</code><i style="width:24px"></i></div>
+            <div class="spacing-row"><code>--space-xl 32</code><i style="width:32px"></i></div>
+            <div class="spacing-row"><code>--space-2xl 48</code><i style="width:48px"></i></div>
+            <div class="spacing-row"><code>--space-3xl 64</code><i style="width:64px"></i></div>
+          </div>
+          <div class="panel">
+            <h4>Grid &amp; breakpoints</h4>
+            <ul style="font-size:var(--fs-small);color:var(--color-muted);padding-left:1.1rem;margin:0">
+              <li>Container 1200px, fluid gutter 16–32px</li>
+              <li>Long-form text max 800px</li>
+              <li>Cards: 3 columns → 2 at 960px → 1 at 600px</li>
+              <li>Navigation collapses to a menu at 900px</li>
+              <li>Radius: 4px buttons &amp; inputs, 8px cards, 16px feature panels</li>
+              <li>Touch targets ≥ 44px on every interactive element</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 COMPONENTS -->
+      <section class="bg-section" id="components">
+        <span class="eyebrow">06 · Components</span>
+        <h2>Building blocks</h2>
+        <p>Live examples from the landing page. One primary green button per view — it is always the single most important action.</p>
+
+        <div class="panel" style="margin-top:var(--space-xl)">
+          <h4>Buttons · on light</h4>
+          <div class="demo-row">
+            <button class="btn btn--primary">Primary action</button>
+            <button class="btn btn--secondary">Secondary</button>
+          </div>
+        </div>
+        <div class="demo-dark" style="margin-top:var(--space-lg)">
+          <h4 style="color:#fff">Buttons · on dark</h4>
+          <div class="demo-row">
+            <button class="btn btn--primary">Primary action</button>
+            <button class="btn btn--on-dark">On dark</button>
+            <button class="btn btn--ghost-light">Ghost</button>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:var(--space-lg)">
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+            <h3>Service card</h3>
+            <p>White surface, 8px radius, soft teal shadow. Lifts 4px on hover and the icon well flips to Dark Teal.</p>
+            <ul class="card__tags"><li class="tag">Tag</li><li class="tag">Label</li></ul>
+          </article>
+          <div class="panel">
+            <h4>Live indicator &amp; lower third</h4>
+            <div style="background:var(--color-dark-teal);border-radius:var(--radius-lg);padding:var(--space-lg);display:grid;gap:var(--space-md)">
+              <span class="live-pill" style="color:#fff;justify-self:start">Live</span>
+              <div class="studio__lower" style="justify-self:start"><strong>Speaker name</strong>Title · Organisation</div>
+            </div>
+            <p style="font-size:var(--fs-small);color:var(--color-muted);margin:var(--space-md) 0 0">Lower thirds: white plate, 4px green left rule, Poppins 600 name / 400 role. Use the same style in slides and the streaming overlay.</p>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:var(--space-lg)">
+          <h4>Iconography</h4>
+          <p style="font-size:var(--fs-small);color:var(--color-muted)">Outline icons, 1.8px stroke, rounded caps and joins, 24px grid. Place them in a Green Soft well; never fill them with colour gradients.</p>
+        </div>
+      </section>
+
+      <!-- 07 VOICE -->
+      <section class="bg-section" id="voice">
+        <span class="eyebrow">07 · Voice &amp; tone</span>
+        <h2>Confident, clear, human</h2>
+        <p>We write like an experienced producer briefing a senior client: short sentences, concrete benefits, no jargon. British English spelling (organise, programme).</p>
+        <div class="panel" style="margin-top:var(--space-xl);padding:0;overflow-x:auto">
+          <table class="voice-table">
+            <thead><tr><th>We are</th><th>We are not</th><th>Write</th><th>Avoid</th></tr></thead>
+            <tbody>
+              <tr><td>Confident</td><td>Arrogant</td><td>“We'll handle the tech so you can focus on your message.”</td><td>“The best webinar agency in the world.”</td></tr>
+              <tr><td>Clear</td><td>Technical</td><td>“Your speakers get a rehearsal and a tech check.”</td><td>“We provide RTMP ingest with redundant encoders.”</td></tr>
+              <tr><td>Warm</td><td>Casual</td><td>“Tell us about your event.”</td><td>“Hey there! Let's make magic happen!!”</td></tr>
+              <tr><td>Flexible</td><td>Vague</td><td>“Choose the full service or just the parts you need.”</td><td>“We do a bit of everything.”</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 08 ACCESSIBILITY -->
+      <section class="bg-section" id="a11y">
+        <span class="eyebrow">08 · Accessibility</span>
+        <h2>Readable by everyone</h2>
+        <p>All text must meet WCAG 2.1 AA. QED Green is bright: use it for fills and large elements, pair it with Navy text on buttons, and switch to <code>#127A57</code> for small green text on light backgrounds. Try any combination below.</p>
+        <div class="panel cc" style="margin-top:var(--space-xl)">
+          <div class="cc__controls">
+            <label for="cc-fg">Text colour</label>
+            <select id="cc-fg">
+              <option value="#2C4D5C">Dark Teal #2C4D5C</option>
+              <option value="#0A2640">Navy #0A2640</option>
+              <option value="#27C490">QED Green #27C490</option>
+              <option value="#127A57">Green Text #127A57</option>
+              <option value="#454545">Mid Gray #454545</option>
+              <option value="#FFFFFF">White #FFFFFF</option>
+            </select>
+            <label for="cc-bg">Background</label>
+            <select id="cc-bg">
+              <option value="#F5F5F5">Off-White #F5F5F5</option>
+              <option value="#FFFFFF">White #FFFFFF</option>
+              <option value="#2C4D5C">Dark Teal #2C4D5C</option>
+              <option value="#0A2640">Navy #0A2640</option>
+              <option value="#27C490">QED Green #27C490</option>
+              <option value="#E6F8F1">Green Soft #E6F8F1</option>
+            </select>
+            <div class="cc__result" aria-live="polite">
+              <span class="cc__ratio" id="cc-ratio">—</span>
+              <span>AA text <span id="cc-aa" class="badge">—</span></span>
+              <span>AA large <span id="cc-aa-large" class="badge">—</span></span>
+              <span>AAA <span id="cc-aaa" class="badge">—</span></span>
+            </div>
+          </div>
+          <div class="cc__preview" id="cc-preview">
+            <strong>Webinars that stand out</strong>
+            <span>Body copy preview at regular size.</span>
+          </div>
+        </div>
+        <div class="dodont" style="margin-top:var(--space-lg)">
+          <div class="panel do"><h4>Do</h4><ul><li>Navy text on QED Green buttons.</li><li>White text on Dark Teal and Navy.</li><li>Provide captions on all recorded video.</li><li>Keep a visible green focus ring on interactive elements.</li></ul></div>
+          <div class="panel dont"><h4>Don't</h4><ul><li>White text on QED Green — it fails contrast.</li><li>Small QED Green text on Off-White.</li><li>Pure black text, or font weights below 400.</li><li>More than two accent colours on one page.</li></ul></div>
+        </div>
+      </section>
+
+      <!-- 09 TOKENS -->
+      <section class="bg-section" id="tokens">
+        <span class="eyebrow">09 · Design tokens</span>
+        <h2>For developers</h2>
+        <p>The full token set lives in <code>assets/styles.css</code>. Copy the core variables to start any new QED Webinars page.</p>
+        <div class="code-head" style="margin-top:var(--space-xl)">
+          <h4 style="margin:0">CSS variables</h4>
+          <button class="btn btn--secondary" id="copy-tokens" style="min-height:40px;padding:8px 18px">Copy</button>
+        </div>
+<pre class="code" id="tokens-code">:root {
+  --color-dark-teal: #2C4D5C;
+  --color-navy: #0A2640;
+  --color-green: #27C490;
+  --color-green-hover: #1fa677;
+  --color-green-text: #127a57;
+  --color-green-soft: #e6f8f1;
+  --color-off-white: #F5F5F5;
+  --color-white: #FFFFFF;
+  --color-mid-gray: #454545;
+  --font: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --shadow-sm: 0 2px 8px rgba(44, 77, 92, 0.08);
+  --shadow-md: 0 4px 16px rgba(44, 77, 92, 0.12);
+}</pre>
+      </section>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer__row">
+      <div>
+        <span class="wordmark wordmark--light">QED<span class="wordmark__dot"></span><span class="wordmark__sub">Webinars</span></span>
+        <p class="footer__tagline">Organise events that <b>stand out</b>.</p>
+      </div>
+      <ul class="footer__links">
+        <li><a href="index.html">Landing page</a></li>
+        <li><a href="#top">Back to top ↑</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/script.js"></script>
+  <script>
+    (function () {
+      var btn = document.getElementById("copy-tokens");
+      btn.addEventListener("click", function () {
+        var txt = document.getElementById("tokens-code").textContent;
+        var t = document.getElementById("toast");
+        var show = function () { t.innerHTML = "Copied <b>CSS tokens</b>"; t.classList.add("is-visible"); setTimeout(function () { t.classList.remove("is-visible"); }, 2200); };
+        if (navigator.clipboard) navigator.clipboard.writeText(txt).then(show, show); else show();
+      });
+      // Highlight current section in the side TOC
+      var links = Array.prototype.slice.call(document.querySelectorAll(".bg-toc a"));
+      if (!("IntersectionObserver" in window)) return;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          links.forEach(function (a) { a.classList.toggle("is-active", a.getAttribute("href") === "#" + en.target.id); });
+        });
+      }, { rootMargin: "-30% 0px -60% 0px" });
+      document.querySelectorAll(".bg-section").forEach(function (s) { io.observe(s); });
+    })();
+  </script>
+</body>
+</html>
