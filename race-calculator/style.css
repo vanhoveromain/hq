@@ -215,6 +215,17 @@ input:focus {
   border-radius: var(--radius);
 }
 
+.messages ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+/* Fuel mix total turns red when it isn't 100% */
+.is-wrong {
+  color: var(--error-text);
+  font-weight: 600;
+}
+
 .results {
   margin-top: var(--gap);
   padding: var(--gap);
@@ -230,6 +241,27 @@ input:focus {
 
 .results h2:first-child {
   margin-top: 0;
+}
+
+/* Pace figures: 2 columns on phones */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+}
+
+.stats dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stats dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  /* Digits all the same width, so numbers line up */
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Wider screens ---------- */

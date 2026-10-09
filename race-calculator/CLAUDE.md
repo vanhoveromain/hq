@@ -15,7 +15,7 @@ I'm learning web development, so this project is also a learning exercise.
 - Work in small steps: one feature per change.
 - After each change, explain what you did and why in 3–5 bullet points, including any JS concept I might not know.
 - Keep code readable over clever. Comment non-obvious logic.
-- Suggest a git commit message after each completed step. Don't commit yourself.
+- After each completed step: commit and push to the working branch (agreed 2026-10-09; repo `hq` is personal).
 - If a calculation rule is a judgment call, make it a configurable input, not a hardcoded value.
 
 ## Decisions so far (v1)
