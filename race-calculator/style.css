@@ -1,0 +1,403 @@
+/* ==========================================================
+   Race Pace & Fuelling — basic styles
+   Mobile-first: base styles target phones, the media query
+   at the bottom adjusts for wider screens.
+   ========================================================== */
+
+/* Colours and spacing in one place, so they're easy to change */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1d2329;
+  --muted: #5f6b76;
+  --border: #d5dae0;
+  --accent: #1f6feb;
+  --accent-text: #ffffff;
+  --error-bg: #fdecec;
+  --error-text: #9b1c1c;
+  --warning-bg: #fff6e0;
+  --warning-text: #7a4b00;
+  --radius: 8px;
+  --gap: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14181c;
+    --surface: #1e242a;
+    --text: #e8ecef;
+    --muted: #9aa5af;
+    --border: #36404a;
+    --accent: #4c8dff;
+    --accent-text: #0b0e11;
+    --error-bg: #3a1d1d;
+    --error-text: #ffb4b4;
+    --warning-bg: #3a2f14;
+    --warning-text: #ffd98a;
+  }
+}
+
+/* Make width/height include padding and border (more predictable sizing) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0 16px 48px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+main,
+.page-header {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.page-header {
+  padding: 24px 0 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+/* ---------- Form ---------- */
+
+fieldset {
+  /* Browsers give fieldsets a minimum width = their widest content,
+     which pushed the page wider than small phones. 0 lets it shrink. */
+  min-width: 0;
+  margin: 0 0 var(--gap);
+  padding: var(--gap);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--gap);
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+label,
+.label {
+  font-weight: 500;
+}
+
+.optional,
+.hint {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.hint {
+  font-size: 0.85rem;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  /* 16px minimum stops iPhones from zooming in when you tap a field */
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* h / m / s boxes side by side */
+.time-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-group input {
+  width: 4.5rem;
+  text-align: center;
+}
+
+/* ---------- Fuel mix table ---------- */
+
+.mix-table {
+  width: 100%;
+  /* Fixed layout: columns share the width we set, instead of growing with their content */
+  table-layout: fixed;
+  margin-bottom: 4px;
+  border-collapse: collapse;
+}
+
+.mix-table caption {
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.mix-table th,
+.mix-table td {
+  padding: 4px;
+  text-align: left;
+}
+
+.mix-table thead th:first-child {
+  width: 34%;
+}
+
+.mix-table thead th {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.mix-table tbody th {
+  font-weight: 400;
+}
+
+.mix-table tfoot {
+  border-top: 1px solid var(--border);
+}
+
+.mix-table + .hint {
+  display: block;
+  margin-bottom: var(--gap);
+}
+
+/* ---------- Advanced (collapsible) ---------- */
+
+.advanced {
+  margin-top: var(--gap);
+  padding-top: var(--gap);
+  border-top: 1px solid var(--border);
+}
+
+.advanced summary {
+  margin-bottom: var(--gap);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ---------- Button ---------- */
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+/* ---------- Outputs ---------- */
+
+.messages:not(:empty) {
+  margin-top: var(--gap);
+  padding: var(--gap);
+  color: var(--error-text);
+  background: var(--error-bg);
+  border-radius: var(--radius);
+}
+
+.messages ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+/* Warnings inside results (amber, softer than errors) */
+.warning {
+  margin: 12px 0;
+  padding: 12px;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-radius: var(--radius);
+}
+
+.warning ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* Fuel table: each thing to take on its own line */
+.take {
+  display: block;
+}
+
+/* Keep "(25 g)" together on one line */
+.take .muted {
+  white-space: nowrap;
+}
+
+.take + .take {
+  margin-top: 2px;
+}
+
+/* Small label for aid stations (AS1, AS2...) */
+.tag {
+  display: inline-block;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.results h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.data-table th .muted {
+  display: block;
+  font-size: 0.8rem;
+}
+
+/* Fuel mix total turns red when it isn't 100% */
+.is-wrong {
+  color: var(--error-text);
+  font-weight: 600;
+}
+
+/* Leave a small gap above results/messages when scrolled into view */
+.results,
+.messages {
+  scroll-margin-top: 12px;
+}
+
+.results {
+  margin-top: var(--gap);
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.results h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.results h2:first-child {
+  margin-top: 0;
+}
+
+/* Pace figures: 2 columns on phones */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+
+.stats dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stats dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  /* Digits all the same width, so numbers line up */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Result tables (splits, later fuelling) */
+.table-wrap {
+  overflow-x: auto; /* scroll inside the box, never the whole page */
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 6px;
+  vertical-align: top;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table thead th {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.data-table tbody th {
+  font-weight: 500;
+}
+
+.data-table .finish th,
+.data-table .finish td {
+  font-weight: 700;
+  border-bottom: none;
+}
+
+.results .hint {
+  display: block;
+  margin: 8px 0 0;
+}
+
+/* ---------- Wider screens ---------- */
+
+@media (min-width: 600px) {
+  h1 {
+    font-size: 1.9rem;
+  }
+
+  /* Pace figures in one row of 4 on wider screens */
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Very narrow phones: tighter tables */
+@media (max-width: 360px) {
+  .data-table {
+    font-size: 0.9rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 4px;
+  }
+}
