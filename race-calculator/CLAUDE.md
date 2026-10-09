@@ -32,11 +32,18 @@ I'm learning web development, so this project is also a learning exercise.
     after "solids allowed from" (input). Warn if the requested % can't be reached.
   - No fuel in the last X min (input).
   - Electrolyte tablets: separate reminders at their own interval, not part of the mix.
-  - Show actual carbs/hour vs target, and a packing list.
+  - Item for each stop: "credit" method (each item earns its % per stop, the eligible item
+    with most credit gets the stop and pays 100 back). Solids catch up after they're allowed.
+  - Show carbs/h at your rhythm (compare to target) and over the whole race, plus a packing list
+    with asked vs actual % per item.
+  - Bad fuel inputs only hide the fuel plan; pace and splits still show.
+- Aid stations (step 5): text field of km, comma-separated. Shown in splits and fuel timeline;
+  packing list split by section (start → AS1 → … → finish) for drop bags / crew.
 
 ## Build order
 1. Skeleton: HTML form with all inputs, basic CSS, no logic.
 2. Time helpers + pace outputs.
 3. Split table (with clock times).
 4. Fuelling plan + packing list.
-5. Styling pass + mobile check.
+5. Aid stations.
+6. Styling pass + mobile check (incl. auto-scroll to results, tidy fuel table on phones).

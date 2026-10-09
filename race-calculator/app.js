@@ -104,6 +104,131 @@ function calculateSplits(distance, interval, averagePace) {
   return splits;
 }
 
+// The four fuel types. `isSolid` drives the long-race rule.
+// Keeping them in one list means the rest of the code just loops over it.
+const FUEL_ITEMS = [
+  { key: 'compote', label: 'Compote', isSolid: false },
+  { key: 'gel', label: 'Gel', isSolid: false },
+  { key: 'bar', label: 'Energy bar', isSolid: true },
+  { key: 'candy', label: 'Candy', isSolid: true },
+];
+
+// Build the fuelling timeline, packing counts and summary figures.
+// All times here are in seconds since the race start.
+function calculateFuelPlan(inputs, averagePace) {
+  const raceSeconds = inputs.targetSeconds;
+  const isLongRace = raceSeconds > inputs.longRaceThreshold * 3600;
+  const solidsFromSeconds = inputs.solidsFrom * 60;
+  const lastAllowedSeconds = raceSeconds - inputs.noFuelEnd * 60;
+  const intervalSeconds = inputs.fuelInterval * 60;
+  const gramsPerStop = inputs.carbsPerHour * inputs.fuelInterval / 60;
+
+  const usedItems = inputs.mix.filter((item) => item.pct > 0);
+
+  // "Credit" per item: how far behind its share each item is.
+  // Every stop, each item earns its % as credit. The eligible item with the most credit
+  // gets the stop and pays 100 back. Over time each item gets its % of the stops,
+  // spread out evenly instead of grouped.
+  const credit = {};
+  usedItems.forEach((item) => { credit[item.key] = 0; });
+
+  const fuelStops = [];
+  let skippedStops = 0;
+
+  for (let i = 0; ; i++) {
+    const time = inputs.firstFuel * 60 + i * intervalSeconds;
+    if (time > lastAllowedSeconds) break; // no fuel in the last X minutes
+
+    // Long-race rule: before "solids allowed from", only liquid/semi-liquid items qualify.
+    const solidsBlocked = isLongRace && time < solidsFromSeconds;
+    const eligible = usedItems.filter((item) => !(solidsBlocked && item.isSolid));
+
+    if (eligible.length === 0) {
+      skippedStops++; // nothing allowed at this stop (e.g. only solids in the mix)
+      continue;
+    }
+
+    usedItems.forEach((item) => { credit[item.key] += item.pct; });
+
+    // Pick the eligible item with the highest credit (first in the list wins a tie).
+    let chosen = eligible[0];
+    eligible.forEach((item) => {
+      if (credit[item.key] > credit[chosen.key]) chosen = item;
+    });
+    credit[chosen.key] -= 100;
+
+    // Whole items closest to the target, but always at least 1.
+    const quantity = Math.max(1, Math.round(gramsPerStop / chosen.carbs));
+
+    fuelStops.push({
+      time: time,
+      item: chosen,
+      quantity: quantity,
+      grams: quantity * chosen.carbs,
+    });
+  }
+
+  // Electrolyte reminders: every X minutes, also not in the last X minutes.
+  const electrolyteTimes = [];
+  if (inputs.electrolyteInterval > 0) {
+    const step = inputs.electrolyteInterval * 60;
+    for (let time = step; time <= lastAllowedSeconds; time += step) {
+      electrolyteTimes.push(time);
+    }
+  }
+
+  // Merge fuel stops and electrolyte reminders into one timeline.
+  // When both happen at the same minute, they share one row.
+  const rowsByTime = {};
+  const rowAt = (time) => {
+    if (!rowsByTime[time]) {
+      rowsByTime[time] = { time: time, km: time / averagePace, fuel: null, electrolyte: false };
+    }
+    return rowsByTime[time];
+  };
+  fuelStops.forEach((stop) => { rowAt(stop.time).fuel = stop; });
+  electrolyteTimes.forEach((time) => { rowAt(time).electrolyte = true; });
+
+  // Object.values() turns the object into a list; sort() orders it by time.
+  // The compare function returns a negative number when a should come before b.
+  const timeline = Object.values(rowsByTime).sort((a, b) => a.time - b.time);
+
+  // Packing counts and mix check per item.
+  const packing = usedItems.map((item) => {
+    const stopsForItem = fuelStops.filter((stop) => stop.item.key === item.key);
+    return {
+      item: item,
+      quantity: stopsForItem.reduce((sum, stop) => sum + stop.quantity, 0),
+      actualPct: fuelStops.length ? (stopsForItem.length / fuelStops.length) * 100 : 0,
+    };
+  });
+
+  const fuelGrams = fuelStops.reduce((sum, stop) => sum + stop.grams, 0);
+  const tabletCount = electrolyteTimes.length;
+  const tabletGrams = tabletCount * inputs.electrolyteCarbs;
+
+  // Carbs per hour at your rhythm: average grams per stop, scaled to one hour,
+  // plus electrolyte carbs at their own rhythm. This is the figure to compare with the target.
+  const gramsPerStopActual = fuelStops.length ? fuelGrams / fuelStops.length : 0;
+  let rhythmPerHour = gramsPerStopActual * (60 / inputs.fuelInterval);
+  if (inputs.electrolyteInterval > 0) {
+    rhythmPerHour += inputs.electrolyteCarbs * (60 / inputs.electrolyteInterval);
+  }
+
+  return {
+    isLongRace: isLongRace,
+    gramsPerStop: gramsPerStop,
+    timeline: timeline,
+    packing: packing,
+    tabletCount: tabletCount,
+    skippedStops: skippedStops,
+    fuelStopCount: fuelStops.length,
+    totalGrams: fuelGrams + tabletGrams,
+    wholeRacePerHour: (fuelGrams + tabletGrams) / (raceSeconds / 3600),
+    rhythmPerHour: rhythmPerHour,
+  };
+}
+
 
 // ============================================================
 // 3. PAGE CODE
@@ -114,6 +239,8 @@ const messagesBox = document.getElementById('messages');
 const resultsSection = document.getElementById('results');
 const paceOutput = document.getElementById('pace-output');
 const splitsOutput = document.getElementById('splits-output');
+const fuelOutput = document.getElementById('fuel-output');
+const packingOutput = document.getElementById('packing-output');
 const mixTotalCell = document.getElementById('mix-total');
 
 // Read one form field as a number.
@@ -141,6 +268,23 @@ function readInputs() {
     splitInterval: readNumber('splitInterval'),
     // Seconds after midnight, or null when no start time is given.
     startClock: clockToSeconds(form.elements.startTime.value),
+
+    // Fuelling
+    carbsPerHour: readNumber('carbsPerHour'),
+    fuelInterval: readNumber('fuelInterval'),
+    electrolyteInterval: readNumber('electrolyteInterval'),
+    electrolyteCarbs: readNumber('electrolyteCarbs'),
+    firstFuel: readNumber('firstFuel'),
+    noFuelEnd: readNumber('noFuelEnd'),
+    longRaceThreshold: readNumber('longRaceThreshold'),
+    solidsFrom: readNumber('solidsFrom'),
+    // One entry per fuel type. "...item" (spread syntax) copies key, label and isSolid,
+    // then we add the two values typed in the form.
+    mix: FUEL_ITEMS.map((item) => ({
+      ...item,
+      pct: readNumber(`${item.key}Pct`),
+      carbs: readNumber(`${item.key}Carbs`),
+    })),
   };
 }
 
@@ -176,13 +320,47 @@ function validate(inputs) {
   return errors;
 }
 
+// Fuelling checks are separate: a bad fuel input hides only the fuel plan,
+// pace and splits still show.
+function validateFuel(inputs) {
+  const errors = [];
+
+  if (!(inputs.carbsPerHour > 0)) errors.push('Carbs per hour must be more than 0.');
+  if (!(inputs.fuelInterval > 0)) errors.push('Fuel stop interval must be more than 0 min.');
+  if (!(inputs.electrolyteInterval >= 0)) errors.push('Electrolyte interval must be 0 or more.');
+  if (!(inputs.electrolyteCarbs >= 0)) errors.push('Carbs per electrolyte tablet must be 0 or more.');
+  if (!(inputs.firstFuel >= 0)) errors.push('First fuel stop must be 0 min or more.');
+  if (!(inputs.noFuelEnd >= 0)) errors.push('"No fuel in the last" must be 0 min or more.');
+  if (!(inputs.longRaceThreshold >= 0)) errors.push('Long race threshold must be 0 h or more.');
+  if (!(inputs.solidsFrom >= 0)) errors.push('"Solids allowed from" must be 0 min or more.');
+
+  let totalPct = 0;
+  inputs.mix.forEach((item) => {
+    if (!(item.pct >= 0)) {
+      errors.push(`${item.label}: % must be 0 or more.`);
+    } else {
+      totalPct += item.pct;
+      if (item.pct > 0 && !(item.carbs > 0)) {
+        errors.push(`${item.label}: carbs per item must be more than 0.`);
+      }
+    }
+  });
+  if (totalPct !== 100) {
+    errors.push(`Fuel mix adds up to ${totalPct}%, it must be 100%.`);
+  }
+
+  return errors;
+}
+
+// Turn a list of messages into an HTML <ul>.
+// map() turns each message into HTML text, join('') glues them into one string.
+function listHtml(messages) {
+  return `<ul>${messages.map((message) => `<li>${message}</li>`).join('')}</ul>`;
+}
+
 // Show error messages, or clear them when the list is empty.
 function showErrors(errors) {
-  // Build one <li> per error. map() turns each message into HTML text,
-  // join('') glues them together into one string.
-  messagesBox.innerHTML = errors.length
-    ? `<ul>${errors.map((error) => `<li>${error}</li>`).join('')}</ul>`
-    : '';
+  messagesBox.innerHTML = errors.length ? listHtml(errors) : '';
 }
 
 function renderPace(inputs, pace) {
@@ -243,6 +421,117 @@ function renderSplits(inputs, splits) {
     <p class="hint">Even pace assumed: on hilly courses, real splits will be slower on climbs and faster on descents.</p>`;
 }
 
+function renderFuel(inputs, plan) {
+  const hasClock = inputs.startClock !== null;
+
+  // Warnings: things the plan could not do exactly as asked.
+  const warnings = [];
+  plan.packing.forEach((line) => {
+    if (line.quantity === 0) {
+      warnings.push(`${line.item.label}: asked ${line.item.pct}% but no stop got it (too few stops, or solids not allowed yet).`);
+    }
+  });
+  if (plan.skippedStops > 0) {
+    warnings.push(`${plan.skippedStops} stop(s) skipped: only solids in the mix, and solids are not allowed yet.`);
+  }
+  if (plan.fuelStopCount === 0) {
+    warnings.push('No fuel stops fit in this race with the current settings.');
+  }
+
+  const rows = plan.timeline.map((row) => {
+    const take = [];
+    if (row.fuel) {
+      take.push(`${row.fuel.quantity} × ${row.fuel.item.label} <span class="muted">(${row.fuel.grams} g)</span>`);
+    }
+    if (row.electrolyte) {
+      take.push('Electrolyte tablet');
+    }
+    return `
+      <tr>
+        <th scope="row">${formatDuration(row.time)}</th>
+        <td>${row.km.toFixed(1)}</td>
+        ${hasClock ? `<td>${formatClock(inputs.startClock + row.time)}</td>` : ''}
+        <td>${take.join('<br>')}</td>
+      </tr>`;
+  }).join('');
+
+  const longRaceNote = plan.isLongRace
+    ? `<p class="hint">Long race (over ${inputs.longRaceThreshold} h): only compote and gel before ${formatDuration(inputs.solidsFrom * 60)}.</p>`
+    : '';
+
+  fuelOutput.innerHTML = `
+    <dl class="stats">
+      <div>
+        <dt>Target per stop</dt>
+        <dd>${Math.round(plan.gramsPerStop)} g</dd>
+      </div>
+      <div>
+        <dt>Total carbs</dt>
+        <dd>${Math.round(plan.totalGrams)} g</dd>
+      </div>
+      <div>
+        <dt>Carbs/h at your rhythm <span class="muted">(target ${inputs.carbsPerHour})</span></dt>
+        <dd>${Math.round(plan.rhythmPerHour)} g/h</dd>
+      </div>
+      <div>
+        <dt>Carbs/h over the whole race</dt>
+        <dd>${Math.round(plan.wholeRacePerHour)} g/h</dd>
+      </div>
+    </dl>
+    <p class="hint">"Whole race" is lower because nothing is taken before the first stop or in the last ${inputs.noFuelEnd} min.</p>
+    ${longRaceNote}
+    ${warnings.length ? `<div class="warning">${listHtml(warnings)}</div>` : ''}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Time</th>
+            <th scope="col">~km</th>
+            ${hasClock ? '<th scope="col">Clock</th>' : ''}
+            <th scope="col">Take</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderPacking(plan) {
+  const rows = plan.packing.map((line) => `
+    <tr>
+      <th scope="row">${line.item.label}</th>
+      <td>${line.quantity}</td>
+      <td>${line.item.pct}%</td>
+      <td>${Math.round(line.actualPct)}%</td>
+    </tr>`).join('');
+
+  const tabletRow = plan.tabletCount > 0
+    ? `<tr><th scope="row">Electrolyte tablet</th><td>${plan.tabletCount}</td><td>–</td><td>–</td></tr>`
+    : '';
+
+  packingOutput.innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Item</th>
+            <th scope="col">Qty</th>
+            <th scope="col">Asked</th>
+            <th scope="col">Actual</th>
+          </tr>
+        </thead>
+        <tbody>${rows}${tabletRow}</tbody>
+      </table>
+    </div>
+    <p class="hint">Asked/Actual = share of fuel stops. With few stops, rounding makes them differ.</p>`;
+}
+
+// Show fuel errors inside the fuelling section and clear the packing list.
+function renderFuelErrors(errors) {
+  fuelOutput.innerHTML = `<div class="messages">${listHtml(errors)}</div>`;
+  packingOutput.innerHTML = '<p class="hint">Fix the fuelling inputs above to see the packing list.</p>';
+}
+
 // Live total for the fuel mix percentages.
 function updateMixTotal() {
   const names = ['compotePct', 'gelPct', 'barPct', 'candyPct'];
@@ -271,6 +560,16 @@ form.addEventListener('submit', (event) => {
   const pace = calculatePace(inputs);
   renderPace(inputs, pace);
   renderSplits(inputs, calculateSplits(inputs.distance, inputs.splitInterval, pace.averagePace));
+
+  const fuelErrors = validateFuel(inputs);
+  if (fuelErrors.length > 0) {
+    renderFuelErrors(fuelErrors);
+  } else {
+    const plan = calculateFuelPlan(inputs, pace.averagePace);
+    renderFuel(inputs, plan);
+    renderPacking(plan);
+  }
+
   resultsSection.hidden = false;
 });
 

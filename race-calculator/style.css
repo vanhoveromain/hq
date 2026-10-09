@@ -15,6 +15,8 @@
   --accent-text: #ffffff;
   --error-bg: #fdecec;
   --error-text: #9b1c1c;
+  --warning-bg: #fff6e0;
+  --warning-text: #7a4b00;
   --radius: 8px;
   --gap: 1rem;
 }
@@ -30,6 +32,8 @@
     --accent-text: #0b0e11;
     --error-bg: #3a1d1d;
     --error-text: #ffb4b4;
+    --warning-bg: #3a2f14;
+    --warning-text: #ffd98a;
   }
 }
 
@@ -220,6 +224,25 @@ input:focus {
   padding-left: 1.2rem;
 }
 
+/* Warnings inside results (amber, softer than errors) */
+.warning {
+  margin: 12px 0;
+  padding: 12px;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-radius: var(--radius);
+}
+
+.warning ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
 /* Fuel mix total turns red when it isn't 100% */
 .is-wrong {
   color: var(--error-text);
@@ -248,7 +271,7 @@ input:focus {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin: 0;
+  margin: 0 0 8px;
 }
 
 .stats dt {
