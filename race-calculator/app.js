@@ -33,6 +33,13 @@ function formatDuration(totalSeconds) {
   return `${hours}:${pad2(minutes)}:${pad2(seconds)}`;
 }
 
+// Format seconds as "h:mm" (e.g. 5400 -> "1:30"). Used where seconds are just noise.
+// Cut off to the minute, like clock times.
+function formatHoursMinutes(totalSeconds) {
+  const totalMinutes = Math.floor(Math.round(totalSeconds) / 60);
+  return `${Math.floor(totalMinutes / 60)}:${pad2(totalMinutes % 60)}`;
+}
+
 // Format a pace in seconds per km as "m:ss /km" (e.g. 298.6 -> "4:59 /km").
 function formatPace(secondsPerKm) {
   const rounded = Math.round(secondsPerKm);
@@ -67,20 +74,22 @@ function formatKm(km) {
   return String(Number(km.toFixed(1)));
 }
 
-// Turn the aid stations text ("12, 25.5, 38") into a sorted list of numbers.
+// Turn the aid stations text ("12,5; 25; 38") into a sorted list of numbers.
+// Separators: ";" or spaces. Decimals: comma or dot (12,5 and 12.5 both mean 12.5 km).
 // Returns the list plus any problems found, so validation can show them.
 function parseAidStations(text, distance) {
   const stations = [];
   const errors = [];
 
-  // split(',') cuts the text at each comma; trim() removes spaces around each part.
-  text.split(',').forEach((part) => {
+  // split() with a regular expression: /[;\s]+/ means "one or more ; or whitespace".
+  // So "12,5;  25 38" becomes ["12,5", "25", "38"].
+  text.split(/[;\s]+/).forEach((part) => {
     const trimmed = part.trim();
     if (trimmed === '') return; // ignore empty bits like "12, , 25" or a trailing comma
 
-    const km = Number(trimmed);
+    const km = Number(trimmed.replace(',', '.')); // decimal comma -> dot
     if (Number.isNaN(km)) {
-      errors.push(`Aid station "${trimmed}" is not a number (use a dot for decimals).`);
+      errors.push(`Aid station "${trimmed}" is not a number. Separate stations with ";" or spaces.`);
     } else if (km <= 0 || km >= distance) {
       errors.push(`Aid station at ${trimmed} km must be between 0 and the race distance.`);
     } else if (!stations.includes(km)) {
@@ -532,14 +541,14 @@ function renderFuel(inputs, plan) {
       take.push('Electrolyte tablet');
     }
     if (row.aidIndex !== null) {
-      take.push(`<span class="tag">${aidLabel(row.aidIndex)}</span> Aid station (${formatKm(inputs.aidStations[row.aidIndex])} km)`);
+      take.push(`<span class="tag">${aidLabel(row.aidIndex)}</span> Aid station`);
     }
     return `
       <tr>
-        <th scope="row">${formatDuration(row.time)}</th>
+        <th scope="row">${formatHoursMinutes(row.time)}</th>
         <td>${row.km.toFixed(1)}</td>
         ${hasClock ? `<td>${formatClock(inputs.startClock + row.time)}</td>` : ''}
-        <td>${take.join('<br>')}</td>
+        <td>${take.map((thing) => `<span class="take">${thing}</span>`).join('')}</td>
       </tr>`;
   }).join('');
 
@@ -659,6 +668,12 @@ function updateMixTotal() {
   mixTotalCell.classList.toggle('is-wrong', total !== 100);
 }
 
+// Scroll smoothly so the element's top is at the top of the screen.
+// On a phone the results are far below the Calculate button, so this saves scrolling.
+function scrollToElement(element) {
+  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // "submit" fires when Calculate is pressed (or Enter in a field).
 form.addEventListener('submit', (event) => {
   event.preventDefault(); // stop the page from reloading
@@ -669,6 +684,7 @@ form.addEventListener('submit', (event) => {
 
   if (errors.length > 0) {
     resultsSection.hidden = true;
+    scrollToElement(messagesBox);
     return; // stop here: no results with bad inputs
   }
 
@@ -686,6 +702,7 @@ form.addEventListener('submit', (event) => {
   }
 
   resultsSection.hidden = false;
+  scrollToElement(resultsSection);
 });
 
 // "input" fires on every keystroke in any field of the form.

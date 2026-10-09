@@ -76,6 +76,9 @@ h1 {
 /* ---------- Form ---------- */
 
 fieldset {
+  /* Browsers give fieldsets a minimum width = their widest content,
+     which pushed the page wider than small phones. 0 lets it shrink. */
+  min-width: 0;
   margin: 0 0 var(--gap);
   padding: var(--gap);
   border: 1px solid var(--border);
@@ -146,6 +149,8 @@ input:focus {
 
 .mix-table {
   width: 100%;
+  /* Fixed layout: columns share the width we set, instead of growing with their content */
+  table-layout: fixed;
   margin-bottom: 4px;
   border-collapse: collapse;
 }
@@ -160,6 +165,10 @@ input:focus {
 .mix-table td {
   padding: 4px;
   text-align: left;
+}
+
+.mix-table thead th:first-child {
+  width: 34%;
 }
 
 .mix-table thead th {
@@ -243,6 +252,20 @@ input:focus {
   font-weight: 400;
 }
 
+/* Fuel table: each thing to take on its own line */
+.take {
+  display: block;
+}
+
+/* Keep "(25 g)" together on one line */
+.take .muted {
+  white-space: nowrap;
+}
+
+.take + .take {
+  margin-top: 2px;
+}
+
 /* Small label for aid stations (AS1, AS2...) */
 .tag {
   display: inline-block;
@@ -268,6 +291,12 @@ input:focus {
 .is-wrong {
   color: var(--error-text);
   font-weight: 600;
+}
+
+/* Leave a small gap above results/messages when scrolled into view */
+.results,
+.messages {
+  scroll-margin-top: 12px;
 }
 
 .results {
@@ -322,6 +351,7 @@ input:focus {
 .data-table th,
 .data-table td {
   padding: 8px 6px;
+  vertical-align: top;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -352,5 +382,22 @@ input:focus {
 @media (min-width: 600px) {
   h1 {
     font-size: 1.9rem;
+  }
+
+  /* Pace figures in one row of 4 on wider screens */
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Very narrow phones: tighter tables */
+@media (max-width: 360px) {
+  .data-table {
+    font-size: 0.9rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 4px;
   }
 }

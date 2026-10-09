@@ -37,7 +37,7 @@ I'm learning web development, so this project is also a learning exercise.
   - Show carbs/h at your rhythm (compare to target) and over the whole race, plus a packing list
     with asked vs actual % per item.
   - Bad fuel inputs only hide the fuel plan; pace and splits still show.
-- Aid stations: text field of km, comma-separated, dot for decimals. Sorted, duplicates dropped.
+- Aid stations: text field of km, separated by ";" or spaces; decimal comma or dot (12,5 = 12.5). Sorted, duplicates dropped.
   Shown in splits (tag on an existing row if same km) and fuel timeline.
   Packing list split by section (start → AS1 → … → finish) for drop bags / crew.
   A fuel stop exactly at an aid station counts in the next section (after restocking).
@@ -49,3 +49,5 @@ I'm learning web development, so this project is also a learning exercise.
 4. Fuelling plan + packing list.
 5. Aid stations.
 6. Styling pass + mobile check (incl. auto-scroll to results, tidy fuel table on phones).
+
+v1 complete. Tested at 320, 375 and 800 px wide: no sideways page scroll.
