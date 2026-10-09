@@ -1,0 +1,241 @@
+/* ==========================================================
+   Race Pace & Fuelling — basic styles
+   Mobile-first: base styles target phones, the media query
+   at the bottom adjusts for wider screens.
+   ========================================================== */
+
+/* Colours and spacing in one place, so they're easy to change */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1d2329;
+  --muted: #5f6b76;
+  --border: #d5dae0;
+  --accent: #1f6feb;
+  --accent-text: #ffffff;
+  --error-bg: #fdecec;
+  --error-text: #9b1c1c;
+  --radius: 8px;
+  --gap: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14181c;
+    --surface: #1e242a;
+    --text: #e8ecef;
+    --muted: #9aa5af;
+    --border: #36404a;
+    --accent: #4c8dff;
+    --accent-text: #0b0e11;
+    --error-bg: #3a1d1d;
+    --error-text: #ffb4b4;
+  }
+}
+
+/* Make width/height include padding and border (more predictable sizing) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0 16px 48px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+main,
+.page-header {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.page-header {
+  padding: 24px 0 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+/* ---------- Form ---------- */
+
+fieldset {
+  margin: 0 0 var(--gap);
+  padding: var(--gap);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--gap);
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+label,
+.label {
+  font-weight: 500;
+}
+
+.optional,
+.hint {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.hint {
+  font-size: 0.85rem;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  /* 16px minimum stops iPhones from zooming in when you tap a field */
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* h / m / s boxes side by side */
+.time-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-group input {
+  width: 4.5rem;
+  text-align: center;
+}
+
+/* ---------- Fuel mix table ---------- */
+
+.mix-table {
+  width: 100%;
+  margin-bottom: 4px;
+  border-collapse: collapse;
+}
+
+.mix-table caption {
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.mix-table th,
+.mix-table td {
+  padding: 4px;
+  text-align: left;
+}
+
+.mix-table thead th {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.mix-table tbody th {
+  font-weight: 400;
+}
+
+.mix-table tfoot {
+  border-top: 1px solid var(--border);
+}
+
+.mix-table + .hint {
+  display: block;
+  margin-bottom: var(--gap);
+}
+
+/* ---------- Advanced (collapsible) ---------- */
+
+.advanced {
+  margin-top: var(--gap);
+  padding-top: var(--gap);
+  border-top: 1px solid var(--border);
+}
+
+.advanced summary {
+  margin-bottom: var(--gap);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ---------- Button ---------- */
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+/* ---------- Outputs ---------- */
+
+.messages:not(:empty) {
+  margin-top: var(--gap);
+  padding: var(--gap);
+  color: var(--error-text);
+  background: var(--error-bg);
+  border-radius: var(--radius);
+}
+
+.results {
+  margin-top: var(--gap);
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.results h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.results h2:first-child {
+  margin-top: 0;
+}
+
+/* ---------- Wider screens ---------- */
+
+@media (min-width: 600px) {
+  h1 {
+    font-size: 1.9rem;
+  }
+}

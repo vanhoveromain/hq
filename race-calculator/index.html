@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Makes the page use the phone's real width instead of a zoomed-out desktop view -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Race Pace & Fuelling</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Race Pace &amp; Fuelling</h1>
+    <p class="subtitle">Plan your pace, splits and fuel for road and trail races.</p>
+  </header>
+
+  <main>
+    <!-- novalidate: we will check inputs ourselves in app.js and show clearer messages -->
+    <form id="race-form" novalidate>
+
+      <!-- ========== RACE ========== -->
+      <fieldset>
+        <legend>Race</legend>
+
+        <div class="field">
+          <label for="distance">Distance (km)</label>
+          <input id="distance" name="distance" type="number" inputmode="decimal"
+                 min="0.1" step="0.1" value="42.2" required>
+        </div>
+
+        <div class="field">
+          <label for="elevation">Elevation gain (m D+)</label>
+          <input id="elevation" name="elevation" type="number" inputmode="numeric"
+                 min="0" step="10" value="0">
+        </div>
+
+        <!-- Three small boxes instead of one "hh:mm:ss" text box:
+             phone number keyboards often have no ":" key. -->
+        <div class="field">
+          <span class="label" id="target-time-label">Target finish time</span>
+          <div class="time-group" role="group" aria-labelledby="target-time-label">
+            <input id="target-h" name="targetH" type="number" inputmode="numeric"
+                   min="0" max="99" value="3" aria-label="Hours">
+            <span>h</span>
+            <input id="target-m" name="targetM" type="number" inputmode="numeric"
+                   min="0" max="59" value="30" aria-label="Minutes">
+            <span>m</span>
+            <input id="target-s" name="targetS" type="number" inputmode="numeric"
+                   min="0" max="59" value="0" aria-label="Seconds">
+            <span>s</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="start-time">Race start time <span class="optional">(optional)</span></label>
+          <input id="start-time" name="startTime" type="time">
+          <small class="hint">Leave empty to hide clock times.</small>
+        </div>
+      </fieldset>
+
+      <!-- ========== PACING ========== -->
+      <fieldset>
+        <legend>Pacing</legend>
+
+        <div class="field">
+          <label for="elevation-factor">Elevation adjustment (flat-equivalent km per 100 m D+)</label>
+          <input id="elevation-factor" name="elevationFactor" type="number" inputmode="decimal"
+                 min="0" step="0.1" value="1">
+          <small class="hint">Default 1: every 100 m of climbing counts as 1 extra flat km.</small>
+        </div>
+
+        <div class="field">
+          <label for="split-interval">Split every (km)</label>
+          <input id="split-interval" name="splitInterval" type="number" inputmode="decimal"
+                 min="0.5" step="0.5" value="5">
+        </div>
+      </fieldset>
+
+      <!-- ========== FUELLING ========== -->
+      <fieldset>
+        <legend>Fuelling</legend>
+
+        <div class="field">
+          <label for="carbs-per-hour">Carbs per hour (g)</label>
+          <input id="carbs-per-hour" name="carbsPerHour" type="number" inputmode="numeric"
+                 min="0" step="5" value="60">
+        </div>
+
+        <div class="field">
+          <label for="fuel-interval">Fuel stop every (min)</label>
+          <input id="fuel-interval" name="fuelInterval" type="number" inputmode="numeric"
+                 min="5" step="5" value="30">
+        </div>
+
+        <!-- Fuel mix: % of stops + carbs per item for each fuel type -->
+        <table class="mix-table">
+          <caption>Fuel mix <small>(% of stops, must add up to 100)</small></caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">% of stops</th>
+              <th scope="col">Carbs / item (g)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Compote</th>
+              <td><input name="compotePct" type="number" inputmode="numeric" min="0" max="100" value="50" aria-label="Compote, % of stops"></td>
+              <td><input name="compoteCarbs" type="number" inputmode="decimal" min="0" step="0.5" value="22" aria-label="Compote, carbs per item"></td>
+            </tr>
+            <tr>
+              <th scope="row">Gel</th>
+              <td><input name="gelPct" type="number" inputmode="numeric" min="0" max="100" value="30" aria-label="Gel, % of stops"></td>
+              <td><input name="gelCarbs" type="number" inputmode="decimal" min="0" step="0.5" value="25" aria-label="Gel, carbs per item"></td>
+            </tr>
+            <tr>
+              <th scope="row">Energy bar</th>
+              <td><input name="barPct" type="number" inputmode="numeric" min="0" max="100" value="10" aria-label="Energy bar, % of stops"></td>
+              <td><input name="barCarbs" type="number" inputmode="decimal" min="0" step="0.5" value="25" aria-label="Energy bar, carbs per item"></td>
+            </tr>
+            <tr>
+              <th scope="row">Candy</th>
+              <td><input name="candyPct" type="number" inputmode="numeric" min="0" max="100" value="10" aria-label="Candy, % of stops"></td>
+              <td><input name="candyCarbs" type="number" inputmode="decimal" min="0" step="0.5" value="5" aria-label="Candy, carbs per item"></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">Total</th>
+              <!-- Filled in by app.js later -->
+              <td id="mix-total">–</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        <small class="hint">Check carbs per item on your packaging. Values here are placeholders.</small>
+
+        <div class="field">
+          <label for="electrolyte-interval">Electrolyte tablet every (min)</label>
+          <input id="electrolyte-interval" name="electrolyteInterval" type="number" inputmode="numeric"
+                 min="0" step="5" value="60">
+          <small class="hint">Set to 0 for no electrolyte reminders.</small>
+        </div>
+
+        <div class="field">
+          <label for="electrolyte-carbs">Carbs per electrolyte tablet (g)</label>
+          <input id="electrolyte-carbs" name="electrolyteCarbs" type="number" inputmode="decimal"
+                 min="0" step="0.5" value="0">
+        </div>
+
+        <!-- <details> is a built-in collapsible section: no JavaScript needed -->
+        <details class="advanced">
+          <summary>Advanced fuelling settings</summary>
+
+          <div class="field">
+            <label for="first-fuel">First fuel stop at (min)</label>
+            <input id="first-fuel" name="firstFuel" type="number" inputmode="numeric"
+                   min="0" step="5" value="30">
+          </div>
+
+          <div class="field">
+            <label for="no-fuel-end">No fuel in the last (min)</label>
+            <input id="no-fuel-end" name="noFuelEnd" type="number" inputmode="numeric"
+                   min="0" step="5" value="20">
+          </div>
+
+          <div class="field">
+            <label for="long-race-threshold">Long race from (hours)</label>
+            <input id="long-race-threshold" name="longRaceThreshold" type="number" inputmode="decimal"
+                   min="0" step="0.5" value="3">
+            <small class="hint">Above this, start with liquid/semi-liquid fuel only.</small>
+          </div>
+
+          <div class="field">
+            <label for="solids-from">Solids (bar, candy) allowed from (min)</label>
+            <input id="solids-from" name="solidsFrom" type="number" inputmode="numeric"
+                   min="0" step="5" value="90">
+            <small class="hint">Only applies to long races.</small>
+          </div>
+        </details>
+      </fieldset>
+
+      <button type="submit" class="btn-primary">Calculate</button>
+    </form>
+
+    <!-- ========== OUTPUTS (filled in by app.js) ========== -->
+    <!-- aria-live: screen readers announce new error messages automatically -->
+    <div id="messages" class="messages" aria-live="polite"></div>
+
+    <section id="results" class="results" hidden>
+      <h2>Pace</h2>
+      <div id="pace-output"></div>
+
+      <h2>Splits</h2>
+      <div id="splits-output"></div>
+
+      <h2>Fuelling plan</h2>
+      <div id="fuel-output"></div>
+
+      <h2>Packing list</h2>
+      <div id="packing-output"></div>
+    </section>
+  </main>
+
+  <!-- defer: run app.js only after the whole page has loaded -->
+  <script src="app.js" defer></script>
+</body>
+</html>
