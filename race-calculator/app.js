@@ -67,6 +67,37 @@ function formatKm(km) {
   return String(Number(km.toFixed(1)));
 }
 
+// Turn the aid stations text ("12, 25.5, 38") into a sorted list of numbers.
+// Returns the list plus any problems found, so validation can show them.
+function parseAidStations(text, distance) {
+  const stations = [];
+  const errors = [];
+
+  // split(',') cuts the text at each comma; trim() removes spaces around each part.
+  text.split(',').forEach((part) => {
+    const trimmed = part.trim();
+    if (trimmed === '') return; // ignore empty bits like "12, , 25" or a trailing comma
+
+    const km = Number(trimmed);
+    if (Number.isNaN(km)) {
+      errors.push(`Aid station "${trimmed}" is not a number (use a dot for decimals).`);
+    } else if (km <= 0 || km >= distance) {
+      errors.push(`Aid station at ${trimmed} km must be between 0 and the race distance.`);
+    } else if (!stations.includes(km)) {
+      stations.push(km); // includes() skips duplicates
+    }
+  });
+
+  // Without a compare function, sort() would sort as text: "100" before "25".
+  stations.sort((a, b) => a - b);
+  return { stations: stations, errors: errors };
+}
+
+// Aid station label: AS1, AS2, ... (number starts at 1 for people, index starts at 0 for JS).
+function aidLabel(index) {
+  return `AS${index + 1}`;
+}
+
 
 // ============================================================
 // 2. CALCULATIONS
@@ -89,7 +120,7 @@ function calculatePace(inputs) {
 
 // Split table: one row every `interval` km, plus a final row at the finish.
 // Assumes even pace (we don't know where the climbs are yet).
-function calculateSplits(distance, interval, averagePace) {
+function calculateSplits(distance, interval, averagePace, aidStations) {
   const splits = [];
 
   // Multiply (i × interval) instead of adding interval again and again:
@@ -97,11 +128,23 @@ function calculateSplits(distance, interval, averagePace) {
   // The small 0.001 margin avoids a duplicate row when the distance is an exact multiple.
   for (let i = 1; i * interval < distance - 0.001; i++) {
     const km = i * interval;
-    splits.push({ km: km, elapsed: km * averagePace, isFinish: false });
+    splits.push({ km: km, elapsed: km * averagePace, isFinish: false, aidIndex: null });
   }
 
-  splits.push({ km: distance, elapsed: distance * averagePace, isFinish: true });
-  return splits;
+  splits.push({ km: distance, elapsed: distance * averagePace, isFinish: true, aidIndex: null });
+
+  // Add aid stations. If one falls exactly on a split (e.g. at 10 km), mark that row
+  // instead of adding a duplicate.
+  aidStations.forEach((km, index) => {
+    const sameKm = splits.find((split) => Math.abs(split.km - km) < 0.001);
+    if (sameKm) {
+      sameKm.aidIndex = index;
+    } else {
+      splits.push({ km: km, elapsed: km * averagePace, isFinish: false, aidIndex: index });
+    }
+  });
+
+  return splits.sort((a, b) => a.km - b.km);
 }
 
 // The four fuel types. `isSolid` drives the long-race rule.
@@ -162,6 +205,7 @@ function calculateFuelPlan(inputs, averagePace) {
 
     fuelStops.push({
       time: time,
+      km: time / averagePace,
       item: chosen,
       quantity: quantity,
       grams: quantity * chosen.carbs,
@@ -182,12 +226,16 @@ function calculateFuelPlan(inputs, averagePace) {
   const rowsByTime = {};
   const rowAt = (time) => {
     if (!rowsByTime[time]) {
-      rowsByTime[time] = { time: time, km: time / averagePace, fuel: null, electrolyte: false };
+      rowsByTime[time] = { time: time, km: time / averagePace, fuel: null, electrolyte: false, aidIndex: null };
     }
     return rowsByTime[time];
   };
   fuelStops.forEach((stop) => { rowAt(stop.time).fuel = stop; });
   electrolyteTimes.forEach((time) => { rowAt(time).electrolyte = true; });
+  // Aid stations: time = km × pace, rounded to the second so it can share a row.
+  inputs.aidStations.forEach((km, index) => {
+    rowAt(Math.round(km * averagePace)).aidIndex = index;
+  });
 
   // Object.values() turns the object into a list; sort() orders it by time.
   // The compare function returns a negative number when a should come before b.
@@ -202,6 +250,32 @@ function calculateFuelPlan(inputs, averagePace) {
       actualPct: fuelStops.length ? (stopsForItem.length / fuelStops.length) * 100 : 0,
     };
   });
+
+  // Packing by section: start -> AS1 -> AS2 -> ... -> finish.
+  // Section number = how many aid stations you have passed. A stop exactly at an
+  // aid station counts in the next section (you take it after restocking there).
+  const sectionOf = (km) => inputs.aidStations.filter((station) => station <= km).length;
+  const boundaries = [0, ...inputs.aidStations, inputs.distance]; // "..." spreads the list in
+  const sections = [];
+  for (let i = 0; i < boundaries.length - 1; i++) {
+    const stopsHere = fuelStops.filter((stop) => sectionOf(stop.km) === i);
+    sections.push({
+      from: i === 0 ? 'Start' : aidLabel(i - 1),
+      to: i === boundaries.length - 2 ? 'Finish' : aidLabel(i),
+      fromKm: boundaries[i],
+      toKm: boundaries[i + 1],
+      // Count per item, keeping the FUEL_ITEMS order.
+      items: usedItems
+        .map((item) => ({
+          item: item,
+          quantity: stopsHere
+            .filter((stop) => stop.item.key === item.key)
+            .reduce((sum, stop) => sum + stop.quantity, 0),
+        }))
+        .filter((line) => line.quantity > 0),
+      tablets: electrolyteTimes.filter((time) => sectionOf(time / averagePace) === i).length,
+    });
+  }
 
   const fuelGrams = fuelStops.reduce((sum, stop) => sum + stop.grams, 0);
   const tabletCount = electrolyteTimes.length;
@@ -221,6 +295,7 @@ function calculateFuelPlan(inputs, averagePace) {
     timeline: timeline,
     packing: packing,
     tabletCount: tabletCount,
+    sections: sections,
     skippedStops: skippedStops,
     fuelStopCount: fuelStops.length,
     totalGrams: fuelGrams + tabletGrams,
@@ -253,12 +328,14 @@ function readNumber(name) {
 
 // Collect every input we need into one object.
 function readInputs() {
+  const distance = readNumber('distance');
+  const aid = parseAidStations(form.elements.aidStations.value, distance);
   const targetH = readNumber('targetH');
   const targetM = readNumber('targetM');
   const targetS = readNumber('targetS');
 
   return {
-    distance: readNumber('distance'),
+    distance: distance,
     elevation: readNumber('elevation'),
     elevationFactor: readNumber('elevationFactor'),
     targetH: targetH,
@@ -268,6 +345,8 @@ function readInputs() {
     splitInterval: readNumber('splitInterval'),
     // Seconds after midnight, or null when no start time is given.
     startClock: clockToSeconds(form.elements.startTime.value),
+    aidStations: aid.stations,        // clean, sorted list of km
+    aidStationErrors: aid.errors,
 
     // Fuelling
     carbsPerHour: readNumber('carbsPerHour'),
@@ -310,6 +389,9 @@ function validate(inputs) {
     Number.isInteger(inputs.targetH) && inputs.targetH >= 0 &&
     Number.isInteger(inputs.targetM) && inputs.targetM >= 0 && inputs.targetM <= 59 &&
     Number.isInteger(inputs.targetS) && inputs.targetS >= 0 && inputs.targetS <= 59;
+
+  // "..." adds each aid station error separately, not the whole list as one item.
+  errors.push(...inputs.aidStationErrors);
 
   if (!timeIsValid) {
     errors.push('Target time: use whole numbers, minutes and seconds between 0 and 59.');
@@ -391,7 +473,10 @@ function renderSplits(inputs, splits) {
 
   // Build one table row per split.
   const rows = splits.map((split) => {
-    const label = split.isFinish ? `Finish (${formatKm(split.km)})` : formatKm(split.km);
+    let label = split.isFinish ? `Finish (${formatKm(split.km)})` : formatKm(split.km);
+    if (split.aidIndex !== null) {
+      label += ` <span class="tag">${aidLabel(split.aidIndex)}</span>`;
+    }
     const clockCell = hasClock
       ? `<td>${formatClock(inputs.startClock + split.elapsed)}</td>`
       : '';
@@ -445,6 +530,9 @@ function renderFuel(inputs, plan) {
     }
     if (row.electrolyte) {
       take.push('Electrolyte tablet');
+    }
+    if (row.aidIndex !== null) {
+      take.push(`<span class="tag">${aidLabel(row.aidIndex)}</span> Aid station (${formatKm(inputs.aidStations[row.aidIndex])} km)`);
     }
     return `
       <tr>
@@ -509,7 +597,34 @@ function renderPacking(plan) {
     ? `<tr><th scope="row">Electrolyte tablet</th><td>${plan.tabletCount}</td><td>–</td><td>–</td></tr>`
     : '';
 
+  // Per-section list, only when there are aid stations.
+  let sectionsHtml = '';
+  if (plan.sections.length > 1) {
+    const sectionRows = plan.sections.map((section) => {
+      const things = section.items.map((line) => `${line.quantity} × ${line.item.label}`);
+      if (section.tablets > 0) things.push(`${section.tablets} × Electrolyte tablet`);
+      return `
+        <tr>
+          <th scope="row">${section.from} → ${section.to}
+            <span class="muted">${formatKm(section.fromKm)}–${formatKm(section.toKm)} km</span></th>
+          <td>${things.length ? things.join('<br>') : '<span class="muted">Nothing</span>'}</td>
+        </tr>`;
+    }).join('');
+
+    sectionsHtml = `
+      <h3>By section</h3>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th scope="col">Section</th><th scope="col">Carry</th></tr></thead>
+          <tbody>${sectionRows}</tbody>
+        </table>
+      </div>
+      <p class="hint">"Start → AS1" is what to carry from the start. The rest goes in drop bags or to your crew.</p>
+      <h3>Total</h3>`;
+  }
+
   packingOutput.innerHTML = `
+    ${sectionsHtml}
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -559,7 +674,7 @@ form.addEventListener('submit', (event) => {
 
   const pace = calculatePace(inputs);
   renderPace(inputs, pace);
-  renderSplits(inputs, calculateSplits(inputs.distance, inputs.splitInterval, pace.averagePace));
+  renderSplits(inputs, calculateSplits(inputs.distance, inputs.splitInterval, pace.averagePace, inputs.aidStations));
 
   const fuelErrors = validateFuel(inputs);
   if (fuelErrors.length > 0) {

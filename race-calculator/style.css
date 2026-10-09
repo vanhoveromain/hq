@@ -243,6 +243,27 @@ input:focus {
   font-weight: 400;
 }
 
+/* Small label for aid stations (AS1, AS2...) */
+.tag {
+  display: inline-block;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.results h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.data-table th .muted {
+  display: block;
+  font-size: 0.8rem;
+}
+
 /* Fuel mix total turns red when it isn't 100% */
 .is-wrong {
   color: var(--error-text);
