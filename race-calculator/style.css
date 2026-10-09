@@ -264,6 +264,45 @@ input:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* Result tables (splits, later fuelling) */
+.table-wrap {
+  overflow-x: auto; /* scroll inside the box, never the whole page */
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table thead th {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.data-table tbody th {
+  font-weight: 500;
+}
+
+.data-table .finish th,
+.data-table .finish td {
+  font-weight: 700;
+  border-bottom: none;
+}
+
+.results .hint {
+  display: block;
+  margin: 8px 0 0;
+}
+
 /* ---------- Wider screens ---------- */
 
 @media (min-width: 600px) {

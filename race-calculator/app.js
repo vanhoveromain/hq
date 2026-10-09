@@ -41,6 +41,32 @@ function formatPace(secondsPerKm) {
   return `${minutes}:${pad2(seconds)} /km`;
 }
 
+// Turn a time-of-day "HH:MM" (from <input type="time">) into seconds after midnight.
+// Returns null when the field is empty, meaning "no start time given".
+function clockToSeconds(clockText) {
+  if (clockText === '') return null;
+  // split(':') cuts "07:30" into ["07", "30"]; map(Number) turns them into numbers.
+  const [hours, minutes] = clockText.split(':').map(Number);
+  return toSeconds(hours, minutes, 0);
+}
+
+// Format seconds after midnight as a clock time "HH:MM".
+// Races can run past midnight, so we also return how many days later it is.
+function formatClock(secondsAfterMidnight) {
+  const secondsPerDay = 24 * 3600;
+  const rounded = Math.round(secondsAfterMidnight);
+  const dayOffset = Math.floor(rounded / secondsPerDay);
+  const timeOfDay = rounded % secondsPerDay; // wrap back into 0:00–23:59
+  const text = `${pad2(Math.floor(timeOfDay / 3600))}:${pad2(Math.floor((timeOfDay % 3600) / 60))}`;
+  return dayOffset > 0 ? `${text} (+${dayOffset}d)` : text;
+}
+
+// Show a distance without useless decimals: 5 -> "5", 2.5 -> "2.5", 42.195 -> "42.2".
+function formatKm(km) {
+  // toFixed(1) gives text like "5.0"; Number() then String drops the ".0".
+  return String(Number(km.toFixed(1)));
+}
+
 
 // ============================================================
 // 2. CALCULATIONS
@@ -61,6 +87,24 @@ function calculatePace(inputs) {
 }
 
 
+// Split table: one row every `interval` km, plus a final row at the finish.
+// Assumes even pace (we don't know where the climbs are yet).
+function calculateSplits(distance, interval, averagePace) {
+  const splits = [];
+
+  // Multiply (i × interval) instead of adding interval again and again:
+  // repeated adding of decimals slowly builds up rounding errors (0.1 + 0.2 = 0.30000000000000004).
+  // The small 0.001 margin avoids a duplicate row when the distance is an exact multiple.
+  for (let i = 1; i * interval < distance - 0.001; i++) {
+    const km = i * interval;
+    splits.push({ km: km, elapsed: km * averagePace, isFinish: false });
+  }
+
+  splits.push({ km: distance, elapsed: distance * averagePace, isFinish: true });
+  return splits;
+}
+
+
 // ============================================================
 // 3. PAGE CODE
 // ============================================================
@@ -69,6 +113,7 @@ const form = document.getElementById('race-form');
 const messagesBox = document.getElementById('messages');
 const resultsSection = document.getElementById('results');
 const paceOutput = document.getElementById('pace-output');
+const splitsOutput = document.getElementById('splits-output');
 const mixTotalCell = document.getElementById('mix-total');
 
 // Read one form field as a number.
@@ -93,6 +138,9 @@ function readInputs() {
     targetM: targetM,
     targetS: targetS,
     targetSeconds: toSeconds(targetH, targetM, targetS),
+    splitInterval: readNumber('splitInterval'),
+    // Seconds after midnight, or null when no start time is given.
+    startClock: clockToSeconds(form.elements.startTime.value),
   };
 }
 
@@ -108,6 +156,9 @@ function validate(inputs) {
   }
   if (!(inputs.elevationFactor >= 0)) {
     errors.push('Elevation adjustment must be 0 or more.');
+  }
+  if (!(inputs.splitInterval > 0)) {
+    errors.push('Split interval must be more than 0 km.');
   }
 
   // Number.isInteger rejects decimals and NaN in one go.
@@ -157,6 +208,41 @@ function renderPace(inputs, pace) {
     </dl>`;
 }
 
+function renderSplits(inputs, splits) {
+  const hasClock = inputs.startClock !== null;
+
+  // Build one table row per split.
+  const rows = splits.map((split) => {
+    const label = split.isFinish ? `Finish (${formatKm(split.km)})` : formatKm(split.km);
+    const clockCell = hasClock
+      ? `<td>${formatClock(inputs.startClock + split.elapsed)}</td>`
+      : '';
+    return `
+      <tr${split.isFinish ? ' class="finish"' : ''}>
+        <th scope="row">${label}</th>
+        <td>${formatDuration(split.elapsed)}</td>
+        ${clockCell}
+      </tr>`;
+  }).join('');
+
+  // The wrapper lets the table scroll sideways on its own if it ever gets too wide,
+  // instead of making the whole page scroll.
+  splitsOutput.innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">km</th>
+            <th scope="col">Elapsed</th>
+            ${hasClock ? '<th scope="col">Clock</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="hint">Even pace assumed: on hilly courses, real splits will be slower on climbs and faster on descents.</p>`;
+}
+
 // Live total for the fuel mix percentages.
 function updateMixTotal() {
   const names = ['compotePct', 'gelPct', 'barPct', 'candyPct'];
@@ -182,7 +268,9 @@ form.addEventListener('submit', (event) => {
     return; // stop here: no results with bad inputs
   }
 
-  renderPace(inputs, calculatePace(inputs));
+  const pace = calculatePace(inputs);
+  renderPace(inputs, pace);
+  renderSplits(inputs, calculateSplits(inputs.distance, inputs.splitInterval, pace.averagePace));
   resultsSection.hidden = false;
 });
 
