@@ -1,8 +1,8 @@
-# SportHQ — personal training hub (v1)
+# SportHQ3 — personal training hub (v1)
 
 ## Context
 - Owner: Rom, amateur hybrid athlete in Brussels: 11-a-side football, running, trail, gym.
-- Replaces the Notion system "Sport HQ2".
+- Replaces the Notion system "Sport HQ2" (Sport HQ 1 and 2 were Notion; this is the third version).
 - v1 is single-user (me), but structure everything so it can become a public multi-user product
   ("SportHQ") for hybrid amateur athletes (club sport + running + gym).
 - Learning project: I know HTML/CSS/JS fundamentals, no React yet. Readable code > clever code.
@@ -73,4 +73,5 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   PB distance (window in rules.js); manual PB entries are kept for older records (e.g. 10k 46:00).
 - 2026-10-11: v1 scope extended to match Sport HQ2: football match stats, shoes, training blocks,
   all six sports.
-- 2026-10-11: project lives in `sporthq/` inside the `hq` repo (same pattern as `race-calculator/`).
+- 2026-10-11: project is named SportHQ3; the possible future public product is still called "SportHQ".
+- 2026-10-11: project lives in `sporthq3/` inside the `hq` repo (same pattern as `race-calculator/`).
