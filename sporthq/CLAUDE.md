@@ -45,6 +45,8 @@ Rules are data + small pure functions so future users can define their own.
 - Shoes: warn when a pair gets close to its replacement distance (default 700 km, configurable).
 - Default week: Mon explosivity/intervals, Tue easy run, Wed team training,
   Thu/Fri alternate easy run and upper body, Sat match, Sun rest.
+  The Thu/Fri swap flips every week (odd week numbers: Thu easy run / Fri upper body; even: the reverse).
+  It is an on/off switch in rules.js; when off, the week is always Thu easy run / Fri upper body.
 
 ## Out of scope for v1
 Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
