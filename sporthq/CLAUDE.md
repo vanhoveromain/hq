@@ -54,6 +54,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Plan first, then wait for approval. One milestone at a time.
 - After each milestone: stop, explain how to test it, wait for confirmation, then commit with a clear message.
 - Briefly explain key code decisions (and any JS/SQL concept that may be new).
+- Explain simply, "like I'm 10": plain words, everyday analogies, no unexplained jargon.
 - Ask instead of assuming. Point out flaws in the plan proactively.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
