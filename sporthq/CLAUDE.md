@@ -65,6 +65,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-11: race routine vs. existing sessions: a planned match wins. The routine never replaces it;
+  the app keeps the match and shows a warning instead.
 - 2026-10-11: personal bests are computed automatically from every run whose distance is close to a
   PB distance (window in rules.js); manual PB entries are kept for older records (e.g. 10k 46:00).
 - 2026-10-11: v1 scope extended to match Sport HQ2: football match stats, shoes, training blocks,
