@@ -26,10 +26,15 @@
 ## v1 modules
 1. **Weekly planner** — week view generated from a default template. Move, swap, cancel, mark done,
    link a session to an activity log entry.
-2. **Activity log** — date, type, duration, distance (optional), RPE 1–10, notes. No HR zones (I train by feel).
+2. **Activity log** — date, sport, session type, duration, distance (optional), elevation (optional), RPE 1–10, notes.
+   No HR zones (I train by feel). Sports (same as Sport HQ2): running, football, muscle training, biking,
+   swimming, stair stepper. Football matches carry a match card: opponent, minutes played, goals, assists
+   (season totals computed from it).
 3. **Races** — upcoming and past, distance, elevation, goal time, result, notes, pre-race checklist.
 4. **Body & goals** — weekly weigh-in with trend chart (target −5 kg), personal bests (10k: 46:00).
 5. **Dashboard** — this week plan vs done, next race countdown, weight trend, active rule warnings.
+6. **Shoes** — name, road/trail, purchase date, retired or not; runs link to a shoe; total km computed.
+7. **Training blocks** — name, start/end dates, goal/focus, recap; races link to a block.
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -59,4 +64,6 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-11: v1 scope extended to match Sport HQ2: football match stats, shoes, training blocks,
+  all six sports.
 - 2026-10-11: project lives in `sporthq/` inside the `hq` repo (same pattern as `race-calculator/`).
