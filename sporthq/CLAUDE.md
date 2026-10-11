@@ -42,6 +42,7 @@ Rules are data + small pure functions so future users can define their own.
 - Warn when two heavy-leg sessions fall on consecutive days.
 - Monday is leg explosivity OR intervals, never both.
 - Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
+- Shoes: warn when a pair gets close to its replacement distance (default 700 km, configurable).
 - Default week: Mon explosivity/intervals, Tue easy run, Wed team training,
   Thu/Fri alternate easy run and upper body, Sat match, Sun rest.
 
