@@ -1,0 +1,11 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Supabase CLI local state
+sporthq3/supabase/.temp/
+sporthq3/supabase/.branches/
+
+# OS / editor
+.DS_Store

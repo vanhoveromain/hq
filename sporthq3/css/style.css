@@ -1,0 +1,292 @@
+/* SportHQ3 — mobile-first styles.
+   "Mobile-first" = the base rules are for a phone; the @media rule at the
+   bottom adds tweaks for bigger screens. */
+
+/* ---------- Design tokens: change a colour once here, it changes everywhere ---------- */
+:root {
+  --bg: #f6f5f3;
+  --surface: #ffffff;
+  --text: #1c1917;
+  --muted: #6b6560;
+  --border: #e4e0db;
+  --accent: #c2410c;        /* sporty orange, dark enough for white text */
+  --accent-text: #ffffff;
+  --ok: #15803d;
+  --error: #b91c1c;
+  --radius: 12px;
+  --tabbar-height: 64px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Dark mode follows the phone's setting automatically. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171412;
+    --surface: #221e1b;
+    --text: #f5f2ef;
+    --muted: #a8a19a;
+    --border: #3a342f;
+    --accent: #fb923c;
+    --accent-text: #1c1917;
+    --ok: #4ade80;
+    --error: #f87171;
+  }
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 16px;            /* 16px+ stops iPhone zooming into inputs */
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2 { line-height: 1.2; margin: 0 0 8px; }
+h2 { font-size: 1.15rem; }
+p { margin: 0 0 12px; }
+.muted { color: var(--muted); }
+
+/* ---------- Top bar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.brand { font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
+.page-title { font-size: 1rem; font-weight: 600; margin: 0; }
+
+/* ---------- Main area ---------- */
+.view {
+  max-width: 720px;
+  margin: 0 auto;
+  /* bottom padding keeps content above the fixed tab bar */
+  padding: 16px 16px calc(var(--tabbar-height) + 24px + env(safe-area-inset-bottom));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card > :last-child { margin-bottom: 0; }
+.placeholder { border-style: dashed; }
+
+/* ---------- Forms ---------- */
+label { display: block; font-weight: 600; margin-bottom: 4px; }
+
+input {
+  width: 100%;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.button {
+  display: inline-block;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;            /* big enough for a thumb */
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.button.primary {
+  width: 100%;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.button:disabled { opacity: 0.6; cursor: default; }
+
+.status { margin: 12px 0 0; }
+.status:empty { display: none; }
+.status.ok { color: var(--ok); }
+.status.error { color: var(--error); }
+
+.login { margin-top: 24px; }
+
+/* ---------- Bottom tab bar ---------- */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  height: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+
+.tabbar a {
+  flex: 1;                     /* 5 equal-width tabs */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.tabbar a span { font-size: 1.3rem; line-height: 1; }
+.tabbar a.active { color: var(--accent); font-weight: 700; }
+
+/* ---------- Bigger screens ---------- */
+@media (min-width: 720px) {
+  .tabbar { justify-content: center; }
+  .tabbar a { flex: 0 0 120px; }
+}
+
+/* ---------- Activity log: list ---------- */
+.add-button { display: block; text-align: center; text-decoration: none; margin-bottom: 16px; line-height: 24px; }
+.load-more { width: 100%; }
+
+.week { margin-bottom: 20px; }
+.week-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.95rem;
+  margin: 0 4px 8px;
+}
+.week-title .muted { font-size: 0.85rem; font-weight: 400; }
+
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;            /* keeps the rounded corners on the first/last row */
+}
+.activity-list li + li { border-top: 1px solid var(--border); }
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 56px;
+}
+.activity-item:active { background: var(--bg); }
+.activity-icon { font-size: 1.5rem; }
+.activity-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.activity-main .muted { font-size: 0.85rem; }
+.activity-title { font-weight: 600; }
+.match-line { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+
+.rpe-chip {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Activity log: form ---------- */
+select, textarea {
+  width: 100%;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+textarea { resize: vertical; }
+
+[hidden] { display: none !important; }
+
+.hint { font-size: 0.85rem; color: var(--muted); margin: -8px 0 12px; }
+.speed { font-weight: 700; color: var(--accent); margin: -4px 0 12px; }
+.speed:empty { display: none; }
+
+fieldset { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
+
+.match-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--bg);
+}
+.match-card legend { padding: 0 4px; }
+.match-card input { background: var(--surface); }
+.row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.row-3 input { margin-bottom: 0; }
+
+/* RPE: ten big round buttons (5 per row). The real radio input is hidden
+   visually but still there, so the keyboard and screen readers work. */
+.rpe-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px; }
+.rpe-option { margin: 0; position: relative; }
+.rpe-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rpe-option span {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-weight: 700;
+  cursor: pointer;
+}
+.rpe-option input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.rpe-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rpe .hint { margin: 0; }
+
+.form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.form-actions .button.primary { flex: 1 1 100%; }
+.form-actions a.button { text-decoration: none; text-align: center; line-height: 24px; }
+.button.danger { color: var(--error); margin-left: auto; }
+
+/* ---------- Login: password + link ---------- */
+.login-alt { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.login-alt .button { width: 100%; }
+.login-alt p { margin-bottom: 8px; font-size: 0.9rem; }
+
+/* Present for the password manager, invisible on screen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

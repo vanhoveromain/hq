@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover lets the app use the full iPhone screen; the CSS
+       then adds padding for the notch / home bar (safe-area insets). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#c2410c">
+  <title>SportHQ3</title>
+  <!-- "Add to Home Screen": app name, icon, and open full screen (no browser bars) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="SportHQ3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">SportHQ3</span>
+    <h1 id="page-title" class="page-title"></h1>
+  </header>
+
+  <!-- Each screen ("view") is drawn inside <main> by its own JS module. -->
+  <main id="view" class="view" aria-live="polite">
+    <p class="muted">Loading…</p>
+  </main>
+
+  <!-- Bottom tab bar (thumb-friendly on a phone). Hidden until logged in. -->
+  <nav id="tabbar" class="tabbar" hidden>
+    <a href="#/dashboard" data-route="dashboard"><span aria-hidden="true">🏠</span>Home</a>
+    <a href="#/planner"   data-route="planner"><span aria-hidden="true">📅</span>Plan</a>
+    <a href="#/log"       data-route="log"><span aria-hidden="true">✍️</span>Log</a>
+    <a href="#/races"     data-route="races"><span aria-hidden="true">🏁</span>Races</a>
+    <a href="#/me"        data-route="me"><span aria-hidden="true">👤</span>Me</a>
+  </nav>
+
+  <!-- type="module" turns on ES modules (import/export between files).
+       Modules only work when the page is served over http, not file://. -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
