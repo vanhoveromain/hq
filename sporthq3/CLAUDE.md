@@ -67,6 +67,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: Supabase project `sporthq3` (EU region, free plan). Migrations are applied by pasting the
+  file into the dashboard SQL Editor (no CLI for now). Auth: Site URL + redirect `http://localhost:8000`,
+  my user created manually, public sign-ups disabled.
 - 2026-10-11: race routine vs. existing sessions: a planned match wins. The routine never replaces it;
   the app keeps the match and shows a warning instead.
 - 2026-10-11: personal bests are computed automatically from every run whose distance is close to a
