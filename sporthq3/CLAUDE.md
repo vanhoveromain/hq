@@ -43,7 +43,7 @@
 3. Activity log (incl. football match card) — done 2026-10-12
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
-6. Import Sport HQ2 history from Notion (re-runnable until switch day)
+6. Import Sport HQ2 history from Notion (re-runnable until switch day) — built 2026-10-12, awaiting import
 7. Weekly planner
 8. Rule warnings
 9. Races + checklist + race routine
@@ -89,6 +89,12 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: import details (see tools/notion-import/README.md): session types guessed from names
+  (Notion has no type field), Notion name kept as activity `title` (now shown and editable in the app);
+  football comes from planner sessions marked Done (no duration); match stats not imported (no date);
+  planner history not imported; race ideas without a date are allowed (race_date nullable).
+  A re-import never overwrites session_type, rpe or match cards. Imported gym/football activities
+  can be saved without a duration.
 - 2026-10-12: Notion import moved to step 6 (right after shoes). It must be re-runnable: imported rows
   carry their Notion page id (new `notion_id` column, additive migration); a re-import adds new, updates
   changed and removes deleted Notion rows, never touching rows created in the app. Until switch day,

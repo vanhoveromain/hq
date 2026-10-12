@@ -200,6 +200,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .activity-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .activity-main .muted { font-size: 0.85rem; }
 .activity-title { font-weight: 600; }
+.activity-subtitle { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .match-line { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
 
 .rpe-chip {
