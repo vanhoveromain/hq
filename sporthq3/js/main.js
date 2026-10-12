@@ -11,14 +11,17 @@ import * as plannerView from "./views/planner.js";
 import * as logView from "./views/log.js";
 import * as racesView from "./views/races.js";
 import * as meView from "./views/me.js";
+import * as shoesView from "./views/shoes.js";
 
 // The list of screens: address name -> title + module that draws it.
+// `tab` = which bottom tab lights up, for screens that live "inside" another tab.
 const routes = {
   dashboard: { title: "Home", view: dashboardView },
   planner:   { title: "Weekly plan", view: plannerView },
   log:       { title: "Activity log", view: logView },
   races:     { title: "Races", view: racesView },
   me:        { title: "Me", view: meView },
+  shoes:     { title: "Shoes", view: shoesView, tab: "me" },
 };
 const DEFAULT_ROUTE = "dashboard";
 
@@ -66,7 +69,7 @@ function render() {
   tabbarEl.hidden = false;
   titleEl.textContent = routes[name].title;
   for (const link of tabbarEl.querySelectorAll("a")) {
-    link.classList.toggle("active", link.dataset.route === name);
+    link.classList.toggle("active", link.dataset.route === (routes[name].tab || name));
   }
   window.scrollTo(0, 0); // a new screen starts at the top
   routes[name].view.render(viewEl, { user: currentUser, params });

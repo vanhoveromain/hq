@@ -9,7 +9,7 @@
 // have data, change a label freely but don't rename a key.
 //
 // Later steps add more to this file: the default week, warnings, race
-// routine, shoe replacement distance, personal-best distances.
+// routine, personal-best distances.
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -24,6 +24,7 @@ export const CATEGORIES = {
 // Which extra boxes the activity form shows for a sport:
 //   distance  -> km          elevation -> D+ in metres
 //   stairs    -> stairs climbed
+//   shoe      -> which pair of shoes (see SHOE_RULES below)
 // speed: how speed is shown — "per_km" (4:36 /km), "kmh" (28.5 km/h),
 //        "per_100m" (1:52 /100m), or null (not shown)
 // matchCard: true on a session type -> show opponent, minutes played, goals,
@@ -31,7 +32,7 @@ export const CATEGORIES = {
 export const SPORTS = [
   {
     key: "running", label: "Running", icon: "🏃",
-    fields: ["distance", "elevation"], speed: "per_km",
+    fields: ["distance", "elevation", "shoe"], speed: "per_km",
     sessionTypes: [
       { key: "easy_run",        label: "Easy run (EF)",   category: "easy_run" },
       { key: "long_run",        label: "Long run",        category: "other" },
@@ -88,6 +89,26 @@ export const SPORTS = [
 export const RPE_LABELS = {
   1: "Very easy", 2: "Easy", 3: "Easy", 4: "Comfortable", 5: "Moderate",
   6: "Somewhat hard", 7: "Hard", 8: "Very hard", 9: "Extremely hard", 10: "Max effort",
+};
+
+
+// ---------- Shoes ----------
+// Running shoes wear out with distance. warnKm = start warning, replaceKm = time for a new pair.
+export const SHOE_RULES = {
+  warnKm: 600,
+  replaceKm: 700,
+};
+
+// "ok" | "warn" | "replace" for a pair that has done `km` kilometres.
+export function shoeStatus(km) {
+  if (km >= SHOE_RULES.replaceKm) return "replace";
+  if (km >= SHOE_RULES.warnKm) return "warn";
+  return "ok";
+}
+
+export const SHOE_SURFACES = {
+  road:  { label: "Road" },
+  trail: { label: "Trail" },
 };
 
 

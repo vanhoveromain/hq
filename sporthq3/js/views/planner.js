@@ -1,10 +1,10 @@
-// Placeholder: this screen is built in step 6.
+// Placeholder: this screen is built in step 7.
 
 export function render(container) {
   container.innerHTML = `
     <section class="card placeholder">
       <p>Your weekly plan, filled from your default week.</p>
-      <p class="muted">Coming in step 6.</p>
+      <p class="muted">Coming in step 7.</p>
     </section>
   `;
 }

@@ -7,6 +7,10 @@ const MIN_PASSWORD_LENGTH = 12;
 
 export function render(container, { user }) {
   container.innerHTML = `
+    <nav class="card menu" aria-label="More">
+      <a href="#/shoes">👟 Shoes <span aria-hidden="true">›</span></a>
+    </nav>
+
     <section class="card">
       <h2>Account</h2>
       <p>Logged in as <strong class="email"></strong></p>
@@ -32,7 +36,7 @@ export function render(container, { user }) {
     </section>
 
     <section class="card placeholder">
-      <p>Body &amp; goals, shoes and training blocks will live here (steps 5, 9, 10).</p>
+      <p>Training blocks and body &amp; goals will live here too (steps 10 and 11).</p>
     </section>
   `;
 
