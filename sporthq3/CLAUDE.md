@@ -39,9 +39,9 @@
 
 ## Milestones
 1. Supabase setup (tables, RLS, auth) — done 2026-10-12
-2. App shell + magic-link login — done 2026-10-12
+2. App shell + login — done 2026-10-12
 3. Activity log (incl. football match card) — done 2026-10-12
-4. Hosting (put the app online so it works on my phone) — built 2026-10-12, awaiting merge + test
+4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes
 6. Weekly planner
 7. Rule warnings
