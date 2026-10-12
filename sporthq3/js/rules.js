@@ -95,8 +95,8 @@ export const RPE_LABELS = {
 // ---------- Shoes ----------
 // Running shoes wear out with distance. warnKm = start warning, replaceKm = time for a new pair.
 export const SHOE_RULES = {
-  warnKm: 600,
-  replaceKm: 700,
+  warnKm: 700,
+  replaceKm: 800,
 };
 
 // "ok" | "warn" | "replace" for a pair that has done `km` kilometres.

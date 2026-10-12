@@ -58,7 +58,7 @@ Rules are data + small pure functions so future users can define their own.
 - Warn when two heavy-leg sessions fall on consecutive days.
 - Monday is leg explosivity OR intervals, never both.
 - Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
-- Shoes: warn when a pair gets close to its replacement distance (default 700 km, configurable).
+- Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
 - Default week: Mon explosivity/intervals, Tue easy run, Wed team training,
   Thu/Fri alternate easy run and upper body, Sat match, Sun rest.
   The Thu/Fri swap flips every week (odd week numbers: Thu easy run / Fri upper body; even: the reverse).
@@ -95,8 +95,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   Notion is the source of truth (log real sessions there; the app is for testing). Import = generated
   SQL file pasted into the SQL Editor (no secret key leaves Supabase).
 - 2026-10-12: shoes have no "km before the app" field: the km come from imported runs. Km are
-  computed in the browser from linked runs (not stored). Warn at 600 km, replace at 700 (SHOE_RULES in
-  rules.js). Shoe picker only for running; pre-selects the last pair used; retired pairs hidden.
+  computed in the browser from linked runs (not stored). Warn at 700 km, replace at 800 (SHOE_RULES in
+  rules.js; changed from 600/700 on 2026-10-12). Shoe picker only for running; pre-selects the last pair used; retired pairs hidden.
   Screens that live inside a tab use `tab:` in the routes list (Shoes -> Me tab).
 - 2026-10-12: hosting on GitHub Pages (repo is public, Pages already enabled) from `main`.
   Web app manifest + icons for "Add to Home Screen".
