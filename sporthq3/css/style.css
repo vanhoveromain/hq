@@ -138,7 +138,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   background: var(--surface);
   border-top: 1px solid var(--border);
 }
-.tabbar[hidden] { display: none; }
+
 
 .tabbar a {
   flex: 1;                     /* 5 equal-width tabs */
@@ -159,3 +159,116 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .tabbar { justify-content: center; }
   .tabbar a { flex: 0 0 120px; }
 }
+
+/* ---------- Activity log: list ---------- */
+.add-button { display: block; text-align: center; text-decoration: none; margin-bottom: 16px; line-height: 24px; }
+.load-more { width: 100%; }
+
+.week { margin-bottom: 20px; }
+.week-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.95rem;
+  margin: 0 4px 8px;
+}
+.week-title .muted { font-size: 0.85rem; font-weight: 400; }
+
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;            /* keeps the rounded corners on the first/last row */
+}
+.activity-list li + li { border-top: 1px solid var(--border); }
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 56px;
+}
+.activity-item:active { background: var(--bg); }
+.activity-icon { font-size: 1.5rem; }
+.activity-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.activity-main .muted { font-size: 0.85rem; }
+.activity-title { font-weight: 600; }
+.match-line { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+
+.rpe-chip {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Activity log: form ---------- */
+select, textarea {
+  width: 100%;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+textarea { resize: vertical; }
+
+[hidden] { display: none !important; }
+
+.hint { font-size: 0.85rem; color: var(--muted); margin: -8px 0 12px; }
+.speed { font-weight: 700; color: var(--accent); margin: -4px 0 12px; }
+.speed:empty { display: none; }
+
+fieldset { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
+
+.match-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--bg);
+}
+.match-card legend { padding: 0 4px; }
+.match-card input { background: var(--surface); }
+.row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.row-3 input { margin-bottom: 0; }
+
+/* RPE: ten big round buttons (5 per row). The real radio input is hidden
+   visually but still there, so the keyboard and screen readers work. */
+.rpe-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px; }
+.rpe-option { margin: 0; position: relative; }
+.rpe-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rpe-option span {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-weight: 700;
+  cursor: pointer;
+}
+.rpe-option input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.rpe-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rpe .hint { margin: 0; }
+
+.form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.form-actions .button.primary { flex: 1 1 100%; }
+.form-actions a.button { text-decoration: none; text-align: center; line-height: 24px; }
+.button.danger { color: var(--error); margin-left: auto; }

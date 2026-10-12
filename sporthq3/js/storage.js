@@ -65,3 +65,97 @@ export function onAuthChange(callback) {
     setTimeout(() => callback(session ? session.user : null), 0);
   });
 }
+
+
+// ---------------------------------------------------------------------
+// Activities (+ the football "match card" stapled to a match)
+//
+// Rows travel through the app with their database column names
+// (activity_date, duration_s…), so what you see in the code matches the
+// table in Supabase. A loaded activity looks like:
+//   { id, activity_date, sport, session_type, duration_s, distance_km,
+//     elevation_m, stairs_climbed, rpe, notes, …, match_stats: {…} | null }
+// ---------------------------------------------------------------------
+
+// The columns we're allowed to write. Anything else on the object
+// (id, user_id, created_at, match_stats) is ignored when saving.
+const ACTIVITY_COLUMNS = [
+  "activity_date", "sport", "session_type", "title", "duration_s",
+  "distance_km", "elevation_m", "stairs_climbed", "rpe", "notes",
+  "shoe_id", "race_id",
+];
+const MATCH_COLUMNS = ["opponent", "minutes_played", "goals", "assists"];
+
+function pick(object, keys) {
+  const result = {};
+  for (const key of keys) {
+    if (key in object) result[key] = object[key];
+  }
+  return result;
+}
+
+// Supabase returns a one-to-one link either as an object or as a list with
+// one item, depending on how it reads the tables. Always give back object|null.
+function withMatchStats(row) {
+  const stats = Array.isArray(row.match_stats) ? row.match_stats[0] : row.match_stats;
+  return { ...row, match_stats: stats || null };
+}
+
+// Newest first. `offset` skips rows already shown ("Load more").
+// The select text "*, match_stats(*)" means: every column of the activity,
+// plus every column of its match card if it has one.
+export async function listActivities({ limit = 30, offset = 0 } = {}) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*, match_stats(*)")
+    .order("activity_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return data.map(withMatchStats);
+}
+
+export async function getActivity(id) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*, match_stats(*)")
+    .eq("id", id)
+    .maybeSingle(); // null instead of an error when it doesn't exist
+  if (error) throw error;
+  return data ? withMatchStats(data) : null;
+}
+
+// Creates (no id) or updates (with id) an activity, then its match card.
+// `matchStats` = { opponent, minutes_played, goals, assists } or null.
+// null removes an existing card (e.g. a "match" changed into "training").
+//
+// Note: these are two separate saves. If the second one fails, the activity
+// is saved without its card; the error is shown and saving again fixes it.
+export async function saveActivity(activity, matchStats) {
+  const values = pick(activity, ACTIVITY_COLUMNS);
+
+  const query = activity.id
+    ? supabase.from("activities").update(values).eq("id", activity.id)
+    : supabase.from("activities").insert(values);
+  const { data: saved, error } = await query.select().single();
+  if (error) throw error;
+
+  if (matchStats) {
+    // upsert = "insert, or update if a card for this activity already exists"
+    const { error: statsError } = await supabase
+      .from("match_stats")
+      .upsert({ activity_id: saved.id, ...pick(matchStats, MATCH_COLUMNS) });
+    if (statsError) throw statsError;
+  } else {
+    const { error: deleteError } = await supabase
+      .from("match_stats").delete().eq("activity_id", saved.id);
+    if (deleteError) throw deleteError;
+  }
+  return saved;
+}
+
+// The match card is deleted automatically with it (on delete cascade).
+export async function deleteActivity(id) {
+  const { error } = await supabase.from("activities").delete().eq("id", id);
+  if (error) throw error;
+}

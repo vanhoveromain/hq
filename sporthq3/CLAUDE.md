@@ -39,7 +39,7 @@
 ## Milestones
 1. Supabase setup (tables, RLS, auth) — done 2026-10-12
 2. App shell + magic-link login — done 2026-10-12
-3. Activity log (incl. football match card)
+3. Activity log (incl. football match card) — built 2026-10-12, awaiting test
 4. Hosting (put the app online so it works on my phone)
 5. Shoes
 6. Weekly planner
@@ -70,7 +70,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Dates: weeks start Monday; store calendar days as Postgres `date` (no timezone surprises).
 - Durations/times stored as integer seconds; formatted for display in one helper.
 - Enumerations stored as `text` + `CHECK` constraint (easier to evolve than Postgres enums).
-- Table and column names: `snake_case`. JS: `camelCase`. One module per view in `js/views/`.
+- Table and column names: `snake_case`. JS variables/functions: `camelCase`. Data rows keep their
+  database column names in JS (`activity.duration_s`) so code and tables match. One module per view in `js/views/`.
+- Anything the user typed is inserted into HTML via `escapeHtml()` (or `textContent`).
 - Comments where logic isn't obvious. Small functions. No clever one-liners.
 
 ## How we work
@@ -82,6 +84,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: activity log: sports + session types + categories live in rules.js (from the Sport HQ2
+  templates; trail and D+ = heavy legs; long run, futsal, morning routine, bike, swim, stairs = other).
+  Form shows only the fields a sport uses; hidden fields are saved as null. Duration typed as
+  `45:00` / `1:02:30` ("." also works for the iPhone keypad). RPE optional. List: 30 per page, grouped by week.
 - 2026-10-12: app shell: single page with a hash router (`#/planner`), bottom tab bar
   Home / Plan / Log / Races / Me (body, shoes, blocks and export live under Me).
   supabase-js pinned to 2.117.2 (jsDelivr `+esm`). Magic link uses the default (implicit) flow so a

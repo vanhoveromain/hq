@@ -30,10 +30,14 @@ let currentUser = null;
 let loginMessage = ""; // e.g. "This link has expired", shown on the login screen
 
 
-// Reads "#/planner" -> "planner". Anything unknown -> null.
-function currentRouteName() {
-  const name = window.location.hash.replace(/^#\/?/, "");
-  return routes[name] ? name : null;
+// Splits the address after "#" into the screen name and extra parts:
+//   "#/log"         -> { name: "log", params: [] }
+//   "#/log/new"     -> { name: "log", params: ["new"] }
+//   "#/log/abc-123" -> { name: "log", params: ["abc-123"] }  (edit that activity)
+// Unknown screen -> name is null.
+function currentRoute() {
+  const [name, ...params] = window.location.hash.replace(/^#\/?/, "").split("/");
+  return { name: routes[name] ? name : null, params };
 }
 
 // Turns "Email link is invalid or has expired" into a message with a next step.
@@ -51,7 +55,7 @@ function render() {
     return;
   }
 
-  const name = currentRouteName();
+  const { name, params } = currentRoute();
   if (!name) {
     // Unknown or empty address: go to the default screen. replaceState
     // swaps the address without adding a "back" step in the browser.
@@ -64,7 +68,8 @@ function render() {
   for (const link of tabbarEl.querySelectorAll("a")) {
     link.classList.toggle("active", link.dataset.route === name);
   }
-  routes[name].view.render(viewEl, { user: currentUser });
+  window.scrollTo(0, 0); // a new screen starts at the top
+  routes[name].view.render(viewEl, { user: currentUser, params });
 }
 
 async function start() {
