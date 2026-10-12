@@ -67,6 +67,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: app shell: single page with a hash router (`#/planner`), bottom tab bar
+  Home / Plan / Log / Races / Me (body, shoes, blocks and export live under Me).
+  supabase-js pinned to 2.117.2 (jsDelivr `+esm`). Magic link uses the default (implicit) flow so a
+  link works in any browser; `shouldCreateUser: false`. Local dev: `python3 -m http.server 8000`.
 - 2026-10-12: Supabase project `sporthq3` (EU region, free plan). Migrations are applied by pasting the
   file into the dashboard SQL Editor (no CLI for now). Auth: Site URL + redirect `http://localhost:8000`,
   my user created manually, public sign-ups disabled.
