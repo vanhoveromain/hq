@@ -39,8 +39,8 @@
 ## Milestones
 1. Supabase setup (tables, RLS, auth) — done 2026-10-12
 2. App shell + magic-link login — done 2026-10-12
-3. Activity log (incl. football match card) — built 2026-10-12, awaiting test
-4. Hosting (put the app online so it works on my phone)
+3. Activity log (incl. football match card) — done 2026-10-12
+4. Hosting (put the app online so it works on my phone) — built 2026-10-12, awaiting merge + test
 5. Shoes
 6. Weekly planner
 7. Rule warnings
@@ -76,6 +76,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Comments where logic isn't obvious. Small functions. No clever one-liners.
 
 ## How we work
+- Workflow: build on the working branch (the "draft") -> test locally -> pull request -> merge into
+  `main` -> GitHub Pages publishes `main` automatically. Live app: https://vanhoveromain.github.io/hq/sporthq3/
+- Database migrations are NOT drafts: one database serves local and live. Always flag them, and make
+  them backward-compatible (add first, remove only after the new code is live).
 - Plan first, then wait for approval. One milestone at a time.
 - After each milestone: stop, explain how to test it, wait for confirmation, then commit with a clear message.
 - Briefly explain key code decisions (and any JS/SQL concept that may be new).
@@ -84,6 +88,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: hosting on GitHub Pages (repo is public, Pages already enabled) from `main`.
+  Login email contains a magic link AND a code; the app accepts either (code = needed for the iPhone
+  home-screen app, which doesn't share Safari's login). Web app manifest + icons for "Add to Home Screen".
 - 2026-10-12: for a football match the Duration box is hidden; "Minutes played" (required, 0–200) is
   saved as the match card value AND as the activity duration (0 min -> duration empty).
 - 2026-10-12: activity log: sports + session types + categories live in rules.js (from the Sport HQ2

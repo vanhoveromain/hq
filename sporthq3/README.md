@@ -3,6 +3,9 @@
 Personal training hub: weekly planner, activity log, races, shoes, body & goals.
 Vanilla HTML/CSS/JS + Supabase. Brief, rules and decisions: see `CLAUDE.md`.
 
+**Live:** https://vanhoveromain.github.io/hq/sporthq3/ (published from `main` by GitHub Pages).
+On iPhone: open it in Safari → Share → Add to Home Screen. Log in with the **code** from the email.
+
 ## Run it on your Mac
 
 The app must be opened through a small local web server (not by double-clicking
@@ -31,5 +34,8 @@ The app must be opened through a small local web server (not by double-clicking
 | `js/config.js` | Supabase URL + publishable key (public by design) |
 | `js/storage.js` | The only file that talks to Supabase |
 | `js/main.js` | Starts the app, login check, switches screens (hash router) |
+| `js/rules.js` | The rulebook: sports, session types, categories (later: training rules) |
+| `js/utils/*.js` | Date and formatting helpers |
 | `js/views/*.js` | One file per screen |
+| `manifest.webmanifest`, `icons/` | Name and icon for "Add to Home Screen" |
 | `supabase/migrations/` | SQL that builds the database; paste into Supabase's SQL Editor |

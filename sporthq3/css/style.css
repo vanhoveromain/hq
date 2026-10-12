@@ -272,3 +272,17 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .form-actions .button.primary { flex: 1 1 100%; }
 .form-actions a.button { text-decoration: none; text-align: center; line-height: 24px; }
 .button.danger { color: var(--error); margin-left: auto; }
+
+/* ---------- Login: code ---------- */
+.code-form { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.code-form input { font-size: 1.25rem; letter-spacing: 0.2em; text-align: center; }
+.link-button {
+  background: none;
+  border: 0;
+  padding: 8px 0 0;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
