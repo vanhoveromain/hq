@@ -39,18 +39,18 @@
 
 ## Milestones
 1. Supabase setup (tables, RLS, auth) — done 2026-10-12
-2. App shell + magic-link login — done 2026-10-12
+2. App shell + login — done 2026-10-12
 3. Activity log (incl. football match card) — done 2026-10-12
-4. Hosting (put the app online so it works on my phone) — built 2026-10-12, awaiting merge + test
-5. Shoes
-6. Weekly planner
-7. Rule warnings
-8. Races + checklist + race routine
-9. Training blocks
-10. Body & goals (weigh-ins, trend chart, PBs)
-11. Dashboard (incl. football season totals, shoe km)
-12. JSON export + polish
-13. (optional) Import Sport HQ2 history from Notion
+4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
+5. Shoes — done 2026-10-12
+6. Import Sport HQ2 history from Notion (re-runnable until switch day)
+7. Weekly planner
+8. Rule warnings
+9. Races + checklist + race routine
+10. Training blocks
+11. Body & goals (weigh-ins, trend chart, PBs)
+12. Dashboard (incl. football season totals, shoe km)
+13. JSON export + polish
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -58,7 +58,7 @@ Rules are data + small pure functions so future users can define their own.
 - Warn when two heavy-leg sessions fall on consecutive days.
 - Monday is leg explosivity OR intervals, never both.
 - Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
-- Shoes: warn when a pair gets close to its replacement distance (default 700 km, configurable).
+- Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
 - Default week: Mon explosivity/intervals, Tue easy run, Wed team training,
   Thu/Fri alternate easy run and upper body, Sat match, Sun rest.
   The Thu/Fri swap flips every week (odd week numbers: Thu easy run / Fri upper body; even: the reverse).
@@ -89,6 +89,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: Notion import moved to step 6 (right after shoes). It must be re-runnable: imported rows
+  carry their Notion page id (new `notion_id` column, additive migration); a re-import adds new, updates
+  changed and removes deleted Notion rows, never touching rows created in the app. Until switch day,
+  Notion is the source of truth (log real sessions there; the app is for testing). Import = generated
+  SQL file pasted into the SQL Editor (no secret key leaves Supabase).
+- 2026-10-12: shoes have no "km before the app" field: the km come from imported runs. Km are
+  computed in the browser from linked runs (not stored). Warn at 700 km, replace at 800 (SHOE_RULES in
+  rules.js; changed from 600/700 on 2026-10-12). Shoe picker only for running; pre-selects the last pair used; retired pairs hidden.
+  Screens that live inside a tab use `tab:` in the routes list (Shoes -> Me tab).
 - 2026-10-12: hosting on GitHub Pages (repo is public, Pages already enabled) from `main`.
   Web app manifest + icons for "Add to Home Screen".
 - 2026-10-12: login = email + password, magic link as backup. Reason: the iPhone home-screen app

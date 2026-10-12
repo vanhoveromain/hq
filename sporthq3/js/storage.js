@@ -173,3 +173,75 @@ export async function deleteActivity(id) {
   const { error } = await supabase.from("activities").delete().eq("id", id);
   if (error) throw error;
 }
+
+
+// ---------------------------------------------------------------------
+// Shoes
+// A shoe row: { id, name, surface ("road"|"trail"|null), purchase_date,
+//               retired (true/false), notes }
+// Its km are not stored: they're added up from the runs linked to it,
+// so they're always right (see getShoeDistances).
+// ---------------------------------------------------------------------
+
+const SHOE_COLUMNS = ["name", "surface", "purchase_date", "retired", "notes"];
+
+// Pairs still in use first, then newest purchase first.
+export async function listShoes() {
+  const { data, error } = await supabase
+    .from("shoes")
+    .select("*")
+    .order("retired", { ascending: true })
+    .order("purchase_date", { ascending: false, nullsFirst: false })
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function getShoe(id) {
+  const { data, error } = await supabase.from("shoes").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function saveShoe(shoe) {
+  const values = pick(shoe, SHOE_COLUMNS);
+  const query = shoe.id
+    ? supabase.from("shoes").update(values).eq("id", shoe.id)
+    : supabase.from("shoes").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Runs that used this pair keep existing; they just lose the link
+// (the database sets their shoe_id to empty: "on delete set null").
+export async function deleteShoe(id) {
+  const { error } = await supabase.from("shoes").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Returns { [shoeId]: { km, runs } } for every pair that has runs.
+//
+// Supabase sends at most 1,000 rows per request, so we ask page by page
+// until a page comes back short. With a few hundred runs that's 1 request.
+export async function getShoeDistances() {
+  const PAGE = 1000;
+  const totals = {};
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("activities")
+      .select("shoe_id, distance_km")
+      .not("shoe_id", "is", null)
+      .order("id")                       // a fixed order so pages don't overlap
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+
+    for (const row of data) {
+      const total = totals[row.shoe_id] || (totals[row.shoe_id] = { km: 0, runs: 0 });
+      total.km += Number(row.distance_km) || 0;
+      total.runs += 1;
+    }
+    if (data.length < PAGE) break;
+  }
+  return totals;
+}

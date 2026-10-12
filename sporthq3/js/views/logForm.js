@@ -2,34 +2,47 @@
 // It shows only the boxes that make sense for the chosen sport, using the
 // `fields`, `speed` and `matchCard` settings from rules.js.
 
-import { getActivity, saveActivity, deleteActivity } from "../storage.js";
+import { getActivity, saveActivity, deleteActivity, listShoes } from "../storage.js";
 import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js";
 import { todayISO } from "../utils/dates.js";
 import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
+const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
 
 export async function render(container, { activityId }) {
   let activity = null;
-  if (activityId) {
-    container.innerHTML = `<p class="muted">Loading…</p>`;
-    try {
-      activity = await getActivity(activityId);
-    } catch (error) {
-      container.innerHTML = `<p class="status error"></p>`;
-      container.querySelector(".status").textContent = "Could not load: " + error.message;
-      return;
-    }
-    if (!activity) {
-      container.innerHTML = `<section class="card"><p>This activity doesn't exist (any more).</p>
-        <a class="button" href="#/log">Back to the log</a></section>`;
-      return;
-    }
+  let shoes = [];
+  container.innerHTML = `<p class="muted">Loading…</p>`;
+  try {
+    // Load the activity (when editing) and the shoe list at the same time.
+    [activity, shoes] = await Promise.all([
+      activityId ? getActivity(activityId) : null,
+      listShoes(),
+    ]);
+  } catch (error) {
+    container.innerHTML = `<p class="status error"></p>`;
+    container.querySelector(".status").textContent = "Could not load: " + error.message;
+    return;
   }
-  drawForm(container, activity);
+  if (activityId && !activity) {
+    container.innerHTML = `<section class="card"><p>This activity doesn't exist (any more).</p>
+      <a class="button" href="#/log">Back to the log</a></section>`;
+    return;
+  }
+  drawForm(container, activity, shoes);
 }
 
-function drawForm(container, activity) {
+// The shoe list for the picker: pairs in use, plus the pair already linked
+// to this activity even if it's retired now (so editing an old run keeps it).
+function shoeOptionsHtml(shoes, selectedId) {
+  const choices = shoes.filter((shoe) => !shoe.retired || shoe.id === selectedId);
+  return `<option value="">— No shoe —</option>` + choices
+    .map((shoe) => `<option value="${shoe.id}" ${shoe.id === selectedId ? "selected" : ""}>${escapeHtml(shoe.name)}${shoe.retired ? " (retired)" : ""}</option>`)
+    .join("");
+}
+
+function drawForm(container, activity, shoes) {
   const isEdit = Boolean(activity);
   const a = activity || {
     activity_date: todayISO(),
@@ -70,6 +83,11 @@ function drawForm(container, activity) {
         <label for="f-elevation">Climbing, D+ (m)</label>
         <input id="f-elevation" name="elevation_m" type="number" inputmode="numeric" min="0" step="1"
                value="${a.elevation_m ?? ""}">
+      </div>
+
+      <div data-field="shoe">
+        <label for="f-shoe">Shoes</label>
+        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : readLastShoe(shoes))}</select>
       </div>
 
       <div data-field="stairs">
@@ -172,6 +190,7 @@ function drawForm(container, activity) {
       if (isEdit) result.activity.id = activity.id;
       await saveActivity(result.activity, result.matchStats);
       saveLastSport(result.activity.sport);
+      if (result.activity.shoe_id) saveLastShoe(result.activity.shoe_id);
       window.location.hash = "#/log"; // back to the list
     } catch (error) {
       showStatus(status, "Could not save: " + error.message, "error");
@@ -278,6 +297,7 @@ function readForm(form) {
     stairs_climbed: stairs === null ? null : Math.round(stairs),
     rpe: chosenRpe ? Number(chosenRpe.value) : null,
     notes: f.notes.value.trim() || null,
+    shoe_id: shows("shoe") ? (f.shoe_id.value || null) : null,
   };
 
   let matchStats = null;
@@ -308,4 +328,14 @@ function readLastSport() {
 }
 function saveLastSport(key) {
   try { localStorage.setItem(LAST_SPORT_KEY, key); } catch { /* not important */ }
+}
+
+// Only suggest the last shoe if it still exists and isn't retired.
+function readLastShoe(shoes) {
+  let id = null;
+  try { id = localStorage.getItem(LAST_SHOE_KEY); } catch { /* ignore */ }
+  return shoes.some((shoe) => shoe.id === id && !shoe.retired) ? id : null;
+}
+function saveLastShoe(id) {
+  try { localStorage.setItem(LAST_SHOE_KEY, id); } catch { /* not important */ }
 }
