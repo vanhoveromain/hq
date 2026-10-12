@@ -42,7 +42,7 @@
 2. App shell + login — done 2026-10-12
 3. Activity log (incl. football match card) — done 2026-10-12
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
-5. Shoes — built 2026-10-12, awaiting test
+5. Shoes — done 2026-10-12
 6. Import Sport HQ2 history from Notion (re-runnable until switch day)
 7. Weekly planner
 8. Rule warnings
