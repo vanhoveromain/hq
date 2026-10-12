@@ -11,7 +11,8 @@
 - Vanilla HTML, CSS, JavaScript (ES modules). No frameworks, no build step, no npm runtime deps.
 - Data: Supabase (Postgres) via supabase-js loaded from a CDN (pinned version).
 - **All Supabase access goes through `js/storage.js`.** UI code never imports supabase-js directly.
-- Auth: email magic link, single user. Row Level Security (RLS) on every table, scoped to `auth.uid()`.
+- Auth: email + password (main way in, works in the iPhone home-screen app) and magic link (backup),
+  single user. Row Level Security (RLS) on every table, scoped to `auth.uid()`.
 - Every table has a `user_id` column (needed for RLS now, and for multi-user later).
 - Schema changes only via SQL migrations in `supabase/migrations/`, never ad-hoc in the dashboard.
 - JSON export for backup.
@@ -89,8 +90,11 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 
 ## Decisions log
 - 2026-10-12: hosting on GitHub Pages (repo is public, Pages already enabled) from `main`.
-  Login email contains a magic link AND a code; the app accepts either (code = needed for the iPhone
-  home-screen app, which doesn't share Safari's login). Web app manifest + icons for "Add to Home Screen".
+  Web app manifest + icons for "Add to Home Screen".
+- 2026-10-12: login = email + password, magic link as backup. Reason: the iPhone home-screen app
+  doesn't share Safari's login and email links always open in Safari. Email codes were rejected
+  because editing Supabase's email template requires custom SMTP. Password is set in the app
+  (Me -> Password, min 12 characters) after a first login by link.
 - 2026-10-12: for a football match the Duration box is hidden; "Minutes played" (required, 0–200) is
   saved as the match card value AND as the activity duration (0 min -> duration empty).
 - 2026-10-12: activity log: sports + session types + categories live in rules.js (from the Sport HQ2

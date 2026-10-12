@@ -51,13 +51,18 @@ export async function sendMagicLink(email) {
   if (error) throw error;
 }
 
-// Logs in with the code from the email (same email as the magic link).
-// Useful on iPhone: a home-screen app doesn't share its login with Safari,
-// so clicking the link would log in Safari instead of the app.
-export async function verifyEmailCode(email, code) {
-  const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+// Logs in with email + password (works inside the iPhone home-screen app,
+// which can't receive the magic link because links always open in Safari).
+export async function signInWithPassword(email, password) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   // Success: onAuthChange (below) fires and main.js shows the app.
+}
+
+// Sets or changes the password of the logged-in user.
+export async function setPassword(password) {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
 }
 
 export async function signOut() {

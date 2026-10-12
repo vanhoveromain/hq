@@ -4,7 +4,8 @@ Personal training hub: weekly planner, activity log, races, shoes, body & goals.
 Vanilla HTML/CSS/JS + Supabase. Brief, rules and decisions: see `CLAUDE.md`.
 
 **Live:** https://vanhoveromain.github.io/hq/sporthq3/ (published from `main` by GitHub Pages).
-On iPhone: open it in Safari → Share → Add to Home Screen. Log in with the **code** from the email.
+On iPhone: open it in Safari → Share → Add to Home Screen, then log in with your **password**
+(set it once under Me → Password after a first login by email link).
 
 ## Run it on your Mac
 

@@ -273,16 +273,20 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .form-actions a.button { text-decoration: none; text-align: center; line-height: 24px; }
 .button.danger { color: var(--error); margin-left: auto; }
 
-/* ---------- Login: code ---------- */
-.code-form { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-.code-form input { font-size: 1.25rem; letter-spacing: 0.2em; text-align: center; }
-.link-button {
-  background: none;
+/* ---------- Login: password + link ---------- */
+.login-alt { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.login-alt .button { width: 100%; }
+.login-alt p { margin-bottom: 8px; font-size: 0.9rem; }
+
+/* Present for the password manager, invisible on screen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
   border: 0;
-  padding: 8px 0 0;
-  font: inherit;
-  font-size: 0.9rem;
-  color: var(--accent);
-  text-decoration: underline;
-  cursor: pointer;
 }
