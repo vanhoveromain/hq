@@ -52,10 +52,13 @@ function drawForm(container, activity) {
       <label for="f-type">Session type</label>
       <select id="f-type" name="session_type"></select>
 
-      <label for="f-duration">Duration</label>
-      <input id="f-duration" name="duration" type="text" inputmode="decimal" autocomplete="off"
-             placeholder="45:00 or 1:02:30" required value="${escapeHtml(formatDuration(a.duration_s))}">
-      <p class="hint">Minutes:seconds or hours:minutes:seconds. "45" = 45 minutes.</p>
+      <!-- Hidden for a match: there, "Minutes played" in the match card is the duration. -->
+      <div id="duration-box">
+        <label for="f-duration">Duration</label>
+        <input id="f-duration" name="duration" type="text" inputmode="decimal" autocomplete="off"
+               placeholder="45:00 or 1:02:30" required value="${escapeHtml(formatDuration(a.duration_s))}">
+        <p class="hint">Minutes:seconds or hours:minutes:seconds. "45" = 45 minutes.</p>
+      </div>
 
       <div data-field="distance">
         <label for="f-distance">Distance (km)</label>
@@ -83,7 +86,7 @@ function drawForm(container, activity) {
         <input id="f-opponent" name="opponent" type="text" autocomplete="off" value="${escapeHtml(stats.opponent || "")}">
         <div class="row-3">
           <div>
-            <label for="f-minutes">Minutes</label>
+            <label for="f-minutes">Minutes played</label>
             <input id="f-minutes" name="minutes_played" type="number" inputmode="numeric" min="0" max="200"
                    value="${stats.minutes_played ?? ""}">
           </div>
@@ -204,13 +207,16 @@ function fillSessionTypes(form, selectedKey) {
 }
 
 // Shows/hides the distance, D+, stairs boxes and the match card.
+// For a match, the match card's "Minutes played" replaces the Duration box.
 function updateVisibleFields(form) {
   const sport = getSport(form.elements.sport.value);
   for (const box of form.querySelectorAll("[data-field]")) {
     box.hidden = !sport.fields.includes(box.dataset.field);
   }
   const type = getSessionType(sport.key, form.elements.session_type.value);
-  form.querySelector("#match-card").hidden = !(type && type.matchCard);
+  const isMatch = Boolean(type && type.matchCard);
+  form.querySelector("#match-card").hidden = !isMatch;
+  form.querySelector("#duration-box").hidden = isMatch;
 }
 
 function updateSpeed(form) {
@@ -237,10 +243,22 @@ function readForm(form) {
 
   if (!f.activity_date.value) return { error: "Please pick a date." };
 
-  const duration = parseDuration(f.duration.value);
-  if (!duration) return { error: 'Duration not understood. Try "45:00" or "1:02:30".' };
-
   const number = (input) => (input.value === "" ? null : Number(input.value));
+
+  // A match takes its duration from "Minutes played" (one box instead of two).
+  // 0 minutes (stayed on the bench) is allowed: the duration is then empty.
+  let duration;
+  if (type.matchCard) {
+    const minutes = number(f.minutes_played);
+    if (minutes === null || !Number.isInteger(minutes) || minutes < 0 || minutes > 200) {
+      return { error: "Please fill in minutes played (a whole number, 0 to 200)." };
+    }
+    duration = minutes > 0 ? minutes * 60 : null;
+  } else {
+    duration = parseDuration(f.duration.value);
+    if (!duration) return { error: 'Duration not understood. Try "45:00" or "1:02:30".' };
+  }
+
   const distance = shows("distance") ? number(f.distance_km) : null;
   const elevation = shows("elevation") ? number(f.elevation_m) : null;
   const stairs = shows("stairs") ? number(f.stairs_climbed) : null;
@@ -264,13 +282,12 @@ function readForm(form) {
 
   let matchStats = null;
   if (type.matchCard) {
-    const minutes = number(f.minutes_played);
+    const minutes = number(f.minutes_played); // already checked above
     const goals = number(f.goals) ?? 0;
     const assists = number(f.assists) ?? 0;
-    if ([minutes, goals, assists].some((n) => n !== null && (!Number.isInteger(n) || n < 0))) {
-      return { error: "Minutes, goals and assists must be whole numbers." };
+    if ([goals, assists].some((n) => !Number.isInteger(n) || n < 0)) {
+      return { error: "Goals and assists must be whole numbers." };
     }
-    if (minutes !== null && minutes > 200) return { error: "Minutes played can't be more than 200." };
     matchStats = {
       opponent: f.opponent.value.trim() || null,
       minutes_played: minutes,

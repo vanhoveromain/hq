@@ -85,17 +85,19 @@ function weekHtml(week) {
 // One line in the list. Everything you typed goes through escapeHtml.
 function activityHtml(a) {
   const sport = getSport(a.sport);
+  const type = getSessionType(a.sport, a.session_type);
+  const stats = a.match_stats;
+  const hasMatchCard = Boolean(type && type.matchCard && stats);
+
   const details = [
-    formatDuration(a.duration_s),
+    hasMatchCard ? "" : formatDuration(a.duration_s), // a match shows minutes played instead
     a.distance_km != null ? formatKm(a.distance_km) : "",
     a.elevation_m ? `${a.elevation_m} m D+` : "",
     a.stairs_climbed ? `${a.stairs_climbed} stairs` : "",
     formatSpeed(sport && sport.speed, a.duration_s, a.distance_km),
   ].filter(Boolean).join(" · ");
 
-  const type = getSessionType(a.sport, a.session_type);
-  const stats = a.match_stats;
-  const matchLine = type && type.matchCard && stats
+  const matchLine = hasMatchCard
     ? `<span class="match-line">vs ${escapeHtml(stats.opponent || "?")} · ${stats.goals} G · ${stats.assists} A${stats.minutes_played != null ? ` · ${stats.minutes_played}'` : ""}</span>`
     : "";
 

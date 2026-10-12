@@ -84,6 +84,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-12: for a football match the Duration box is hidden; "Minutes played" (required, 0–200) is
+  saved as the match card value AND as the activity duration (0 min -> duration empty).
 - 2026-10-12: activity log: sports + session types + categories live in rules.js (from the Sport HQ2
   templates; trail and D+ = heavy legs; long run, futsal, morning routine, bike, swim, stairs = other).
   Form shows only the fields a sport uses; hidden fields are saved as null. Duration typed as

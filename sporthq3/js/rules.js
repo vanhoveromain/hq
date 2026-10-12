@@ -26,7 +26,8 @@ export const CATEGORIES = {
 //   stairs    -> stairs climbed
 // speed: how speed is shown — "per_km" (4:36 /km), "kmh" (28.5 km/h),
 //        "per_100m" (1:52 /100m), or null (not shown)
-// matchCard: true on a session type -> show opponent, minutes, goals, assists
+// matchCard: true on a session type -> show opponent, minutes played, goals,
+//            assists. "Minutes played" is then also used as the duration.
 export const SPORTS = [
   {
     key: "running", label: "Running", icon: "🏃",
