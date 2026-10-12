@@ -242,32 +242,113 @@ create index personal_bests_user_idx        on public.personal_bests (user_id);
 -- =====================================================================
 -- Locks: Row Level Security + one policy per table.
 --
--- "using"      = which existing rows you may see / change / delete
--- "with check" = what new or edited rows are allowed to look like
--- Both say: user_id must be me. (select auth.uid()) is wrapped in a
--- select so Postgres computes it once per query, not once per row.
+-- For each table, 4 lines:
+--   1. turn the lock on (enable row level security)
+--   2. the key: "Owner can do everything" ...
+--        using      = which existing rows you may see / change / delete
+--        with check = what new or edited rows are allowed to look like
+--      Both say: user_id must be me. (select auth.uid()) is wrapped in a
+--      select so Postgres works it out once per query, not once per row.
+--   3. anonymous visitors (not logged in) get no access at all
+--   4. logged-in users may read/add/change/delete (the policy still
+--      limits them to their own rows)
 -- =====================================================================
-do $$
-declare
-  t text;
-begin
-  foreach t in array array[
-    'settings', 'shoes', 'training_blocks', 'races', 'race_checklist_items',
-    'activities', 'match_stats', 'planned_weeks', 'planned_sessions',
-    'weigh_ins', 'personal_bests'
-  ]
-  loop
-    execute format('alter table public.%I enable row level security', t);
 
-    execute format(
-      'create policy "Owner can do everything" on public.%I
-         for all to authenticated
-         using (user_id = (select auth.uid()))
-         with check (user_id = (select auth.uid()))', t);
+-- settings
+alter table public.settings enable row level security;
+create policy "Owner can do everything" on public.settings
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.settings from anon;
+grant select, insert, update, delete on public.settings to authenticated;
 
-    -- Only logged-in users get access to the table at all.
-    execute format('revoke all on public.%I from anon', t);
-    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
-  end loop;
-end
-$$;
+-- shoes
+alter table public.shoes enable row level security;
+create policy "Owner can do everything" on public.shoes
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.shoes from anon;
+grant select, insert, update, delete on public.shoes to authenticated;
+
+-- training_blocks
+alter table public.training_blocks enable row level security;
+create policy "Owner can do everything" on public.training_blocks
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.training_blocks from anon;
+grant select, insert, update, delete on public.training_blocks to authenticated;
+
+-- races
+alter table public.races enable row level security;
+create policy "Owner can do everything" on public.races
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.races from anon;
+grant select, insert, update, delete on public.races to authenticated;
+
+-- race_checklist_items
+alter table public.race_checklist_items enable row level security;
+create policy "Owner can do everything" on public.race_checklist_items
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.race_checklist_items from anon;
+grant select, insert, update, delete on public.race_checklist_items to authenticated;
+
+-- activities
+alter table public.activities enable row level security;
+create policy "Owner can do everything" on public.activities
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.activities from anon;
+grant select, insert, update, delete on public.activities to authenticated;
+
+-- match_stats
+alter table public.match_stats enable row level security;
+create policy "Owner can do everything" on public.match_stats
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.match_stats from anon;
+grant select, insert, update, delete on public.match_stats to authenticated;
+
+-- planned_weeks
+alter table public.planned_weeks enable row level security;
+create policy "Owner can do everything" on public.planned_weeks
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.planned_weeks from anon;
+grant select, insert, update, delete on public.planned_weeks to authenticated;
+
+-- planned_sessions
+alter table public.planned_sessions enable row level security;
+create policy "Owner can do everything" on public.planned_sessions
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.planned_sessions from anon;
+grant select, insert, update, delete on public.planned_sessions to authenticated;
+
+-- weigh_ins
+alter table public.weigh_ins enable row level security;
+create policy "Owner can do everything" on public.weigh_ins
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.weigh_ins from anon;
+grant select, insert, update, delete on public.weigh_ins to authenticated;
+
+-- personal_bests
+alter table public.personal_bests enable row level security;
+create policy "Owner can do everything" on public.personal_bests
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+revoke all on public.personal_bests from anon;
+grant select, insert, update, delete on public.personal_bests to authenticated;
