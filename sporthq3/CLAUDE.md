@@ -36,6 +36,21 @@
 6. **Shoes** — name, road/trail, purchase date, retired or not; runs link to a shoe; total km computed.
 7. **Training blocks** — name, start/end dates, goal/focus, recap; races link to a block.
 
+## Milestones
+1. Supabase setup (tables, RLS, auth) — done 2026-10-12
+2. App shell + magic-link login — done 2026-10-12
+3. Activity log (incl. football match card)
+4. Hosting (put the app online so it works on my phone)
+5. Shoes
+6. Weekly planner
+7. Rule warnings
+8. Races + checklist + race routine
+9. Training blocks
+10. Body & goals (weigh-ins, trend chart, PBs)
+11. Dashboard (incl. football season totals, shoe km)
+12. JSON export + polish
+13. (optional) Import Sport HQ2 history from Notion
+
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
 - Categories: heavy legs (leg explosivity, intervals, team training, match, race), easy run, upper body, rest.

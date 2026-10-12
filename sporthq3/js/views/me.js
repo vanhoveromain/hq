@@ -12,7 +12,7 @@ export function render(container, { user }) {
       <p id="me-status" class="status" role="status"></p>
     </section>
     <section class="card placeholder">
-      <p>Body &amp; goals, shoes and training blocks will live here (steps 4, 8, 9).</p>
+      <p>Body &amp; goals, shoes and training blocks will live here (steps 5, 9, 10).</p>
     </section>
   `;
 
