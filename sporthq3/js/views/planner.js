@@ -8,6 +8,7 @@
 import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
+  listWeekTemplates, saveWeekTemplate, applyWeekTemplate,
 } from "../storage.js";
 import { SPORTS, sportIcon, sessionTypeLabel, getSport } from "../rules.js";
 import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js";
@@ -33,6 +34,7 @@ async function drawWeek(container, monday) {
   container.innerHTML = `
     <nav class="card menu" aria-label="Planning">
       <a href="#/catalogue">📚 Session catalogue <span aria-hidden="true">›</span></a>
+      <a href="#/weektemplates">📋 Week templates <span aria-hidden="true">›</span></a>
     </nav>
     <div class="week-nav">
       <a class="button small-button" href="#/planner/${addDays(monday, -7)}" aria-label="Previous week">‹</a>
@@ -45,7 +47,10 @@ async function drawWeek(container, monday) {
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">↩ Back to this week</a>` : ""}
     <p id="week-summary" class="muted week-summary"></p>
     <div id="days" class="days"><p class="muted">Loading…</p></div>
-    <button id="copy-week" type="button" class="button copy-week">⧉ Copy last week into this week</button>
+    <div class="week-actions">
+      <button id="templates" type="button" class="button">📋 Templates</button>
+      <button id="copy-week" type="button" class="button">⧉ Copy last week into this week</button>
+    </div>
   `;
 
   const daysEl = container.querySelector("#days");
@@ -113,6 +118,98 @@ async function drawWeek(container, monday) {
       showToast("Could not copy: " + error.message);
     }
   });
+
+  container.querySelector("#templates").addEventListener("click", () => templatesMenu());
+
+
+  // ----- week templates: save this week / apply one -----
+  async function templatesMenu() {
+    let templates = [];
+    try {
+      templates = await listWeekTemplates();
+    } catch (error) {
+      return showToast("Could not load the templates: " + error.message);
+    }
+    const toSave = sessions.filter((s) => s.status !== "cancelled");
+    const choice = await openSheet({
+      title: "Week templates",
+      html: `
+        <div class="sheet-actions">
+          <button type="button" class="button primary" data-value="save" ${toSave.length ? "" : "disabled"}>
+            💾 Save this week as a template</button>
+        </div>
+        ${toSave.length ? "" : `<p class="muted small">Plan some sessions first, then save the week.</p>`}
+        <h3 class="sheet-subtitle">Apply a template to this week</h3>
+        ${templates.length ? `<div class="sheet-list">${templates.map((t) => `
+          <button type="button" class="sheet-item" data-value="apply:${t.id}">
+            ${escapeHtml(t.name)} <span class="muted small">${t.items.length} session${t.items.length === 1 ? "" : "s"}</span>
+          </button>`).join("")}</div>`
+        : `<p class="muted small">No templates yet.</p>`}`,
+    });
+    if (!choice) return;
+    if (choice === "save") return saveAsTemplate(toSave, templates);
+    const template = templates.find((t) => "apply:" + t.id === choice);
+    if (template) await applyTemplate(template);
+  }
+
+  async function saveAsTemplate(toSave, templates) {
+    const name = await openSheet({
+      title: "Save this week as a template",
+      html: `
+        <label for="template-name" class="sheet-subtitle">Name</label>
+        <input id="template-name" type="text" maxlength="60" placeholder="e.g. Normal week" list="template-names">
+        <datalist id="template-names">${templates.map((t) => `<option value="${escapeHtml(t.name)}">`).join("")}</datalist>
+        <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled ones are left out).
+          Use an existing name to replace that template.</p>
+        <p id="template-error" class="status error" hidden></p>
+        <button type="button" class="button primary" id="template-go">Save template</button>`,
+      onReady: (dialog, close) => {
+        const input = dialog.querySelector("#template-name");
+        const go = () => {
+          const value = input.value.trim();
+          if (!value) {
+            const errorEl = dialog.querySelector("#template-error");
+            errorEl.textContent = "Give it a name.";
+            errorEl.hidden = false;
+            return;
+          }
+          close(value);
+        };
+        dialog.querySelector("#template-go").addEventListener("click", go);
+        input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); go(); } });
+        input.focus();
+      },
+    });
+    if (!name) return;
+
+    // Same name (ignoring capitals) = replace that template, after asking.
+    const existing = templates.find((t) => t.name.toLowerCase() === name.toLowerCase());
+    if (existing && !window.confirm(`A template called "${existing.name}" already exists. Replace it with this week?`)) return;
+
+    // weekday 1 = Monday … 7 = Sunday; keep the order inside each day.
+    const items = toSave.map((s, index) => ({
+      weekday: Math.round((Date.parse(s.session_date) - Date.parse(monday)) / 86400000) + 1,
+      template_id: s.template_id, sport: s.sport, session_type: s.session_type, position: index,
+    }));
+    try {
+      await saveWeekTemplate(name, items, existing ? existing.id : null);
+      showToast(`📋 Saved as "${name}"`);
+    } catch (error) {
+      showToast("Could not save the template: " + error.message);
+    }
+  }
+
+  async function applyTemplate(template) {
+    if (!template.items.length) return showToast("This template is empty");
+    if (sessions.length && !window.confirm(`This week already has sessions. Add "${template.name}" on top?`)) return;
+    try {
+      const count = await applyWeekTemplate(template, monday, addDays, sessions);
+      showToast(`Added ${count} session${count === 1 ? "" : "s"} from "${template.name}"`);
+      await load();
+    } catch (error) {
+      showToast("Could not apply the template: " + error.message);
+    }
+  }
 
 
   // ----- add a session -----

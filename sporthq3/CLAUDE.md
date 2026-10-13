@@ -45,7 +45,7 @@
 5. Shoes — done 2026-10-12
 6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
 7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
-   (save a week as template / apply a template), 7d workout mode
+   (save a week as template / apply a template) (done 2026-10-13), 7d workout mode
 8. Rule warnings
 9. Races + checklist + race routine
 10. Training blocks
@@ -89,6 +89,11 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: week templates (7c): made from a real week (Plan -> 📋 Templates -> Save this week;
+  cancelled sessions left out; same name = replace after asking). Apply = add on top of the week
+  (ask first if not empty, never deletes). No template editor: apply, adjust, save again.
+  Plan -> Week templates lists them (view, rename, delete). Deleting a recipe removes it from
+  templates (cascade); archiving doesn't. No migration needed.
 - 2026-10-13: test freely in the real database until switch day. Switch day = "big clean": delete
   app-created test rows (activities without notion_id, planned sessions, ...), KEEP the catalogue and
   match cards, then run the final Notion re-import. (A re-import alone never removes app-created rows.)
