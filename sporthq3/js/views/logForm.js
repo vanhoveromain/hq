@@ -65,6 +65,10 @@ function drawForm(container, activity, shoes) {
       <label for="f-type">Session type</label>
       <select id="f-type" name="session_type"></select>
 
+      <label for="f-title">Title <span class="muted">(optional)</span></label>
+      <input id="f-title" name="title" type="text" autocomplete="off" maxlength="200"
+             placeholder="e.g. Trail avec Lélé" value="${escapeHtml(a.title || "")}">
+
       <!-- Hidden for a match: there, "Minutes played" in the match card is the duration. -->
       <div id="duration-box">
         <label for="f-duration">Duration</label>
@@ -177,7 +181,10 @@ function drawForm(container, activity, shoes) {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const result = readForm(form);
+    // Imported activities (gym, football) can have no duration; editing them
+    // shouldn't force you to invent one. New activities always need one.
+    const allowEmptyDuration = isEdit && activity.duration_s == null;
+    const result = readForm(form, { allowEmptyDuration });
     if (result.error) {
       showStatus(status, result.error, "error");
       return;
@@ -254,7 +261,7 @@ function updateRpeLabel(form) {
 // Reads the form into { activity, matchStats } or { error: "message" }.
 // Hidden boxes are saved as empty (null), so switching from Running to
 // Football doesn't keep an old distance.
-function readForm(form) {
+function readForm(form, { allowEmptyDuration = false } = {}) {
   const f = form.elements;
   const sport = getSport(f.sport.value);
   const type = getSessionType(sport.key, f.session_type.value);
@@ -274,8 +281,11 @@ function readForm(form) {
     }
     duration = minutes > 0 ? minutes * 60 : null;
   } else {
-    duration = parseDuration(f.duration.value);
-    if (!duration) return { error: 'Duration not understood. Try "45:00" or "1:02:30".' };
+    const empty = f.duration.value.trim() === "";
+    duration = empty && allowEmptyDuration ? null : parseDuration(f.duration.value);
+    if (!duration && !(empty && allowEmptyDuration)) {
+      return { error: 'Duration not understood. Try "45:00" or "1:02:30".' };
+    }
   }
 
   const distance = shows("distance") ? number(f.distance_km) : null;
@@ -296,6 +306,7 @@ function readForm(form) {
     elevation_m: elevation === null ? null : Math.round(elevation),
     stairs_climbed: stairs === null ? null : Math.round(stairs),
     rpe: chosenRpe ? Number(chosenRpe.value) : null,
+    title: f.title.value.trim() || null,
     notes: f.notes.value.trim() || null,
     shoe_id: shows("shoe") ? (f.shoe_id.value || null) : null,
   };

@@ -107,6 +107,7 @@ function activityHtml(a) {
         <span class="activity-icon" aria-hidden="true">${sportIcon(a.sport)}</span>
         <span class="activity-main">
           <span class="activity-title">${escapeHtml(sessionTypeLabel(a.sport, a.session_type))}</span>
+          ${a.title ? `<span class="activity-subtitle">${escapeHtml(a.title)}</span>` : ""}
           <span class="muted">${formatDayLabel(a.activity_date)}${details ? " · " + details : ""}</span>
           ${matchLine}
         </span>
