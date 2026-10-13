@@ -43,7 +43,7 @@
 3. Activity log (incl. football match card) — done 2026-10-12
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
-6. Import Sport HQ2 history from Notion (re-runnable until switch day) — built 2026-10-12, awaiting import
+6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
 7. Weekly planner
 8. Rule warnings
 9. Races + checklist + race routine
