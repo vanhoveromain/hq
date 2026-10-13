@@ -366,3 +366,106 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .exercise-row .row-3 input { margin: 4px 0 12px; }
 .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .small-button { min-height: 36px; min-width: 44px; padding: 4px 10px; }
+
+/* ---------- Planner: week ---------- */
+.week-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.week-nav a { text-decoration: none; text-align: center; font-size: 1.2rem; }
+.week-nav-title { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.today-link { display: block; text-align: center; color: var(--accent); font-weight: 600; text-decoration: none; margin-bottom: 4px; }
+.week-summary { text-align: center; font-size: 0.9rem; margin-bottom: 12px; }
+
+.days { display: flex; flex-direction: column; gap: 12px; }
+.day {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px 12px;
+}
+.day.is-today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.day-title {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.95rem; margin: 0 0 8px;
+}
+.day-add {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--bg); color: var(--accent);
+  font: inherit; font-size: 1.3rem; font-weight: 700; cursor: pointer;
+}
+.day-empty { margin: 0; font-size: 0.85rem; }
+
+.plan-card {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  padding: 10px; margin-top: 8px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+}
+.plan-card:first-of-type { margin-top: 0; }
+.plan-card.status-done { border-color: var(--ok); }
+.plan-card.status-cancelled { opacity: 0.55; }
+.plan-card.status-cancelled .activity-title { text-decoration: line-through; }
+.plan-card.extra { border-style: dashed; opacity: 0.8; }
+.plan-status { font-size: 1.1rem; }
+.copy-week { width: 100%; margin-top: 16px; }
+
+/* Laptop: the 7 days side by side, like a calendar. */
+@media (min-width: 1000px) {
+  .view:has(.days) { max-width: 1400px; }
+  .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: start; }
+  .day { min-height: 160px; padding: 8px; }
+  .day-title { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
+  .plan-card .activity-icon { font-size: 1.1rem; }
+}
+
+/* ---------- Bottom sheet (pop-up panel) ---------- */
+.sheet {
+  border: 0; padding: 0; margin: auto auto 0;
+  width: 100%; max-width: 560px; max-height: 85vh;
+  border-radius: 16px 16px 0 0;
+  background: var(--surface); color: var(--text);
+}
+.sheet::backdrop { background: rgba(0, 0, 0, 0.45); }
+.sheet-header {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 16px 16px 8px; position: sticky; top: 0; background: var(--surface);
+}
+.sheet-header h2 { margin: 0; font-size: 1.1rem; }
+.sheet-close { border: 0; background: none; font-size: 1.2rem; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; }
+.sheet-body { padding: 0 16px calc(20px + env(safe-area-inset-bottom)); }
+.sheet-subtitle { font-size: 0.85rem; color: var(--muted); margin: 12px 0 6px; font-weight: 600; display: block; }
+.sheet-list { display: flex; flex-direction: column; gap: 6px; }
+.sheet-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  padding: 12px; min-height: 44px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+}
+.sheet-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.sheet-actions .button { width: 100%; }
+.sheet-body input[type="date"] { margin-top: 4px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-button {
+  font: inherit; font-size: 0.9rem; cursor: pointer; color: inherit;
+  padding: 8px 12px; min-height: 40px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--bg);
+}
+.chip-button:disabled { opacity: 0.4; cursor: default; }
+.exercise-list { margin: 0 0 8px; padding-left: 20px; }
+.exercise-list li { margin-bottom: 4px; }
+.pre-line { white-space: pre-line; }
+@media (min-width: 700px) {
+  .sheet { margin: auto; border-radius: 16px; }
+}
+
+/* ---------- Toast (small message at the bottom) ---------- */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--tabbar-height) + 16px + env(safe-area-inset-bottom));
+  z-index: 50; display: flex; align-items: center; gap: 12px;
+  max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 12px;
+  background: var(--text); color: var(--bg); box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.toast button { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
+@media (prefers-color-scheme: dark) { .toast button { color: #c2410c; } }
+
+.plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
