@@ -51,7 +51,8 @@
 10. Training blocks
 11. Body & goals (weigh-ins, trend chart, PBs)
 12. Dashboard (incl. football season totals, shoe km)
-13. JSON export + polish + design pass (overall look, laptop layout for older screens)
+13. JSON export + polish + design pass (overall look, laptop layout for older screens, drag and drop
+    of planner cards on laptop + phone (press and hold))
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -88,6 +89,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: test freely in the real database until switch day. Switch day = "big clean": delete
+  app-created test rows (activities without notion_id, planned sessions, ...), KEEP the catalogue and
+  match cards, then run the final Notion re-import. (A re-import alone never removes app-created rows.)
 - 2026-10-13: planner (7b): week view (7 columns on laptop), + per day (quick sport or catalogue
   recipe), tap a session for Done / Not done / Cancel / Move / Swap day / Edit recipe / Remove.
   Done = link to an activity of that day, "Log it now" (pre-filled form, linked on save) or just tick.
