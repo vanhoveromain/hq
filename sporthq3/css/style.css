@@ -405,7 +405,11 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .plan-card.status-cancelled .activity-title { text-decoration: line-through; }
 .plan-card.extra { border-style: dashed; opacity: 0.8; }
 .plan-status { font-size: 1.1rem; }
-.copy-week { width: 100%; margin-top: 16px; }
+.week-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.week-actions .button { width: 100%; }
+@media (min-width: 700px) {
+  .week-actions { flex-direction: row; }
+}
 
 /* Laptop: the 7 days side by side, like a calendar. */
 @media (min-width: 1000px) {
@@ -469,3 +473,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (prefers-color-scheme: dark) { .toast button { color: #c2410c; } }
 
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
+
+/* Week templates screen */
+.week-template h2 { margin-top: 0; }
+.template-days { list-style: none; margin: 0 0 12px; padding: 0; }
+.template-days li { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--border); }
+.template-day { width: 2.5em; flex-shrink: 0; font-weight: 600; }

@@ -393,3 +393,86 @@ export async function copyWeek(fromMonday, toMonday, addDays) {
   if (error) throw error;
   return copies.length;
 }
+
+
+// ---------------------------------------------------------------------
+// Week templates: a saved week ("Normal week", "Race week").
+// A template: { id, name, position, items: [ { weekday 1-7, template_id,
+//   sport, session_type, position, template: {…recipe…} | null } ] }
+// ---------------------------------------------------------------------
+
+const WEEK_TEMPLATE_SELECT = "*, items:week_template_items(*, " +
+  "template:session_templates(id, name, sport, session_type, archived))";
+
+// Items come back sorted by day, then by their place in the day.
+function sortItems(weekTemplate) {
+  weekTemplate.items.sort((a, b) => a.weekday - b.weekday || a.position - b.position);
+  return weekTemplate;
+}
+
+export async function listWeekTemplates() {
+  const { data, error } = await supabase
+    .from("week_templates")
+    .select(WEEK_TEMPLATE_SELECT)
+    .order("position", { ascending: true })
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data.map(sortItems);
+}
+
+// Saves a week as a template. `items` = [{ weekday, template_id, sport, session_type, position }].
+// With `replaceId`, the old template keeps its id but its content is replaced.
+// Note: this takes 2-3 separate requests; if the internet drops halfway, the
+// template can end up half-saved. Saving it again fixes it.
+export async function saveWeekTemplate(name, items, replaceId = null) {
+  let id = replaceId;
+  if (id) {
+    const { error: renameError } = await supabase.from("week_templates").update({ name }).eq("id", id);
+    if (renameError) throw renameError;
+    const { error: clearError } = await supabase.from("week_template_items").delete().eq("week_template_id", id);
+    if (clearError) throw clearError;
+  } else {
+    const { data, error } = await supabase.from("week_templates").insert({ name }).select().single();
+    if (error) throw error;
+    id = data.id;
+  }
+  if (items.length) {
+    const rows = items.map((item) => ({ ...pick(item, ["weekday", "template_id", "sport", "session_type", "position"]), week_template_id: id }));
+    const { error } = await supabase.from("week_template_items").insert(rows);
+    if (error) throw error;
+  }
+  return id;
+}
+
+export async function renameWeekTemplate(id, name) {
+  const { error } = await supabase.from("week_templates").update({ name }).eq("id", id);
+  if (error) throw error;
+}
+
+// Its items are removed with it (on delete cascade). Planned sessions are not touched.
+export async function deleteWeekTemplate(id) {
+  const { error } = await supabase.from("week_templates").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Puts a template's sessions into the week starting `monday`, after the
+// sessions already planned each day. `existing` = sessions already in that week.
+export async function applyWeekTemplate(weekTemplate, monday, addDays, existing = []) {
+  const perDay = {};
+  existing.forEach((s) => { perDay[s.session_date] = (perDay[s.session_date] || 0) + 1; });
+  const rows = weekTemplate.items.map((item) => {
+    const date = addDays(monday, item.weekday - 1);
+    const position = perDay[date] || 0;
+    perDay[date] = position + 1;
+    return {
+      session_date: date, template_id: item.template_id,
+      sport: item.sport || (item.template && item.template.sport) || null,
+      session_type: item.session_type ?? (item.template ? item.template.session_type : null),
+      position, status: "planned", source: "template",
+    };
+  });
+  if (!rows.length) return 0;
+  const { error } = await supabase.from("planned_sessions").insert(rows);
+  if (error) throw error;
+  return rows.length;
+}
