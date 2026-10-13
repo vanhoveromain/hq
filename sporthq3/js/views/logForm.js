@@ -154,14 +154,16 @@ function drawForm(container, activity, shoes) {
   const status = form.querySelector("#form-status");
 
   sportSelect.value = getSport(a.sport) ? a.sport : SPORTS[0].key;
-  fillSessionTypes(form, a.session_type);
+  form.dataset.editing = isEdit ? "yes" : "no";
+  fillSessionTypes(form, isEdit ? (a.session_type ?? null) : undefined);
   updateVisibleFields(form);
   updateSpeed(form);
   updateRpeLabel(form);
 
   // When the sport changes: new list of session types, new boxes.
   sportSelect.addEventListener("change", () => {
-    fillSessionTypes(form, null);
+    form.dataset.editing = "no"; // a new sport starts on its first type
+    fillSessionTypes(form, undefined);
     updateVisibleFields(form);
     updateSpeed(form);
   });
@@ -220,16 +222,24 @@ function drawForm(container, activity, shoes) {
   }
 }
 
-// Fills the "Session type" list for the chosen sport.
+// Fills the "Session type" list for the chosen sport, plus a last choice
+// without a type ("Just a run"): it counts as "other" for the rules.
 function fillSessionTypes(form, selectedKey) {
   const sport = getSport(form.elements.sport.value);
   const typeSelect = form.elements.session_type;
   typeSelect.innerHTML = sport.sessionTypes
     .map((t) => `<option value="${t.key}">${escapeHtml(t.label)}</option>`)
-    .join("");
-  if (selectedKey && sport.sessionTypes.some((t) => t.key === selectedKey)) {
+    .join("") + `<option value="">${escapeHtml(noTypeLabel(sport))}</option>`;
+  if (selectedKey === null && form.dataset.editing === "yes") {
+    typeSelect.value = ""; // an existing activity saved without a type
+  } else if (selectedKey && sport.sessionTypes.some((t) => t.key === selectedKey)) {
     typeSelect.value = selectedKey;
   }
+}
+
+// "Just a run (no type)", "Just a swim (no type)"…
+export function noTypeLabel(sport) {
+  return `Just ${sport.label.toLowerCase()} (no type)`;
 }
 
 // Shows/hides the distance, D+, stairs boxes and the match card.
@@ -274,7 +284,7 @@ function readForm(form, { allowEmptyDuration = false } = {}) {
   // A match takes its duration from "Minutes played" (one box instead of two).
   // 0 minutes (stayed on the bench) is allowed: the duration is then empty.
   let duration;
-  if (type.matchCard) {
+  if (type && type.matchCard) {
     const minutes = number(f.minutes_played);
     if (minutes === null || !Number.isInteger(minutes) || minutes < 0 || minutes > 200) {
       return { error: "Please fill in minutes played (a whole number, 0 to 200)." };
@@ -300,7 +310,7 @@ function readForm(form, { allowEmptyDuration = false } = {}) {
   const activity = {
     activity_date: f.activity_date.value,
     sport: sport.key,
-    session_type: type.key,
+    session_type: type ? type.key : null,
     duration_s: duration,
     distance_km: distance,
     elevation_m: elevation === null ? null : Math.round(elevation),
@@ -312,7 +322,7 @@ function readForm(form, { allowEmptyDuration = false } = {}) {
   };
 
   let matchStats = null;
-  if (type.matchCard) {
+  if (type && type.matchCard) {
     const minutes = number(f.minutes_played); // already checked above
     const goals = number(f.goals) ?? 0;
     const assists = number(f.assists) ?? 0;

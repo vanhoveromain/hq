@@ -12,6 +12,7 @@ import * as logView from "./views/log.js";
 import * as racesView from "./views/races.js";
 import * as meView from "./views/me.js";
 import * as shoesView from "./views/shoes.js";
+import * as catalogueView from "./views/catalogue.js";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
@@ -22,6 +23,7 @@ const routes = {
   races:     { title: "Races", view: racesView },
   me:        { title: "Me", view: meView },
   shoes:     { title: "Shoes", view: shoesView, tab: "me" },
+  catalogue: { title: "Session catalogue", view: catalogueView, tab: "planner" },
 };
 const DEFAULT_ROUTE = "dashboard";
 

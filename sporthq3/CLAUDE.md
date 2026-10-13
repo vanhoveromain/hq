@@ -44,7 +44,7 @@
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
 6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
-7. Weekly planner, in 3 parts: 7a session catalogue, 7b week templates, 7c planner
+7. Weekly planner, in 4 parts: 7a session catalogue (built 2026-10-13, awaiting test), 7b week templates, 7c planner, 7d workout mode
 8. Rule warnings
 9. Races + checklist + race routine
 10. Training blocks
@@ -89,6 +89,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: planner details: auto-link when an activity is logged on a day with an open planned
+  session of the same sport (Undo offered; ask if 2 candidates). Session type is optional everywhere
+  ("just a run" = category other); planner offers quick-add per sport without a recipe. Catalogue
+  pre-filled from the Notion session templates (gym ones with exercises; running ones name only;
+  "Gym" dropped as duplicate; "Lower body training" = leg explosivity). Exercise line = name, sets,
+  reps-or-time (text), weight kg, note; a recipe can have `rounds` (circuits). Workout mode (7d):
+  Start -> tick sets with a timer, change weights on the spot (offer to update the catalogue),
+  Finish -> creates the activity, marks the session done and freezes what was done. One migration
+  (20261013000001_planner.sql) covers all of step 7.
 - 2026-10-13: planner redesign (Rom): a **session catalogue** (reusable sessions with details: gym =
   exercises with sets x reps x weight; others = description + optional targets) and **week templates**
   built from catalogue sessions (several menus, e.g. Normal / Race / Holiday; A/B alternation replaces the

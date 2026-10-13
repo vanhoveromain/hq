@@ -72,3 +72,12 @@ export function escapeHtml(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+// One exercise line as text: "Leg extension — 3 × 10 @ 25 kg".
+export function formatExercise(e) {
+  // "3 × 10", or "3 sets" without reps, or just "10"
+  const amount = e.sets && e.reps ? `${e.sets} × ${e.reps}` : e.sets ? `${e.sets} sets` : (e.reps || "");
+  const weight = e.weight_kg != null && e.weight_kg !== "" ? `@ ${Number(e.weight_kg)} kg` : "";
+  const detail = [amount, weight].filter(Boolean).join(" ");
+  return detail ? `${e.name} — ${detail}` : e.name;
+}

@@ -349,3 +349,20 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (prefers-color-scheme: dark) {
   .status-warn .shoe-message { color: #fbbf24; }
 }
+
+/* ---------- Catalogue editor ---------- */
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row-2 > [hidden] { display: none !important; }
+.exercises { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+.exercise-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--bg);
+}
+.exercise-row input { background: var(--surface); }
+.exercise-row .row-3 label { font-size: 0.8rem; font-weight: 600; margin: 0; }
+.exercise-row .row-3 input { margin: 4px 0 12px; }
+.row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.small-button { min-height: 36px; min-width: 44px; padding: 4px 10px; }

@@ -245,3 +245,48 @@ export async function getShoeDistances() {
   }
   return totals;
 }
+
+
+// ---------------------------------------------------------------------
+// Session catalogue ("recipe book")
+// A recipe: { id, name, sport, session_type, description, rounds,
+//             exercises: [{ name, sets, reps, weight_kg, note }],
+//             target_duration_s, target_distance_km, archived }
+// ---------------------------------------------------------------------
+
+const TEMPLATE_COLUMNS = ["name", "sport", "session_type", "description", "rounds",
+  "exercises", "target_duration_s", "target_distance_km", "archived"];
+
+// All recipes, A→Z. Archived ones too (the screen decides what to show).
+export async function listSessionTemplates() {
+  const { data, error } = await supabase
+    .from("session_templates")
+    .select("*")
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function getSessionTemplate(id) {
+  const { data, error } = await supabase.from("session_templates").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function saveSessionTemplate(template) {
+  // updated_at is set here so we know when a recipe last changed.
+  const values = { ...pick(template, TEMPLATE_COLUMNS), updated_at: new Date().toISOString() };
+  const query = template.id
+    ? supabase.from("session_templates").update(values).eq("id", template.id)
+    : supabase.from("session_templates").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Planned sessions that used it keep existing; they just lose the link.
+// (Week templates that used it lose that item.)
+export async function deleteSessionTemplate(id) {
+  const { error } = await supabase.from("session_templates").delete().eq("id", id);
+  if (error) throw error;
+}
