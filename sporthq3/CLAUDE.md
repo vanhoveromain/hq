@@ -25,8 +25,8 @@
 - The Supabase anon/publishable key is designed to be public; RLS is what protects the data.
 
 ## v1 modules
-1. **Weekly planner** — week view generated from a default template. Move, swap, cancel, mark done,
-   link a session to an activity log entry.
+1. **Weekly planner** — week view planned by hand from a session catalogue (+ copy last week, week
+   templates). Move, swap, cancel, mark done, link a session to an activity log entry, workout mode.
 2. **Activity log** — date, sport, session type, duration, distance (optional), elevation (optional), RPE 1–10, notes.
    No HR zones (I train by feel). Sports (same as Sport HQ2): running, football, muscle training, biking,
    swimming, stair stepper. Football matches carry a match card: opponent, minutes played, goals, assists
@@ -44,7 +44,8 @@
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
 6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
-7. Weekly planner, in 4 parts: 7a session catalogue (built 2026-10-13, awaiting test), 7b week templates, 7c planner, 7d workout mode
+7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner, 7c week templates
+   (save a week as template / apply a template), 7d workout mode
 8. Rule warnings
 9. Races + checklist + race routine
 10. Training blocks
@@ -59,10 +60,8 @@ Rules are data + small pure functions so future users can define their own.
 - Monday is leg explosivity OR intervals, never both.
 - Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
 - Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
-- Default week: Mon explosivity/intervals, Tue easy run, Wed team training,
-  Thu/Fri alternate easy run and upper body, Sat match, Sun rest.
-  The Thu/Fri swap flips every week (odd week numbers: Thu easy run / Fri upper body; even: the reverse).
-  It is an on/off switch in rules.js; when off, the week is always Thu easy run / Fri upper body.
+- No automatic default week (decided 2026-10-13): Rom plans each week himself (catalogue, quick-add,
+  copy last week, later templates). The Thu/Fri A/B swap was dropped.
 
 ## Out of scope for v1
 Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
@@ -89,6 +88,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: no A/B weeks, no rotation, no auto-filled weeks. Order: planner first (7b, incl.
+  "copy last week"), then week templates (7c) built from real weeks ("save this week as template",
+  "apply template"). settings.week_rotation stays unused for now.
 - 2026-10-13: one responsive app for phone AND laptop (no separate versions). New screens are built
   laptop-aware from now on (planner: 7 day columns on wide screens); a global design pass happens in
   step 13. Colours/fonts/spacing stay centralised as CSS variables in style.css.
