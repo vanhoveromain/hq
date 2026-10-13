@@ -50,7 +50,7 @@
 10. Training blocks
 11. Body & goals (weigh-ins, trend chart, PBs)
 12. Dashboard (incl. football season totals, shoe km)
-13. JSON export + polish
+13. JSON export + polish + design pass (overall look, laptop layout for older screens)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -89,6 +89,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: one responsive app for phone AND laptop (no separate versions). New screens are built
+  laptop-aware from now on (planner: 7 day columns on wide screens); a global design pass happens in
+  step 13. Colours/fonts/spacing stay centralised as CSS variables in style.css.
 - 2026-10-13: planner details: auto-link when an activity is logged on a day with an open planned
   session of the same sport (Undo offered; ask if 2 candidates). Session type is optional everywhere
   ("just a run" = category other); planner offers quick-add per sport without a recipe. Catalogue
