@@ -2,23 +2,28 @@
 // It shows only the boxes that make sense for the chosen sport, using the
 // `fields`, `speed` and `matchCard` settings from rules.js.
 
-import { getActivity, saveActivity, deleteActivity, listShoes } from "../storage.js";
+import { getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions } from "../storage.js";
 import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js";
-import { todayISO } from "../utils/dates.js";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js";
+import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js";
+import { openSheet } from "../utils/sheet.js";
+import { showToast } from "../utils/toast.js";
 import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
 
-export async function render(container, { activityId }) {
+export async function render(container, { activityId, plannedId = null }) {
   let activity = null;
   let shoes = [];
+  let planned = null; // the planned session this activity is logged for (from the planner)
   container.innerHTML = `<p class="muted">Loading…</p>`;
   try {
     // Load the activity (when editing) and the shoe list at the same time.
-    [activity, shoes] = await Promise.all([
+    [activity, shoes, planned] = await Promise.all([
       activityId ? getActivity(activityId) : null,
       listShoes(),
+      plannedId ? getPlannedSession(plannedId) : null,
     ]);
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
@@ -30,7 +35,7 @@ export async function render(container, { activityId }) {
       <a class="button" href="#/log">Back to the log</a></section>`;
     return;
   }
-  drawForm(container, activity, shoes);
+  drawForm(container, activity, shoes, planned);
 }
 
 // The shoe list for the picker: pairs in use, plus the pair already linked
@@ -42,9 +47,16 @@ function shoeOptionsHtml(shoes, selectedId) {
     .join("");
 }
 
-function drawForm(container, activity, shoes) {
+function drawForm(container, activity, shoes, planned) {
   const isEdit = Boolean(activity);
-  const a = activity || {
+  // A new activity from the planner starts with the planned day, sport, type and name.
+  const fromPlan = !isEdit && planned ? {
+    activity_date: planned.session_date,
+    sport: planned.sport || readLastSport() || SPORTS[0].key,
+    session_type: planned.session_type ?? null,
+    title: planned.title || (sessionDetails(planned) && sessionDetails(planned).name) || null,
+  } : null;
+  const a = activity || fromPlan || {
     activity_date: todayISO(),
     sport: readLastSport() || SPORTS[0].key,
   };
@@ -53,6 +65,7 @@ function drawForm(container, activity, shoes) {
   container.innerHTML = `
     <form id="activity-form" class="card form" novalidate>
       <h2>${isEdit ? "Edit activity" : "New activity"}</h2>
+      ${fromPlan ? `<p class="plan-banner">📅 For your planned <strong>${escapeHtml(sessionName(planned))}</strong> · ${escapeHtml(formatDayLabel(planned.session_date))}</p>` : ""}
 
       <label for="f-date">Date</label>
       <input id="f-date" name="activity_date" type="date" required value="${escapeHtml(a.activity_date)}">
@@ -154,8 +167,8 @@ function drawForm(container, activity, shoes) {
   const status = form.querySelector("#form-status");
 
   sportSelect.value = getSport(a.sport) ? a.sport : SPORTS[0].key;
-  form.dataset.editing = isEdit ? "yes" : "no";
-  fillSessionTypes(form, isEdit ? (a.session_type ?? null) : undefined);
+  form.dataset.editing = isEdit || fromPlan ? "yes" : "no";
+  fillSessionTypes(form, isEdit || fromPlan ? (a.session_type ?? null) : undefined);
   updateVisibleFields(form);
   updateSpeed(form);
   updateRpeLabel(form);
@@ -197,9 +210,18 @@ function drawForm(container, activity, shoes) {
     showStatus(status, "Saving…", "");
     try {
       if (isEdit) result.activity.id = activity.id;
-      await saveActivity(result.activity, result.matchStats);
+      const saved = await saveActivity(result.activity, result.matchStats);
       saveLastSport(result.activity.sport);
       if (result.activity.shoe_id) saveLastShoe(result.activity.shoe_id);
+
+      if (fromPlan) {
+        // Logged from the planner: tick that exact session, then go back to the plan.
+        await completeSession(planned, saved.id);
+        showToast(`✅ ${sessionName(planned)} marked done`);
+        window.location.hash = `#/planner/${startOfWeek(saved.activity_date)}`;
+        return;
+      }
+      if (!isEdit) await linkToPlan(saved);
       window.location.hash = "#/log"; // back to the list
     } catch (error) {
       showStatus(status, "Could not save: " + error.message, "error");
@@ -359,4 +381,37 @@ function readLastShoe(shoes) {
 }
 function saveLastShoe(id) {
   try { localStorage.setItem(LAST_SHOE_KEY, id); } catch { /* not important */ }
+}
+
+// After logging a NEW activity: if that day has an open planned session of
+// the same sport, link them and mark it done (with Undo). If there are
+// several, ask which one. Never blocks saving if something goes wrong.
+async function linkToPlan(activity) {
+  try {
+    const open = await findOpenPlannedSessions(activity.activity_date, activity.sport);
+    if (!open.length) return;
+
+    let session = open[0];
+    if (open.length > 1) {
+      const choice = await openSheet({
+        title: "Which planned session was this?",
+        html: `<div class="sheet-list">${open.map((s) =>
+          `<button type="button" class="sheet-item" data-value="${s.id}">${escapeHtml(sessionName(s))}</button>`).join("")}</div>
+          <div class="sheet-actions"><button type="button" class="button" data-value="none">None of them</button></div>`,
+      });
+      session = open.find((s) => s.id === choice);
+      if (!session) return;
+    }
+
+    await completeSession(session, activity.id);
+    showToast(`Linked to your planned ${sessionName(session)} ✅`, {
+      actionLabel: "Undo",
+      onAction: async () => {
+        await reopenSession(session.id);
+        showToast("Unlinked");
+      },
+    });
+  } catch (error) {
+    showToast("Saved, but could not link it to your plan: " + error.message);
+  }
 }

@@ -290,3 +290,106 @@ export async function deleteSessionTemplate(id) {
   const { error } = await supabase.from("session_templates").delete().eq("id", id);
   if (error) throw error;
 }
+
+
+// ---------------------------------------------------------------------
+// Planner: planned sessions
+// A planned session: { id, session_date, sport, session_type, title,
+//   status ('planned'|'done'|'cancelled'), position, template_id,
+//   activity_id, details (frozen when done), notes,
+//   template: {…recipe…} | null, activity: {…} | null }
+// ---------------------------------------------------------------------
+
+const PLANNED_COLUMNS = ["session_date", "sport", "session_type", "title", "status", "source",
+  "position", "template_id", "activity_id", "details", "notes"];
+
+// "template:session_templates(*)" = also bring the linked recipe, and call it
+// `template` in the result. Same for the linked activity.
+const PLANNED_SELECT = "*, template:session_templates(*), " +
+  "activity:activities(id, activity_date, sport, session_type, title, duration_s, distance_km, rpe)";
+
+// Every planned session between two days (inclusive), in day + position order.
+export async function listPlannedSessions(fromDate, toDate) {
+  const { data, error } = await supabase
+    .from("planned_sessions")
+    .select(PLANNED_SELECT)
+    .gte("session_date", fromDate)
+    .lte("session_date", toDate)
+    .order("session_date", { ascending: true })
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function getPlannedSession(id) {
+  const { data, error } = await supabase.from("planned_sessions").select(PLANNED_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Activities between two days, light version (for "what did I really do").
+export async function listActivitiesBetween(fromDate, toDate) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("id, activity_date, sport, session_type, title, duration_s, distance_km, rpe")
+    .gte("activity_date", fromDate)
+    .lte("activity_date", toDate)
+    .order("activity_date", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createPlannedSession(session) {
+  const { data, error } = await supabase
+    .from("planned_sessions").insert(pick(session, PLANNED_COLUMNS)).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePlannedSession(id, changes) {
+  const { data, error } = await supabase
+    .from("planned_sessions").update(pick(changes, PLANNED_COLUMNS)).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePlannedSession(id) {
+  const { error } = await supabase.from("planned_sessions").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Open (not done, not cancelled) sessions on a day for one sport:
+// used to link a freshly logged activity to its planned session.
+export async function findOpenPlannedSessions(date, sport) {
+  const { data, error } = await supabase
+    .from("planned_sessions")
+    .select(PLANNED_SELECT)
+    .eq("session_date", date)
+    .eq("sport", sport)
+    .eq("status", "planned")
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// Copies every session of one week into another, as fresh "planned" sessions
+// (no link to activities, no frozen details). Returns how many were copied.
+export async function copyWeek(fromMonday, toMonday, addDays) {
+  const sessions = await listPlannedSessions(fromMonday, addDays(fromMonday, 6));
+  if (!sessions.length) return 0;
+  const shift = (date) => {
+    // same weekday, other week: count the days from Monday and add them to the target Monday
+    const offset = Math.round((Date.parse(date) - Date.parse(fromMonday)) / 86400000);
+    return addDays(toMonday, offset);
+  };
+  const copies = sessions.map((s) => ({
+    session_date: shift(s.session_date), sport: s.sport, session_type: s.session_type,
+    title: s.title, template_id: s.template_id, position: s.position, notes: s.notes,
+    status: "planned", source: "manual",
+  }));
+  const { error } = await supabase.from("planned_sessions").insert(copies);
+  if (error) throw error;
+  return copies.length;
+}

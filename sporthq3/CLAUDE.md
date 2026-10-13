@@ -44,7 +44,7 @@
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
 6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
-7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner, 7c week templates
+7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
    (save a week as template / apply a template), 7d workout mode
 8. Rule warnings
 9. Races + checklist + race routine
@@ -88,6 +88,12 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: planner (7b): week view (7 columns on laptop), + per day (quick sport or catalogue
+  recipe), tap a session for Done / Not done / Cancel / Move / Swap day / Edit recipe / Remove.
+  Done = link to an activity of that day, "Log it now" (pre-filled form, linked on save) or just tick.
+  Logging a new activity auto-links to an open session of the same sport that day (Undo; ask if 2+).
+  Unplanned activities show as dashed "extra" cards. "Copy last week" copies sessions as fresh
+  planned ones (no links, no frozen details, cancelled ones come back as planned).
 - 2026-10-13: no A/B weeks, no rotation, no auto-filled weeks. Order: planner first (7b, incl.
   "copy last week"), then week templates (7c) built from real weeks ("save this week as template",
   "apply template"). settings.week_rotation stays unused for now.

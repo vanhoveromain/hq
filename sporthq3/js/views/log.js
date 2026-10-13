@@ -12,7 +12,8 @@ import * as logForm from "./logForm.js";
 const PAGE_SIZE = 30;
 
 export function render(container, { params = [] } = {}) {
-  if (params[0] === "new") return logForm.render(container, { activityId: null });
+  // #/log/new/<plannedId> = "Log it now" from the planner: pre-filled + linked
+  if (params[0] === "new") return logForm.render(container, { activityId: null, plannedId: params[1] || null });
   if (params[0]) return logForm.render(container, { activityId: params[0] });
   renderList(container);
 }
