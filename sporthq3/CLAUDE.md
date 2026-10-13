@@ -43,14 +43,14 @@
 3. Activity log (incl. football match card) — done 2026-10-12
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
-6. Import Sport HQ2 history from Notion (re-runnable until switch day) — built 2026-10-12, awaiting import
-7. Weekly planner
+6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
+7. Weekly planner, in 4 parts: 7a session catalogue (built 2026-10-13, awaiting test), 7b week templates, 7c planner, 7d workout mode
 8. Rule warnings
 9. Races + checklist + race routine
 10. Training blocks
 11. Body & goals (weigh-ins, trend chart, PBs)
 12. Dashboard (incl. football season totals, shoe km)
-13. JSON export + polish
+13. JSON export + polish + design pass (overall look, laptop layout for older screens)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -89,6 +89,25 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-13: one responsive app for phone AND laptop (no separate versions). New screens are built
+  laptop-aware from now on (planner: 7 day columns on wide screens); a global design pass happens in
+  step 13. Colours/fonts/spacing stay centralised as CSS variables in style.css.
+- 2026-10-13: planner details: auto-link when an activity is logged on a day with an open planned
+  session of the same sport (Undo offered; ask if 2 candidates). Session type is optional everywhere
+  ("just a run" = category other); planner offers quick-add per sport without a recipe. Catalogue
+  pre-filled from the Notion session templates (gym ones with exercises; running ones name only;
+  "Gym" dropped as duplicate; "Lower body training" = leg explosivity). Exercise line = name, sets,
+  reps-or-time (text), weight kg, note; a recipe can have `rounds` (circuits). Workout mode (7d):
+  Start -> tick sets with a timer, change weights on the spot (offer to update the catalogue),
+  Finish -> creates the activity, marks the session done and freezes what was done. One migration
+  (20261013000001_planner.sql) covers all of step 7.
+- 2026-10-13: planner redesign (Rom): a **session catalogue** (reusable sessions with details: gym =
+  exercises with sets x reps x weight; others = description + optional targets) and **week templates**
+  built from catalogue sessions (several menus, e.g. Normal / Race / Holiday; A/B alternation replaces the
+  hardcoded Thu/Fri swap). The default week moves from rules.js into editable data; training *rules*
+  stay in rules.js. Planned sessions POINT to a catalogue session, so editing it (25 kg -> 30 kg)
+  updates every not-yet-done session. When a session is marked done, its details are FROZEN (snapshot)
+  so history stays true.
 - 2026-10-12: import details (see tools/notion-import/README.md): session types guessed from names
   (Notion has no type field), Notion name kept as activity `title` (now shown and editable in the app);
   football comes from planner sessions marked Done (no duration); match stats not imported (no date);

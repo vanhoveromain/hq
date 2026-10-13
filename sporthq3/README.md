@@ -37,6 +37,6 @@ The app must be opened through a small local web server (not by double-clicking
 | `js/main.js` | Starts the app, login check, switches screens (hash router) |
 | `js/rules.js` | The rulebook: sports, session types, categories (later: training rules) |
 | `js/utils/*.js` | Date and formatting helpers |
-| `js/views/*.js` | One file per screen (`shoes.js` opens from the Me tab) |
+| `js/views/*.js` | One file per screen (`shoes.js` opens from Me, `catalogue.js` from Plan) |
 | `manifest.webmanifest`, `icons/` | Name and icon for "Add to Home Screen" |
 | `supabase/migrations/` | SQL that builds the database; paste into Supabase's SQL Editor |
