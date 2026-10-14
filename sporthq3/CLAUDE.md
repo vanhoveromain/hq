@@ -105,7 +105,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - 2026-10-14: race cards differ per group: Upcoming = violet left line, big countdown, date + distance,
   goal + pace, checklist progress (listRaces brings checklist done flags); Ideas = dashed, no shadow,
   💡, name + date/distance only; Past = big result time + pace; cancelled / never run = greyed + struck.
-  All race cards share one size (min-height 176px, stretched per row), as tiles.
+  Cards are the same size WITHIN a group (grid-auto-rows: 1fr), groups may differ. Race page on laptop:
+  header across the top, details form left (fields in 2 columns), routine + checklist sidebar right.
 - 2026-10-14: laptop + polish round (Rom's feedback): Home "This week" strip shows only the sport
   icons per day (done day = light green background; utils/plan.js daySummary, also used by the month).
   Plan: Week | Month switch (#/planner/month/YYYY-MM; last view remembered per device); month = calendar

@@ -6,12 +6,12 @@
 import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610142138";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610142138";
-import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610142138";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142138";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610142138";
-import { showToast } from "../utils/toast.js?v=202610142138";
+} from "../storage.js?v=202610142140";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610142140";
+import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610142140";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142140";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610142140";
+import { showToast } from "../utils/toast.js?v=202610142140";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -162,70 +162,82 @@ async function renderRace(container, raceId) {
 
   const isEdit = Boolean(race);
   const r = race || { status: "registered" };
+  // Phone: header, routine, checklist, then the form (one column).
+  // Laptop: header across the top, the form on the left (fields in 2
+  // columns), routine + checklist as a sidebar on the right.
   container.innerHTML = `
+    <div class="race-page">
     <a href="#/races" class="back-link">‹ Races</a>
     ${isEdit ? `
-      <h2 class="race-title">${escapeHtml(race.name)}</h2>
-      <p class="muted race-subtitle">${race.race_date ? escapeHtml(formatDayLabel(race.race_date)) : "No date yet"}
-        ${race.race_date && race.race_date >= todayISO() && race.status !== "finished" && race.status !== "cancelled"
-          ? ` · <strong class="countdown">${countdown(race.race_date, todayISO())}</strong>` : ""}</p>
-      <section class="card" id="routine"><p class="muted">Loading…</p></section>
-      <section class="card" id="checklist"></section>` : ""}
-    <form id="race-form" class="card form" novalidate>
+      <header class="race-header">
+        <h2 class="race-title">${escapeHtml(race.name)}</h2>
+        <p class="muted race-subtitle">${race.race_date ? escapeHtml(formatDayLabel(race.race_date)) : "No date yet"}
+          ${race.race_date && race.race_date >= todayISO() && race.status !== "finished" && race.status !== "cancelled"
+            ? ` · <strong class="countdown">${countdown(race.race_date, todayISO())}</strong>` : ""}</p>
+      </header>` : ""}
+    <div class="race-layout">
+    ${isEdit ? `
+      <aside class="race-side">
+        <section class="card" id="routine"><p class="muted">Loading…</p></section>
+        <section class="card" id="checklist"></section>
+      </aside>` : ""}
+    <form id="race-form" class="card form race-form" novalidate>
       <h2>${isEdit ? "Race details" : "New race"}</h2>
-
-      <label for="r-name">Name</label>
-      <input id="r-name" name="name" type="text" required autocomplete="off" placeholder="e.g. 20 km de Bruxelles"
-             value="${escapeHtml(r.name || "")}">
-
-      <label for="r-date">Date <span class="muted">(empty = just an idea)</span></label>
-      <input id="r-date" name="race_date" type="date" value="${escapeHtml(r.race_date || "")}">
-
-      <label for="r-status">Status</label>
-      <select id="r-status" name="status">
-        ${Object.entries(RACE_STATUSES).map(([key, s]) =>
-          `<option value="${key}" ${r.status === key ? "selected" : ""}>${s.label}</option>`).join("")}
-      </select>
-
-      <label for="r-location">Location</label>
-      <input id="r-location" name="location" type="text" autocomplete="off" value="${escapeHtml(r.location || "")}">
-
-      <div class="field-row">
-        <div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="r-name">Name</label>
+          <input id="r-name" name="name" type="text" required autocomplete="off" placeholder="e.g. 20 km de Bruxelles"
+                 value="${escapeHtml(r.name || "")}">
+        </div>
+        <div class="field">
+          <label for="r-date">Date <span class="muted">(empty = just an idea)</span></label>
+          <input id="r-date" name="race_date" type="date" value="${escapeHtml(r.race_date || "")}">
+        </div>
+        <div class="field">
+          <label for="r-status">Status</label>
+          <select id="r-status" name="status">
+            ${Object.entries(RACE_STATUSES).map(([key, s]) =>
+              `<option value="${key}" ${r.status === key ? "selected" : ""}>${s.label}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label for="r-location">Location</label>
+          <input id="r-location" name="location" type="text" autocomplete="off" value="${escapeHtml(r.location || "")}">
+        </div>
+        <div class="field">
           <label for="r-distance">Distance (km)</label>
           <input id="r-distance" name="distance_km" type="text" inputmode="decimal" autocomplete="off"
                  value="${r.distance_km != null ? Number(r.distance_km) : ""}">
         </div>
-        <div>
+        <div class="field">
           <label for="r-elevation">D+ (m)</label>
           <input id="r-elevation" name="elevation_m" type="text" inputmode="numeric" autocomplete="off"
                  value="${r.elevation_m ?? ""}">
         </div>
-      </div>
-
-      <div class="field-row">
-        <div>
+        <div class="field">
           <label for="r-goal">Goal time</label>
           <input id="r-goal" name="goal" type="text" inputmode="decimal" autocomplete="off" placeholder="1:45:00"
                  value="${escapeHtml(formatDuration(r.goal_time_s))}">
           <p class="hint" id="goal-pace"></p>
         </div>
-        <div>
+        <div class="field">
           <label for="r-result">Result time</label>
           <input id="r-result" name="result" type="text" inputmode="decimal" autocomplete="off" placeholder="1:43:12"
                  value="${escapeHtml(formatDuration(r.result_time_s))}">
           <p class="hint" id="result-pace"></p>
         </div>
+        <div class="field field-full">
+          <label for="r-block">Training block</label>
+          <select id="r-block" name="training_block_id">
+            <option value="">— none —</option>
+            ${blocks.map((b) => `<option value="${b.id}" ${r.training_block_id === b.id ? "selected" : ""}>${escapeHtml(b.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field field-full">
+          <label for="r-notes">Notes</label>
+          <textarea id="r-notes" name="notes" rows="4">${escapeHtml(r.notes || "")}</textarea>
+        </div>
       </div>
-
-      <label for="r-block">Training block</label>
-      <select id="r-block" name="training_block_id">
-        <option value="">— none —</option>
-        ${blocks.map((b) => `<option value="${b.id}" ${r.training_block_id === b.id ? "selected" : ""}>${escapeHtml(b.name)}</option>`).join("")}
-      </select>
-
-      <label for="r-notes">Notes</label>
-      <textarea id="r-notes" name="notes" rows="3">${escapeHtml(r.notes || "")}</textarea>
 
       <p id="race-status" class="status" role="status"></p>
       <div class="form-actions">
@@ -234,6 +246,8 @@ async function renderRace(container, raceId) {
         ${isEdit ? `<button type="button" id="delete" class="button danger">Delete</button>` : ""}
       </div>
     </form>
+    </div>
+    </div>
   `;
 
   const form = container.querySelector("#race-form");
