@@ -52,7 +52,7 @@
 11. Body & goals (weigh-ins, trend chart, PBs) — done 2026-10-14
 12. Dashboard (incl. football season totals, shoe km) — done 2026-10-14
 13. In 4 parts: 13a JSON export (done 2026-10-14), 13b drag and drop of planner cards (laptop + phone:
-    press and hold) (done 2026-10-14), 13c design pass + polish (done 2026-10-14: "A + C orange"), 13d switch day
+    press and hold) (done 2026-10-14), 13c design pass + polish (done 2026-10-14: "A + C", violet), 13d switch day
     (final Notion re-import, big clean, merge to live, phone check)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
@@ -102,6 +102,12 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: accent = VIOLET (#6d28d9 / #7c3aed lines / #a78bfa brand + dark mode). Orange felt too
+  "Strava". Rom's end goal is one HQ hub hosting all his HQs (sport, work, personal) with the SAME
+  style and one accent per HQ: hub = ink (black & white), Sport = violet, Work = blue, Personal =
+  raspberry. Green / amber / red are reserved for done / warning / error in every HQ, so no HQ uses
+  them as accent. (If Work HQ uses QED's teal + green later, its green clashes with "done".) Later:
+  move the shared style into one stylesheet the HQs share, each HQ setting only --accent tokens.
 - 2026-10-14: design pass (13c). Rom compared mock-ups (A Clean, B Night run, C Coach) and chose
   "A + C, orange": light cards lifted by a soft shadow (dark mode: thin borders instead), charcoal top
   bar (#1c1917) with orange brand, small grey UPPERCASE labels on dashboard cards and list sections,

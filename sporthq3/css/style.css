@@ -3,9 +3,12 @@
    bottom adds tweaks for bigger screens. */
 
 /* ---------- Design tokens: change a colour once here, it changes everywhere ----------
-   Look chosen on 2026-10-14 ("A + C orange"): soft white cards with a light
-   shadow, a charcoal top bar, small uppercase card labels, a thin orange
-   line on dashboard cards and planner sessions; done = green. */
+   Look chosen on 2026-10-14 ("A + C"): soft white cards with a light shadow,
+   a charcoal top bar, small uppercase card labels, a thin accent line on
+   dashboard cards and planner sessions; done = green.
+   HQ family: every HQ shares this style and only changes its ACCENT
+   (hub = ink, Sport = violet, Work = blue, Personal = raspberry). Green,
+   amber and red keep their meaning (done / warning / error) in every HQ. */
 :root {
   --bg: #f4f4f5;
   --surface: #ffffff;
@@ -14,12 +17,12 @@
   --border: #e7e5e4;
   --card-border: transparent;   /* light mode: cards are lifted by a shadow, no border */
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
-  --accent: #c2410c;            /* orange, dark enough for white text and small text */
-  --accent-strong: #ea580c;     /* brighter orange for lines and bars */
+  --accent: #6d28d9;            /* Sport HQ violet, dark enough for white text and small text */
+  --accent-strong: #7c3aed;     /* brighter violet for lines and bars */
   --accent-text: #ffffff;
   --topbar-bg: #1c1917;         /* charcoal top bar */
   --topbar-text: #ffffff;
-  --brand: #fb923c;
+  --brand: #a78bfa;
   --ok: #15803d;
   --done-line: #16a34a;
   --error: #b91c1c;
@@ -39,8 +42,8 @@
     --border: #34302c;
     --card-border: #2c2926;
     --shadow: none;
-    --accent: #fb923c;
-    --accent-strong: #fb923c;
+    --accent: #a78bfa;
+    --accent-strong: #a78bfa;
     --accent-text: #1c1917;
     --topbar-bg: #0a0a09;
     --ok: #4ade80;
@@ -495,7 +498,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   background: var(--text); color: var(--bg); box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 .toast button { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
-@media (prefers-color-scheme: dark) { .toast button { color: #c2410c; } }
+@media (prefers-color-scheme: dark) { .toast button { color: #6d28d9; } }
 
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
 
