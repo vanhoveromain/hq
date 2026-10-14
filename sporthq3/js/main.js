@@ -4,17 +4,20 @@
 // screen you're on, e.g. index.html#/planner. Changing it doesn't reload the
 // page; we just draw a different view inside <main>. This is a "hash router".
 
-import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610141003";
-import * as loginView from "./views/login.js?v=202610141003";
-import * as dashboardView from "./views/dashboard.js?v=202610141003";
-import * as plannerView from "./views/planner.js?v=202610141003";
-import * as logView from "./views/log.js?v=202610141003";
-import * as racesView from "./views/races.js?v=202610141003";
-import * as meView from "./views/me.js?v=202610141003";
-import * as shoesView from "./views/shoes.js?v=202610141003";
-import * as catalogueView from "./views/catalogue.js?v=202610141003";
-import * as weekTemplatesView from "./views/weekTemplates.js?v=202610141003";
-import * as workoutView from "./views/workout.js?v=202610141003";
+import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610142142";
+import * as loginView from "./views/login.js?v=202610142142";
+import * as dashboardView from "./views/dashboard.js?v=202610142142";
+import * as plannerView from "./views/planner.js?v=202610142142";
+import * as logView from "./views/log.js?v=202610142142";
+import * as racesView from "./views/races.js?v=202610142142";
+import * as meView from "./views/me.js?v=202610142142";
+import * as shoesView from "./views/shoes.js?v=202610142142";
+import * as blocksView from "./views/blocks.js?v=202610142142";
+import * as bodyView from "./views/body.js?v=202610142142";
+import * as settingsView from "./views/settings.js?v=202610142142";
+import * as catalogueView from "./views/catalogue.js?v=202610142142";
+import * as weekTemplatesView from "./views/weekTemplates.js?v=202610142142";
+import * as workoutView from "./views/workout.js?v=202610142142";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
@@ -25,6 +28,9 @@ const routes = {
   races:     { title: "Races", view: racesView },
   me:        { title: "Me", view: meView },
   shoes:     { title: "Shoes", view: shoesView, tab: "me" },
+  blocks:    { title: "Training blocks", view: blocksView, tab: "me" },
+  body:      { title: "Body & goals", view: bodyView, tab: "me" },
+  settings:  { title: "Settings", view: settingsView, tab: "me" },
   catalogue: { title: "Session catalogue", view: catalogueView, tab: "planner" },
   weektemplates: { title: "Week templates", view: weekTemplatesView, tab: "planner" },
   workout:   { title: "Workout", view: workoutView, tab: "planner" },

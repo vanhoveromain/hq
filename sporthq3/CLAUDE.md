@@ -47,19 +47,21 @@
 7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
    (save a week as template / apply a template) (done 2026-10-13), 7d workout mode (done 2026-10-14)
 8. Rule warnings — done 2026-10-14
-9. Races + checklist + race routine
-10. Training blocks
-11. Body & goals (weigh-ins, trend chart, PBs)
-12. Dashboard (incl. football season totals, shoe km)
-13. JSON export + polish + design pass (overall look, laptop layout for older screens, drag and drop
-    of planner cards on laptop + phone (press and hold))
+9. Races + checklist + race routine — done 2026-10-14
+10. Training blocks — done 2026-10-14
+11. Body & goals (weigh-ins, trend chart, PBs) — done 2026-10-14
+12. Dashboard (incl. football season totals, shoe km) — done 2026-10-14
+13. In 4 parts: 13a JSON export (done 2026-10-14), 13b drag and drop of planner cards (laptop + phone:
+    press and hold) (done 2026-10-14), 13c design pass + polish (done 2026-10-14: "A + C", violet), 13d switch day
+    (final Notion re-import, big clean, merge to live, phone check)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
 - Categories: heavy legs (leg explosivity, intervals, team training, match, race), easy run, upper body, rest.
 - Warn when two heavy-leg sessions fall on consecutive days.
 - Leg explosivity OR intervals, never both on the same day (any day; was "Monday" until 2026-10-14).
-- Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
+- Race routine (RACE_ROUTINE): race day + light activation jog 2 days before; full rest the day before
+  (rule rest_before_race warns if anything is planned then). A planned match wins over the jog.
 - Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
 - No automatic default week (decided 2026-10-13): Rom plans each week himself (catalogue, quick-add,
   copy last week, later templates). The Thu/Fri A/B swap was dropped.
@@ -83,8 +85,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Comments where logic isn't obvious. Small functions. No clever one-liners.
 
 ## How we work
-- Workflow: build on the working branch (the "draft") -> test locally -> pull request -> merge into
-  `main` -> GitHub Pages publishes `main` automatically. Live app: https://vanhoveromain.github.io/hq/sporthq3/
+- Workflow: build on the working branch (the "draft") -> test locally -> commit + push the draft.
+  Since 2026-10-14 (after step 9): NO pull request per step. Merge into `main` (GitHub Pages publishes
+  it: https://vanhoveromain.github.io/hq/sporthq3/) only when Rom wants to test on his phone, and
+  before switch day. Every step is still committed and pushed, so nothing is lost.
 - Before every pull request: run `node tools/bump-version.mjs` (new `?v=` on every file address, so
   phones fetch the whole new version together instead of mixing old and new saved copies).
   Local testing: `python3 serve.py` (no-cache server) instead of `python3 -m http.server 8000`.
@@ -98,6 +102,75 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: race cards differ per group: Upcoming = violet left line, big countdown, date + distance,
+  goal + pace, checklist progress (listRaces brings checklist done flags); Ideas = dashed, no shadow,
+  💡, name + date/distance only; Past = big result time + pace; cancelled / never run = greyed + struck.
+  Cards are the same size WITHIN a group (grid-auto-rows: 1fr), groups may differ. Race page on laptop:
+  header across the top, details form left (fields in 2 columns), routine + checklist sidebar right.
+- 2026-10-14: laptop + polish round (Rom's feedback): Home "This week" strip shows only the sport
+  icons per day (done day = light green background; utils/plan.js daySummary, also used by the month).
+  Plan: Week | Month switch (#/planner/month/YYYY-MM; last view remembered per device); month = calendar
+  with sport icons, tap a day -> its week. Laptop: catalogue / templates links below the calendar
+  (phone: still on top). Laptop (>= 1000px): Log = table (date, session, time, distance, pace, RPE);
+  Races, Blocks, Shoes = card grids (.wide-page + .card-grid); Body = weight + PBs left, chart right.
+  Me = menu (Body & goals, Shoes, Training blocks, Settings); Settings (#/settings) = account,
+  password, backup (moved out of Me; not a 6th tab, the tab bar stays at 5).
+- 2026-10-14: accent = VIOLET (#6d28d9 / #7c3aed lines / #a78bfa brand + dark mode). Orange felt too
+  "Strava". Rom's end goal is one HQ hub hosting all his HQs (sport, work, personal) with the SAME
+  style and one accent per HQ: hub = ink (black & white), Sport = violet, Work = blue, Personal =
+  raspberry. Green / amber / red are reserved for done / warning / error in every HQ, so no HQ uses
+  them as accent. (If Work HQ uses QED's teal + green later, its green clashes with "done".) Later:
+  move the shared style into one stylesheet the HQs share, each HQ setting only --accent tokens.
+- 2026-10-14: design pass (13c). Rom compared mock-ups (A Clean, B Night run, C Coach) and chose
+  "A + C, orange": light cards lifted by a soft shadow (dark mode: thin borders instead), charcoal top
+  bar (#1c1917) with orange brand, small grey UPPERCASE labels on dashboard cards and list sections,
+  a 3px orange line on top of dashboard cards, a 4px left line on planner sessions (orange = planned,
+  green = done, dashed = extra). Green was rejected: it clashed with "done = green". All colours are
+  tokens in style.css (:root + dark mode). Laptop Home = 2 ordered columns: left "now" (Today, This
+  week, Warnings), right overview (race, block, weight, football, shoes). Polish: laptop planner
+  "+" next to the day name, weigh-in Save button sized, catalogue hides a type equal to the name,
+  "Past ..." sections styled like the others; theme-color / manifest updated to the charcoal bar.
+- 2026-10-14: drag and drop (13b): utils/dragDrop.js on pointer events (mouse and finger alike).
+  Mouse: press + move 8px. Finger: hold 450 ms (a quick swipe still scrolls, a tap still opens the
+  menu); page scrolling is blocked while dragging and the page auto-scrolls near the screen edges.
+  Drop on another day of the shown week = move (added at the end of that day); rule warnings pop up as
+  usual. Done sessions can't be dragged. Move / Swap buttons stay. Window listeners only live during a
+  press (the planner redraws on every week change).
+- 2026-10-14: JSON export (13a): Me -> Backup -> "Export my data" downloads sporthq3-backup-<date>.json
+  with every row of the 14 tables (RLS = only your rows), paged by 1000, plus counts. "Last export"
+  is remembered per device (localStorage), nudge after 30 days. No import in v1 (restore = SQL by hand).
+- 2026-10-14: dashboard (12): Home = cards that each load on their own (one failing card shows its
+  error, the rest still work), each title opens the full screen: Today (planned sessions with Start /
+  Log, workout-in-progress banner, "rest day"), This week (done of planned, 7-day strip, running km),
+  Warnings (hidden when none), Next race (registered / to register: countdown, checklist progress),
+  Current block (week x of y), Weight (latest, goal %, sparkline of the trend), Football season
+  (FOOTBALL_SEASON in rules.js = 1 Aug -> 15 Apr; between seasons the last one is shown as finished;
+  matches = football match activities, minutes/goals/assists from match cards only), Shoes in use.
+  Phone: one column; 2 columns from 700px, 3 from 1100px.
+- 2026-10-14: body & goals (11): Me -> Body & goals (#/body). Weight: quick weigh-in (comma ok, one
+  per day: same date = replace, via upsert), goal = settings start/target weight (start defaults to the
+  first weigh-in), progress "−x kg of −y kg · z%". Chart = hand-made SVG (no library): weigh-in dots,
+  trend line = average of the last WEIGHT_TREND_POINTS (4) weigh-ins (computed on all data), dashed
+  target, tap/hover tooltip, range 3m/6m/1y/All (remembered); weigh-in list (delete) under the chart.
+  PBs (PB_DISTANCES in rules.js: 5k, 10k, half, marathon): automatic from runs = a run counts if its
+  distance is between d and d × 1.05; within 50 m it shows its real time, longer ones are scaled by
+  pace and shown with "≈" (Rom chose this over strict matching). Manual records (personal_bests) win
+  when faster. No migration.
+- 2026-10-14: training blocks (10): Me -> Training blocks (#/blocks). List = Current (week x / y, days
+  left, progress bar), Upcoming, Past (recap reminder only during the 14 days after a block ends, not for older blocks). Block page = stats computed from the
+  log for the period (current block: up to today): sessions (+/week), running km (+/week), D+, total
+  time (a minimum when some sessions have no duration), sessions per sport; its races; then the form
+  (name, start, end, goal, recap). Overlapping blocks: warning on save, never blocked. Deleting a block
+  keeps its races (link set to null). Planner shows "📘 <block> · week x / y" for the week shown.
+- 2026-10-14: races (9): Races tab = Upcoming (date >= today + to register/registered, countdown),
+  Ideas (no date or idea/potential), Past (finished/cancelled/date passed). Race page = routine card +
+  checklist card first, details form below (goal/result time with live pace, training block picker;
+  a registered race needs a date). Checklist per race: starter list (STARTER_CHECKLIST in rules.js) or
+  "copy from my last race", tick / add / remove / untick all. Race routine = button "Add race routine
+  to my planner" (sessions carry race_id, source race_routine); moving the race date moves the open
+  routine sessions, removing the date removes them, deleting the race deletes them (cascade). The
+  planner's race session links back to the race; once logged, "Use my logged time as result" sets the
+  result + finished. Only ONE toast at a time: combine messages into one (a second hides the first).
 - 2026-10-14: cache fix. Browsers kept old copies of some modules (planner stuck on "Loading…" when a
   new planner.js met an old rules.js; Safari's hard reload is Cmd+Option+R, not Cmd+Shift+R). Fix:
   every local import / index.html reference carries `?v=<version>`, stamped by tools/bump-version.mjs
@@ -122,8 +195,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   Plan -> Week templates lists them (view, rename, delete). Deleting a recipe removes it from
   templates (cascade); archiving doesn't. No migration needed.
 - 2026-10-13: test freely in the real database until switch day. Switch day = "big clean": delete
-  app-created test rows (activities without notion_id, planned sessions, ...), KEEP the catalogue and
-  match cards, then run the final Notion re-import. (A re-import alone never removes app-created rows.)
+  app-created test rows (activities without notion_id, planned sessions, races without notion_id +
+  their checklists, week templates if Rom wants), KEEP the catalogue and match cards, then run the
+  final Notion re-import. (A re-import alone never removes app-created rows.) Until switch day, real
+  races are still added in Notion (an app-created race would be deleted by the big clean).
 - 2026-10-13: planner (7b): week view (7 columns on laptop), + per day (quick sport or catalogue
   recipe), tap a session for Done / Not done / Cancel / Move / Swap day / Edit recipe / Remove.
   Done = link to an activity of that day, "Log it now" (pre-filled form, linked on save) or just tick.

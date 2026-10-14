@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141003";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610142142";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -301,7 +301,7 @@ export async function deleteSessionTemplate(id) {
 // ---------------------------------------------------------------------
 
 const PLANNED_COLUMNS = ["session_date", "sport", "session_type", "title", "status", "source",
-  "position", "template_id", "activity_id", "details", "notes"];
+  "position", "template_id", "activity_id", "details", "notes", "race_id"];
 
 // "template:session_templates(*)" = also bring the linked recipe, and call it
 // `template` in the result. Same for the linked activity.
@@ -332,7 +332,7 @@ export async function getPlannedSession(id) {
 export async function listActivitiesBetween(fromDate, toDate) {
   const { data, error } = await supabase
     .from("activities")
-    .select("id, activity_date, sport, session_type, title, duration_s, distance_km, rpe")
+    .select("id, activity_date, sport, session_type, title, duration_s, distance_km, elevation_m, rpe")
     .gte("activity_date", fromDate)
     .lte("activity_date", toDate)
     .order("activity_date", { ascending: true })
@@ -475,4 +475,289 @@ export async function applyWeekTemplate(weekTemplate, monday, addDays, existing 
   const { error } = await supabase.from("planned_sessions").insert(rows);
   if (error) throw error;
   return rows.length;
+}
+
+
+// ---------------------------------------------------------------------
+// Races + their checklist
+// A race: { id, name, race_date (or null = idea), location, distance_km,
+//   elevation_m, status, goal_time_s, result_time_s, training_block_id,
+//   notes, block: { id, name } | null }
+// ---------------------------------------------------------------------
+
+const RACE_COLUMNS = ["name", "race_date", "location", "distance_km", "elevation_m", "status",
+  "goal_time_s", "result_time_s", "training_block_id", "notes"];
+
+export async function listRaces() {
+  const { data, error } = await supabase
+    .from("races")
+    .select("*, block:training_blocks(id, name), checklist:race_checklist_items(done)")
+    .order("race_date", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data;
+}
+
+// One race with its checklist (in order).
+export async function getRace(id) {
+  const { data, error } = await supabase
+    .from("races")
+    .select("*, block:training_blocks(id, name), checklist:race_checklist_items(*)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (data) data.checklist.sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at));
+  return data;
+}
+
+export async function saveRace(race) {
+  const values = pick(race, RACE_COLUMNS);
+  const query = race.id
+    ? supabase.from("races").update(values).eq("id", race.id)
+    : supabase.from("races").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Its checklist and its race-routine sessions in the planner go with it
+// (on delete cascade).
+export async function deleteRace(id) {
+  const { error } = await supabase.from("races").delete().eq("id", id);
+  if (error) throw error;
+}
+
+
+// ---------------------------------------------------------------------
+// Training blocks: { id, name, start_date, end_date, goal, recap,
+//   races: [ { id, name, race_date, status, result_time_s, distance_km } ] }
+// ---------------------------------------------------------------------
+
+const BLOCK_COLUMNS = ["name", "start_date", "end_date", "goal", "recap"];
+const BLOCK_SELECT = "*, races(id, name, race_date, status, result_time_s, goal_time_s, distance_km)";
+
+// All blocks, newest first (also used by the block picker on a race).
+export async function listTrainingBlocks() {
+  const { data, error } = await supabase
+    .from("training_blocks")
+    .select(BLOCK_SELECT)
+    .order("start_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getTrainingBlock(id) {
+  const { data, error } = await supabase.from("training_blocks").select(BLOCK_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// The block that contains this day, or null.
+export async function findBlockOn(date) {
+  const { data, error } = await supabase
+    .from("training_blocks")
+    .select("id, name, start_date, end_date")
+    .lte("start_date", date)
+    .gte("end_date", date)
+    .order("start_date", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data[0] || null;
+}
+
+export async function saveTrainingBlock(block) {
+  const values = pick(block, BLOCK_COLUMNS);
+  const query = block.id
+    ? supabase.from("training_blocks").update(values).eq("id", block.id)
+    : supabase.from("training_blocks").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Its races stay; they just lose the link (on delete set null).
+export async function deleteTrainingBlock(id) {
+  const { error } = await supabase.from("training_blocks").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Adds lines at the end of a race's checklist.
+export async function addChecklistItems(raceId, labels, startPosition = 0) {
+  if (!labels.length) return [];
+  const rows = labels.map((label, i) => ({ race_id: raceId, label, position: startPosition + i }));
+  const { data, error } = await supabase.from("race_checklist_items").insert(rows).select();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateChecklistItem(id, changes) {
+  const { error } = await supabase.from("race_checklist_items").update(pick(changes, ["label", "done", "position"])).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteChecklistItem(id) {
+  const { error } = await supabase.from("race_checklist_items").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// The checklist of the most recent OTHER race that has one (to copy it).
+// Returns { raceName, labels } or null.
+export async function findLastChecklist(excludeRaceId) {
+  const { data, error } = await supabase
+    .from("race_checklist_items")
+    .select("label, position, race_id, race:races(name)")
+    .neq("race_id", excludeRaceId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  if (!data.length) return null;
+  const raceId = data[0].race_id;
+  const items = data.filter((item) => item.race_id === raceId).sort((a, b) => a.position - b.position);
+  return { raceName: data[0].race ? data[0].race.name : "", labels: items.map((item) => item.label) };
+}
+
+// The planner sessions created by a race's routine (race day, activation jog).
+export async function listRaceSessions(raceId) {
+  const { data, error } = await supabase
+    .from("planned_sessions")
+    .select(PLANNED_SELECT)
+    .eq("race_id", raceId)
+    .order("session_date", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+
+// ---------------------------------------------------------------------
+// Body & goals: weigh-ins, weight goal (settings), personal bests
+// ---------------------------------------------------------------------
+
+// All weigh-ins, oldest first (the chart reads them left to right).
+export async function listWeighIns() {
+  const { data, error } = await supabase
+    .from("weigh_ins")
+    .select("id, weigh_date, weight_kg, notes")
+    .order("weigh_date", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// Max one weigh-in per day: saving a second one on the same day replaces it
+// ("upsert" = insert, or update if that day already exists).
+export async function saveWeighIn({ weigh_date, weight_kg, notes = null }) {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("weigh_ins")
+    .upsert({ user_id: user.id, weigh_date, weight_kg, notes }, { onConflict: "user_id,weigh_date" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteWeighIn(id) {
+  const { error } = await supabase.from("weigh_ins").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Your settings row (start + target weight), or an empty one.
+export async function getSettings() {
+  const { data, error } = await supabase.from("settings").select("*").maybeSingle();
+  if (error) throw error;
+  return data || {};
+}
+
+export async function saveWeightGoal({ start_weight_kg, target_weight_kg }) {
+  const user = await getCurrentUser();
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ user_id: user.id, start_weight_kg, target_weight_kg }, { onConflict: "user_id" });
+  if (error) throw error;
+}
+
+// Every run with a distance and a time (for the automatic personal bests).
+export async function listRunsWithTimes() {
+  const PAGE = 1000;
+  const runs = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("activities")
+      .select("id, activity_date, title, session_type, distance_km, duration_s")
+      .eq("sport", "running")
+      .not("distance_km", "is", null)
+      .not("duration_s", "is", null)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    runs.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return runs;
+}
+
+// Records you typed in yourself (e.g. an old 10k from before the app).
+export async function listPersonalBests() {
+  const { data, error } = await supabase.from("personal_bests").select("*").order("distance_km");
+  if (error) throw error;
+  return data;
+}
+
+export async function savePersonalBest(pb) {
+  const values = pick(pb, ["label", "distance_km", "time_s", "achieved_on", "notes"]);
+  const query = pb.id
+    ? supabase.from("personal_bests").update(values).eq("id", pb.id)
+    : supabase.from("personal_bests").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePersonalBest(id) {
+  const { error } = await supabase.from("personal_bests").delete().eq("id", id);
+  if (error) throw error;
+}
+
+
+// ---------------------------------------------------------------------
+// Dashboard helpers
+// ---------------------------------------------------------------------
+
+// Football matches between two days, with their match card (or null).
+export async function listMatchesBetween(fromDate, toDate) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("id, activity_date, match_stats(minutes_played, goals, assists)")
+    .eq("sport", "football")
+    .eq("session_type", "match")
+    .gte("activity_date", fromDate)
+    .lte("activity_date", toDate);
+  if (error) throw error;
+  return data.map(withMatchStats);
+}
+
+
+// ---------------------------------------------------------------------
+// Export: every table, every row of yours, in one object (JSON backup).
+// ---------------------------------------------------------------------
+
+// Table name -> the column that orders it (its primary key), so the pages
+// of 1000 rows never overlap.
+const EXPORT_TABLES = {
+  settings: "user_id", shoes: "id", training_blocks: "id", races: "id", race_checklist_items: "id",
+  activities: "id", match_stats: "activity_id", session_templates: "id", week_templates: "id",
+  week_template_items: "id", planned_weeks: "week_start", planned_sessions: "id", weigh_ins: "id", personal_bests: "id",
+};
+
+export async function exportAllData() {
+  const PAGE = 1000;
+  const tables = {};
+  for (const [table, key] of Object.entries(EXPORT_TABLES)) {
+    tables[table] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase.from(table).select("*").order(key).range(from, from + PAGE - 1);
+      if (error) throw new Error(`${table}: ${error.message}`);
+      tables[table].push(...data);
+      if (data.length < PAGE) break;
+    }
+  }
+  return tables;
 }

@@ -2,33 +2,52 @@
    "Mobile-first" = the base rules are for a phone; the @media rule at the
    bottom adds tweaks for bigger screens. */
 
-/* ---------- Design tokens: change a colour once here, it changes everywhere ---------- */
+/* ---------- Design tokens: change a colour once here, it changes everywhere ----------
+   Look chosen on 2026-10-14 ("A + C"): soft white cards with a light shadow,
+   a charcoal top bar, small uppercase card labels, a thin accent line on
+   dashboard cards and planner sessions; done = green.
+   HQ family: every HQ shares this style and only changes its ACCENT
+   (hub = ink, Sport = violet, Work = blue, Personal = raspberry). Green,
+   amber and red keep their meaning (done / warning / error) in every HQ. */
 :root {
-  --bg: #f6f5f3;
+  --bg: #f4f4f5;
   --surface: #ffffff;
-  --text: #1c1917;
-  --muted: #6b6560;
-  --border: #e4e0db;
-  --accent: #c2410c;        /* sporty orange, dark enough for white text */
+  --text: #18181b;
+  --muted: #71717a;
+  --border: #e7e5e4;
+  --card-border: transparent;   /* light mode: cards are lifted by a shadow, no border */
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
+  --accent: #6d28d9;            /* Sport HQ violet, dark enough for white text and small text */
+  --accent-strong: #7c3aed;     /* brighter violet for lines and bars */
   --accent-text: #ffffff;
+  --topbar-bg: #1c1917;         /* charcoal top bar */
+  --topbar-text: #ffffff;
+  --brand: #a78bfa;
   --ok: #15803d;
+  --done-line: #16a34a;
   --error: #b91c1c;
-  --radius: 12px;
+  --radius: 14px;
   --tabbar-height: 64px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Dark mode follows the phone's setting automatically. */
+/* Dark mode follows the phone's setting automatically. Shadows don't show
+   on dark backgrounds, so cards get a thin border instead. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #171412;
-    --surface: #221e1b;
+    --bg: #111110;
+    --surface: #1e1c1a;
     --text: #f5f2ef;
     --muted: #a8a19a;
-    --border: #3a342f;
-    --accent: #fb923c;
+    --border: #34302c;
+    --card-border: #2c2926;
+    --shadow: none;
+    --accent: #a78bfa;
+    --accent-strong: #a78bfa;
     --accent-text: #1c1917;
+    --topbar-bg: #0a0a09;
     --ok: #4ade80;
+    --done-line: #4ade80;
     --error: #f87171;
   }
 }
@@ -59,11 +78,11 @@ p { margin: 0 0 12px; }
   align-items: baseline;
   gap: 12px;
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--topbar-bg);
+  color: var(--topbar-text);
 }
-.brand { font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
-.page-title { font-size: 1rem; font-weight: 600; margin: 0; }
+.brand { font-weight: 800; color: var(--brand); letter-spacing: -0.02em; }
+.page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); }
 
 /* ---------- Main area ---------- */
 .view {
@@ -75,13 +94,14 @@ p { margin: 0 0 12px; }
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 16px;
 }
 .card > :last-child { margin-bottom: 0; }
-.placeholder { border-style: dashed; }
+.placeholder { border: 1px dashed var(--border); box-shadow: none; }
 
 /* ---------- Forms ---------- */
 label { display: block; font-weight: 600; margin-bottom: 4px; }
@@ -104,7 +124,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   font-weight: 600;
   min-height: 44px;            /* big enough for a thumb */
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -137,6 +157,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
   border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
 }
 
 
@@ -170,7 +191,10 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
   margin: 0 4px 8px;
 }
 .week-title .muted { font-size: 0.85rem; font-weight: 400; }
@@ -180,7 +204,8 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   margin: 0;
   padding: 0;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   overflow: hidden;            /* keeps the rounded corners on the first/last row */
 }
@@ -331,7 +356,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 
 /* Progress bar: grey track, coloured fill whose width = % of the replace distance. */
 .bar { display: block; height: 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; }
-.bar-fill { display: block; height: 100%; background: var(--ok); }
+.bar-fill { display: block; height: 100%; background: var(--ok); border-radius: 4px; }
 .status-warn .bar-fill { background: #d97706; }
 .status-replace .bar-fill { background: var(--error); }
 .status-retired { opacity: 0.7; }
@@ -341,7 +366,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .status-replace .shoe-message { color: var(--error); }
 
 .retired { margin-bottom: 16px; }
-.retired summary { cursor: pointer; font-weight: 600; padding: 8px 4px; color: var(--muted); }
+.retired summary { cursor: pointer; font-weight: 600; padding: 8px 4px; color: var(--muted);
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; }
 
 .checkbox { display: flex; align-items: center; gap: 8px; font-weight: 400; margin-bottom: 12px; }
 .checkbox input { width: 20px; height: 20px; margin: 0; }
@@ -377,11 +403,12 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .days { display: flex; flex-direction: column; gap: 12px; }
 .day {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: 10px 12px 12px;
 }
-.day.is-today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.day.is-today { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong), var(--shadow); }
 .day-title {
   display: flex; justify-content: space-between; align-items: center;
   font-size: 0.95rem; margin: 0 0 8px;
@@ -397,13 +424,13 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   display: flex; align-items: center; gap: 10px; width: 100%;
   text-align: left; font: inherit; color: inherit; cursor: pointer;
   padding: 10px; margin-top: 8px;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  border: 0; border-left: 4px solid var(--accent-strong); border-radius: 10px; background: var(--bg);
 }
 .plan-card:first-of-type { margin-top: 0; }
-.plan-card.status-done { border-color: var(--ok); }
+.plan-card.status-done { border-left-color: var(--done-line); }
 .plan-card.status-cancelled { opacity: 0.55; }
 .plan-card.status-cancelled .activity-title { text-decoration: line-through; }
-.plan-card.extra { border-style: dashed; opacity: 0.8; }
+.plan-card.extra { border: 1px dashed var(--border); border-left: 4px dashed var(--muted); opacity: 0.8; }
 .plan-status { font-size: 1.1rem; }
 .week-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .week-actions .button { width: 100%; }
@@ -414,9 +441,11 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Laptop: the 7 days side by side, like a calendar. */
 @media (min-width: 1000px) {
   .view:has(.days) { max-width: 1400px; }
+  .view:has(.month) { max-width: 1100px; }
   .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: start; }
   .day { min-height: 160px; padding: 8px; }
-  .day-title { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .day-title { align-items: flex-start; gap: 4px; font-size: 0.85rem; }
+  .day-add { width: 28px; height: 28px; font-size: 1.05rem; flex-shrink: 0; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
   .plan-card .activity-icon { font-size: 1.1rem; }
 }
@@ -470,7 +499,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   background: var(--text); color: var(--bg); box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 .toast button { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
-@media (prefers-color-scheme: dark) { .toast button { color: #c2410c; } }
+@media (prefers-color-scheme: dark) { .toast button { color: #6d28d9; } }
 
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
 
@@ -516,4 +545,212 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 }
 @media (prefers-color-scheme: dark) {
   .day-warning { background: #422006; color: #fde68a; }
+}
+
+/* Races */
+.race-card { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+.race-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.race-card.status-cancelled { opacity: 0.6; }
+.countdown { color: var(--accent); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.routine-list { margin: 0 0 12px; padding-left: 20px; }
+.routine-list li { margin: 4px 0; }
+#routine .button, #checklist .button { margin-top: 8px; }
+.checklist { list-style: none; margin: 0 0 12px; padding: 0; }
+.checklist li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  border-top: 1px solid var(--border); padding: 6px 0; }
+.checklist li .checkbox { margin: 0; flex: 1; }
+.checklist li.is-done .checkbox { color: var(--muted, #78716c); text-decoration: line-through; }
+.add-item { display: flex; gap: 8px; margin-top: 8px; }
+.add-item input { flex: 1; margin: 0; }
+.add-item .button { margin-top: 0 !important; }
+.race-title { margin: 8px 0 0; }
+.race-subtitle { margin: 2px 0 12px; }
+
+/* Training blocks */
+.block-card { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+.block-goal { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.stat-grid div { display: flex; flex-direction: column; min-width: 0; }
+.stat-grid strong { font-size: 1.3rem; overflow-wrap: anywhere; }
+@media (min-width: 700px) { .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.week-block { display: block; text-align: center; margin: -4px 0 12px; font-size: 0.9rem; color: var(--accent); text-decoration: none; }
+.week-block[hidden] { display: none; }
+.block-reminder { color: var(--accent); font-weight: 600; }
+
+/* Body & goals */
+.weigh-form input[type="date"] { flex: 1.4; }
+.weigh-form input[name="weight_kg"] { flex: 1; min-width: 70px; }
+.goal-line { margin: 12px 0 6px; }
+.goal-edit, .weigh-list { margin-top: 16px; }
+.goal-edit summary, .weigh-list summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+#goal-form { margin-top: 8px; align-items: end; }
+#goal-form .button { grid-column: 1 / -1; }
+.pb-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.pb-row { display: flex; gap: 12px; align-items: baseline; border-top: 1px solid var(--border); padding: 8px 0; }
+.pb-label { width: 7.5em; flex-shrink: 0; font-weight: 600; }
+
+/* Weight chart (colours come from the theme tokens, so dark mode works) */
+.chart-legend { display: flex; gap: 16px; font-size: 0.85rem; color: var(--muted); margin: 12px 0 4px; }
+.chart-legend .key { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.key-line { width: 16px; height: 2px; background: var(--accent); }
+.key-dash { width: 16px; height: 0; border-top: 2px dashed var(--muted); }
+.chart-box { position: relative; }
+.weight-chart { display: block; touch-action: pan-y; }
+.weight-chart .grid { stroke: var(--border); stroke-width: 1; }
+.weight-chart .axis { fill: var(--muted); font-size: 11px; }
+.weight-chart .dot { fill: var(--muted); opacity: 0.55; stroke: var(--surface); stroke-width: 2; }
+.weight-chart .trend { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.weight-chart .target { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 4; }
+.weight-chart .cursor { stroke: var(--muted); stroke-width: 1; }
+.weight-chart .cursor-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.weight-chart .hit { fill: transparent; }
+.chart-tip {
+  position: absolute; top: 0; pointer-events: none; padding: 6px 10px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size: 0.85rem; white-space: nowrap;
+}
+.pb-row a { color: var(--accent); }
+
+/* Dashboard */
+.dashboard { display: grid; gap: 0; }
+.dash-card { min-width: 0; }
+.dash-card { border-top: 3px solid var(--accent-strong); }
+.dash-card h2 { margin: 0 0 8px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.dash-card h2 a { color: inherit; text-decoration: none; }
+.dash-card h2 a::after { content: " →"; color: var(--accent); }
+.dash-big { font-size: 1.6rem; font-weight: 700; margin: 4px 0; line-height: 1.2; letter-spacing: -0.02em; }
+.dash-big .muted { font-size: 0.95rem; font-weight: 400; }
+.dash-card .stat-grid { gap: 8px; }
+.dash-card .stat-grid strong { font-size: 1.15rem; }
+.dash-list { list-style: none; margin: 0; padding: 0; }
+.dash-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 6px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.dash-list li:first-child { border-top: 0; }
+.dash-actions { display: flex; gap: 6px; }
+.dash-actions .button { text-decoration: none; }
+.dash-shoe { flex-direction: column; align-items: stretch !important; }
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 8px 0; text-align: center; }
+.strip-day { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; border-radius: 8px; }
+.strip-day.is-today { outline: 2px solid var(--accent); }
+.dash-warnings { border-top-color: #d97706; }
+.sparkline { display: block; width: 100%; height: 40px; margin-top: 8px; }
+.sparkline path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+@media (min-width: 900px) {
+  .view:has(.dashboard) { max-width: 1200px; }   /* the page may be wider than the phone layout */
+  .dashboard { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
+}
+
+/* Drag and drop in the planner */
+.plan-card[data-session] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.plan-card.is-dragging { opacity: 0.35; }
+.drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; margin: 0;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25); transform-origin: top left; opacity: 0.95;
+}
+.day.is-drop-target { outline: 2px dashed var(--accent); outline-offset: 2px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+
+/* Weigh-in form: the Save button keeps its own size */
+.weigh-form { margin-bottom: 12px; }
+.weigh-form .button { width: auto; flex: 0 0 auto; }
+@media (min-width: 700px) { .weigh-form { max-width: 460px; } }
+.strip-day.is-done { background: color-mix(in srgb, var(--done-line) 16%, transparent); }
+.strip-icons { font-size: 1rem; line-height: 1.2; word-break: break-all; min-height: 1.2em; }
+
+/* Planner: Week | Month switch */
+.planner { display: flex; flex-direction: column; }
+.view-switch { display: flex; align-self: center; gap: 4px; padding: 4px; margin-bottom: 12px;
+  background: var(--surface); border-radius: 999px; box-shadow: var(--shadow); border: 1px solid var(--card-border); }
+.view-switch a { padding: 6px 18px; border-radius: 999px; text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+.view-switch a[aria-selected="true"] { background: var(--accent); color: var(--accent-text); }
+
+/* Planner: month calendar */
+.month { padding: 8px; }
+.month-head, .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-head span { text-align: center; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 4px 0; }
+.month-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 56px; padding: 4px 2px;
+  border-radius: 8px; text-decoration: none; color: inherit; background: var(--bg); }
+.month-day.is-other { opacity: 0.4; }
+.month-day.is-today { outline: 2px solid var(--accent-strong); }
+.month-day.is-done { background: color-mix(in srgb, var(--done-line) 16%, var(--surface)); }
+.month-date { font-size: 0.8rem; font-weight: 600; }
+.month-icons { font-size: 0.95rem; line-height: 1.15; text-align: center; word-break: break-all; }
+
+/* Laptop: the catalogue / templates links go below the calendar */
+@media (min-width: 1000px) {
+  .planner-menu { order: 99; margin-top: 16px; }
+  .month-day { min-height: 92px; align-items: flex-start; padding: 6px 8px; }
+  .month-icons { font-size: 1.2rem; text-align: left; }
+}
+
+/* ---------- Laptop: wider list screens ---------- */
+.log-head, .activity-item .col { display: none; }
+@media (min-width: 1000px) {
+  .view:has(.log-page), .view:has(.wide-page) { max-width: 1100px; }
+
+  /* Log: one table row per activity */
+  .log-head, .log-page .activity-item {
+    display: grid;
+    grid-template-columns: 32px 130px minmax(0, 1fr) 80px 150px 100px 44px;
+    gap: 12px; align-items: center;
+  }
+  .log-head { padding: 0 16px 6px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .log-page .activity-item { min-height: 0; padding: 10px 16px; }
+  .log-page .activity-item:hover { background: var(--bg); }
+  .log-page .activity-item .col { display: block; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+  .log-page .col-date { color: var(--muted); }
+  .log-page .activity-meta { display: none; }
+  .log-page .activity-icon { font-size: 1.2rem; }
+  .log-page .add-button { max-width: 260px; margin-left: auto; }
+
+  /* Races, blocks, shoes: cards side by side */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  .card-grid > .card { margin-bottom: 0; }
+  .wide-page .add-button { max-width: 260px; margin-left: auto; }
+  .wide-page .week, .wide-page .retired { margin-bottom: 24px; }
+}
+@media (min-width: 1000px) {
+  .view:has(.body-page) { max-width: 1100px; }
+  .body-page { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-areas: "weight chart" "pb chart";
+    column-gap: 16px; align-items: start; }
+  #weight-card { grid-area: weight; }
+  #chart-card { grid-area: chart; }
+  #pb-card { grid-area: pb; }
+}
+.menu-hint { margin: 0 auto 0 8px; font-weight: 400; }
+.card-grid + .hint, .card-grid + .retired { margin-top: 12px; }
+.menu a .menu-hint { font-size: 0.85rem; color: var(--muted); }
+
+/* Race cards: one look per group */
+.race-upcoming { border-left: 4px solid var(--accent-strong); }
+.race-countdown { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--accent); margin: 2px 0; }
+.race-countdown span { font-size: 1rem; font-weight: 600; }
+.race-idea { background: transparent; box-shadow: none; border: 1px dashed var(--border); }
+.race-idea strong { font-weight: 600; }
+.race-result { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.race-result .muted { font-size: 0.85rem; font-weight: 400; margin-left: 4px; letter-spacing: 0; }
+.race-past.is-not-run { opacity: 0.6; }
+.race-past.is-not-run strong { text-decoration: line-through; }
+/* Race cards: the same size WITHIN a group (every row of a grid gets the
+   height of its tallest card); different groups can differ. */
+.card-grid:has(.race-card) { display: grid; grid-auto-rows: 1fr; gap: 16px; align-items: stretch; }
+.card-grid:has(.race-card) > .card { margin-bottom: 0; }
+
+/* Race page: phone = one column; laptop = form left (fields in 2 columns), sidebar right */
+.form-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 16px; }
+.race-header { margin-bottom: 8px; }
+@media (min-width: 1000px) {
+  .view:has(.race-page) { max-width: 1100px; }
+  .race-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-areas: "form side"; gap: 16px; align-items: start; }
+  .race-layout .race-form { grid-area: form; margin-bottom: 0; }
+  .race-layout .race-side { grid-area: side; }
+  .race-layout .race-side .card:last-child { margin-bottom: 0; }
+  .race-layout:not(:has(.race-side)) { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form-grid .field-full { grid-column: 1 / -1; }
+  .race-header { display: flex; align-items: baseline; gap: 16px; }
+  .race-header .race-title { font-size: 1.6rem; }
+  .race-form .form-actions .button.primary { flex: 0 0 auto; width: auto; min-width: 160px; }
+  .race-form .form-actions #delete { margin-left: auto; }
 }

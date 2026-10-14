@@ -5,14 +5,14 @@
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate,
-} from "../storage.js?v=202610141003";
-import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610141003";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610141003";
-import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js?v=202610141003";
-import { openSheet } from "../utils/sheet.js?v=202610141003";
-import { showToast } from "../utils/toast.js?v=202610141003";
-import { loadWorkout, clearWorkout, workoutSnapshot, weightChanges, ticksDone, ticksTotal } from "../utils/workout.js?v=202610141003";
-import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610141003";
+} from "../storage.js?v=202610142142";
+import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610142142";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610142142";
+import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js?v=202610142142";
+import { openSheet } from "../utils/sheet.js?v=202610142142";
+import { showToast } from "../utils/toast.js?v=202610142142";
+import { loadWorkout, clearWorkout, workoutSnapshot, weightChanges, ticksDone, ticksTotal } from "../utils/workout.js?v=202610142142";
+import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142142";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
@@ -231,11 +231,13 @@ function drawForm(container, activity, shoes, planned) {
         // After a workout, the "photo" is what was really done (ticks, weights).
         await completeSession(planned, saved.id,
           workout ? workoutSnapshot(workout, sessionDetails(planned)) : undefined);
+        let recipeUpdated = false;
         if (workout) {
           clearWorkout();
-          await offerRecipeUpdate(planned, workout);
+          recipeUpdated = await offerRecipeUpdate(planned, workout);
         }
-        showToast(`✅ ${sessionName(planned)} marked done`);
+        // One message only (a second toast would hide the first).
+        showToast(`✅ ${sessionName(planned)} marked done${recipeUpdated ? " · 📚 recipe updated" : ""}`);
         window.location.hash = `#/planner/${startOfWeek(saved.activity_date)}`;
         return;
       }
@@ -436,10 +438,10 @@ async function linkToPlan(activity) {
 
 // After a workout where weights changed: "update the recipe for next time?"
 // Yes = every session that isn't done yet follows the new weights.
-// Never blocks: the activity is already saved.
+// Never blocks: the activity is already saved. Returns true if updated.
 async function offerRecipeUpdate(planned, workout) {
   const changes = weightChanges(workout);
-  if (!planned.template_id || !changes.length) return;
+  if (!planned.template_id || !changes.length) return false;
   const kg = (value) => (value == null ? "no weight" : `${Number(value)} kg`);
   const choice = await openSheet({
     title: "Update your recipe?",
@@ -454,10 +456,10 @@ async function offerRecipeUpdate(planned, workout) {
         <button type="button" class="button" data-value="keep">Only today</button>
       </div>`,
   });
-  if (choice !== "update") return;
+  if (choice !== "update") return false;
   try {
     const recipe = await getSessionTemplate(planned.template_id);
-    if (!recipe) return;
+    if (!recipe) return false;
     const exercises = recipe.exercises.map((e) => ({ ...e }));
     for (const change of changes) {
       // Same place in the list and same name = same exercise (the recipe may
@@ -466,8 +468,9 @@ async function offerRecipeUpdate(planned, workout) {
       if (line && line.name === change.name) line.weight_kg = change.to;
     }
     await saveSessionTemplate({ ...recipe, exercises });
-    showToast("📚 Recipe updated");
+    return true;
   } catch (error) {
-    showToast("Could not update the recipe: " + error.message);
+    window.alert("Could not update the recipe: " + error.message);
+    return false;
   }
 }

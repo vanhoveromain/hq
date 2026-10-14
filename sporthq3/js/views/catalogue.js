@@ -6,9 +6,9 @@
 // Planned sessions point to a recipe, so changing a recipe here (e.g. a
 // weight 25 -> 30 kg) shows up in every session that isn't done yet.
 
-import { listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate } from "../storage.js?v=202610141003";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610141003";
-import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610141003";
+import { listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate } from "../storage.js?v=202610142142";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610142142";
+import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610142142";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -62,7 +62,8 @@ async function renderList(container) {
 
 function templateItemHtml(t) {
   const summary = [
-    t.session_type ? sessionTypeLabel(t.sport, t.session_type) : "",
+    // the type, unless it just repeats the name ("Long run" / "Long run")
+    t.session_type && sessionTypeLabel(t.sport, t.session_type) !== t.name ? sessionTypeLabel(t.sport, t.session_type) : "",
     t.exercises.length ? `${t.exercises.length} exercise${t.exercises.length === 1 ? "" : "s"}` : "",
     t.rounds ? `${t.rounds} rounds` : "",
     t.target_duration_s ? formatDuration(t.target_duration_s) : "",
