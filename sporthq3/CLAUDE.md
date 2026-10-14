@@ -45,7 +45,7 @@
 5. Shoes — done 2026-10-12
 6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
 7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
-   (save a week as template / apply a template) (done 2026-10-13), 7d workout mode
+   (save a week as template / apply a template) (done 2026-10-13), 7d workout mode (done 2026-10-14)
 8. Rule warnings
 9. Races + checklist + race routine
 10. Training blocks
@@ -89,6 +89,13 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: workout mode (7d): planner -> session -> Start workout (#/workout/<id>). Timer from the
+  clock, one tick box per set (per round for circuits), weight editable on the spot (text box, comma
+  ok), optional rest timer (Off/1/1.5/2/3 min or Custom: "45" = seconds, "1:15", 5 s-15 min; remembered; beeps + vibrates where allowed; no beep
+  while the phone is locked), keep-screen-awake where supported. Progress lives in localStorage on
+  that phone (one workout at a time). Finish -> log form pre-filled (duration from timer); saving it
+  marks the session done with a snapshot (weights used, done_sets/total_sets) and, if weights
+  changed, asks "update the recipe?" (matched by position + name). No migration.
 - 2026-10-13: week templates (7c): made from a real week (Plan -> 📋 Templates -> Save this week;
   cancelled sessions left out; same name = replace after asking). Apply = add on top of the week
   (ask first if not empty, never deletes). No template editor: apply, adjust, save again.

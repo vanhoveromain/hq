@@ -2,12 +2,16 @@
 // It shows only the boxes that make sense for the chosen sport, using the
 // `fields`, `speed` and `matchCard` settings from rules.js.
 
-import { getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions } from "../storage.js";
+import {
+  getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
+  getSessionTemplate, saveSessionTemplate,
+} from "../storage.js";
 import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js";
 import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js";
 import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js";
 import { openSheet } from "../utils/sheet.js";
 import { showToast } from "../utils/toast.js";
+import { loadWorkout, clearWorkout, workoutSnapshot, weightChanges, ticksDone, ticksTotal } from "../utils/workout.js";
 import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
@@ -56,6 +60,11 @@ function drawForm(container, activity, shoes, planned) {
     session_type: planned.session_type ?? null,
     title: planned.title || (sessionDetails(planned) && sessionDetails(planned).name) || null,
   } : null;
+  // Coming from workout mode ("Finish"): the timer gives the duration.
+  const savedWorkout = loadWorkout();
+  const workout = fromPlan && savedWorkout && savedWorkout.plannedId === planned.id && savedWorkout.finishedAt
+    ? savedWorkout : null;
+  if (workout) fromPlan.duration_s = workout.durationS;
   const a = activity || fromPlan || {
     activity_date: todayISO(),
     sport: readLastSport() || SPORTS[0].key,
@@ -66,6 +75,9 @@ function drawForm(container, activity, shoes, planned) {
     <form id="activity-form" class="card form" novalidate>
       <h2>${isEdit ? "Edit activity" : "New activity"}</h2>
       ${fromPlan ? `<p class="plan-banner">📅 For your planned <strong>${escapeHtml(sessionName(planned))}</strong> · ${escapeHtml(formatDayLabel(planned.session_date))}</p>` : ""}
+      ${workout ? `<p class="plan-banner">🏋️ Workout finished${ticksTotal(workout) ? ` · ${ticksDone(workout)} / ${ticksTotal(workout)} sets ticked` : ""}.
+        Check the duration, add how it felt, then save.
+        <a href="#/workout/${escapeHtml(planned.id)}">‹ Back to the workout</a></p>` : ""}
 
       <label for="f-date">Date</label>
       <input id="f-date" name="activity_date" type="date" required value="${escapeHtml(a.activity_date)}">
@@ -216,7 +228,13 @@ function drawForm(container, activity, shoes, planned) {
 
       if (fromPlan) {
         // Logged from the planner: tick that exact session, then go back to the plan.
-        await completeSession(planned, saved.id);
+        // After a workout, the "photo" is what was really done (ticks, weights).
+        await completeSession(planned, saved.id,
+          workout ? workoutSnapshot(workout, sessionDetails(planned)) : undefined);
+        if (workout) {
+          clearWorkout();
+          await offerRecipeUpdate(planned, workout);
+        }
         showToast(`✅ ${sessionName(planned)} marked done`);
         window.location.hash = `#/planner/${startOfWeek(saved.activity_date)}`;
         return;
@@ -413,5 +431,43 @@ async function linkToPlan(activity) {
     });
   } catch (error) {
     showToast("Saved, but could not link it to your plan: " + error.message);
+  }
+}
+
+// After a workout where weights changed: "update the recipe for next time?"
+// Yes = every session that isn't done yet follows the new weights.
+// Never blocks: the activity is already saved.
+async function offerRecipeUpdate(planned, workout) {
+  const changes = weightChanges(workout);
+  if (!planned.template_id || !changes.length) return;
+  const kg = (value) => (value == null ? "no weight" : `${Number(value)} kg`);
+  const choice = await openSheet({
+    title: "Update your recipe?",
+    html: `
+      <p>You changed ${changes.length === 1 ? "a weight" : "some weights"} today:</p>
+      <ul class="exercise-list">${changes.map((c) =>
+        `<li>${escapeHtml(c.name)}: ${escapeHtml(kg(c.from))} → <strong>${escapeHtml(kg(c.to))}</strong></li>`).join("")}</ul>
+      <p class="muted small">Updating changes "${escapeHtml(sessionName(planned))}" in your catalogue,
+        so every session that isn't done yet uses the new weights.</p>
+      <div class="sheet-actions">
+        <button type="button" class="button primary" data-value="update">Update the recipe</button>
+        <button type="button" class="button" data-value="keep">Only today</button>
+      </div>`,
+  });
+  if (choice !== "update") return;
+  try {
+    const recipe = await getSessionTemplate(planned.template_id);
+    if (!recipe) return;
+    const exercises = recipe.exercises.map((e) => ({ ...e }));
+    for (const change of changes) {
+      // Same place in the list and same name = same exercise (the recipe may
+      // have been edited in the meantime; then we leave that line alone).
+      const line = exercises[change.index];
+      if (line && line.name === change.name) line.weight_kg = change.to;
+    }
+    await saveSessionTemplate({ ...recipe, exercises });
+    showToast("📚 Recipe updated");
+  } catch (error) {
+    showToast("Could not update the recipe: " + error.message);
   }
 }

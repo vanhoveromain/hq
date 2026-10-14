@@ -16,6 +16,7 @@ import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/f
 import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js";
 import { openSheet } from "../utils/sheet.js";
 import { showToast } from "../utils/toast.js";
+import { loadWorkout } from "../utils/workout.js";
 
 export function render(container, { params = [] } = {}) {
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();
@@ -44,6 +45,7 @@ async function drawWeek(container, monday) {
       </div>
       <a class="button small-button" href="#/planner/${addDays(monday, 7)}" aria-label="Next week">›</a>
     </div>
+    ${workoutBannerHtml()}
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">↩ Back to this week</a>` : ""}
     <p id="week-summary" class="muted week-summary"></p>
     <div id="days" class="days"><p class="muted">Loading…</p></div>
@@ -263,13 +265,16 @@ async function drawWeek(container, monday) {
     const details = sessionDetails(session);
     const isDone = session.status === "done";
     const isCancelled = session.status === "cancelled";
+    const workout = loadWorkout();
+    const inProgress = workout && workout.plannedId === session.id;
 
     const choice = await openSheet({
       title: sessionName(session),
       html: `
         ${detailsHtml(session, details)}
         <div class="sheet-actions">
-          ${!isDone && !isCancelled ? `<button type="button" class="button primary" data-value="done">✅ Done</button>` : ""}
+          ${!isDone && !isCancelled ? `<button type="button" class="button primary" data-value="start">▶️ ${inProgress ? "Resume" : "Start"} workout</button>
+          <button type="button" class="button" data-value="done">✅ Done</button>` : ""}
           ${isDone ? `<button type="button" class="button" data-value="reopen">↩ Not done</button>` : ""}
           ${isDone && session.activity_id ? `<button type="button" class="button" data-value="open-activity">Open the logged activity</button>` : ""}
           ${!isDone ? (isCancelled
@@ -283,6 +288,7 @@ async function drawWeek(container, monday) {
     });
 
     try {
+      if (choice === "start") window.location.hash = `#/workout/${session.id}`;
       if (choice === "done") await markDone(session);
       if (choice === "reopen") await reopenSession(session.id);
       if (choice === "open-activity") window.location.hash = `#/log/${session.activity_id}`;
@@ -295,7 +301,7 @@ async function drawWeek(container, monday) {
     } catch (error) {
       showToast("Something went wrong: " + error.message);
     }
-    if (choice && !["open-activity", "recipe"].includes(choice)) await load();
+    if (choice && !["open-activity", "recipe", "start"].includes(choice)) await load();
   }
 
   // Done: link to an activity of that day, log it now, or just tick it.
@@ -368,6 +374,14 @@ async function drawWeek(container, monday) {
 // HTML pieces
 // ---------------------------------------------------------------------
 
+// "Workout in progress" reminder at the top of the planner.
+function workoutBannerHtml() {
+  const workout = loadWorkout();
+  if (!workout) return "";
+  return `<a class="plan-banner workout-banner" href="#/workout/${escapeHtml(workout.plannedId)}">
+    🏋️ Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>`;
+}
+
 function dayHeading(day) {
   const date = parseISODate(day);
   const weekday = date.toLocaleDateString("en-GB", { weekday: "long" });
@@ -424,7 +438,7 @@ function detailsHtml(session, details) {
   if (details.exercises && details.exercises.length) {
     lines.push(`${details.rounds ? `<p><strong>${details.rounds} rounds of:</strong></p>` : ""}
       <ul class="exercise-list">${details.exercises.map((e) => `
-        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}</li>`).join("")}</ul>`);
+        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">✓ ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`).join("")}</ul>`);
   }
   return lines.join("");
 }
