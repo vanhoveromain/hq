@@ -1,9 +1,10 @@
-// "Me" screen: who is logged in, set a password, sign out.
-// Later: export.
+// "Me" screen: links to body, shoes, blocks; JSON backup; account and password.
 
-import { signOut, setPassword } from "../storage.js?v=202610141711";
+import { signOut, setPassword, exportAllData } from "../storage.js?v=202610141721";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141721";
 
 const MIN_PASSWORD_LENGTH = 12;
+const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
 
 export function render(container, { user }) {
   container.innerHTML = `
@@ -37,14 +38,22 @@ export function render(container, { user }) {
       <p id="password-status" class="status" role="status"></p>
     </section>
 
-    <section class="card placeholder">
-      <p>Training blocks and body &amp; goals will live here too (steps 10 and 11).</p>
+    <section class="card">
+      <h2>💾 Backup</h2>
+      <p class="muted">Downloads everything you saved in the app as one file (JSON): activities, match cards,
+        plan, catalogue, races, blocks, shoes, weight, PBs. Keep it somewhere safe (e.g. iCloud Drive).</p>
+      <p id="last-export" class="small"></p>
+      <button id="export" type="button" class="button primary">Export my data</button>
+      <p id="export-status" class="status" role="status"></p>
     </section>
   `;
 
   // textContent / .value (not innerHTML) so an email can never be read as HTML code.
   container.querySelector(".email").textContent = user.email;
   container.querySelector('input[name="username"]').value = user.email;
+
+  showLastExport(container.querySelector("#last-export"));
+  container.querySelector("#export").addEventListener("click", () => runExport(container));
 
   container.querySelector("#sign-out").addEventListener("click", async () => {
     try {
@@ -101,4 +110,54 @@ function friendlyPasswordError(error) {
 function showStatus(element, text, kind) {
   element.textContent = text;
   element.className = "status " + kind;
+}
+
+
+// ---------- Backup ----------
+
+function showLastExport(el) {
+  let last = null;
+  try { last = localStorage.getItem(LAST_EXPORT_KEY); } catch { /* not important */ }
+  if (!last) {
+    el.textContent = "No export yet on this device.";
+    return;
+  }
+  const days = Math.round((Date.parse(todayISO()) - Date.parse(last)) / 86400000);
+  el.textContent = `Last export: ${days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`} (${formatDayLabel(last)}).`;
+  if (days > 30) el.textContent += " Time for a new one!";
+}
+
+async function runExport(container) {
+  const button = container.querySelector("#export");
+  const status = container.querySelector("#export-status");
+  button.disabled = true;
+  showStatus(status, "Collecting your data…", "");
+  try {
+    const tables = await exportAllData();
+    const backup = {
+      app: "SportHQ3",
+      exported_at: new Date().toISOString(),
+      counts: Object.fromEntries(Object.entries(tables).map(([name, rows]) => [name, rows.length])),
+      tables,
+    };
+    // Make a file in memory (a "Blob") and click a hidden download link to it.
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sporthq3-backup-${todayISO()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    try { localStorage.setItem(LAST_EXPORT_KEY, todayISO()); } catch { /* not important */ }
+    showLastExport(container.querySelector("#last-export"));
+    const total = Object.values(backup.counts).reduce((a, b) => a + b, 0);
+    showStatus(status, `Done: ${total} rows in ${link.download}`, "ok");
+  } catch (error) {
+    showStatus(status, "Could not export: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
 }

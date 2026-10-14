@@ -51,8 +51,9 @@
 10. Training blocks — done 2026-10-14
 11. Body & goals (weigh-ins, trend chart, PBs) — done 2026-10-14
 12. Dashboard (incl. football season totals, shoe km) — done 2026-10-14
-13. JSON export + polish + design pass (overall look, laptop layout for older screens, drag and drop
-    of planner cards on laptop + phone (press and hold))
+13. In 4 parts: 13a JSON export (done 2026-10-14), 13b drag and drop of planner cards (laptop + phone:
+    press and hold), 13c design pass + polish (Rom picks from 2-3 mock-ups), 13d switch day
+    (final Notion re-import, big clean, merge to live, phone check)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -101,6 +102,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: JSON export (13a): Me -> Backup -> "Export my data" downloads sporthq3-backup-<date>.json
+  with every row of the 14 tables (RLS = only your rows), paged by 1000, plus counts. "Last export"
+  is remembered per device (localStorage), nudge after 30 days. No import in v1 (restore = SQL by hand).
 - 2026-10-14: dashboard (12): Home = cards that each load on their own (one failing card shows its
   error, the rest still work), each title opens the full screen: Today (planned sessions with Start /
   Log, workout-in-progress banner, "rest day"), This week (done of planned, 7-day strip, running km),

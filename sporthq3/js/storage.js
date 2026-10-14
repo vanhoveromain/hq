@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141711";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141721";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -732,4 +732,32 @@ export async function listMatchesBetween(fromDate, toDate) {
     .lte("activity_date", toDate);
   if (error) throw error;
   return data.map(withMatchStats);
+}
+
+
+// ---------------------------------------------------------------------
+// Export: every table, every row of yours, in one object (JSON backup).
+// ---------------------------------------------------------------------
+
+// Table name -> the column that orders it (its primary key), so the pages
+// of 1000 rows never overlap.
+const EXPORT_TABLES = {
+  settings: "user_id", shoes: "id", training_blocks: "id", races: "id", race_checklist_items: "id",
+  activities: "id", match_stats: "activity_id", session_templates: "id", week_templates: "id",
+  week_template_items: "id", planned_weeks: "week_start", planned_sessions: "id", weigh_ins: "id", personal_bests: "id",
+};
+
+export async function exportAllData() {
+  const PAGE = 1000;
+  const tables = {};
+  for (const [table, key] of Object.entries(EXPORT_TABLES)) {
+    tables[table] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase.from(table).select("*").order(key).range(from, from + PAGE - 1);
+      if (error) throw new Error(`${table}: ${error.message}`);
+      tables[table].push(...data);
+      if (data.length < PAGE) break;
+    }
+  }
+  return tables;
 }
