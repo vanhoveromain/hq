@@ -9,15 +9,15 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610141648";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141648";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141648";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141648";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141648";
-import { openSheet } from "../utils/sheet.js?v=202610141648";
-import { showToast } from "../utils/toast.js?v=202610141648";
-import { loadWorkout } from "../utils/workout.js?v=202610141648";
-import { blockWeek } from "./blocks.js?v=202610141648";
+} from "../storage.js?v=202610141654";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141654";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141654";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141654";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141654";
+import { openSheet } from "../utils/sheet.js?v=202610141654";
+import { showToast } from "../utils/toast.js?v=202610141654";
+import { loadWorkout } from "../utils/workout.js?v=202610141654";
+import { blockWeek } from "./blocks.js?v=202610141654";
 
 export function render(container, { params = [] } = {}) {
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();

@@ -541,7 +541,6 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Training blocks */
 .block-card { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
 .block-goal { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.block-reminder { color: var(--accent); font-weight: 600; }
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .stat-grid div { display: flex; flex-direction: column; }
 .stat-grid strong { font-size: 1.3rem; }
