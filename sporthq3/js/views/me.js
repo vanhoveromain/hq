@@ -1,7 +1,7 @@
 // "Me" screen: who is logged in, set a password, sign out.
 // Later: body & goals, shoes, training blocks, export.
 
-import { signOut, setPassword } from "../storage.js";
+import { signOut, setPassword } from "../storage.js?v=202610141003";
 
 const MIN_PASSWORD_LENGTH = 12;
 

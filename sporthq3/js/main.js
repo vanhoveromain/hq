@@ -4,17 +4,17 @@
 // screen you're on, e.g. index.html#/planner. Changing it doesn't reload the
 // page; we just draw a different view inside <main>. This is a "hash router".
 
-import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js";
-import * as loginView from "./views/login.js";
-import * as dashboardView from "./views/dashboard.js";
-import * as plannerView from "./views/planner.js";
-import * as logView from "./views/log.js";
-import * as racesView from "./views/races.js";
-import * as meView from "./views/me.js";
-import * as shoesView from "./views/shoes.js";
-import * as catalogueView from "./views/catalogue.js";
-import * as weekTemplatesView from "./views/weekTemplates.js";
-import * as workoutView from "./views/workout.js";
+import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610141003";
+import * as loginView from "./views/login.js?v=202610141003";
+import * as dashboardView from "./views/dashboard.js?v=202610141003";
+import * as plannerView from "./views/planner.js?v=202610141003";
+import * as logView from "./views/log.js?v=202610141003";
+import * as racesView from "./views/races.js?v=202610141003";
+import * as meView from "./views/me.js?v=202610141003";
+import * as shoesView from "./views/shoes.js?v=202610141003";
+import * as catalogueView from "./views/catalogue.js?v=202610141003";
+import * as weekTemplatesView from "./views/weekTemplates.js?v=202610141003";
+import * as workoutView from "./views/workout.js?v=202610141003";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.

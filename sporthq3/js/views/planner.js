@@ -9,14 +9,14 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate,
-} from "../storage.js";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport } from "../rules.js";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js";
-import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js";
-import { openSheet } from "../utils/sheet.js";
-import { showToast } from "../utils/toast.js";
-import { loadWorkout } from "../utils/workout.js";
+} from "../storage.js?v=202610141003";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141003";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141003";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141003";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141003";
+import { openSheet } from "../utils/sheet.js?v=202610141003";
+import { showToast } from "../utils/toast.js?v=202610141003";
+import { loadWorkout } from "../utils/workout.js?v=202610141003";
 
 export function render(container, { params = [] } = {}) {
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();
@@ -56,16 +56,25 @@ async function drawWeek(container, monday) {
   `;
 
   const daysEl = container.querySelector("#days");
-  let sessions = [];
-  let activities = [];
+  let sessions = [];    // this week's planned sessions
+  let activities = [];  // this week's logged activities
+  let warnings = [];    // training-rule warnings touching this week
+  let shownWarnings = null; // warnings already seen (to pop up only new ones)
 
   async function load() {
     try {
-      [sessions, activities] = await Promise.all([
-        listPlannedSessions(monday, sunday),
-        listActivitiesBetween(monday, sunday),
+      // One extra day on each side, so "Sunday + next Monday" is checked too.
+      const [allSessions, allActivities] = await Promise.all([
+        listPlannedSessions(addDays(monday, -1), addDays(sunday, 1)),
+        listActivitiesBetween(addDays(monday, -1), addDays(sunday, 1)),
       ]);
+      const inWeek = (date) => date >= monday && date <= sunday;
+      sessions = allSessions.filter((s) => inWeek(s.session_date));
+      activities = allActivities.filter((a) => inWeek(a.activity_date));
+      warnings = checkTrainingRules(calendarItems(allSessions, allActivities))
+        .filter((w) => w.days.some(inWeek));
       drawDays();
+      announceNewWarnings();
     } catch (error) {
       daysEl.innerHTML = `<p class="status error"></p>`;
       daysEl.querySelector(".status").textContent = "Could not load the week: " + error.message;
@@ -88,15 +97,29 @@ async function drawWeek(container, monday) {
           ${daySessions.map(sessionCardHtml).join("")}
           ${extras.map(extraCardHtml).join("")}
           ${!daySessions.length && !extras.length ? `<p class="day-empty muted">Rest</p>` : ""}
+          ${warnings.filter((w) => w.days.includes(day)).map((w) =>
+            `<p class="day-warning" role="note">⚠️ ${escapeHtml(w.message)}</p>`).join("")}
         </section>`;
     }).join("");
 
     const planned = sessions.length;
     const done = sessions.filter((s) => s.status === "done").length;
     const cancelled = sessions.filter((s) => s.status === "cancelled").length;
-    container.querySelector("#week-summary").textContent = planned
+    container.querySelector("#week-summary").textContent = (planned
       ? `${planned} planned · ${done} done${cancelled ? ` · ${cancelled} cancelled` : ""}`
-      : "Nothing planned yet. Tap + on a day, or copy last week.";
+      : "Nothing planned yet. Tap + on a day, or copy last week.")
+      + (warnings.length ? ` · ⚠️ ${warnings.length} warning${warnings.length === 1 ? "" : "s"}` : "");
+  }
+
+  // After you add / move / swap something: pop up a warning it just created.
+  // (Not on the first load: the warnings are already visible on the days.)
+  function announceNewWarnings() {
+    const keys = warnings.map((w) => w.rule + w.days.join());
+    if (shownWarnings) {
+      const fresh = warnings.find((w, i) => !shownWarnings.has(keys[i]));
+      if (fresh) showToast("⚠️ " + fresh.message, { seconds: 8 });
+    }
+    shownWarnings = new Set(keys);
   }
 
   // One listener for the whole week ("event delegation").
