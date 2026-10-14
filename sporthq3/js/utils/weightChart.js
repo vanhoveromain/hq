@@ -6,8 +6,8 @@
 // Dots = each weigh-in. Line = the trend (average of the last weigh-ins).
 // Dashed line = your target. Tap or hover the chart to read a value.
 
-import { escapeHtml } from "./format.js?v=202610141743";
-import { formatDayLabel } from "./dates.js?v=202610141743";
+import { escapeHtml } from "./format.js?v=202610141751";
+import { formatDayLabel } from "./dates.js?v=202610141751";
 
 const HEIGHT = 220;
 const PAD = { top: 16, right: 12, bottom: 26, left: 40 };

@@ -2,33 +2,49 @@
    "Mobile-first" = the base rules are for a phone; the @media rule at the
    bottom adds tweaks for bigger screens. */
 
-/* ---------- Design tokens: change a colour once here, it changes everywhere ---------- */
+/* ---------- Design tokens: change a colour once here, it changes everywhere ----------
+   Look chosen on 2026-10-14 ("A + C orange"): soft white cards with a light
+   shadow, a charcoal top bar, small uppercase card labels, a thin orange
+   line on dashboard cards and planner sessions; done = green. */
 :root {
-  --bg: #f6f5f3;
+  --bg: #f4f4f5;
   --surface: #ffffff;
-  --text: #1c1917;
-  --muted: #6b6560;
-  --border: #e4e0db;
-  --accent: #c2410c;        /* sporty orange, dark enough for white text */
+  --text: #18181b;
+  --muted: #71717a;
+  --border: #e7e5e4;
+  --card-border: transparent;   /* light mode: cards are lifted by a shadow, no border */
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
+  --accent: #c2410c;            /* orange, dark enough for white text and small text */
+  --accent-strong: #ea580c;     /* brighter orange for lines and bars */
   --accent-text: #ffffff;
+  --topbar-bg: #1c1917;         /* charcoal top bar */
+  --topbar-text: #ffffff;
+  --brand: #fb923c;
   --ok: #15803d;
+  --done-line: #16a34a;
   --error: #b91c1c;
-  --radius: 12px;
+  --radius: 14px;
   --tabbar-height: 64px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Dark mode follows the phone's setting automatically. */
+/* Dark mode follows the phone's setting automatically. Shadows don't show
+   on dark backgrounds, so cards get a thin border instead. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #171412;
-    --surface: #221e1b;
+    --bg: #111110;
+    --surface: #1e1c1a;
     --text: #f5f2ef;
     --muted: #a8a19a;
-    --border: #3a342f;
+    --border: #34302c;
+    --card-border: #2c2926;
+    --shadow: none;
     --accent: #fb923c;
+    --accent-strong: #fb923c;
     --accent-text: #1c1917;
+    --topbar-bg: #0a0a09;
     --ok: #4ade80;
+    --done-line: #4ade80;
     --error: #f87171;
   }
 }
@@ -59,11 +75,11 @@ p { margin: 0 0 12px; }
   align-items: baseline;
   gap: 12px;
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--topbar-bg);
+  color: var(--topbar-text);
 }
-.brand { font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
-.page-title { font-size: 1rem; font-weight: 600; margin: 0; }
+.brand { font-weight: 800; color: var(--brand); letter-spacing: -0.02em; }
+.page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); }
 
 /* ---------- Main area ---------- */
 .view {
@@ -75,13 +91,14 @@ p { margin: 0 0 12px; }
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 16px;
 }
 .card > :last-child { margin-bottom: 0; }
-.placeholder { border-style: dashed; }
+.placeholder { border: 1px dashed var(--border); box-shadow: none; }
 
 /* ---------- Forms ---------- */
 label { display: block; font-weight: 600; margin-bottom: 4px; }
@@ -104,7 +121,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   font-weight: 600;
   min-height: 44px;            /* big enough for a thumb */
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -137,6 +154,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
   border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
 }
 
 
@@ -170,7 +188,10 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
   margin: 0 4px 8px;
 }
 .week-title .muted { font-size: 0.85rem; font-weight: 400; }
@@ -180,7 +201,8 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   margin: 0;
   padding: 0;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   overflow: hidden;            /* keeps the rounded corners on the first/last row */
 }
@@ -331,7 +353,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 
 /* Progress bar: grey track, coloured fill whose width = % of the replace distance. */
 .bar { display: block; height: 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; }
-.bar-fill { display: block; height: 100%; background: var(--ok); }
+.bar-fill { display: block; height: 100%; background: var(--ok); border-radius: 4px; }
 .status-warn .bar-fill { background: #d97706; }
 .status-replace .bar-fill { background: var(--error); }
 .status-retired { opacity: 0.7; }
@@ -341,7 +363,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .status-replace .shoe-message { color: var(--error); }
 
 .retired { margin-bottom: 16px; }
-.retired summary { cursor: pointer; font-weight: 600; padding: 8px 4px; color: var(--muted); }
+.retired summary { cursor: pointer; font-weight: 600; padding: 8px 4px; color: var(--muted);
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; }
 
 .checkbox { display: flex; align-items: center; gap: 8px; font-weight: 400; margin-bottom: 12px; }
 .checkbox input { width: 20px; height: 20px; margin: 0; }
@@ -377,11 +400,12 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .days { display: flex; flex-direction: column; gap: 12px; }
 .day {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: 10px 12px 12px;
 }
-.day.is-today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.day.is-today { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong), var(--shadow); }
 .day-title {
   display: flex; justify-content: space-between; align-items: center;
   font-size: 0.95rem; margin: 0 0 8px;
@@ -397,13 +421,13 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   display: flex; align-items: center; gap: 10px; width: 100%;
   text-align: left; font: inherit; color: inherit; cursor: pointer;
   padding: 10px; margin-top: 8px;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  border: 0; border-left: 4px solid var(--accent-strong); border-radius: 10px; background: var(--bg);
 }
 .plan-card:first-of-type { margin-top: 0; }
-.plan-card.status-done { border-color: var(--ok); }
+.plan-card.status-done { border-left-color: var(--done-line); }
 .plan-card.status-cancelled { opacity: 0.55; }
 .plan-card.status-cancelled .activity-title { text-decoration: line-through; }
-.plan-card.extra { border-style: dashed; opacity: 0.8; }
+.plan-card.extra { border: 1px dashed var(--border); border-left: 4px dashed var(--muted); opacity: 0.8; }
 .plan-status { font-size: 1.1rem; }
 .week-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .week-actions .button { width: 100%; }
@@ -416,7 +440,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .view:has(.days) { max-width: 1400px; }
   .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: start; }
   .day { min-height: 160px; padding: 8px; }
-  .day-title { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .day-title { align-items: flex-start; gap: 4px; font-size: 0.85rem; }
+  .day-add { width: 28px; height: 28px; font-size: 1.05rem; flex-shrink: 0; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
   .plan-card .activity-icon { font-size: 1.1rem; }
 }
@@ -587,10 +612,11 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Dashboard */
 .dashboard { display: grid; gap: 0; }
 .dash-card { min-width: 0; }
-.dash-card h2 { margin: 0 0 8px; font-size: 1rem; }
+.dash-card { border-top: 3px solid var(--accent-strong); }
+.dash-card h2 { margin: 0 0 8px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 .dash-card h2 a { color: inherit; text-decoration: none; }
-.dash-card h2 a::after { content: " ›"; color: var(--muted); }
-.dash-big { font-size: 1.4rem; font-weight: 700; margin: 4px 0; line-height: 1.2; }
+.dash-card h2 a::after { content: " →"; color: var(--accent); }
+.dash-big { font-size: 1.6rem; font-weight: 700; margin: 4px 0; line-height: 1.2; letter-spacing: -0.02em; }
 .dash-big .muted { font-size: 0.95rem; font-weight: 400; }
 .dash-card .stat-grid { gap: 8px; }
 .dash-card .stat-grid strong { font-size: 1.15rem; }
@@ -604,7 +630,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 8px 0; text-align: center; }
 .strip-day { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; border-radius: 8px; }
 .strip-day.is-today { outline: 2px solid var(--accent); }
-.dash-warnings { border-color: #d97706; }
+.dash-warnings { border-top-color: #d97706; }
 .sparkline { display: block; width: 100%; height: 40px; margin-top: 8px; }
 .sparkline path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 @media (min-width: 900px) {
@@ -620,3 +646,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25); transform-origin: top left; opacity: 0.95;
 }
 .day.is-drop-target { outline: 2px dashed var(--accent); outline-offset: 2px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+
+/* Weigh-in form: the Save button keeps its own size */
+.weigh-form { margin-bottom: 12px; }
+.weigh-form .button { width: auto; flex: 0 0 auto; }
+@media (min-width: 700px) { .weigh-form { max-width: 460px; } }

@@ -5,11 +5,11 @@
 // template"). To change one: apply it to a week, adjust the week, then save
 // it again with the same name. Here you can look, rename and delete.
 
-import { listWeekTemplates, renameWeekTemplate, deleteWeekTemplate } from "../storage.js?v=202610141743";
-import { sportIcon, sessionTypeLabel } from "../rules.js?v=202610141743";
-import { escapeHtml } from "../utils/format.js?v=202610141743";
-import { openSheet } from "../utils/sheet.js?v=202610141743";
-import { showToast } from "../utils/toast.js?v=202610141743";
+import { listWeekTemplates, renameWeekTemplate, deleteWeekTemplate } from "../storage.js?v=202610141751";
+import { sportIcon, sessionTypeLabel } from "../rules.js?v=202610141751";
+import { escapeHtml } from "../utils/format.js?v=202610141751";
+import { openSheet } from "../utils/sheet.js?v=202610141751";
+import { showToast } from "../utils/toast.js?v=202610141751";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
