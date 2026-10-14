@@ -3,11 +3,11 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610142111";
-import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610142111";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142111";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142111";
-import * as logForm from "./logForm.js?v=202610142111";
+import { listActivities } from "../storage.js?v=202610142128";
+import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610142128";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142128";
+import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142128";
+import * as logForm from "./logForm.js?v=202610142128";
 
 const PAGE_SIZE = 30;
 
@@ -20,10 +20,16 @@ export function render(container, { params = [] } = {}) {
 
 async function renderList(container) {
   container.innerHTML = `
+    <div class="log-page">
     <a href="#/log/new" class="button primary add-button">+ Add activity</a>
+    <!-- Column titles: only shown on a laptop, where each line becomes a table row -->
+    <div class="log-head" aria-hidden="true">
+      <span></span><span>Date</span><span>Session</span><span>Time</span><span>Distance</span><span>Pace</span><span>RPE</span>
+    </div>
     <div id="activity-list"><p class="muted">Loading…</p></div>
     <button id="load-more" class="button load-more" hidden>Load more</button>
     <p id="list-status" class="status" role="status"></p>
+    </div>
   `;
   const listEl = container.querySelector("#activity-list");
   const moreButton = container.querySelector("#load-more");
@@ -102,17 +108,25 @@ function activityHtml(a) {
     ? `<span class="match-line">vs ${escapeHtml(stats.opponent || "?")} · ${stats.goals} G · ${stats.assists} A${stats.minutes_played != null ? ` · ${stats.minutes_played}'` : ""}</span>`
     : "";
 
+  // On a laptop the "col-…" boxes become table columns and the combined
+  // line (activity-meta) is hidden; on a phone it's the other way round.
+  const distance = [a.distance_km != null ? formatKm(a.distance_km) : "", a.elevation_m ? `${a.elevation_m} m D+` : "",
+    a.stairs_climbed ? `${a.stairs_climbed} stairs` : ""].filter(Boolean).join(" · ");
   return `
     <li>
       <a class="activity-item" href="#/log/${encodeURIComponent(a.id)}">
         <span class="activity-icon" aria-hidden="true">${sportIcon(a.sport)}</span>
+        <span class="col col-date">${formatDayLabel(a.activity_date)}</span>
         <span class="activity-main">
           <span class="activity-title">${escapeHtml(sessionTypeLabel(a.sport, a.session_type))}</span>
           ${a.title ? `<span class="activity-subtitle">${escapeHtml(a.title)}</span>` : ""}
-          <span class="muted">${formatDayLabel(a.activity_date)}${details ? " · " + details : ""}</span>
+          <span class="muted activity-meta">${formatDayLabel(a.activity_date)}${details ? " · " + details : ""}</span>
           ${matchLine}
         </span>
-        ${a.rpe ? `<span class="rpe-chip" title="RPE">${a.rpe}</span>` : ""}
+        <span class="col">${hasMatchCard ? (stats.minutes_played != null ? `${stats.minutes_played}'` : "") : formatDuration(a.duration_s)}</span>
+        <span class="col">${escapeHtml(distance)}</span>
+        <span class="col">${formatSpeed(sport && sport.speed, a.duration_s, a.distance_km)}</span>
+        <span class="col-rpe">${a.rpe ? `<span class="rpe-chip" title="RPE">${a.rpe}</span>` : ""}</span>
       </a>
     </li>
   `;

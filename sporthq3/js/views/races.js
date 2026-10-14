@@ -6,12 +6,12 @@
 import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610142111";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610142111";
-import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610142111";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142111";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610142111";
-import { showToast } from "../utils/toast.js?v=202610142111";
+} from "../storage.js?v=202610142128";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610142128";
+import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610142128";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142128";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610142128";
+import { showToast } from "../utils/toast.js?v=202610142128";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -37,8 +37,10 @@ function groupOf(race, today) {
 
 async function renderList(container) {
   container.innerHTML = `
+    <div class="wide-page">
     <a href="#/races/new" class="button primary add-button">+ Add a race</a>
     <div id="race-list"><p class="muted">Loading…</p></div>
+    </div>
   `;
   const listEl = container.querySelector("#race-list");
   try {
@@ -54,18 +56,18 @@ async function renderList(container) {
     listEl.innerHTML = `
       <section class="week">
         <h2 class="week-title"><span>🏁 Upcoming</span><span class="muted">${upcoming.length}</span></h2>
-        ${upcoming.length ? upcoming.map((r) => raceCardHtml(r, today)).join("")
+        ${upcoming.length ? `<div class="card-grid">${upcoming.map((r) => raceCardHtml(r, today)).join("")}</div>`
           : `<p class="muted">No race booked. Set a race to "To register" or "Registered" (with a date) to see it here.</p>`}
       </section>
       ${ideas.length ? `
         <section class="week">
           <h2 class="week-title"><span>💡 Ideas</span><span class="muted">${ideas.length}</span></h2>
-          ${ideas.map((r) => raceCardHtml(r, today)).join("")}
+          <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today)).join("")}</div>
         </section>` : ""}
       ${past.length ? `
         <details class="retired" open>
           <summary>Past races (${past.length})</summary>
-          ${past.map((r) => raceCardHtml(r, today)).join("")}
+          <div class="card-grid">${past.map((r) => raceCardHtml(r, today)).join("")}</div>
         </details>` : ""}
     `;
   } catch (error) {

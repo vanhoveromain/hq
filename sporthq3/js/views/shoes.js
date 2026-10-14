@@ -3,10 +3,10 @@
 //   #/shoes/new    -> form for a new pair
 //   #/shoes/<id>   -> form to edit that pair
 
-import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610142111";
-import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610142111";
-import { formatDayLabel } from "../utils/dates.js?v=202610142111";
-import { escapeHtml } from "../utils/format.js?v=202610142111";
+import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610142128";
+import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610142128";
+import { formatDayLabel } from "../utils/dates.js?v=202610142128";
+import { escapeHtml } from "../utils/format.js?v=202610142128";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderForm(container, null);
@@ -19,9 +19,11 @@ export function render(container, { params = [] } = {}) {
 
 async function renderList(container) {
   container.innerHTML = `
+    <div class="wide-page">
     <a href="#/me" class="back-link">‹ Me</a>
     <a href="#/shoes/new" class="button primary add-button">+ Add a pair</a>
     <div id="shoe-list"><p class="muted">Loading…</p></div>
+    </div>
   `;
   const listEl = container.querySelector("#shoe-list");
 
@@ -34,12 +36,12 @@ async function renderList(container) {
 
     listEl.innerHTML = `
       ${active.length
-        ? active.map(card).join("")
+        ? `<div class="card-grid">${active.map(card).join("")}</div>`
         : `<section class="card placeholder"><p>No shoes in use. Tap <strong>+ Add a pair</strong>.</p></section>`}
       ${retired.length ? `
         <details class="retired">
           <summary>Retired (${retired.length})</summary>
-          ${retired.map(card).join("")}
+          <div class="card-grid">${retired.map(card).join("")}</div>
         </details>` : ""}
       <p class="hint">Warning from ${SHOE_RULES.warnKm} km, replace at ${SHOE_RULES.replaceKm} km.</p>
     `;

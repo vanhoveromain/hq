@@ -5,11 +5,11 @@
 
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
-} from "../storage.js?v=202610142111";
-import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610142111";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610142111";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610142111";
-import { showToast } from "../utils/toast.js?v=202610142111";
+} from "../storage.js?v=202610142128";
+import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610142128";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610142128";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610142128";
+import { showToast } from "../utils/toast.js?v=202610142128";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -41,9 +41,11 @@ export function blockWeek(block, date) {
 
 async function renderList(container) {
   container.innerHTML = `
+    <div class="wide-page">
     <a href="#/me" class="back-link">‹ Me</a>
     <a href="#/blocks/new" class="button primary add-button">+ New block</a>
     <div id="block-list"><p class="muted">Loading…</p></div>
+    </div>
   `;
   const listEl = container.querySelector("#block-list");
   try {
@@ -55,7 +57,7 @@ async function renderList(container) {
     const section = (title, list) => list.length ? `
       <section class="week">
         <h2 class="week-title"><span>${title}</span><span class="muted">${list.length}</span></h2>
-        ${list.map((b) => blockCardHtml(b, today)).join("")}
+        <div class="card-grid">${list.map((b) => blockCardHtml(b, today)).join("")}</div>
       </section>` : "";
 
     listEl.innerHTML = blocks.length

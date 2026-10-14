@@ -5,13 +5,13 @@
 import {
   listWeighIns, saveWeighIn, deleteWeighIn, getSettings, saveWeightGoal,
   listRunsWithTimes, listPersonalBests, savePersonalBest, deletePersonalBest,
-} from "../storage.js?v=202610142111";
-import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610142111";
-import { todayISO, addDays, formatDayLabel } from "../utils/dates.js?v=202610142111";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142111";
-import { autoPersonalBests, distanceKeyOf, weightTrend } from "../utils/body.js?v=202610142111";
-import { drawWeightChart } from "../utils/weightChart.js?v=202610142111";
-import { showToast } from "../utils/toast.js?v=202610142111";
+} from "../storage.js?v=202610142128";
+import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610142128";
+import { todayISO, addDays, formatDayLabel } from "../utils/dates.js?v=202610142128";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142128";
+import { autoPersonalBests, distanceKeyOf, weightTrend } from "../utils/body.js?v=202610142128";
+import { drawWeightChart } from "../utils/weightChart.js?v=202610142128";
+import { showToast } from "../utils/toast.js?v=202610142128";
 
 const RANGE_KEY = "sporthq3.weightRange";
 const RANGES = [
@@ -24,9 +24,12 @@ const RANGES = [
 export function render(container) {
   container.innerHTML = `
     <a href="#/me" class="back-link">‹ Me</a>
-    <section class="card" id="weight-card"><p class="muted">Loading…</p></section>
-    <section class="card" id="chart-card" hidden></section>
-    <section class="card" id="pb-card"><p class="muted">Looking for your personal bests…</p></section>
+    <!-- Laptop: weight + PBs on the left, the chart on the right -->
+    <div class="body-page">
+      <section class="card" id="weight-card"><p class="muted">Loading…</p></section>
+      <section class="card" id="chart-card" hidden></section>
+      <section class="card" id="pb-card"><p class="muted">Looking for your personal bests…</p></section>
+    </div>
   `;
   drawWeight(container);
   drawPersonalBests(container.querySelector("#pb-card"));

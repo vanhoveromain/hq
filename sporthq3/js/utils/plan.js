@@ -2,8 +2,8 @@
 // workout mode: how a planned session is named, which details it shows,
 // and how it is marked done / reopened.
 
-import { updatePlannedSession } from "../storage.js?v=202610142111";
-import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610142111";
+import { updatePlannedSession } from "../storage.js?v=202610142128";
+import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610142128";
 
 // The name shown on a session card.
 //   own title > recipe name > session type > sport ("Running")
@@ -65,4 +65,17 @@ export function calendarItems(sessions, activities) {
     .filter((a) => !linkedIds.has(a.id))
     .map((a) => ({ date: a.activity_date, sport: a.sport, session_type: a.session_type }));
   return [...fromPlan, ...extras];
+}
+
+// One day in a compact view (Home strip, month calendar): which sport icons
+// to show and whether the day is done. Cancelled sessions are left out;
+// activities logged without a plan count too.
+//   -> { icons: ["🏃", "⚽"], done: true|false }
+export function daySummary(day, sessions, activities, iconOf) {
+  const planned = sessions.filter((s) => s.session_date === day && s.status !== "cancelled");
+  const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
+  const extras = activities.filter((a) => a.activity_date === day && !linkedIds.has(a.id));
+  const icons = [...planned.map((s) => iconOf(s.sport)), ...extras.map((a) => iconOf(a.sport))];
+  const done = icons.length > 0 && planned.every((s) => s.status === "done");
+  return { icons, done };
 }

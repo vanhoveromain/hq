@@ -441,6 +441,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Laptop: the 7 days side by side, like a calendar. */
 @media (min-width: 1000px) {
   .view:has(.days) { max-width: 1400px; }
+  .view:has(.month) { max-width: 1100px; }
   .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: start; }
   .day { min-height: 160px; padding: 8px; }
   .day-title { align-items: flex-start; gap: 4px; font-size: 0.85rem; }
@@ -654,3 +655,69 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .weigh-form { margin-bottom: 12px; }
 .weigh-form .button { width: auto; flex: 0 0 auto; }
 @media (min-width: 700px) { .weigh-form { max-width: 460px; } }
+.strip-day.is-done { background: color-mix(in srgb, var(--done-line) 16%, transparent); }
+.strip-icons { font-size: 1rem; line-height: 1.2; word-break: break-all; min-height: 1.2em; }
+
+/* Planner: Week | Month switch */
+.planner { display: flex; flex-direction: column; }
+.view-switch { display: flex; align-self: center; gap: 4px; padding: 4px; margin-bottom: 12px;
+  background: var(--surface); border-radius: 999px; box-shadow: var(--shadow); border: 1px solid var(--card-border); }
+.view-switch a { padding: 6px 18px; border-radius: 999px; text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+.view-switch a[aria-selected="true"] { background: var(--accent); color: var(--accent-text); }
+
+/* Planner: month calendar */
+.month { padding: 8px; }
+.month-head, .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-head span { text-align: center; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 4px 0; }
+.month-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 56px; padding: 4px 2px;
+  border-radius: 8px; text-decoration: none; color: inherit; background: var(--bg); }
+.month-day.is-other { opacity: 0.4; }
+.month-day.is-today { outline: 2px solid var(--accent-strong); }
+.month-day.is-done { background: color-mix(in srgb, var(--done-line) 16%, var(--surface)); }
+.month-date { font-size: 0.8rem; font-weight: 600; }
+.month-icons { font-size: 0.95rem; line-height: 1.15; text-align: center; word-break: break-all; }
+
+/* Laptop: the catalogue / templates links go below the calendar */
+@media (min-width: 1000px) {
+  .planner-menu { order: 99; margin-top: 16px; }
+  .month-day { min-height: 92px; align-items: flex-start; padding: 6px 8px; }
+  .month-icons { font-size: 1.2rem; text-align: left; }
+}
+
+/* ---------- Laptop: wider list screens ---------- */
+.log-head, .activity-item .col { display: none; }
+@media (min-width: 1000px) {
+  .view:has(.log-page), .view:has(.wide-page) { max-width: 1100px; }
+
+  /* Log: one table row per activity */
+  .log-head, .log-page .activity-item {
+    display: grid;
+    grid-template-columns: 32px 130px minmax(0, 1fr) 80px 150px 100px 44px;
+    gap: 12px; align-items: center;
+  }
+  .log-head { padding: 0 16px 6px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .log-page .activity-item { min-height: 0; padding: 10px 16px; }
+  .log-page .activity-item:hover { background: var(--bg); }
+  .log-page .activity-item .col { display: block; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+  .log-page .col-date { color: var(--muted); }
+  .log-page .activity-meta { display: none; }
+  .log-page .activity-icon { font-size: 1.2rem; }
+  .log-page .add-button { max-width: 260px; margin-left: auto; }
+
+  /* Races, blocks, shoes: cards side by side */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  .card-grid > .card { margin-bottom: 0; }
+  .wide-page .add-button { max-width: 260px; margin-left: auto; }
+  .wide-page .week, .wide-page .retired { margin-bottom: 24px; }
+}
+@media (min-width: 1000px) {
+  .view:has(.body-page) { max-width: 1100px; }
+  .body-page { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-areas: "weight chart" "pb chart";
+    column-gap: 16px; align-items: start; }
+  #weight-card { grid-area: weight; }
+  #chart-card { grid-area: chart; }
+  #pb-card { grid-area: pb; }
+}
+.menu-hint { margin: 0 auto 0 8px; font-weight: 400; }
+.card-grid + .hint, .card-grid + .retired { margin-top: 12px; }
+.menu a .menu-hint { font-size: 0.85rem; color: var(--muted); }

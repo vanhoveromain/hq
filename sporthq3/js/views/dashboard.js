@@ -4,15 +4,15 @@
 import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
-} from "../storage.js?v=202610142111";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610142111";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610142111";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610142111";
-import { sessionName, calendarItems } from "../utils/plan.js?v=202610142111";
-import { loadWorkout } from "../utils/workout.js?v=202610142111";
-import { weightTrend } from "../utils/body.js?v=202610142111";
-import { currentSeason } from "../utils/season.js?v=202610142111";
-import { blockWeek } from "./blocks.js?v=202610142111";
+} from "../storage.js?v=202610142128";
+import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610142128";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610142128";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610142128";
+import { sessionName, calendarItems, daySummary } from "../utils/plan.js?v=202610142128";
+import { loadWorkout } from "../utils/workout.js?v=202610142128";
+import { weightTrend } from "../utils/body.js?v=202610142128";
+import { currentSeason } from "../utils/season.js?v=202610142128";
+import { blockWeek } from "./blocks.js?v=202610142128";
 
 export function render(container) {
   container.innerHTML = `
@@ -86,19 +86,15 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
   const counted = sessions.filter((s) => s.status !== "cancelled");
   const done = counted.filter((s) => s.status === "done").length;
   const runKm = activities.filter((a) => a.sport === "running").reduce((sum, a) => sum + Number(a.distance_km || 0), 0);
+  // The 7 days: the sport icons planned (or logged) that day, nothing else;
+  // a done day gets a light green background.
   const strip = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => {
-    const daySessions = sessions.filter((s) => s.session_date === day);
-    const extra = activities.some((a) => a.activity_date === day) && !daySessions.length;
-    let mark = "–";
-    let label = "rest";
-    if (daySessions.some((s) => s.status === "planned")) { mark = "⚪"; label = "planned"; }
-    if (daySessions.length && daySessions.every((s) => s.status === "cancelled")) { mark = "❌"; label = "cancelled"; }
-    if ((daySessions.length && daySessions.every((s) => s.status === "done" || s.status === "cancelled") && daySessions.some((s) => s.status === "done")) || extra) {
-      mark = "✅"; label = "done";
-    }
+    const { icons, done } = daySummary(day, sessions, activities, sportIcon);
     const name = new Date(day + "T12:00:00").toLocaleDateString("en-GB", { weekday: "narrow" });
-    return `<span class="strip-day ${day === today ? "is-today" : ""}" title="${label}">
-      <span class="muted small">${name}</span><span aria-label="${label}">${mark}</span></span>`;
+    const label = icons.length ? (done ? "done" : "planned") : "rest";
+    return `<span class="strip-day ${day === today ? "is-today" : ""} ${done ? "is-done" : ""}" title="${label}">
+      <span class="muted small">${name}</span>
+      <span class="strip-icons" aria-label="${label}">${icons.length ? icons.join("") : "–"}</span></span>`;
   }).join("");
   weekEl.innerHTML = `
     <h2><a href="#/planner">This week</a></h2>

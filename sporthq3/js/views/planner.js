@@ -9,21 +9,56 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610142111";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610142111";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142111";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610142111";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610142111";
-import { openSheet } from "../utils/sheet.js?v=202610142111";
-import { showToast } from "../utils/toast.js?v=202610142111";
-import { loadWorkout } from "../utils/workout.js?v=202610142111";
-import { blockWeek } from "./blocks.js?v=202610142111";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610142111";
+} from "../storage.js?v=202610142128";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610142128";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142128";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610142128";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary } from "../utils/plan.js?v=202610142128";
+import { openSheet } from "../utils/sheet.js?v=202610142128";
+import { showToast } from "../utils/toast.js?v=202610142128";
+import { loadWorkout } from "../utils/workout.js?v=202610142128";
+import { blockWeek } from "./blocks.js?v=202610142128";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610142128";
+
+// Week or month view; the last one you used is remembered on this device.
+//   #/planner                -> your last view (week by default)
+//   #/planner/2026-10-19     -> the week containing that day
+//   #/planner/month/2026-10  -> that month
+const VIEW_KEY = "sporthq3.planView";
 
 export function render(container, { params = [] } = {}) {
+  if (params[0] === "month") {
+    const month = /^\d{4}-\d{2}$/.test(params[1] || "") ? params[1] : todayISO().slice(0, 7);
+    rememberView("month");
+    return drawMonth(container, month);
+  }
+  if (!params[0] && readView() === "month") return drawMonth(container, todayISO().slice(0, 7));
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();
+  rememberView("week");
   drawWeek(container, startOfWeek(requested));
 }
+
+function readView() {
+  try { return localStorage.getItem(VIEW_KEY) || "week"; } catch { return "week"; }
+}
+function rememberView(view) {
+  try { localStorage.setItem(VIEW_KEY, view); } catch { /* not important */ }
+}
+
+// The "Week | Month" switch at the top of both views.
+function viewSwitchHtml(active, weekHref, monthHref) {
+  return `<div class="view-switch" role="tablist" aria-label="View">
+    <a href="${weekHref}" role="tab" aria-selected="${active === "week"}">Week</a>
+    <a href="${monthHref}" role="tab" aria-selected="${active === "month"}">Month</a>
+  </div>`;
+}
+
+// Links to the catalogue and week templates (below the calendar on a laptop).
+const PLANNING_MENU = `
+  <nav class="card menu planner-menu" aria-label="Planning">
+    <a href="#/catalogue">📚 Session catalogue <span aria-hidden="true">›</span></a>
+    <a href="#/weektemplates">📋 Week templates <span aria-hidden="true">›</span></a>
+  </nav>`;
 
 
 // ---------------------------------------------------------------------
@@ -35,10 +70,9 @@ async function drawWeek(container, monday) {
   const thisMonday = startOfWeek(todayISO());
 
   container.innerHTML = `
-    <nav class="card menu" aria-label="Planning">
-      <a href="#/catalogue">📚 Session catalogue <span aria-hidden="true">›</span></a>
-      <a href="#/weektemplates">📋 Week templates <span aria-hidden="true">›</span></a>
-    </nav>
+    <div class="planner">
+    ${PLANNING_MENU}
+    ${viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`)}
     <div class="week-nav">
       <a class="button small-button" href="#/planner/${addDays(monday, -7)}" aria-label="Previous week">‹</a>
       <div class="week-nav-title">
@@ -55,6 +89,7 @@ async function drawWeek(container, monday) {
     <div class="week-actions">
       <button id="templates" type="button" class="button">📋 Templates</button>
       <button id="copy-week" type="button" class="button">⧉ Copy last week into this week</button>
+    </div>
     </div>
   `;
 
@@ -509,4 +544,76 @@ function weekdayButtons(monday, current) {
     const label = parseISODate(day).toLocaleDateString("en-GB", { weekday: "short", day: "numeric" });
     return `<button type="button" class="chip-button" data-value="${day}" ${day === current ? "disabled" : ""}>${label}</button>`;
   }).join("")}</div>`;
+}
+
+
+// ---------------------------------------------------------------------
+// The month: a calendar with the sport icons of each day.
+// Tap a day to open its week.
+// ---------------------------------------------------------------------
+
+async function drawMonth(container, month) {
+  const first = `${month}-01`;
+  const [year, monthNumber] = month.split("-").map(Number);
+  const nextMonth = toMonth(new Date(year, monthNumber, 1));
+  const previousMonth = toMonth(new Date(year, monthNumber - 2, 1));
+  const lastDay = addDays(`${nextMonth}-01`, -1);
+  // Full weeks: from the Monday before the 1st to the Sunday after the last day.
+  const gridStart = startOfWeek(first);
+  const gridEnd = addDays(startOfWeek(lastDay), 6);
+  const today = todayISO();
+  const title = parseISODate(first).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+
+  container.innerHTML = `
+    <div class="planner">
+    ${PLANNING_MENU}
+    ${viewSwitchHtml("month", `#/planner/${month === today.slice(0, 7) ? today : first}`, `#/planner/month/${month}`)}
+    <div class="week-nav">
+      <a class="button small-button" href="#/planner/month/${previousMonth}" aria-label="Previous month">‹</a>
+      <div class="week-nav-title"><strong>${escapeHtml(title)}</strong></div>
+      <a class="button small-button" href="#/planner/month/${nextMonth}" aria-label="Next month">›</a>
+    </div>
+    ${month !== today.slice(0, 7) ? `<a class="today-link" href="#/planner/month/${today.slice(0, 7)}">↩ Back to this month</a>` : ""}
+    <p id="month-summary" class="muted week-summary"></p>
+    <div class="month card">
+      <div class="month-head">${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<span>${d}</span>`).join("")}</div>
+      <div id="month-grid" class="month-grid"><p class="muted">Loading…</p></div>
+    </div>
+    </div>
+  `;
+
+  const grid = container.querySelector("#month-grid");
+  try {
+    const [sessions, activities] = await Promise.all([
+      listPlannedSessions(gridStart, gridEnd),
+      listActivitiesBetween(gridStart, gridEnd),
+    ]);
+    const days = [];
+    for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) days.push(day);
+    grid.innerHTML = days.map((day) => {
+      const { icons, done } = daySummary(day, sessions, activities, sportIcon);
+      const classes = ["month-day", day.slice(0, 7) !== month ? "is-other" : "", day === today ? "is-today" : "",
+        done ? "is-done" : ""].join(" ");
+      return `<a class="${classes}" href="#/planner/${day}" aria-label="${escapeHtml(formatDayLabel(day))}: ${icons.length ? icons.length + " session(s)" : "rest"}">
+        <span class="month-date">${Number(day.slice(8))}</span>
+        <span class="month-icons">${icons.join("")}</span>
+      </a>`;
+    }).join("");
+
+    const inMonth = (date) => date.slice(0, 7) === month;
+    const planned = sessions.filter((s) => inMonth(s.session_date) && s.status !== "cancelled");
+    const done = planned.filter((s) => s.status === "done").length;
+    const runKm = activities.filter((a) => inMonth(a.activity_date) && a.sport === "running")
+      .reduce((sum, a) => sum + Number(a.distance_km || 0), 0);
+    container.querySelector("#month-summary").textContent =
+      `${planned.length} planned · ${done} done · 🏃 ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km`;
+  } catch (error) {
+    grid.innerHTML = `<p class="status error"></p>`;
+    grid.querySelector(".status").textContent = "Could not load the month: " + error.message;
+  }
+}
+
+// "2026-11" from a Date.
+function toMonth(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }

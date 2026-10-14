@@ -102,6 +102,14 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: laptop + polish round (Rom's feedback): Home "This week" strip shows only the sport
+  icons per day (done day = light green background; utils/plan.js daySummary, also used by the month).
+  Plan: Week | Month switch (#/planner/month/YYYY-MM; last view remembered per device); month = calendar
+  with sport icons, tap a day -> its week. Laptop: catalogue / templates links below the calendar
+  (phone: still on top). Laptop (>= 1000px): Log = table (date, session, time, distance, pace, RPE);
+  Races, Blocks, Shoes = card grids (.wide-page + .card-grid); Body = weight + PBs left, chart right.
+  Me = menu (Body & goals, Shoes, Training blocks, Settings); Settings (#/settings) = account,
+  password, backup (moved out of Me; not a 6th tab, the tab bar stays at 5).
 - 2026-10-14: accent = VIOLET (#6d28d9 / #7c3aed lines / #a78bfa brand + dark mode). Orange felt too
   "Strava". Rom's end goal is one HQ hub hosting all his HQs (sport, work, personal) with the SAME
   style and one accent per HQ: hub = ink (black & white), Sport = violet, Work = blue, Personal =

@@ -4,19 +4,20 @@
 // screen you're on, e.g. index.html#/planner. Changing it doesn't reload the
 // page; we just draw a different view inside <main>. This is a "hash router".
 
-import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610142111";
-import * as loginView from "./views/login.js?v=202610142111";
-import * as dashboardView from "./views/dashboard.js?v=202610142111";
-import * as plannerView from "./views/planner.js?v=202610142111";
-import * as logView from "./views/log.js?v=202610142111";
-import * as racesView from "./views/races.js?v=202610142111";
-import * as meView from "./views/me.js?v=202610142111";
-import * as shoesView from "./views/shoes.js?v=202610142111";
-import * as blocksView from "./views/blocks.js?v=202610142111";
-import * as bodyView from "./views/body.js?v=202610142111";
-import * as catalogueView from "./views/catalogue.js?v=202610142111";
-import * as weekTemplatesView from "./views/weekTemplates.js?v=202610142111";
-import * as workoutView from "./views/workout.js?v=202610142111";
+import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610142128";
+import * as loginView from "./views/login.js?v=202610142128";
+import * as dashboardView from "./views/dashboard.js?v=202610142128";
+import * as plannerView from "./views/planner.js?v=202610142128";
+import * as logView from "./views/log.js?v=202610142128";
+import * as racesView from "./views/races.js?v=202610142128";
+import * as meView from "./views/me.js?v=202610142128";
+import * as shoesView from "./views/shoes.js?v=202610142128";
+import * as blocksView from "./views/blocks.js?v=202610142128";
+import * as bodyView from "./views/body.js?v=202610142128";
+import * as settingsView from "./views/settings.js?v=202610142128";
+import * as catalogueView from "./views/catalogue.js?v=202610142128";
+import * as weekTemplatesView from "./views/weekTemplates.js?v=202610142128";
+import * as workoutView from "./views/workout.js?v=202610142128";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
@@ -29,6 +30,7 @@ const routes = {
   shoes:     { title: "Shoes", view: shoesView, tab: "me" },
   blocks:    { title: "Training blocks", view: blocksView, tab: "me" },
   body:      { title: "Body & goals", view: bodyView, tab: "me" },
+  settings:  { title: "Settings", view: settingsView, tab: "me" },
   catalogue: { title: "Session catalogue", view: catalogueView, tab: "planner" },
   weektemplates: { title: "Week templates", view: weekTemplatesView, tab: "planner" },
   workout:   { title: "Workout", view: workoutView, tab: "planner" },
