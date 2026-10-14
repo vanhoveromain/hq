@@ -732,3 +732,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .race-result .muted { font-size: 0.85rem; font-weight: 400; margin-left: 4px; letter-spacing: 0; }
 .race-past.is-not-run { opacity: 0.6; }
 .race-past.is-not-run strong { text-decoration: line-through; }
+/* All race cards are the same size (tiles), whatever their group. A very
+   long name can still make one taller rather than being cut off. */
+.race-card { min-height: 176px; box-sizing: border-box; }
+.wide-page .card-grid:has(.race-card) { align-items: stretch; }
