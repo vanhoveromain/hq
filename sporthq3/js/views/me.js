@@ -1,7 +1,7 @@
 // "Me" screen: links to body, shoes, blocks; JSON backup; account and password.
 
-import { signOut, setPassword, exportAllData } from "../storage.js?v=202610141721";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141721";
+import { signOut, setPassword, exportAllData } from "../storage.js?v=202610141733";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141733";
 
 const MIN_PASSWORD_LENGTH = 12;
 const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only

@@ -52,7 +52,7 @@
 11. Body & goals (weigh-ins, trend chart, PBs) — done 2026-10-14
 12. Dashboard (incl. football season totals, shoe km) — done 2026-10-14
 13. In 4 parts: 13a JSON export (done 2026-10-14), 13b drag and drop of planner cards (laptop + phone:
-    press and hold), 13c design pass + polish (Rom picks from 2-3 mock-ups), 13d switch day
+    press and hold) (done 2026-10-14), 13c design pass + polish (Rom picks from 2-3 mock-ups), 13d switch day
     (final Notion re-import, big clean, merge to live, phone check)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
@@ -102,6 +102,12 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: drag and drop (13b): utils/dragDrop.js on pointer events (mouse and finger alike).
+  Mouse: press + move 8px. Finger: hold 450 ms (a quick swipe still scrolls, a tap still opens the
+  menu); page scrolling is blocked while dragging and the page auto-scrolls near the screen edges.
+  Drop on another day of the shown week = move (added at the end of that day); rule warnings pop up as
+  usual. Done sessions can't be dragged. Move / Swap buttons stay. Window listeners only live during a
+  press (the planner redraws on every week change).
 - 2026-10-14: JSON export (13a): Me -> Backup -> "Export my data" downloads sporthq3-backup-<date>.json
   with every row of the 14 tables (RLS = only your rows), paged by 1000, plus counts. "Last export"
   is remembered per device (localStorage), nudge after 30 days. No import in v1 (restore = SQL by hand).

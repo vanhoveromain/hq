@@ -4,15 +4,15 @@
 import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
-} from "../storage.js?v=202610141721";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610141721";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610141721";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610141721";
-import { sessionName, calendarItems } from "../utils/plan.js?v=202610141721";
-import { loadWorkout } from "../utils/workout.js?v=202610141721";
-import { weightTrend } from "../utils/body.js?v=202610141721";
-import { currentSeason } from "../utils/season.js?v=202610141721";
-import { blockWeek } from "./blocks.js?v=202610141721";
+} from "../storage.js?v=202610141733";
+import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610141733";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610141733";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610141733";
+import { sessionName, calendarItems } from "../utils/plan.js?v=202610141733";
+import { loadWorkout } from "../utils/workout.js?v=202610141733";
+import { weightTrend } from "../utils/body.js?v=202610141733";
+import { currentSeason } from "../utils/season.js?v=202610141733";
+import { blockWeek } from "./blocks.js?v=202610141733";
 
 export function render(container) {
   container.innerHTML = `

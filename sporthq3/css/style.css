@@ -614,3 +614,12 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (min-width: 1100px) {
   .dashboard { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Drag and drop in the planner */
+.plan-card[data-session] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.plan-card.is-dragging { opacity: 0.35; }
+.drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; margin: 0;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25); transform-origin: top left; opacity: 0.95;
+}
+.day.is-drop-target { outline: 2px dashed var(--accent); outline-offset: 2px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
