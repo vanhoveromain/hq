@@ -8,8 +8,9 @@
 // Keys (like "easy_run") are what gets saved in the database, so once you
 // have data, change a label freely but don't rename a key.
 //
-// Later steps add more to this file: the default week, warnings, race
-// routine, personal-best distances.
+// Later steps add more to this file: race routine, personal-best distances.
+
+import { addDays } from "./utils/dates.js";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -142,4 +143,74 @@ export function sportIcon(sportKey) {
 export function sessionTypeLabel(sportKey, typeKey) {
   const type = getSessionType(sportKey, typeKey);
   return type ? type.label : (typeKey || sportLabel(sportKey));
+}
+
+
+// ---------- Training rules (warnings) ----------
+// Each rule looks at everything that counts on the calendar and returns
+// warnings. It never blocks or changes anything: it only warns.
+//
+// An "item" = one session that counts: { date: "2026-10-14", sport, session_type }
+// (planned sessions that aren't cancelled, and logged activities).
+// A warning = { rule, days: ["2026-10-13", "2026-10-14"], message }
+
+function itemLabel(item) {
+  return sessionTypeLabel(item.sport, item.session_type);
+}
+
+function shortDay(iso) {
+  return new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
+}
+
+const isHeavyLegs = (item) => categoryOf(item.sport, item.session_type) === "heavy_legs";
+const isExplosivity = (item) => item.sport === "muscle" && item.session_type === "explosivity";
+const isIntervals = (item) => item.sport === "running" && String(item.session_type).startsWith("intervals_");
+
+export const TRAINING_RULES = [
+  {
+    key: "heavy_legs_back_to_back",
+    label: "No heavy-leg sessions two days in a row",
+    check(items) {
+      const heavyByDay = groupByDay(items.filter(isHeavyLegs));
+      const warnings = [];
+      for (const day of Object.keys(heavyByDay).sort()) {
+        const next = addDays(day, 1);
+        if (!heavyByDay[next]) continue;
+        warnings.push({
+          rule: this.key,
+          days: [day, next],
+          message: `Heavy legs two days in a row: ${shortDay(day)} ${heavyByDay[day].map(itemLabel).join(" + ")}`
+            + ` → ${shortDay(next)} ${heavyByDay[next].map(itemLabel).join(" + ")}`,
+        });
+      }
+      return warnings;
+    },
+  },
+  {
+    key: "explosivity_and_intervals",
+    label: "Leg explosivity or intervals, never both on the same day",
+    check(items) {
+      const byDay = groupByDay(items);
+      return Object.keys(byDay).sort()
+        .filter((day) => byDay[day].some(isExplosivity) && byDay[day].some(isIntervals))
+        .map((day) => ({
+          rule: this.key,
+          days: [day],
+          message: `Leg explosivity AND intervals on ${shortDay(day)}: pick one`,
+        }));
+    },
+  },
+];
+
+function groupByDay(items) {
+  const byDay = {};
+  for (const item of items) (byDay[item.date] = byDay[item.date] || []).push(item);
+  return byDay;
+}
+
+// All warnings for a list of items, in date order.
+export function checkTrainingRules(items) {
+  return TRAINING_RULES
+    .flatMap((rule) => rule.check(items))
+    .sort((a, b) => a.days[0].localeCompare(b.days[0]));
 }

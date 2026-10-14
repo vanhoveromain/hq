@@ -46,7 +46,7 @@
 6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
 7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
    (save a week as template / apply a template) (done 2026-10-13), 7d workout mode (done 2026-10-14)
-8. Rule warnings
+8. Rule warnings — done 2026-10-14
 9. Races + checklist + race routine
 10. Training blocks
 11. Body & goals (weigh-ins, trend chart, PBs)
@@ -58,7 +58,7 @@
 Rules are data + small pure functions so future users can define their own.
 - Categories: heavy legs (leg explosivity, intervals, team training, match, race), easy run, upper body, rest.
 - Warn when two heavy-leg sessions fall on consecutive days.
-- Monday is leg explosivity OR intervals, never both.
+- Leg explosivity OR intervals, never both on the same day (any day; was "Monday" until 2026-10-14).
 - Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
 - Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
 - No automatic default week (decided 2026-10-13): Rom plans each week himself (catalogue, quick-add,
@@ -89,6 +89,12 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: rule warnings (8): TRAINING_RULES in rules.js (data + check functions), checked by
+  checkTrainingRules(items). Items = planned sessions not cancelled (a done+linked one counts as the
+  logged activity) + unlinked logged activities (utils/plan.js calendarItems). The planner loads one
+  extra day on each side so Sunday -> next Monday is checked. Warnings show on each day involved +
+  count in the week summary; a NEW warning after an add/move/swap pops up as a toast. Warn only, never
+  block. Sessions without a type ("just a sport") count as other, so they never trigger warnings.
 - 2026-10-14: workout mode (7d): planner -> session -> Start workout (#/workout/<id>). Timer from the
   clock, one tick box per set (per round for circuits), weight editable on the spot (text box, comma
   ok), optional rest timer (Off/1/1.5/2/3 min or Custom: "45" = seconds, "1:15", 5 s-15 min; remembered; beeps + vibrates where allowed; no beep

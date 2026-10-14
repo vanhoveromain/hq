@@ -48,3 +48,21 @@ export function completeSession(session, activityId = null, details = undefined)
 export function reopenSession(sessionId) {
   return updatePlannedSession(sessionId, { status: "planned", activity_id: null, details: null });
 }
+
+// What really counts on the calendar, for the training rules:
+//   - planned sessions that aren't cancelled (a done one counts as what was
+//     logged, if it's linked to an activity)
+//   - logged activities that aren't linked to a session ("extras")
+// Returns [{ date, sport, session_type }].
+export function calendarItems(sessions, activities) {
+  const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
+  const fromPlan = sessions
+    .filter((s) => s.status !== "cancelled")
+    .map((s) => (s.activity
+      ? { date: s.session_date, sport: s.activity.sport, session_type: s.activity.session_type }
+      : { date: s.session_date, sport: s.sport, session_type: s.session_type }));
+  const extras = activities
+    .filter((a) => !linkedIds.has(a.id))
+    .map((a) => ({ date: a.activity_date, sport: a.sport, session_type: a.session_type }));
+  return [...fromPlan, ...extras];
+}
