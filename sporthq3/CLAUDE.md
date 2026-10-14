@@ -85,6 +85,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 ## How we work
 - Workflow: build on the working branch (the "draft") -> test locally -> pull request -> merge into
   `main` -> GitHub Pages publishes `main` automatically. Live app: https://vanhoveromain.github.io/hq/sporthq3/
+- Before every pull request: run `node tools/bump-version.mjs` (new `?v=` on every file address, so
+  phones fetch the whole new version together instead of mixing old and new saved copies).
+  Local testing: `python3 serve.py` (no-cache server) instead of `python3 -m http.server 8000`.
 - Database migrations are NOT drafts: one database serves local and live. Always flag them, and make
   them backward-compatible (add first, remove only after the new code is live).
 - Plan first, then wait for approval. One milestone at a time.
@@ -95,6 +98,11 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: cache fix. Browsers kept old copies of some modules (planner stuck on "Loading…" when a
+  new planner.js met an old rules.js; Safari's hard reload is Cmd+Option+R, not Cmd+Shift+R). Fix:
+  every local import / index.html reference carries `?v=<version>`, stamped by tools/bump-version.mjs
+  before each PR (one version for all files; a file imported with two versions would load twice).
+  Local dev uses serve.py (Cache-Control: no-store).
 - 2026-10-14: rule warnings (8): TRAINING_RULES in rules.js (data + check functions), checked by
   checkTrainingRules(items). Items = planned sessions not cancelled (a done+linked one counts as the
   logged activity) + unlinked logged activities (utils/plan.js calendarItems). The planner loads one
@@ -174,7 +182,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - 2026-10-12: app shell: single page with a hash router (`#/planner`), bottom tab bar
   Home / Plan / Log / Races / Me (body, shoes, blocks and export live under Me).
   supabase-js pinned to 2.117.2 (jsDelivr `+esm`). Magic link uses the default (implicit) flow so a
-  link works in any browser; `shouldCreateUser: false`. Local dev: `python3 -m http.server 8000`.
+  link works in any browser; `shouldCreateUser: false`. Local dev: `python3 serve.py` (since 2026-10-14).
 - 2026-10-12: Supabase project `sporthq3` (EU region, free plan). Migrations are applied by pasting the
   file into the dashboard SQL Editor (no CLI for now). Auth: Site URL + redirect `http://localhost:8000`,
   my user created manually, public sign-ups disabled.

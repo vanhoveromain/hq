@@ -10,7 +10,7 @@
 //
 // Later steps add more to this file: race routine, personal-best distances.
 
-import { addDays } from "./utils/dates.js";
+import { addDays } from "./utils/dates.js?v=202610141003";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").

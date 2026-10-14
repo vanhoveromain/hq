@@ -9,14 +9,14 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate,
-} from "../storage.js";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js";
-import { openSheet } from "../utils/sheet.js";
-import { showToast } from "../utils/toast.js";
-import { loadWorkout } from "../utils/workout.js";
+} from "../storage.js?v=202610141003";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141003";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141003";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141003";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141003";
+import { openSheet } from "../utils/sheet.js?v=202610141003";
+import { showToast } from "../utils/toast.js?v=202610141003";
+import { loadWorkout } from "../utils/workout.js?v=202610141003";
 
 export function render(container, { params = [] } = {}) {
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();

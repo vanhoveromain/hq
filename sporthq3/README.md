@@ -20,9 +20,11 @@ The app must be opened through a small local web server (not by double-clicking
    ```
 3. Start the server:
    ```
-   python3 -m http.server 8000
+   python3 serve.py
    ```
    (The first time, macOS may offer to install "command line developer tools": accept.)
+   `serve.py` is a mini web server that tells the browser never to keep old copies of files,
+   so you always test the latest version.
 4. Open **http://localhost:8000** in your browser.
 5. Stop the server with **Ctrl + C** in Terminal.
 
@@ -38,5 +40,7 @@ The app must be opened through a small local web server (not by double-clicking
 | `js/rules.js` | The rulebook: sports, session types, categories (later: training rules) |
 | `js/utils/*.js` | Helpers: dates, formatting, planned-session helpers (`plan.js`), workout in progress (`workout.js`), pop-up sheet, toast |
 | `js/views/*.js` | One file per screen (`shoes.js` opens from Me, `catalogue.js`, `weekTemplates.js` and `workout.js` from Plan) |
+| `serve.py` | Local test server (no saved copies) |
+| `tools/bump-version.mjs` | Stamps a new `?v=` version on every file address before each release |
 | `manifest.webmanifest`, `icons/` | Name and icon for "Add to Home Screen" |
 | `supabase/migrations/` | SQL that builds the database; paste into Supabase's SQL Editor |
