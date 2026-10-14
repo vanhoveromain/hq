@@ -721,3 +721,14 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .menu-hint { margin: 0 auto 0 8px; font-weight: 400; }
 .card-grid + .hint, .card-grid + .retired { margin-top: 12px; }
 .menu a .menu-hint { font-size: 0.85rem; color: var(--muted); }
+
+/* Race cards: one look per group */
+.race-upcoming { border-left: 4px solid var(--accent-strong); }
+.race-countdown { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--accent); margin: 2px 0; }
+.race-countdown span { font-size: 1rem; font-weight: 600; }
+.race-idea { background: transparent; box-shadow: none; border: 1px dashed var(--border); }
+.race-idea strong { font-weight: 600; }
+.race-result { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.race-result .muted { font-size: 0.85rem; font-weight: 400; margin-left: 4px; letter-spacing: 0; }
+.race-past.is-not-run { opacity: 0.6; }
+.race-past.is-not-run strong { text-decoration: line-through; }

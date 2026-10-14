@@ -102,6 +102,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: race cards differ per group: Upcoming = violet left line, big countdown, date + distance,
+  goal + pace, checklist progress (listRaces brings checklist done flags); Ideas = dashed, no shadow,
+  💡, name + date/distance only; Past = big result time + pace; cancelled / never run = greyed + struck.
 - 2026-10-14: laptop + polish round (Rom's feedback): Home "This week" strip shows only the sport
   icons per day (done day = light green background; utils/plan.js daySummary, also used by the month).
   Plan: Week | Month switch (#/planner/month/YYYY-MM; last view remembered per device); month = calendar

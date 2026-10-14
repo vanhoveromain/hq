@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610142128";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610142134";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -491,7 +491,7 @@ const RACE_COLUMNS = ["name", "race_date", "location", "distance_km", "elevation
 export async function listRaces() {
   const { data, error } = await supabase
     .from("races")
-    .select("*, block:training_blocks(id, name)")
+    .select("*, block:training_blocks(id, name), checklist:race_checklist_items(done)")
     .order("race_date", { ascending: false, nullsFirst: false });
   if (error) throw error;
   return data;

@@ -6,12 +6,12 @@
 import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610142128";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610142128";
-import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610142128";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142128";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610142128";
-import { showToast } from "../utils/toast.js?v=202610142128";
+} from "../storage.js?v=202610142134";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610142134";
+import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610142134";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610142134";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610142134";
+import { showToast } from "../utils/toast.js?v=202610142134";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -56,18 +56,18 @@ async function renderList(container) {
     listEl.innerHTML = `
       <section class="week">
         <h2 class="week-title"><span>🏁 Upcoming</span><span class="muted">${upcoming.length}</span></h2>
-        ${upcoming.length ? `<div class="card-grid">${upcoming.map((r) => raceCardHtml(r, today)).join("")}</div>`
+        ${upcoming.length ? `<div class="card-grid">${upcoming.map((r) => raceCardHtml(r, today, "upcoming")).join("")}</div>`
           : `<p class="muted">No race booked. Set a race to "To register" or "Registered" (with a date) to see it here.</p>`}
       </section>
       ${ideas.length ? `
         <section class="week">
           <h2 class="week-title"><span>💡 Ideas</span><span class="muted">${ideas.length}</span></h2>
-          <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today)).join("")}</div>
+          <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today, "ideas")).join("")}</div>
         </section>` : ""}
       ${past.length ? `
         <details class="retired" open>
           <summary>Past races (${past.length})</summary>
-          <div class="card-grid">${past.map((r) => raceCardHtml(r, today)).join("")}</div>
+          <div class="card-grid">${past.map((r) => raceCardHtml(r, today, "past")).join("")}</div>
         </details>` : ""}
     `;
   } catch (error) {
@@ -84,26 +84,51 @@ function countdown(raceDate, today) {
   return `in ${days} days`;
 }
 
-function raceCardHtml(race, today) {
+// Each group has its own card:
+//   upcoming = the big countdown, goal and checklist progress
+//   ideas    = light and dashed: a "maybe"
+//   past     = the result first (cancelled / never run = greyed)
+function raceCardHtml(race, today, group) {
   const status = RACE_STATUSES[race.status];
   const facts = [
     race.distance_km ? `${Number(race.distance_km)} km` : "",
     race.elevation_m ? `${race.elevation_m} m D+` : "",
     race.location || "",
   ].filter(Boolean).join(" · ");
-  const time = race.result_time_s
-    ? `Result ${formatDuration(race.result_time_s)}${paceText(race.result_time_s, race.distance_km)}`
-    : race.goal_time_s ? `Goal ${formatDuration(race.goal_time_s)}${paceText(race.goal_time_s, race.distance_km)}` : "";
-  const upcoming = race.race_date && race.race_date >= today && race.status !== "finished" && race.status !== "cancelled";
+  const href = `#/races/${encodeURIComponent(race.id)}`;
+  const chip = status ? `<span class="chip">${status.label}</span>` : "";
+
+  if (group === "upcoming") {
+    const days = Math.round((Date.parse(race.race_date) - Date.parse(today)) / 86400000);
+    const ready = race.checklist ? race.checklist.filter((i) => i.done).length : 0;
+    const total = race.checklist ? race.checklist.length : 0;
+    return `
+      <a class="card race-card race-upcoming" href="${href}">
+        <span class="race-top"><strong>${escapeHtml(race.name)}</strong>${chip}</span>
+        <span class="race-countdown">${days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `${days} <span>days</span>`}</span>
+        <span class="muted small">${formatDayLabel(race.race_date)}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
+        ${race.goal_time_s ? `<span class="small">🎯 Goal ${formatDuration(race.goal_time_s)}${escapeHtml(paceText(race.goal_time_s, race.distance_km))}</span>` : ""}
+        ${total ? `<span class="small">✅ Checklist ${ready} / ${total}</span>` : ""}
+      </a>`;
+  }
+
+  if (group === "ideas") {
+    return `
+      <a class="card race-card race-idea" href="${href}">
+        <span class="race-top"><strong>💡 ${escapeHtml(race.name)}</strong>${chip}</span>
+        <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date yet"}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
+      </a>`;
+  }
+
+  // Past: finished with a result, or cancelled / never run.
+  const ran = race.status === "finished";
   return `
-    <a class="card race-card status-${escapeHtml(race.status)}" href="#/races/${encodeURIComponent(race.id)}">
-      <span class="race-top">
-        <strong>${escapeHtml(race.name)}</strong>
-        ${status ? `<span class="chip">${status.label}</span>` : ""}
-      </span>
-      <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date yet"}${upcoming ? ` · <strong class="countdown">${countdown(race.race_date, today)}</strong>` : ""}</span>
-      ${facts ? `<span class="small">${escapeHtml(facts)}</span>` : ""}
-      ${time ? `<span class="small">${escapeHtml(time)}</span>` : ""}
+    <a class="card race-card race-past ${ran ? "" : "is-not-run"}" href="${href}">
+      <span class="race-top"><strong>${escapeHtml(race.name)}</strong>${ran ? "" : chip}</span>
+      ${ran && race.result_time_s ? `<span class="race-result">${formatDuration(race.result_time_s)}
+        <span class="muted small">${escapeHtml(paceText(race.result_time_s, race.distance_km).replace(/[()]/g, "").trim())}</span></span>` : ""}
+      <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date"}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
+      ${ran && !race.result_time_s ? `<span class="small muted">🏁 Finished · no result time yet</span>` : ""}
     </a>`;
 }
 

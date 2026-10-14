@@ -1,7 +1,7 @@
 // Settings (opened from the Me tab): account, password, JSON backup.
 
-import { signOut, setPassword, exportAllData } from "../storage.js?v=202610142128";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610142128";
+import { signOut, setPassword, exportAllData } from "../storage.js?v=202610142134";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610142134";
 
 const MIN_PASSWORD_LENGTH = 12;
 const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
