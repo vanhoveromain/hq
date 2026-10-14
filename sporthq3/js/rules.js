@@ -10,7 +10,7 @@
 //
 // Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610141703";
+import { addDays } from "./utils/dates.js?v=202610141708";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -280,3 +280,7 @@ export const PB_RULES = { maxRatio: 1.05 };
 
 // The weight trend line = average of the last N weigh-ins.
 export const WEIGHT_TREND_POINTS = 4;
+
+// Football season: 1 August -> 15 April (months 1-12). Outside the season,
+// the dashboard shows the season that just ended.
+export const FOOTBALL_SEASON = { start: { month: 8, day: 1 }, end: { month: 4, day: 15 } };

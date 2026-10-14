@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141703";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141708";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -714,4 +714,22 @@ export async function savePersonalBest(pb) {
 export async function deletePersonalBest(id) {
   const { error } = await supabase.from("personal_bests").delete().eq("id", id);
   if (error) throw error;
+}
+
+
+// ---------------------------------------------------------------------
+// Dashboard helpers
+// ---------------------------------------------------------------------
+
+// Football matches between two days, with their match card (or null).
+export async function listMatchesBetween(fromDate, toDate) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("id, activity_date, match_stats(minutes_played, goals, assists)")
+    .eq("sport", "football")
+    .eq("session_type", "match")
+    .gte("activity_date", fromDate)
+    .lte("activity_date", toDate);
+  if (error) throw error;
+  return data.map(withMatchStats);
 }

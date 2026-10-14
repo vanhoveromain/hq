@@ -1,7 +1,7 @@
 // "Me" screen: who is logged in, set a password, sign out.
 // Later: export.
 
-import { signOut, setPassword } from "../storage.js?v=202610141703";
+import { signOut, setPassword } from "../storage.js?v=202610141708";
 
 const MIN_PASSWORD_LENGTH = 12;
 

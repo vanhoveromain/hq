@@ -5,11 +5,11 @@
 
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
-} from "../storage.js?v=202610141703";
-import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610141703";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141703";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610141703";
-import { showToast } from "../utils/toast.js?v=202610141703";
+} from "../storage.js?v=202610141708";
+import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610141708";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141708";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610141708";
+import { showToast } from "../utils/toast.js?v=202610141708";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);

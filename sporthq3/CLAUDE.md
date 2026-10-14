@@ -50,7 +50,7 @@
 9. Races + checklist + race routine — done 2026-10-14
 10. Training blocks — done 2026-10-14
 11. Body & goals (weigh-ins, trend chart, PBs) — done 2026-10-14
-12. Dashboard (incl. football season totals, shoe km)
+12. Dashboard (incl. football season totals, shoe km) — done 2026-10-14
 13. JSON export + polish + design pass (overall look, laptop layout for older screens, drag and drop
     of planner cards on laptop + phone (press and hold))
 
@@ -101,6 +101,14 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: dashboard (12): Home = cards that each load on their own (one failing card shows its
+  error, the rest still work), each title opens the full screen: Today (planned sessions with Start /
+  Log, workout-in-progress banner, "rest day"), This week (done of planned, 7-day strip, running km),
+  Warnings (hidden when none), Next race (registered / to register: countdown, checklist progress),
+  Current block (week x of y), Weight (latest, goal %, sparkline of the trend), Football season
+  (FOOTBALL_SEASON in rules.js = 1 Aug -> 15 Apr; between seasons the last one is shown as finished;
+  matches = football match activities, minutes/goals/assists from match cards only), Shoes in use.
+  Phone: one column; 2 columns from 700px, 3 from 1100px.
 - 2026-10-14: body & goals (11): Me -> Body & goals (#/body). Weight: quick weigh-in (comma ok, one
   per day: same date = replace, via upsert), goal = settings start/target weight (start defaults to the
   first weigh-in), progress "−x kg of −y kg · z%". Chart = hand-made SVG (no library): weigh-in dots,
