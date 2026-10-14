@@ -517,3 +517,23 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (prefers-color-scheme: dark) {
   .day-warning { background: #422006; color: #fde68a; }
 }
+
+/* Races */
+.race-card { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+.race-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.race-card.status-cancelled { opacity: 0.6; }
+.countdown { color: var(--accent); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.routine-list { margin: 0 0 12px; padding-left: 20px; }
+.routine-list li { margin: 4px 0; }
+#routine .button, #checklist .button { margin-top: 8px; }
+.checklist { list-style: none; margin: 0 0 12px; padding: 0; }
+.checklist li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  border-top: 1px solid var(--border); padding: 6px 0; }
+.checklist li .checkbox { margin: 0; flex: 1; }
+.checklist li.is-done .checkbox { color: var(--muted, #78716c); text-decoration: line-through; }
+.add-item { display: flex; gap: 8px; margin-top: 8px; }
+.add-item input { flex: 1; margin: 0; }
+.add-item .button { margin-top: 0 !important; }
+.race-title { margin: 8px 0 0; }
+.race-subtitle { margin: 2px 0 12px; }

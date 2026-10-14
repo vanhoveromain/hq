@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141003";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141529";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -301,7 +301,7 @@ export async function deleteSessionTemplate(id) {
 // ---------------------------------------------------------------------
 
 const PLANNED_COLUMNS = ["session_date", "sport", "session_type", "title", "status", "source",
-  "position", "template_id", "activity_id", "details", "notes"];
+  "position", "template_id", "activity_id", "details", "notes", "race_id"];
 
 // "template:session_templates(*)" = also bring the linked recipe, and call it
 // `template` in the result. Same for the linked activity.
@@ -475,4 +475,109 @@ export async function applyWeekTemplate(weekTemplate, monday, addDays, existing 
   const { error } = await supabase.from("planned_sessions").insert(rows);
   if (error) throw error;
   return rows.length;
+}
+
+
+// ---------------------------------------------------------------------
+// Races + their checklist
+// A race: { id, name, race_date (or null = idea), location, distance_km,
+//   elevation_m, status, goal_time_s, result_time_s, training_block_id,
+//   notes, block: { id, name } | null }
+// ---------------------------------------------------------------------
+
+const RACE_COLUMNS = ["name", "race_date", "location", "distance_km", "elevation_m", "status",
+  "goal_time_s", "result_time_s", "training_block_id", "notes"];
+
+export async function listRaces() {
+  const { data, error } = await supabase
+    .from("races")
+    .select("*, block:training_blocks(id, name)")
+    .order("race_date", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data;
+}
+
+// One race with its checklist (in order).
+export async function getRace(id) {
+  const { data, error } = await supabase
+    .from("races")
+    .select("*, block:training_blocks(id, name), checklist:race_checklist_items(*)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (data) data.checklist.sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at));
+  return data;
+}
+
+export async function saveRace(race) {
+  const values = pick(race, RACE_COLUMNS);
+  const query = race.id
+    ? supabase.from("races").update(values).eq("id", race.id)
+    : supabase.from("races").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Its checklist and its race-routine sessions in the planner go with it
+// (on delete cascade).
+export async function deleteRace(id) {
+  const { error } = await supabase.from("races").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// For the "training block" picker on a race.
+export async function listTrainingBlocks() {
+  const { data, error } = await supabase
+    .from("training_blocks")
+    .select("id, name, start_date, end_date")
+    .order("start_date", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data;
+}
+
+// Adds lines at the end of a race's checklist.
+export async function addChecklistItems(raceId, labels, startPosition = 0) {
+  if (!labels.length) return [];
+  const rows = labels.map((label, i) => ({ race_id: raceId, label, position: startPosition + i }));
+  const { data, error } = await supabase.from("race_checklist_items").insert(rows).select();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateChecklistItem(id, changes) {
+  const { error } = await supabase.from("race_checklist_items").update(pick(changes, ["label", "done", "position"])).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteChecklistItem(id) {
+  const { error } = await supabase.from("race_checklist_items").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// The checklist of the most recent OTHER race that has one (to copy it).
+// Returns { raceName, labels } or null.
+export async function findLastChecklist(excludeRaceId) {
+  const { data, error } = await supabase
+    .from("race_checklist_items")
+    .select("label, position, race_id, race:races(name)")
+    .neq("race_id", excludeRaceId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  if (!data.length) return null;
+  const raceId = data[0].race_id;
+  const items = data.filter((item) => item.race_id === raceId).sort((a, b) => a.position - b.position);
+  return { raceName: data[0].race ? data[0].race.name : "", labels: items.map((item) => item.label) };
+}
+
+// The planner sessions created by a race's routine (race day, activation jog).
+export async function listRaceSessions(raceId) {
+  const { data, error } = await supabase
+    .from("planned_sessions")
+    .select(PLANNED_SELECT)
+    .eq("race_id", raceId)
+    .order("session_date", { ascending: true });
+  if (error) throw error;
+  return data;
 }

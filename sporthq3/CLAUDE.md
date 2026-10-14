@@ -47,7 +47,7 @@
 7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
    (save a week as template / apply a template) (done 2026-10-13), 7d workout mode (done 2026-10-14)
 8. Rule warnings — done 2026-10-14
-9. Races + checklist + race routine
+9. Races + checklist + race routine — done 2026-10-14
 10. Training blocks
 11. Body & goals (weigh-ins, trend chart, PBs)
 12. Dashboard (incl. football season totals, shoe km)
@@ -59,7 +59,8 @@ Rules are data + small pure functions so future users can define their own.
 - Categories: heavy legs (leg explosivity, intervals, team training, match, race), easy run, upper body, rest.
 - Warn when two heavy-leg sessions fall on consecutive days.
 - Leg explosivity OR intervals, never both on the same day (any day; was "Monday" until 2026-10-14).
-- Race routine: when a race is added, suggest a light activation jog 2 days before and full rest the day before.
+- Race routine (RACE_ROUTINE): race day + light activation jog 2 days before; full rest the day before
+  (rule rest_before_race warns if anything is planned then). A planned match wins over the jog.
 - Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
 - No automatic default week (decided 2026-10-13): Rom plans each week himself (catalogue, quick-add,
   copy last week, later templates). The Thu/Fri A/B swap was dropped.
@@ -98,6 +99,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: races (9): Races tab = Upcoming (date >= today + to register/registered, countdown),
+  Ideas (no date or idea/potential), Past (finished/cancelled/date passed). Race page = routine card +
+  checklist card first, details form below (goal/result time with live pace, training block picker;
+  a registered race needs a date). Checklist per race: starter list (STARTER_CHECKLIST in rules.js) or
+  "copy from my last race", tick / add / remove / untick all. Race routine = button "Add race routine
+  to my planner" (sessions carry race_id, source race_routine); moving the race date moves the open
+  routine sessions, removing the date removes them, deleting the race deletes them (cascade). The
+  planner's race session links back to the race; once logged, "Use my logged time as result" sets the
+  result + finished. Only ONE toast at a time: combine messages into one (a second hides the first).
 - 2026-10-14: cache fix. Browsers kept old copies of some modules (planner stuck on "Loading…" when a
   new planner.js met an old rules.js; Safari's hard reload is Cmd+Option+R, not Cmd+Shift+R). Fix:
   every local import / index.html reference carries `?v=<version>`, stamped by tools/bump-version.mjs

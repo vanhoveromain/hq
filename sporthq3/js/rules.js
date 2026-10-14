@@ -8,9 +8,9 @@
 // Keys (like "easy_run") are what gets saved in the database, so once you
 // have data, change a label freely but don't rename a key.
 //
-// Later steps add more to this file: race routine, personal-best distances.
+// Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610141003";
+import { addDays } from "./utils/dates.js?v=202610141529";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -166,6 +166,8 @@ const isHeavyLegs = (item) => categoryOf(item.sport, item.session_type) === "hea
 const isExplosivity = (item) => item.sport === "muscle" && item.session_type === "explosivity";
 const isIntervals = (item) => item.sport === "running" && String(item.session_type).startsWith("intervals_");
 
+const isRace = (item) => item.sport === "running" && item.session_type === "race";
+
 export const TRAINING_RULES = [
   {
     key: "heavy_legs_back_to_back",
@@ -200,6 +202,24 @@ export const TRAINING_RULES = [
         }));
     },
   },
+  {
+    key: "rest_before_race",
+    label: "Full rest the day before a race",
+    check(items) {
+      const byDay = groupByDay(items);
+      return Object.keys(byDay).sort()
+        .filter((day) => byDay[day].some(isRace))
+        .flatMap((day) => {
+          const before = addDays(day, -1);
+          const planned = byDay[before] || [];
+          return planned.length ? [{
+            rule: this.key,
+            days: [before, day],
+            message: `Rest the day before your race: ${planned.map(itemLabel).join(" + ")} on ${shortDay(before)}`,
+          }] : [];
+        });
+    },
+  },
 ];
 
 function groupByDay(items) {
@@ -214,3 +234,31 @@ export function checkTrainingRules(items) {
     .flatMap((rule) => rule.check(items))
     .sort((a, b) => a.days[0].localeCompare(b.days[0]));
 }
+
+
+// ---------- Races ----------
+
+// The fixed list of race statuses (same keys as the database check).
+export const RACE_STATUSES = {
+  idea:        { label: "Idea" },
+  potential:   { label: "Potential" },
+  to_register: { label: "To register" },
+  registered:  { label: "Registered" },
+  finished:    { label: "Finished" },
+  cancelled:   { label: "Cancelled" },
+};
+
+// Offered when a race has no checklist yet (each race gets its own copy).
+export const STARTER_CHECKLIST = [
+  "Bib + safety pins", "Race shoes", "Race outfit", "Watch charged", "Gels / nutrition",
+  "Water bottle", "Headphones", "ID + race confirmation", "Change of clothes", "Recovery snack",
+];
+
+// The race routine: sessions added to the planner around a race.
+// dayOffset: days from race day (-2 = two days before). The day before is
+// full rest: no session, and the "rest_before_race" rule warns if anything
+// is planned then. A planned match always wins over the activation jog.
+export const RACE_ROUTINE = [
+  { key: "activation_jog", dayOffset: -2, sport: "running", session_type: "easy_run", title: "Activation jog" },
+  { key: "race_day",       dayOffset: 0,  sport: "running", session_type: "race",     title: null }, // title = race name
+];

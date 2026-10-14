@@ -9,14 +9,14 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate,
-} from "../storage.js?v=202610141003";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141003";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141003";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141003";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141003";
-import { openSheet } from "../utils/sheet.js?v=202610141003";
-import { showToast } from "../utils/toast.js?v=202610141003";
-import { loadWorkout } from "../utils/workout.js?v=202610141003";
+} from "../storage.js?v=202610141529";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141529";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141529";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141529";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141529";
+import { openSheet } from "../utils/sheet.js?v=202610141529";
+import { showToast } from "../utils/toast.js?v=202610141529";
+import { loadWorkout } from "../utils/workout.js?v=202610141529";
 
 export function render(container, { params = [] } = {}) {
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();
@@ -306,6 +306,7 @@ async function drawWeek(container, monday) {
           ${!isDone ? `<button type="button" class="button" data-value="move">📅 Move to another day</button>
           <button type="button" class="button" data-value="swap">⇄ Swap this day with another day</button>` : ""}
           ${session.template_id ? `<button type="button" class="button" data-value="recipe">📚 Edit the recipe</button>` : ""}
+          ${session.race_id ? `<button type="button" class="button" data-value="race">🏁 Open the race</button>` : ""}
           <button type="button" class="button danger" data-value="delete">🗑 Remove from plan</button>
         </div>`,
     });
@@ -320,11 +321,12 @@ async function drawWeek(container, monday) {
       if (choice === "move") await moveSession(session);
       if (choice === "swap") await swapDay(session.session_date);
       if (choice === "recipe") window.location.hash = `#/catalogue/${session.template_id}`;
+      if (choice === "race") window.location.hash = `#/races/${session.race_id}`;
       if (choice === "delete" && window.confirm("Remove this session from the plan?")) await deletePlannedSession(session.id);
     } catch (error) {
       showToast("Something went wrong: " + error.message);
     }
-    if (choice && !["open-activity", "recipe", "start"].includes(choice)) await load();
+    if (choice && !["open-activity", "recipe", "start", "race"].includes(choice)) await load();
   }
 
   // Done: link to an activity of that day, log it now, or just tick it.
