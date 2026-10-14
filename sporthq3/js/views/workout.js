@@ -13,7 +13,7 @@ import { sessionName, sessionDetails } from "../utils/plan.js";
 import { openSheet } from "../utils/sheet.js";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
-  REST_CHOICES, ticksDone, ticksTotal,
+  REST_CHOICES, parseRest, ticksDone, ticksTotal,
 } from "../utils/workout.js";
 
 export async function render(container, { params = [] } = {}) {
@@ -78,9 +78,7 @@ function drawWorkout(container, session, workout, backToPlan) {
 
     <section class="card rest-settings">
       <h3>Rest timer</h3>
-      <div class="chip-row" id="rest-choices">${REST_CHOICES.map((s) => `
-        <button type="button" class="chip-button" data-rest="${s}" aria-pressed="${s === restSeconds}">
-          ${s === 0 ? "Off" : formatRest(s)}</button>`).join("")}</div>
+      <div class="chip-row" id="rest-choices"></div>
     </section>
 
     <div id="rest-banner" class="rest-banner" hidden>
@@ -179,12 +177,30 @@ function drawWorkout(container, session, workout, backToPlan) {
     }
   });
 
-  container.querySelector("#rest-choices").addEventListener("click", (event) => {
+  // The rest choices: Off, the usual times, and "Custom" (shows your own
+  // time once you've set one).
+  const restChoicesEl = container.querySelector("#rest-choices");
+  function drawRestChoices() {
+    const isCustom = !REST_CHOICES.includes(restSeconds);
+    restChoicesEl.innerHTML = REST_CHOICES.map((s) => `
+      <button type="button" class="chip-button" data-rest="${s}" aria-pressed="${s === restSeconds}">
+        ${s === 0 ? "Off" : formatRest(s)}</button>`).join("") + `
+      <button type="button" class="chip-button" data-rest="custom" aria-pressed="${isCustom}">
+        ${isCustom ? formatRest(restSeconds) + " ✎" : "Custom"}</button>`;
+  }
+
+  restChoicesEl.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-rest]");
     if (!button) return;
-    restSeconds = Number(button.dataset.rest);
+    if (button.dataset.rest === "custom") {
+      const seconds = await askRest(restSeconds);
+      if (seconds == null) return;
+      restSeconds = seconds;
+    } else {
+      restSeconds = Number(button.dataset.rest);
+    }
     saveRestSeconds(restSeconds);
-    container.querySelectorAll("[data-rest]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+    drawRestChoices();
     if (!restSeconds) {
       restEndsAt = null;
       restBanner.hidden = true;
@@ -211,6 +227,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     window.location.hash = backToPlan;
   });
 
+  drawRestChoices();
   drawExercises();
   tick();
   keepScreenAwake();
@@ -223,8 +240,41 @@ function targetsHtml(details) {
   return targets.length ? `<p><strong>Target:</strong> ${escapeHtml(targets.join(" · "))}</p>` : "";
 }
 
+// 45 -> "45 s", 90 -> "90 s", 120 -> "2 min", 75 -> "1:15"
 function formatRest(seconds) {
-  return seconds < 60 || seconds % 60 ? `${seconds} s` : `${seconds / 60} min`;
+  if (seconds < 60 || seconds === 90) return `${seconds} s`;
+  if (seconds % 60 === 0) return `${seconds / 60} min`;
+  return formatDuration(seconds);
+}
+
+// Pop-up to type your own rest time. Resolves to seconds, or null.
+function askRest(current) {
+  return openSheet({
+    title: "Custom rest time",
+    html: `
+      <label for="rest-input" class="sheet-subtitle">Rest between sets</label>
+      <input id="rest-input" type="text" inputmode="decimal" autocomplete="off" placeholder="45 or 1:15"
+             value="${current ? escapeHtml(formatDuration(current)) : ""}">
+      <p class="muted small">"45" = 45 seconds, "1:15" = 1 minute 15. Between 5 seconds and 15 minutes.</p>
+      <p id="rest-error" class="status error" hidden></p>
+      <button type="button" class="button primary" id="rest-go">Use this time</button>`,
+    onReady: (dialog, close) => {
+      const input = dialog.querySelector("#rest-input");
+      const go = () => {
+        const seconds = parseRest(input.value);
+        if (seconds == null) {
+          const errorEl = dialog.querySelector("#rest-error");
+          errorEl.textContent = "Not understood. Try 45 or 1:15.";
+          errorEl.hidden = false;
+          return;
+        }
+        close(String(seconds));
+      };
+      dialog.querySelector("#rest-go").addEventListener("click", go);
+      input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); go(); } });
+      input.select();
+    },
+  }).then((value) => (value == null ? null : Number(value)));
 }
 
 // Pop-up to change a weight. Resolves to a number, null (no weight) or

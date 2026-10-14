@@ -91,7 +91,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 ## Decisions log
 - 2026-10-14: workout mode (7d): planner -> session -> Start workout (#/workout/<id>). Timer from the
   clock, one tick box per set (per round for circuits), weight editable on the spot (text box, comma
-  ok), optional rest timer (Off/1/1.5/2/3 min, remembered; beeps + vibrates where allowed; no beep
+  ok), optional rest timer (Off/1/1.5/2/3 min or Custom: "45" = seconds, "1:15", 5 s-15 min; remembered; beeps + vibrates where allowed; no beep
   while the phone is locked), keep-screen-awake where supported. Progress lives in localStorage on
   that phone (one workout at a time). Finish -> log form pre-filled (duration from timer); saving it
   marks the session done with a snapshot (weights used, done_sets/total_sets) and, if weights

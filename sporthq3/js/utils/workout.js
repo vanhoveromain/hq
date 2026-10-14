@@ -13,6 +13,27 @@ const WORKOUT_KEY = "sporthq3.workout";
 const REST_KEY = "sporthq3.restSeconds"; // the rest timer choice (0 = off)
 
 export const REST_CHOICES = [0, 60, 90, 120, 180];
+export const REST_MIN = 5;    // custom rest: between 5 seconds…
+export const REST_MAX = 900;  // …and 15 minutes
+
+function isValidRest(seconds) {
+  return seconds === 0 || (Number.isInteger(seconds) && seconds >= REST_MIN && seconds <= REST_MAX);
+}
+
+// A custom rest time typed by you: "45" = 45 seconds, "1:15" = 1 min 15 s.
+// (Not like the log's duration box, where "45" means minutes: rests are short.)
+// Returns seconds, or null if not understood / out of range.
+export function parseRest(text) {
+  const clean = String(text).trim().replace(/[.,]/g, ":");
+  let seconds;
+  if (/^\d+$/.test(clean)) seconds = Number(clean);
+  else if (/^\d+:\d{1,2}$/.test(clean)) {
+    const [minutes, secs] = clean.split(":").map(Number);
+    if (secs > 59) return null;
+    seconds = minutes * 60 + secs;
+  } else return null;
+  return seconds >= REST_MIN && seconds <= REST_MAX ? seconds : null;
+}
 
 export function loadWorkout() {
   try {
@@ -33,7 +54,7 @@ export function clearWorkout() {
 export function readRestSeconds() {
   try {
     const value = Number(localStorage.getItem(REST_KEY));
-    return REST_CHOICES.includes(value) ? value : 0;
+    return isValidRest(value) ? value : 0;
   } catch {
     return 0;
   }
