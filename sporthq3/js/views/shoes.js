@@ -3,10 +3,10 @@
 //   #/shoes/new    -> form for a new pair
 //   #/shoes/<id>   -> form to edit that pair
 
-import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610142140";
-import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610142140";
-import { formatDayLabel } from "../utils/dates.js?v=202610142140";
-import { escapeHtml } from "../utils/format.js?v=202610142140";
+import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610142142";
+import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610142142";
+import { formatDayLabel } from "../utils/dates.js?v=202610142142";
+import { escapeHtml } from "../utils/format.js?v=202610142142";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderForm(container, null);
