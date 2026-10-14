@@ -117,6 +117,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   💡, name + date/distance only; Past = big result time + pace; cancelled / never run = greyed + struck.
   Cards are the same size WITHIN a group (grid-auto-rows: 1fr), groups may differ. Race page on laptop:
   header across the top, details form left (fields in 2 columns), routine + checklist sidebar right.
+  Training blocks: same rule (same size within Current / Upcoming / Past); current block = violet left line.
 - 2026-10-14: laptop + polish round (Rom's feedback): Home "This week" strip shows only the sport
   icons per day (done day = light green background; utils/plan.js daySummary, also used by the month).
   Plan: Week | Month switch (#/planner/month/YYYY-MM; last view remembered per device); month = calendar

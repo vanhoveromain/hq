@@ -732,10 +732,11 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .race-result .muted { font-size: 0.85rem; font-weight: 400; margin-left: 4px; letter-spacing: 0; }
 .race-past.is-not-run { opacity: 0.6; }
 .race-past.is-not-run strong { text-decoration: line-through; }
-/* Race cards: the same size WITHIN a group (every row of a grid gets the
-   height of its tallest card); different groups can differ. */
-.card-grid:has(.race-card) { display: grid; grid-auto-rows: 1fr; gap: 16px; align-items: stretch; }
-.card-grid:has(.race-card) > .card { margin-bottom: 0; }
+/* Race and training-block cards: the same size WITHIN a group (every row
+   of a grid gets the height of its tallest card); different groups (e.g.
+   the current block vs past blocks) can differ. */
+.card-grid:has(.race-card), .card-grid:has(.block-card) { display: grid; grid-auto-rows: 1fr; gap: 16px; align-items: stretch; }
+.card-grid:has(.race-card) > .card, .card-grid:has(.block-card) > .card { margin-bottom: 0; }
 
 /* Race page: phone = one column; laptop = form left (fields in 2 columns), sidebar right */
 .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 16px; }
@@ -788,3 +789,4 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .stats-grid .stats-wide { grid-column: 1 / -1; }
   .stats-filters { flex-direction: row; justify-content: space-between; flex-wrap: wrap; }
 }
+.block-card.is-current { border-left: 4px solid var(--accent-strong); }

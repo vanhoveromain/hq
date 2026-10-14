@@ -6,9 +6,9 @@
 // Planned sessions point to a recipe, so changing a recipe here (e.g. a
 // weight 25 -> 30 kg) shows up in every session that isn't done yet.
 
-import { listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate } from "../storage.js?v=202610142252";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610142252";
-import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610142252";
+import { listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate } from "../storage.js?v=202610142256";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610142256";
+import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610142256";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
