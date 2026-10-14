@@ -102,6 +102,16 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: Stats page (Log tab -> List | Stats, #/log/stats). Filters: period (week, month, year,
+  last 12 months, all time) + sport (all or one), remembered per device. Cards: Overview (sessions,
+  per week, time, km or D+, avg RPE, sessions per sport), Year to date vs same day last year, Volume
+  bar chart (per week up to ~3 months, per month up to 3 years, else per year; km for sports with a
+  distance, running km when "all", sessions otherwise; 80 km/month "Min" line on monthly running =
+  Sport HQ2's chart), Running (km, per week, avg pace, longest run, most D+), Football (matches,
+  minutes / goals / assists from match cards), sessions by type, Consistency (plan vs done %, streak
+  of weeks with 3+ sessions, busiest week), Weight change. Rules in STATS_RULES (rules.js); maths in
+  utils/stats.js; chart in utils/barChart.js (SVG). Pace zones (Sport HQ2 running page, VMA 15.5)
+  kept as an idea for later. CSS: never name a chart shape ".bar" (the shoe progress bar style).
 - 2026-10-14: race cards differ per group: Upcoming = violet left line, big countdown, date + distance,
   goal + pace, checklist progress (listRaces brings checklist done flags); Ideas = dashed, no shadow,
   💡, name + date/distance only; Past = big result time + pace; cancelled / never run = greyed + struck.

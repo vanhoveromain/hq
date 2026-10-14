@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610142142";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610142252";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -760,4 +760,40 @@ export async function exportAllData() {
     }
   }
   return tables;
+}
+
+
+// ---------------------------------------------------------------------
+// Stats: everything between two days, paged by 1000 (all-time can be big)
+// ---------------------------------------------------------------------
+
+async function selectAllBetween(table, columns, dateColumn, fromDate, toDate) {
+  const PAGE = 1000;
+  const rows = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .gte(dateColumn, fromDate)
+      .lte(dateColumn, toDate)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return rows;
+}
+
+// Activities with their match card (for goals / assists / minutes).
+export async function listActivitiesForStats(fromDate, toDate) {
+  const rows = await selectAllBetween("activities",
+    "id, activity_date, sport, session_type, title, duration_s, distance_km, elevation_m, rpe, match_stats(minutes_played, goals, assists)",
+    "activity_date", fromDate, toDate);
+  return rows.map(withMatchStats);
+}
+
+// Planned sessions (for "plan vs done").
+export async function listPlannedForStats(fromDate, toDate) {
+  return selectAllBetween("planned_sessions", "id, session_date, sport, status", "session_date", fromDate, toDate);
 }
