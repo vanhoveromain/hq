@@ -84,8 +84,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Comments where logic isn't obvious. Small functions. No clever one-liners.
 
 ## How we work
-- Workflow: build on the working branch (the "draft") -> test locally -> pull request -> merge into
-  `main` -> GitHub Pages publishes `main` automatically. Live app: https://vanhoveromain.github.io/hq/sporthq3/
+- Workflow: build on the working branch (the "draft") -> test locally -> commit + push the draft.
+  Since 2026-10-14 (after step 9): NO pull request per step. Merge into `main` (GitHub Pages publishes
+  it: https://vanhoveromain.github.io/hq/sporthq3/) only when Rom wants to test on his phone, and
+  before switch day. Every step is still committed and pushed, so nothing is lost.
 - Before every pull request: run `node tools/bump-version.mjs` (new `?v=` on every file address, so
   phones fetch the whole new version together instead of mixing old and new saved copies).
   Local testing: `python3 serve.py` (no-cache server) instead of `python3 -m http.server 8000`.
@@ -132,8 +134,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   Plan -> Week templates lists them (view, rename, delete). Deleting a recipe removes it from
   templates (cascade); archiving doesn't. No migration needed.
 - 2026-10-13: test freely in the real database until switch day. Switch day = "big clean": delete
-  app-created test rows (activities without notion_id, planned sessions, ...), KEEP the catalogue and
-  match cards, then run the final Notion re-import. (A re-import alone never removes app-created rows.)
+  app-created test rows (activities without notion_id, planned sessions, races without notion_id +
+  their checklists, week templates if Rom wants), KEEP the catalogue and match cards, then run the
+  final Notion re-import. (A re-import alone never removes app-created rows.) Until switch day, real
+  races are still added in Notion (an app-created race would be deleted by the big clean).
 - 2026-10-13: planner (7b): week view (7 columns on laptop), + per day (quick sport or catalogue
   recipe), tap a session for Done / Not done / Cancel / Move / Swap day / Edit recipe / Remove.
   Done = link to an activity of that day, "Log it now" (pre-filled form, linked on save) or just tick.
