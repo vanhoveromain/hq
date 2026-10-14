@@ -64,6 +64,12 @@ Rules are data + small pure functions so future users can define their own.
 - No automatic default week (decided 2026-10-13): Rom plans each week himself (catalogue, quick-add,
   copy last week, later templates). The Thu/Fri A/B swap was dropped.
 
+## Ideas for the public version ("SportHQ", not v1)
+- Each user defines their own training rules (turn rules on/off, change them, create new ones:
+  e.g. which session types count as "heavy legs", rest days needed, max sessions per day). The rules
+  are already data in rules.js (TRAINING_RULES) so they can later move to a per-user table.
+- Each user defines their own sports / session types / categories (same reason).
+
 ## Out of scope for v1
 Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 
