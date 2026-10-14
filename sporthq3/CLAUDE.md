@@ -48,7 +48,7 @@
    (save a week as template / apply a template) (done 2026-10-13), 7d workout mode (done 2026-10-14)
 8. Rule warnings — done 2026-10-14
 9. Races + checklist + race routine — done 2026-10-14
-10. Training blocks
+10. Training blocks — done 2026-10-14
 11. Body & goals (weigh-ins, trend chart, PBs)
 12. Dashboard (incl. football season totals, shoe km)
 13. JSON export + polish + design pass (overall look, laptop layout for older screens, drag and drop
@@ -101,6 +101,12 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: training blocks (10): Me -> Training blocks (#/blocks). List = Current (week x / y, days
+  left, progress bar), Upcoming, Past ("No recap yet" reminder). Block page = stats computed from the
+  log for the period (current block: up to today): sessions (+/week), running km (+/week), D+, total
+  time (a minimum when some sessions have no duration), sessions per sport; its races; then the form
+  (name, start, end, goal, recap). Overlapping blocks: warning on save, never blocked. Deleting a block
+  keeps its races (link set to null). Planner shows "📘 <block> · week x / y" for the week shown.
 - 2026-10-14: races (9): Races tab = Upcoming (date >= today + to register/registered, countdown),
   Ideas (no date or idea/potential), Past (finished/cancelled/date passed). Race page = routine card +
   checklist card first, details form below (goal/result time with live pace, training block picker;

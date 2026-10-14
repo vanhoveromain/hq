@@ -8,15 +8,16 @@
 import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
-  listWeekTemplates, saveWeekTemplate, applyWeekTemplate,
-} from "../storage.js?v=202610141529";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141529";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141529";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141529";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141529";
-import { openSheet } from "../utils/sheet.js?v=202610141529";
-import { showToast } from "../utils/toast.js?v=202610141529";
-import { loadWorkout } from "../utils/workout.js?v=202610141529";
+  listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
+} from "../storage.js?v=202610141648";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610141648";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610141648";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610141648";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems } from "../utils/plan.js?v=202610141648";
+import { openSheet } from "../utils/sheet.js?v=202610141648";
+import { showToast } from "../utils/toast.js?v=202610141648";
+import { loadWorkout } from "../utils/workout.js?v=202610141648";
+import { blockWeek } from "./blocks.js?v=202610141648";
 
 export function render(container, { params = [] } = {}) {
   const requested = /^\d{4}-\d{2}-\d{2}$/.test(params[0] || "") ? params[0] : todayISO();
@@ -48,6 +49,7 @@ async function drawWeek(container, monday) {
     ${workoutBannerHtml()}
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">↩ Back to this week</a>` : ""}
     <p id="week-summary" class="muted week-summary"></p>
+    <a id="week-block" class="week-block" hidden></a>
     <div id="days" class="days"><p class="muted">Loading…</p></div>
     <div class="week-actions">
       <button id="templates" type="button" class="button">📋 Templates</button>
@@ -145,6 +147,21 @@ async function drawWeek(container, monday) {
   });
 
   container.querySelector("#templates").addEventListener("click", () => templatesMenu());
+
+  // Which training block this week is in (today's, or the week's Monday).
+  async function showBlock() {
+    const day = todayISO() >= monday && todayISO() <= sunday ? todayISO() : monday;
+    try {
+      const block = await findBlockOn(day);
+      if (!block) return;
+      const link = container.querySelector("#week-block");
+      const week = blockWeek(block, day);
+      link.href = `#/blocks/${block.id}`;
+      link.textContent = `📘 ${block.name} · week ${week.current} / ${week.total}`;
+      link.hidden = false;
+    } catch { /* not important: the planner works without it */ }
+  }
+  showBlock();
 
 
   // ----- week templates: save this week / apply one -----

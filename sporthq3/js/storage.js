@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141529";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141648";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -332,7 +332,7 @@ export async function getPlannedSession(id) {
 export async function listActivitiesBetween(fromDate, toDate) {
   const { data, error } = await supabase
     .from("activities")
-    .select("id, activity_date, sport, session_type, title, duration_s, distance_km, rpe")
+    .select("id, activity_date, sport, session_type, title, duration_s, distance_km, elevation_m, rpe")
     .gte("activity_date", fromDate)
     .lte("activity_date", toDate)
     .order("activity_date", { ascending: true })
@@ -526,14 +526,58 @@ export async function deleteRace(id) {
   if (error) throw error;
 }
 
-// For the "training block" picker on a race.
+
+// ---------------------------------------------------------------------
+// Training blocks: { id, name, start_date, end_date, goal, recap,
+//   races: [ { id, name, race_date, status, result_time_s, distance_km } ] }
+// ---------------------------------------------------------------------
+
+const BLOCK_COLUMNS = ["name", "start_date", "end_date", "goal", "recap"];
+const BLOCK_SELECT = "*, races(id, name, race_date, status, result_time_s, goal_time_s, distance_km)";
+
+// All blocks, newest first (also used by the block picker on a race).
 export async function listTrainingBlocks() {
   const { data, error } = await supabase
     .from("training_blocks")
-    .select("id, name, start_date, end_date")
-    .order("start_date", { ascending: false, nullsFirst: false });
+    .select(BLOCK_SELECT)
+    .order("start_date", { ascending: false });
   if (error) throw error;
   return data;
+}
+
+export async function getTrainingBlock(id) {
+  const { data, error } = await supabase.from("training_blocks").select(BLOCK_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// The block that contains this day, or null.
+export async function findBlockOn(date) {
+  const { data, error } = await supabase
+    .from("training_blocks")
+    .select("id, name, start_date, end_date")
+    .lte("start_date", date)
+    .gte("end_date", date)
+    .order("start_date", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data[0] || null;
+}
+
+export async function saveTrainingBlock(block) {
+  const values = pick(block, BLOCK_COLUMNS);
+  const query = block.id
+    ? supabase.from("training_blocks").update(values).eq("id", block.id)
+    : supabase.from("training_blocks").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Its races stay; they just lose the link (on delete set null).
+export async function deleteTrainingBlock(id) {
+  const { error } = await supabase.from("training_blocks").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // Adds lines at the end of a race's checklist.

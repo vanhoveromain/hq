@@ -5,14 +5,14 @@
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate,
-} from "../storage.js?v=202610141529";
-import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610141529";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610141529";
-import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js?v=202610141529";
-import { openSheet } from "../utils/sheet.js?v=202610141529";
-import { showToast } from "../utils/toast.js?v=202610141529";
-import { loadWorkout, clearWorkout, workoutSnapshot, weightChanges, ticksDone, ticksTotal } from "../utils/workout.js?v=202610141529";
-import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610141529";
+} from "../storage.js?v=202610141648";
+import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610141648";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610141648";
+import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js?v=202610141648";
+import { openSheet } from "../utils/sheet.js?v=202610141648";
+import { showToast } from "../utils/toast.js?v=202610141648";
+import { loadWorkout, clearWorkout, workoutSnapshot, weightChanges, ticksDone, ticksTotal } from "../utils/workout.js?v=202610141648";
+import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610141648";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
