@@ -479,3 +479,32 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .template-days { list-style: none; margin: 0 0 12px; padding: 0; }
 .template-days li { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--border); }
 .template-day { width: 2.5em; flex-shrink: 0; font-weight: 600; }
+
+/* Workout mode */
+.workout-head h2 { margin: 4px 0; }
+.workout-timer { font-size: 2.6rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 4px 0; }
+.rest-settings h3 { margin: 0 0 8px; font-size: 1rem; }
+.chip-button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.rest-banner {
+  position: sticky; top: 8px; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 0 0 12px; padding: 12px 16px; border-radius: 12px;
+  background: var(--accent); color: var(--accent-text); font-size: 1.2rem;
+}
+.rest-banner strong { font-variant-numeric: tabular-nums; }
+.rest-banner[hidden] { display: none; }
+.workout-rounds { margin: 0 0 8px; }
+.exercise h3 { margin: 0; font-size: 1.05rem; }
+.exercise.is-complete { border-color: #15803d; }
+.exercise-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.weight-button { white-space: nowrap; }
+.tick-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.tick {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface); color: inherit;
+  font-size: 1.1rem; font-weight: 600; cursor: pointer;
+}
+.tick.is-ticked { background: #15803d; border-color: #15803d; color: #fff; }
+.workout-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.workout-actions .button { width: 100%; }
+.workout-banner { display: block; text-decoration: none; color: inherit; }
