@@ -1,6 +1,6 @@
 // stats.js — the maths behind the Stats page (no database, no HTML here).
 
-import { addDays, startOfWeek } from "./dates.js?v=202610142256";
+import { addDays, startOfWeek } from "./dates.js?v=202610142257";
 
 // The periods you can pick. Returns { from, to } (both included).
 export const PERIODS = [

@@ -9,16 +9,16 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610142256";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610142256";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142256";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610142256";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary } from "../utils/plan.js?v=202610142256";
-import { openSheet } from "../utils/sheet.js?v=202610142256";
-import { showToast } from "../utils/toast.js?v=202610142256";
-import { loadWorkout } from "../utils/workout.js?v=202610142256";
-import { blockWeek } from "./blocks.js?v=202610142256";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610142256";
+} from "../storage.js?v=202610142257";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610142257";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142257";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610142257";
+import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary } from "../utils/plan.js?v=202610142257";
+import { openSheet } from "../utils/sheet.js?v=202610142257";
+import { showToast } from "../utils/toast.js?v=202610142257";
+import { loadWorkout } from "../utils/workout.js?v=202610142257";
+import { blockWeek } from "./blocks.js?v=202610142257";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610142257";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
