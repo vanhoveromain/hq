@@ -102,7 +102,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 
 ## Decisions log
 - 2026-10-14: training blocks (10): Me -> Training blocks (#/blocks). List = Current (week x / y, days
-  left, progress bar), Upcoming, Past (no "missing recap" reminder: Rom won't go back to old blocks). Block page = stats computed from the
+  left, progress bar), Upcoming, Past (recap reminder only during the 14 days after a block ends, not for older blocks). Block page = stats computed from the
   log for the period (current block: up to today): sessions (+/week), running km (+/week), D+, total
   time (a minimum when some sessions have no duration), sessions per sport; its races; then the form
   (name, start, end, goal, recap). Overlapping blocks: warning on save, never blocked. Deleting a block

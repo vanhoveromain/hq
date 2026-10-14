@@ -5,11 +5,11 @@
 
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
-} from "../storage.js?v=202610141654";
-import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610141654";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141654";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610141654";
-import { showToast } from "../utils/toast.js?v=202610141654";
+} from "../storage.js?v=202610141655";
+import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610141655";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610141655";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610141655";
+import { showToast } from "../utils/toast.js?v=202610141655";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -19,6 +19,13 @@ export function render(container, { params = [] } = {}) {
 
 const DAY = 86400000;
 const daysBetween = (from, to) => Math.round((Date.parse(to) - Date.parse(from)) / DAY);
+
+// A block that ended less than 2 weeks ago and has no recap yet: remind
+// (older blocks: no reminder, you won't go back to them).
+const RECAP_REMINDER_DAYS = 14;
+function needsRecap(block, today) {
+  return block.end_date < today && !block.recap && daysBetween(block.end_date, today) <= RECAP_REMINDER_DAYS;
+}
 
 // "week 9 / 20" (weeks counted from the block's first day).
 export function blockWeek(block, date) {
@@ -77,6 +84,7 @@ function blockCardHtml(block, today) {
         <span class="bar" role="img" aria-label="${percent}% done"><span class="bar-fill" style="width: ${percent}%"></span></span>` : ""}
       ${goal ? `<span class="small block-goal">🎯 ${escapeHtml(goal)}</span>` : ""}
       ${block.races.length ? `<span class="small">🏁 ${block.races.map((r) => escapeHtml(r.name)).join(", ")}</span>` : ""}
+      ${needsRecap(block, today) ? `<span class="small block-reminder">✍️ Just ended: write your recap</span>` : ""}
     </a>`;
 }
 
@@ -113,6 +121,7 @@ async function renderBlock(container, blockId) {
       <h2 class="race-title">${escapeHtml(block.name)}</h2>
       <p class="muted race-subtitle">${formatDayLabel(block.start_date)} → ${formatDayLabel(block.end_date)}
         ${block.start_date <= today && !ended ? ` · <strong>week ${blockWeek(block, today).current} / ${blockWeek(block, today).total}</strong>` : ""}</p>
+      ${needsRecap(block, today) ? `<p class="plan-banner">✍️ This block just ended: write your recap below while it's fresh. What worked, what didn't?</p>` : ""}
       <section class="card" id="block-stats"><p class="muted">Counting…</p></section>
       ${block.races.length ? `<section class="card"><h2>Races</h2><ul class="routine-list">${block.races
         .sort((x, y) => (x.race_date || "").localeCompare(y.race_date || ""))
