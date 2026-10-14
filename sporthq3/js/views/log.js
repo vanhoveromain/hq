@@ -1,18 +1,21 @@
 // Log screen: the list of activities, newest first, grouped by week.
 //   #/log          -> the list
+//   #/log/stats    -> all the stats (see stats.js)
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610142142";
-import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610142142";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142142";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142142";
-import * as logForm from "./logForm.js?v=202610142142";
+import { listActivities } from "../storage.js?v=202610142257";
+import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610142257";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142257";
+import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142257";
+import * as logForm from "./logForm.js?v=202610142257";
+import * as statsView from "./stats.js?v=202610142257";
 
 const PAGE_SIZE = 30;
 
 export function render(container, { params = [] } = {}) {
   // #/log/new/<plannedId> = "Log it now" from the planner: pre-filled + linked
+  if (params[0] === "stats") return statsView.render(container);
   if (params[0] === "new") return logForm.render(container, { activityId: null, plannedId: params[1] || null });
   if (params[0]) return logForm.render(container, { activityId: params[0] });
   renderList(container);
@@ -21,6 +24,10 @@ export function render(container, { params = [] } = {}) {
 async function renderList(container) {
   container.innerHTML = `
     <div class="log-page">
+    <div class="view-switch log-switch" role="tablist" aria-label="Log view">
+      <a href="#/log" role="tab" aria-selected="true">List</a>
+      <a href="#/log/stats" role="tab" aria-selected="false">Stats</a>
+    </div>
     <a href="#/log/new" class="button primary add-button">+ Add activity</a>
     <!-- Column titles: only shown on a laptop, where each line becomes a table row -->
     <div class="log-head" aria-hidden="true">

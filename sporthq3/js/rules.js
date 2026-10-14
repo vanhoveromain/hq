@@ -10,7 +10,7 @@
 //
 // Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610142142";
+import { addDays } from "./utils/dates.js?v=202610142257";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -284,3 +284,8 @@ export const WEIGHT_TREND_POINTS = 4;
 // Football season: 1 August -> 15 April (months 1-12). Outside the season,
 // the dashboard shows the season that just ended.
 export const FOOTBALL_SEASON = { start: { month: 8, day: 1 }, end: { month: 4, day: 15 } };
+
+// ---------- Stats ----------
+// monthlyRunTargetKm: the "Min" line of Sport HQ2's monthly mileage chart.
+// streakMinSessions: a week counts in a streak with at least this many sessions.
+export const STATS_RULES = { monthlyRunTargetKm: 80, streakMinSessions: 3 };
