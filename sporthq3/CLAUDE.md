@@ -49,7 +49,7 @@
 8. Rule warnings — done 2026-10-14
 9. Races + checklist + race routine — done 2026-10-14
 10. Training blocks — done 2026-10-14
-11. Body & goals (weigh-ins, trend chart, PBs)
+11. Body & goals (weigh-ins, trend chart, PBs) — done 2026-10-14
 12. Dashboard (incl. football season totals, shoe km)
 13. JSON export + polish + design pass (overall look, laptop layout for older screens, drag and drop
     of planner cards on laptop + phone (press and hold))
@@ -101,6 +101,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-14: body & goals (11): Me -> Body & goals (#/body). Weight: quick weigh-in (comma ok, one
+  per day: same date = replace, via upsert), goal = settings start/target weight (start defaults to the
+  first weigh-in), progress "−x kg of −y kg · z%". Chart = hand-made SVG (no library): weigh-in dots,
+  trend line = average of the last WEIGHT_TREND_POINTS (4) weigh-ins (computed on all data), dashed
+  target, tap/hover tooltip, range 3m/6m/1y/All (remembered); weigh-in list (delete) under the chart.
+  PBs (PB_DISTANCES in rules.js: 5k, 10k, half, marathon): automatic from runs = a run counts if its
+  distance is between d and d × 1.05; within 50 m it shows its real time, longer ones are scaled by
+  pace and shown with "≈" (Rom chose this over strict matching). Manual records (personal_bests) win
+  when faster. No migration.
 - 2026-10-14: training blocks (10): Me -> Training blocks (#/blocks). List = Current (week x / y, days
   left, progress bar), Upcoming, Past (recap reminder only during the 14 days after a block ends, not for older blocks). Block page = stats computed from the
   log for the period (current block: up to today): sessions (+/week), running km (+/week), D+, total

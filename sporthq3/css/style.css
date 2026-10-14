@@ -548,3 +548,38 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .week-block { display: block; text-align: center; margin: -4px 0 12px; font-size: 0.9rem; color: var(--accent); text-decoration: none; }
 .week-block[hidden] { display: none; }
 .block-reminder { color: var(--accent); font-weight: 600; }
+
+/* Body & goals */
+.weigh-form input[type="date"] { flex: 1.4; }
+.weigh-form input[name="weight_kg"] { flex: 1; min-width: 70px; }
+.goal-line { margin: 12px 0 6px; }
+.goal-edit, .weigh-list { margin-top: 16px; }
+.goal-edit summary, .weigh-list summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+#goal-form { margin-top: 8px; align-items: end; }
+#goal-form .button { grid-column: 1 / -1; }
+.pb-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.pb-row { display: flex; gap: 12px; align-items: baseline; border-top: 1px solid var(--border); padding: 8px 0; }
+.pb-label { width: 7.5em; flex-shrink: 0; font-weight: 600; }
+
+/* Weight chart (colours come from the theme tokens, so dark mode works) */
+.chart-legend { display: flex; gap: 16px; font-size: 0.85rem; color: var(--muted); margin: 12px 0 4px; }
+.chart-legend .key { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.key-line { width: 16px; height: 2px; background: var(--accent); }
+.key-dash { width: 16px; height: 0; border-top: 2px dashed var(--muted); }
+.chart-box { position: relative; }
+.weight-chart { display: block; touch-action: pan-y; }
+.weight-chart .grid { stroke: var(--border); stroke-width: 1; }
+.weight-chart .axis { fill: var(--muted); font-size: 11px; }
+.weight-chart .dot { fill: var(--muted); opacity: 0.55; stroke: var(--surface); stroke-width: 2; }
+.weight-chart .trend { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.weight-chart .target { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 4; }
+.weight-chart .cursor { stroke: var(--muted); stroke-width: 1; }
+.weight-chart .cursor-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.weight-chart .hit { fill: transparent; }
+.chart-tip {
+  position: absolute; top: 0; pointer-events: none; padding: 6px 10px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size: 0.85rem; white-space: nowrap;
+}
+.pb-row a { color: var(--accent); }

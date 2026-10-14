@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141655";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610141703";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -624,4 +624,94 @@ export async function listRaceSessions(raceId) {
     .order("session_date", { ascending: true });
   if (error) throw error;
   return data;
+}
+
+
+// ---------------------------------------------------------------------
+// Body & goals: weigh-ins, weight goal (settings), personal bests
+// ---------------------------------------------------------------------
+
+// All weigh-ins, oldest first (the chart reads them left to right).
+export async function listWeighIns() {
+  const { data, error } = await supabase
+    .from("weigh_ins")
+    .select("id, weigh_date, weight_kg, notes")
+    .order("weigh_date", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// Max one weigh-in per day: saving a second one on the same day replaces it
+// ("upsert" = insert, or update if that day already exists).
+export async function saveWeighIn({ weigh_date, weight_kg, notes = null }) {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("weigh_ins")
+    .upsert({ user_id: user.id, weigh_date, weight_kg, notes }, { onConflict: "user_id,weigh_date" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteWeighIn(id) {
+  const { error } = await supabase.from("weigh_ins").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Your settings row (start + target weight), or an empty one.
+export async function getSettings() {
+  const { data, error } = await supabase.from("settings").select("*").maybeSingle();
+  if (error) throw error;
+  return data || {};
+}
+
+export async function saveWeightGoal({ start_weight_kg, target_weight_kg }) {
+  const user = await getCurrentUser();
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ user_id: user.id, start_weight_kg, target_weight_kg }, { onConflict: "user_id" });
+  if (error) throw error;
+}
+
+// Every run with a distance and a time (for the automatic personal bests).
+export async function listRunsWithTimes() {
+  const PAGE = 1000;
+  const runs = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("activities")
+      .select("id, activity_date, title, session_type, distance_km, duration_s")
+      .eq("sport", "running")
+      .not("distance_km", "is", null)
+      .not("duration_s", "is", null)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    runs.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return runs;
+}
+
+// Records you typed in yourself (e.g. an old 10k from before the app).
+export async function listPersonalBests() {
+  const { data, error } = await supabase.from("personal_bests").select("*").order("distance_km");
+  if (error) throw error;
+  return data;
+}
+
+export async function savePersonalBest(pb) {
+  const values = pick(pb, ["label", "distance_km", "time_s", "achieved_on", "notes"]);
+  const query = pb.id
+    ? supabase.from("personal_bests").update(values).eq("id", pb.id)
+    : supabase.from("personal_bests").insert(values);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePersonalBest(id) {
+  const { error } = await supabase.from("personal_bests").delete().eq("id", id);
+  if (error) throw error;
 }

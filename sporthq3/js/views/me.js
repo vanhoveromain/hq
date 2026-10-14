@@ -1,13 +1,14 @@
 // "Me" screen: who is logged in, set a password, sign out.
-// Later: body & goals, export.
+// Later: export.
 
-import { signOut, setPassword } from "../storage.js?v=202610141655";
+import { signOut, setPassword } from "../storage.js?v=202610141703";
 
 const MIN_PASSWORD_LENGTH = 12;
 
 export function render(container, { user }) {
   container.innerHTML = `
     <nav class="card menu" aria-label="More">
+      <a href="#/body">⚖️ Body & goals <span aria-hidden="true">›</span></a>
       <a href="#/shoes">👟 Shoes <span aria-hidden="true">›</span></a>
       <a href="#/blocks">📘 Training blocks <span aria-hidden="true">›</span></a>
     </nav>

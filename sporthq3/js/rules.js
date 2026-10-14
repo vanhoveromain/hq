@@ -10,7 +10,7 @@
 //
 // Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610141655";
+import { addDays } from "./utils/dates.js?v=202610141703";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -262,3 +262,21 @@ export const RACE_ROUTINE = [
   { key: "activation_jog", dayOffset: -2, sport: "running", session_type: "easy_run", title: "Activation jog" },
   { key: "race_day",       dayOffset: 0,  sport: "running", session_type: "race",     title: null }, // title = race name
 ];
+
+
+// ---------- Body & goals ----------
+
+// Personal-best distances. A run counts for a distance when it is between
+// that distance and maxRatio × it (10 → 10.5 km); its time is then scaled to
+// the exact distance by its pace (shown with "≈"). Add a distance here and
+// the app finds its PB by itself.
+export const PB_DISTANCES = [
+  { key: "5k",       label: "5k",            km: 5 },
+  { key: "10k",      label: "10k",           km: 10 },
+  { key: "half",     label: "Half marathon", km: 21.0975 },
+  { key: "marathon", label: "Marathon",      km: 42.195 },
+];
+export const PB_RULES = { maxRatio: 1.05 };
+
+// The weight trend line = average of the last N weigh-ins.
+export const WEIGHT_TREND_POINTS = 4;
