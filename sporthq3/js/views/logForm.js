@@ -5,14 +5,14 @@
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate,
-} from "../storage.js?v=202610142257";
-import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610142257";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610142257";
-import { sessionName, sessionDetails, completeSession, reopenSession } from "../utils/plan.js?v=202610142257";
-import { openSheet } from "../utils/sheet.js?v=202610142257";
-import { showToast } from "../utils/toast.js?v=202610142257";
-import { loadWorkout, clearWorkout, workoutSnapshot, weightChanges, ticksDone, ticksTotal } from "../utils/workout.js?v=202610142257";
-import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142257";
+} from "../storage.js?v=202610160915";
+import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610160915";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610160915";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610160915";
+import { openSheet } from "../utils/sheet.js?v=202610160915";
+import { showToast } from "../utils/toast.js?v=202610160915";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610160915";
+import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610160915";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
@@ -231,13 +231,13 @@ function drawForm(container, activity, shoes, planned) {
         // After a workout, the "photo" is what was really done (ticks, weights).
         await completeSession(planned, saved.id,
           workout ? workoutSnapshot(workout, sessionDetails(planned)) : undefined);
-        let recipeUpdated = false;
+        let recipeNote = "";
         if (workout) {
           clearWorkout();
-          recipeUpdated = await offerRecipeUpdate(planned, workout);
+          recipeNote = await offerRecipeUpdate({ ...planned, status: "done" }, workout);
         }
         // One message only (a second toast would hide the first).
-        showToast(`✅ ${sessionName(planned)} marked done${recipeUpdated ? " · 📚 recipe updated" : ""}`);
+        showToast(`✅ ${sessionName(planned)} marked done${recipeNote ? " · 📚 " + recipeNote : ""}`);
         window.location.hash = `#/planner/${startOfWeek(saved.activity_date)}`;
         return;
       }
@@ -427,7 +427,7 @@ async function linkToPlan(activity) {
     showToast(`Linked to your planned ${sessionName(session)} ✅`, {
       actionLabel: "Undo",
       onAction: async () => {
-        await reopenSession(session.id);
+        await reopenSession(session);
         showToast("Unlinked");
       },
     });
@@ -436,41 +436,76 @@ async function linkToPlan(activity) {
   }
 }
 
-// After a workout where weights changed: "update the recipe for next time?"
-// Yes = every session that isn't done yet follows the new weights.
-// Never blocks: the activity is already saved. Returns true if updated.
+// After a workout:
+//   - from a catalogue recipe, and something changed (sets, reps/time,
+//     weights, exercises added or removed): "update the recipe?"
+//     Yes = every session that isn't done yet follows today's version.
+//   - a custom session (or "just a sport" where you added exercises):
+//     "add it to your catalogue?"
+// Never blocks: the activity is already saved. Returns a short note for the
+// toast ("recipe updated" / "added to the catalogue") or "".
 async function offerRecipeUpdate(planned, workout) {
-  const changes = weightChanges(workout);
-  if (!planned.template_id || !changes.length) return false;
-  const kg = (value) => (value == null ? "no weight" : `${Number(value)} kg`);
+  if (!planned.template_id) return offerAddToCatalogue(planned, workout);
+  const changes = recipeChanges(workout);
+  if (!changes.length) return "";
   const choice = await openSheet({
     title: "Update your recipe?",
     html: `
-      <p>You changed ${changes.length === 1 ? "a weight" : "some weights"} today:</p>
-      <ul class="exercise-list">${changes.map((c) =>
-        `<li>${escapeHtml(c.name)}: ${escapeHtml(kg(c.from))} → <strong>${escapeHtml(kg(c.to))}</strong></li>`).join("")}</ul>
-      <p class="muted small">Updating changes "${escapeHtml(sessionName(planned))}" in your catalogue,
-        so every session that isn't done yet uses the new weights.</p>
+      <p>You changed ${changes.length === 1 ? "this" : "these"} today:</p>
+      <ul class="exercise-list">${changes.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
+      <p class="muted small">Updating changes "${escapeHtml(sessionName(planned))}" in your catalogue to
+        today's version, so every session that isn't done yet uses it.</p>
       <div class="sheet-actions">
         <button type="button" class="button primary" data-value="update">Update the recipe</button>
         <button type="button" class="button" data-value="keep">Only today</button>
       </div>`,
   });
-  if (choice !== "update") return false;
+  if (choice !== "update") return "";
   try {
     const recipe = await getSessionTemplate(planned.template_id);
-    if (!recipe) return false;
-    const exercises = recipe.exercises.map((e) => ({ ...e }));
-    for (const change of changes) {
-      // Same place in the list and same name = same exercise (the recipe may
-      // have been edited in the meantime; then we leave that line alone).
-      const line = exercises[change.index];
-      if (line && line.name === change.name) line.weight_kg = change.to;
-    }
-    await saveSessionTemplate({ ...recipe, exercises });
-    return true;
+    if (!recipe) return "";
+    await saveSessionTemplate({ ...recipe, ...recipeFromWorkout(workout) });
+    return "recipe updated";
   } catch (error) {
     window.alert("Could not update the recipe: " + error.message);
-    return false;
+    return "";
+  }
+}
+
+async function offerAddToCatalogue(planned, workout) {
+  if (!workout.exercises.length) return "";
+  const name = await openSheet({
+    title: "Add it to your catalogue?",
+    html: `
+      <p>This session isn't in your catalogue. Save today's version as a recipe to plan it again later?</p>
+      <label for="recipe-name" class="sheet-subtitle">Name</label>
+      <input id="recipe-name" type="text" maxlength="80" autocomplete="off" value="${escapeHtml(workout.name)}">
+      <p id="recipe-error" class="status error" hidden></p>
+      <div class="sheet-actions">
+        <button type="button" class="button primary" id="recipe-go">📚 Add to the catalogue</button>
+        <button type="button" class="button" data-value="">No thanks</button>
+      </div>`,
+    onReady: (dialog, close) => {
+      const input = dialog.querySelector("#recipe-name");
+      const go = () => {
+        if (!input.value.trim()) {
+          const errorEl = dialog.querySelector("#recipe-error");
+          errorEl.textContent = "Give it a name.";
+          errorEl.hidden = false;
+          return;
+        }
+        close(input.value.trim());
+      };
+      dialog.querySelector("#recipe-go").addEventListener("click", go);
+      input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); go(); } });
+    },
+  });
+  if (!name) return "";
+  try {
+    await addToCatalogue(planned, name, recipeFromWorkout(workout));
+    return "added to the catalogue";
+  } catch (error) {
+    window.alert("Could not add it to the catalogue: " + error.message);
+    return "";
   }
 }

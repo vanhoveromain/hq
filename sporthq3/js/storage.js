@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610142257";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610160915";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -375,7 +375,12 @@ export async function findOpenPlannedSessions(date, sport) {
 }
 
 // Copies every session of one week into another, as fresh "planned" sessions
-// (no link to activities, no frozen details). Returns how many were copied.
+// (no link to activities, no frozen details; a custom session keeps its own
+// content, without the ticked counts). Returns how many were copied.
+function customCopy(details) {
+  return { ...details, exercises: (details.exercises || []).map(({ done_sets, total_sets, ...line }) => line) };
+}
+
 export async function copyWeek(fromMonday, toMonday, addDays) {
   const sessions = await listPlannedSessions(fromMonday, addDays(fromMonday, 6));
   if (!sessions.length) return 0;
@@ -387,6 +392,7 @@ export async function copyWeek(fromMonday, toMonday, addDays) {
   const copies = sessions.map((s) => ({
     session_date: shift(s.session_date), sport: s.sport, session_type: s.session_type,
     title: s.title, template_id: s.template_id, position: s.position, notes: s.notes,
+    details: !s.template_id && s.details && s.details.custom ? customCopy(s.details) : null,
     status: "planned", source: "manual",
   }));
   const { error } = await supabase.from("planned_sessions").insert(copies);

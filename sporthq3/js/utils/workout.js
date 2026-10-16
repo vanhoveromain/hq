@@ -7,7 +7,14 @@
 // A workout:
 //   { plannedId, name, startedAt (ms), finishedAt (ms|null), durationS,
 //     rounds, exercises: [ { name, sets, reps, weight_kg, note,
-//                            startWeight, ticks: [true, false, …] } ] }
+//                            origIndex, ticks: [true, false, …] } ],
+//     original: { rounds, exercises },   // the recipe as it was at the start
+//     setTimer: { index, tick, readyEndsAt, endsAt } | null }
+//
+// You can change the session while you train (sets, reps/time, weight,
+// add or remove exercises). `origIndex` = where the exercise was in the
+// original recipe (null = added today), so at the end we can list what
+// changed and offer to update the recipe.
 
 const WORKOUT_KEY = "sporthq3.workout";
 const REST_KEY = "sporthq3.restSeconds"; // the rest timer choice (0 = off)
@@ -37,10 +44,26 @@ export function parseRest(text) {
 
 export function loadWorkout() {
   try {
-    return JSON.parse(localStorage.getItem(WORKOUT_KEY)) || null;
+    return upgrade(JSON.parse(localStorage.getItem(WORKOUT_KEY)) || null);
   } catch {
     return null;
   }
+}
+
+// A workout started with an older version of the app has no `original`:
+// rebuild it from what we have (the weights it started with).
+function upgrade(workout) {
+  if (!workout || workout.original) return workout;
+  workout.exercises.forEach((e, i) => { e.origIndex = i; });
+  workout.original = {
+    rounds: workout.rounds,
+    exercises: workout.exercises.map((e) => ({
+      name: e.name, sets: e.sets, reps: e.reps, note: e.note,
+      weight_kg: "startWeight" in e ? e.startWeight : e.weight_kg,
+    })),
+  };
+  workout.setTimer = null;
+  return workout;
 }
 
 export function saveWorkout(workout) {
@@ -73,13 +96,39 @@ export function boxCount(exercise, rounds) {
 // A fresh workout from a session's details (recipe or "just a sport").
 export function newWorkout(plannedId, name, details) {
   const rounds = (details && details.rounds) || null;
-  const exercises = ((details && details.exercises) || []).map((e) => ({
+  const lines = ((details && details.exercises) || []).map((e) => ({
     name: e.name, sets: e.sets ?? null, reps: e.reps ?? null, note: e.note ?? null,
     weight_kg: e.weight_kg ?? null,
-    startWeight: e.weight_kg ?? null,
-    ticks: Array(boxCount(e, rounds)).fill(false),
   }));
-  return { plannedId, name, startedAt: Date.now(), finishedAt: null, durationS: null, rounds, exercises };
+  const exercises = lines.map((e, i) => ({ ...e, origIndex: i, ticks: Array(boxCount(e, rounds)).fill(false) }));
+  return {
+    plannedId, name, startedAt: Date.now(), finishedAt: null, durationS: null, rounds, exercises,
+    original: { rounds, exercises: lines }, setTimer: null,
+  };
+}
+
+// After the sets (or the rounds) changed: as many tick boxes as needed.
+// Ticks already done are kept; extra boxes start empty.
+export function resizeTicks(exercise, rounds) {
+  const count = boxCount(exercise, rounds);
+  exercise.ticks = Array.from({ length: count }, (_, i) => Boolean(exercise.ticks[i]));
+}
+
+// A time typed in "Reps / time": "45s", "45 sec", "1:30", "1 min",
+// "1min30", "2'30". Returns seconds, or null when it's a number of reps
+// ("10", "8-10", "10 each side"). Bare "m" is NOT minutes (20m = metres).
+export function parseExerciseTime(text) {
+  const t = String(text ?? "").trim().toLowerCase();
+  let seconds = null;
+  let m;
+  if ((m = t.match(/^(\d{1,2}):([0-5]\d)(?!\d)/))) {
+    seconds = Number(m[1]) * 60 + Number(m[2]);
+  } else if ((m = t.match(/^(\d{1,4})\s*(?:s|sec|secs|seconds?|''|")(?![a-z])/))) {
+    seconds = Number(m[1]);
+  } else if ((m = t.match(/^(\d{1,2})\s*(?:min(?:utes?)?|mn|')(?:\s*(\d{1,2})\s*(?:s|sec|secs|seconds?|''|")?)?(?![a-z\d])/))) {
+    seconds = Number(m[1]) * 60 + Number(m[2] || 0);
+  }
+  return seconds >= 3 && seconds <= 3600 ? seconds : null;
 }
 
 export function ticksDone(workout) {
@@ -90,10 +139,11 @@ export function ticksTotal(workout) {
   return workout.exercises.reduce((sum, e) => sum + e.ticks.length, 0);
 }
 
-// The frozen "photo" saved on the planned session: the recipe as it was,
-// with the weights really used and how many sets were ticked.
+// The frozen "photo" saved on the planned session: what you really did
+// (today's exercises, sets and weights) and how many sets were ticked.
 export function workoutSnapshot(workout, details) {
   return {
+    ...(details && details.custom ? { custom: true } : {}),
     name: (details && details.name) || workout.name,
     description: (details && details.description) || null,
     rounds: workout.rounds,
@@ -107,9 +157,56 @@ export function workoutSnapshot(workout, details) {
   };
 }
 
-// Exercises whose weight was changed during the workout.
-export function weightChanges(workout) {
-  return workout.exercises
-    .map((e, index) => ({ index, name: e.name, from: e.startWeight, to: e.weight_kg }))
-    .filter((c) => c.from !== c.to);
+// What changed compared with the recipe, in words, e.g.
+//   ["Squat: 3 → 4 sets, 25 kg → 30 kg", "+ Lunges", "− Plank (removed)"]
+export function recipeChanges(workout) {
+  const original = workout.original;
+  const changes = [];
+  if ((original.rounds || null) !== (workout.rounds || null)) {
+    changes.push(`Rounds: ${original.rounds || "none"} → ${workout.rounds || "none"}`);
+  }
+  const kept = new Set();
+  for (const e of workout.exercises) {
+    if (e.origIndex == null) {
+      changes.push(`+ ${[e.name, amountText(e, workout.rounds)].filter(Boolean).join(" · ")}`);
+      continue;
+    }
+    kept.add(e.origIndex);
+    const o = original.exercises[e.origIndex];
+    const bits = [];
+    if (!workout.rounds && (o.sets ?? null) !== (e.sets ?? null)) bits.push(`${o.sets ?? "no"} → ${e.sets ?? "no"} sets`);
+    if ((o.reps ?? null) !== (e.reps ?? null)) bits.push(`${o.reps ?? "—"} → ${e.reps ?? "—"}`);
+    if ((o.weight_kg ?? null) !== (e.weight_kg ?? null)) bits.push(`${kgText(o.weight_kg)} → ${kgText(e.weight_kg)}`);
+    if (bits.length) changes.push(`${e.name}: ${bits.join(", ")}`);
+  }
+  original.exercises.forEach((o, i) => {
+    if (!kept.has(i)) changes.push(`− ${o.name} (removed)`);
+  });
+  return changes;
+}
+
+// Today's version as recipe content: { rounds, exercises } (empty values left out,
+// like the catalogue editor does).
+export function recipeFromWorkout(workout) {
+  return {
+    rounds: workout.rounds || null,
+    exercises: workout.exercises.map((e) => {
+      const line = { name: e.name };
+      if (e.sets != null) line.sets = e.sets;
+      if (e.reps) line.reps = e.reps;
+      if (e.weight_kg != null) line.weight_kg = e.weight_kg;
+      if (e.note) line.note = e.note;
+      return line;
+    }),
+  };
+}
+
+// "3 × 10", "45s", "4 sets" (in a circuit: just the reps/time).
+export function amountText(e, rounds) {
+  if (e.reps) return rounds ? e.reps : `${e.sets ? e.sets + " × " : ""}${e.reps}`;
+  return !rounds && e.sets ? `${e.sets} sets` : "";
+}
+
+function kgText(value) {
+  return value == null ? "no weight" : `${Number(value)} kg`;
 }

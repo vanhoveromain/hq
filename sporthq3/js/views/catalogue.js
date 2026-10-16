@@ -5,10 +5,19 @@
 //
 // Planned sessions point to a recipe, so changing a recipe here (e.g. a
 // weight 25 -> 30 kg) shows up in every session that isn't done yet.
+//
+// The same editor makes "custom sessions" (see views/customSession.js):
+// a session for one day only, kept on the planned session, not in the
+// catalogue (unless you tick "Also add it to my catalogue").
 
-import { listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate } from "../storage.js?v=202610142257";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610142257";
-import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610142257";
+import {
+  listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
+  getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
+} from "../storage.js?v=202610160915";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610160915";
+import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610160915";
+import { startOfWeek } from "../utils/dates.js?v=202610160915";
+import { isCustomSession } from "../utils/plan.js?v=202610160915";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -84,7 +93,10 @@ function templateItemHtml(t) {
 
 // ---------- The editor ----------
 
-async function renderEditor(container, templateId) {
+// Custom mode: renderEditor(container, null, { date }) = new custom session
+// on that day; renderEditor(container, null, { plannedId }) = edit one.
+export async function renderEditor(container, templateId, custom = null) {
+  if (custom) return renderCustomEditor(container, custom);
   let template = null;
   if (templateId) {
     container.innerHTML = `<p class="muted">Loading…</p>`;
@@ -102,7 +114,82 @@ async function renderEditor(container, templateId) {
     }
   }
   const isEdit = Boolean(template);
-  const t = template || { sport: "muscle", exercises: [] };
+  drawEditor(container, template || { sport: "muscle", exercises: [] }, {
+    title: isEdit ? "Edit session" : "New session",
+    saveLabel: isEdit ? "Save changes" : "Save session",
+    cancelHref: "#/catalogue",
+    canDelete: isEdit,
+    onSave: async (recipe) => {
+      if (isEdit) recipe.id = template.id;
+      await saveSessionTemplate(recipe);
+      window.location.hash = "#/catalogue";
+    },
+    onDelete: async () => {
+      const question = "Delete this session from the catalogue?\n\n" +
+        "Planned sessions using it stay, but lose their details. " +
+        "Tip: tick \"Archived\" instead to keep it for history.";
+      if (!window.confirm(question)) return;
+      await deleteSessionTemplate(template.id);
+      window.location.hash = "#/catalogue";
+    },
+  });
+}
+
+async function renderCustomEditor(container, { date, plannedId }) {
+  let planned = null;
+  if (plannedId) {
+    container.innerHTML = `<p class="muted">Loading…</p>`;
+    try {
+      planned = await getPlannedSession(plannedId);
+    } catch (error) {
+      container.innerHTML = `<p class="status error"></p>`;
+      container.querySelector(".status").textContent = "Could not load: " + error.message;
+      return;
+    }
+    if (!planned || !isCustomSession(planned) || planned.status !== "planned") {
+      container.innerHTML = `<section class="card"><p>This custom session can't be edited (any more).</p>
+        <a class="button" href="#/planner">Back to the plan</a></section>`;
+      return;
+    }
+    date = planned.session_date;
+  }
+  const backToPlan = `#/planner/${startOfWeek(date)}`;
+  const t = planned
+    ? { ...planned.details, sport: planned.sport, session_type: planned.session_type }
+    : { sport: "muscle", exercises: [] };
+
+  drawEditor(container, t, {
+    title: planned ? "Edit custom session" : "Custom session",
+    intro: "Just for this day. It isn't added to your catalogue unless you tick the box below.",
+    saveLabel: planned ? "Save changes" : "Add to the plan",
+    cancelHref: backToPlan,
+    custom: true,
+    onSave: async (recipe, { addToCatalogue }) => {
+      // archived is a catalogue thing; the rest is the session's content.
+      const { archived, ...content } = recipe;
+      const values = { sport: recipe.sport, session_type: recipe.session_type };
+      if (addToCatalogue) {
+        const saved = await saveSessionTemplate({ ...content, archived: false });
+        Object.assign(values, { template_id: saved.id, details: null });
+      } else {
+        const { sport, session_type, ...details } = content;
+        Object.assign(values, { template_id: null, details: { ...details, custom: true } });
+      }
+      if (planned) {
+        await updatePlannedSession(planned.id, values);
+      } else {
+        const sameDay = await listPlannedSessions(date, date);
+        await createPlannedSession({ ...values, session_date: date, status: "planned", source: "manual", position: sameDay.length });
+      }
+      window.location.hash = backToPlan;
+    },
+  });
+}
+
+// The form itself, shared by recipes and custom sessions.
+//   options: { title, intro, saveLabel, cancelHref, canDelete, custom,
+//              onSave(recipe, { addToCatalogue }), onDelete() }
+function drawEditor(container, t, options) {
 
   // The exercise lines live in this list while you edit; the boxes on screen
   // write into it as you type, and buttons (↑ ↓ ✕ +) change it and redraw.
@@ -110,7 +197,8 @@ async function renderEditor(container, templateId) {
 
   container.innerHTML = `
     <form id="template-form" class="card form" novalidate>
-      <h2>${isEdit ? "Edit session" : "New session"}</h2>
+      <h2>${escapeHtml(options.title)}</h2>
+      ${options.intro ? `<p class="muted small">${escapeHtml(options.intro)}</p>` : ""}
 
       <label for="t-name">Name</label>
       <input id="t-name" name="name" type="text" required autocomplete="off"
@@ -151,17 +239,22 @@ async function renderEditor(container, templateId) {
         <button type="button" id="add-exercise" class="button">+ Add exercise</button>
       </fieldset>
 
+      ${options.custom ? `
+      <label class="checkbox">
+        <input type="checkbox" name="add_to_catalogue">
+        Also add it to my catalogue (to plan it again later)
+      </label>` : `
       <label class="checkbox">
         <input type="checkbox" name="archived" ${t.archived ? "checked" : ""}>
         Archived (kept for history, hidden from the planner)
-      </label>
+      </label>`}
 
       <p id="template-status" class="status" role="status"></p>
 
       <div class="form-actions">
-        <button type="submit" class="button primary">${isEdit ? "Save changes" : "Save session"}</button>
-        <a href="#/catalogue" class="button">Cancel</a>
-        ${isEdit ? `<button type="button" id="delete" class="button danger">Delete</button>` : ""}
+        <button type="submit" class="button primary">${escapeHtml(options.saveLabel)}</button>
+        <a href="${options.cancelHref}" class="button">Cancel</a>
+        ${options.canDelete ? `<button type="button" id="delete" class="button danger">Delete</button>` : ""}
       </div>
     </form>
   `;
@@ -229,14 +322,14 @@ async function renderEditor(container, templateId) {
     event.preventDefault();
     const result = readTemplate(form, exercises);
     if (result.error) return showStatus(status, result.error, "error");
-    if (isEdit) result.template.id = template.id;
 
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
     showStatus(status, "Saving…", "");
     try {
-      await saveSessionTemplate(result.template);
-      window.location.hash = "#/catalogue";
+      await options.onSave(result.template, {
+        addToCatalogue: Boolean(form.elements.add_to_catalogue && form.elements.add_to_catalogue.checked),
+      });
     } catch (error) {
       showStatus(status, "Could not save: " + error.message, "error");
       button.disabled = false;
@@ -246,13 +339,8 @@ async function renderEditor(container, templateId) {
   const deleteButton = form.querySelector("#delete");
   if (deleteButton) {
     deleteButton.addEventListener("click", async () => {
-      const question = "Delete this session from the catalogue?\n\n" +
-        "Planned sessions using it stay, but lose their details. " +
-        "Tip: tick \"Archived\" instead to keep it for history.";
-      if (!window.confirm(question)) return;
       try {
-        await deleteSessionTemplate(template.id);
-        window.location.hash = "#/catalogue";
+        await options.onDelete();
       } catch (error) {
         showStatus(status, "Could not delete: " + error.message, "error");
       }
@@ -320,7 +408,7 @@ function readTemplate(form, exercises) {
       target_distance_km: distance,
       rounds,
       exercises: lines,
-      archived: f.archived.checked,
+      archived: Boolean(f.archived && f.archived.checked),
     },
   };
 }

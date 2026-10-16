@@ -9,16 +9,19 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610142257";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610142257";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142257";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610142257";
-import { sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary } from "../utils/plan.js?v=202610142257";
-import { openSheet } from "../utils/sheet.js?v=202610142257";
-import { showToast } from "../utils/toast.js?v=202610142257";
-import { loadWorkout } from "../utils/workout.js?v=202610142257";
-import { blockWeek } from "./blocks.js?v=202610142257";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610142257";
+} from "../storage.js?v=202610160915";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610160915";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610160915";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610160915";
+import {
+  sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
+  isCustomSession, addToCatalogue,
+} from "../utils/plan.js?v=202610160915";
+import { openSheet } from "../utils/sheet.js?v=202610160915";
+import { showToast } from "../utils/toast.js?v=202610160915";
+import { loadWorkout } from "../utils/workout.js?v=202610160915";
+import { blockWeek } from "./blocks.js?v=202610160915";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610160915";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -248,6 +251,7 @@ async function drawWeek(container, monday) {
   }
 
   async function saveAsTemplate(toSave, templates) {
+    const customCount = toSave.filter(isCustomSession).length;
     const name = await openSheet({
       title: "Save this week as a template",
       html: `
@@ -256,6 +260,9 @@ async function drawWeek(container, monday) {
         <datalist id="template-names">${templates.map((t) => `<option value="${escapeHtml(t.name)}">`).join("")}</datalist>
         <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled ones are left out).
           Use an existing name to replace that template.</p>
+        ${customCount ? `<p class="status warning">⚠️ ${customCount} custom session${customCount === 1 ? " is" : "s are"} not in your catalogue:
+          the template only keeps ${customCount === 1 ? "its" : "their"} sport, not the exercises.
+          Add ${customCount === 1 ? "it" : "them"} to your catalogue first to keep everything.</p>` : ""}
         <p id="template-error" class="status error" hidden></p>
         <button type="button" class="button primary" id="template-go">Save template</button>`,
       onReady: (dialog, close) => {
@@ -330,9 +337,17 @@ async function drawWeek(container, monday) {
       html: `
         <h3 class="sheet-subtitle">Just a sport</h3>
         <div class="chip-row">${quick}</div>
-        ${fromCatalogue || `<p class="muted">Your catalogue is empty.</p>`}`,
+        ${fromCatalogue || `<p class="muted">Your catalogue is empty.</p>`}
+        <h3 class="sheet-subtitle">Something else</h3>
+        <div class="sheet-actions">
+          <button type="button" class="button" data-value="custom">✏️ Custom session (not in the catalogue)</button>
+        </div>`,
     });
     if (!choice) return;
+    if (choice === "custom") {
+      window.location.hash = `#/custom/new/${day}`;
+      return;
+    }
 
     const position = sessions.filter((s) => s.session_date === day).length;
     const [kind, value] = choice.split(":");
@@ -376,6 +391,8 @@ async function drawWeek(container, monday) {
           ${!isDone ? `<button type="button" class="button" data-value="move">📅 Move to another day</button>
           <button type="button" class="button" data-value="swap">⇄ Swap this day with another day</button>` : ""}
           ${session.template_id ? `<button type="button" class="button" data-value="recipe">📚 Edit the recipe</button>` : ""}
+          ${isCustomSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">✏️ Edit this session</button>` : ""}
+          ${isCustomSession(session) ? `<button type="button" class="button" data-value="to-catalogue">📚 Add to my catalogue</button>` : ""}
           ${session.race_id ? `<button type="button" class="button" data-value="race">🏁 Open the race</button>` : ""}
           <button type="button" class="button danger" data-value="delete">🗑 Remove from plan</button>
         </div>`,
@@ -384,19 +401,44 @@ async function drawWeek(container, monday) {
     try {
       if (choice === "start") window.location.hash = `#/workout/${session.id}`;
       if (choice === "done") await markDone(session);
-      if (choice === "reopen") await reopenSession(session.id);
+      if (choice === "reopen") await reopenSession(session);
       if (choice === "open-activity") window.location.hash = `#/log/${session.activity_id}`;
       if (choice === "cancel") await updatePlannedSession(session.id, { status: "cancelled" });
       if (choice === "uncancel") await updatePlannedSession(session.id, { status: "planned" });
       if (choice === "move") await moveSession(session);
       if (choice === "swap") await swapDay(session.session_date);
       if (choice === "recipe") window.location.hash = `#/catalogue/${session.template_id}`;
+      if (choice === "edit-custom") window.location.hash = `#/custom/${session.id}`;
+      if (choice === "to-catalogue") await sendToCatalogue(session);
       if (choice === "race") window.location.hash = `#/races/${session.race_id}`;
       if (choice === "delete" && window.confirm("Remove this session from the plan?")) await deletePlannedSession(session.id);
     } catch (error) {
       showToast("Something went wrong: " + error.message);
     }
-    if (choice && !["open-activity", "recipe", "start", "race"].includes(choice)) await load();
+    if (choice && !["open-activity", "recipe", "start", "race", "edit-custom"].includes(choice)) await load();
+  }
+
+  // A custom session -> a recipe in the catalogue (asks for the name).
+  async function sendToCatalogue(session) {
+    const name = await openSheet({
+      title: "Add to my catalogue",
+      html: `
+        <label for="recipe-name" class="sheet-subtitle">Name in the catalogue</label>
+        <input id="recipe-name" type="text" maxlength="80" autocomplete="off" value="${escapeHtml(sessionName(session))}">
+        <p class="muted small">${session.status === "planned"
+          ? "This session then follows the recipe (edit it in the catalogue)."
+          : "This session keeps what you did; the recipe is for next time."}</p>
+        <button type="button" class="button primary" id="recipe-go">📚 Add</button>`,
+      onReady: (dialog, close) => {
+        const input = dialog.querySelector("#recipe-name");
+        const go = () => { if (input.value.trim()) close(input.value.trim()); };
+        dialog.querySelector("#recipe-go").addEventListener("click", go);
+        input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); go(); } });
+      },
+    });
+    if (!name) return;
+    await addToCatalogue(session, name);
+    showToast(`📚 "${name}" added to your catalogue`);
   }
 
   // Done: link to an activity of that day, log it now, or just tick it.
@@ -494,6 +536,7 @@ function sessionCardHtml(session) {
   }
   if (details && details.target_duration_s) bits.push(formatDuration(details.target_duration_s));
   if (details && details.target_distance_km) bits.push(`${Number(details.target_distance_km)} km`);
+  if (isCustomSession(session)) bits.push("custom");
   if (session.status === "done" && session.activity) {
     const a = session.activity;
     bits.push("Logged: " + [formatDuration(a.duration_s), a.distance_km != null ? formatKm(a.distance_km) : ""].filter(Boolean).join(" · "));
