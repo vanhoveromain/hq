@@ -9,19 +9,19 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610160915";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610160915";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610160915";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610160915";
+} from "../storage.js?v=202610161542";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610161542";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610161542";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610161542";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
   isCustomSession, addToCatalogue,
-} from "../utils/plan.js?v=202610160915";
-import { openSheet } from "../utils/sheet.js?v=202610160915";
-import { showToast } from "../utils/toast.js?v=202610160915";
-import { loadWorkout } from "../utils/workout.js?v=202610160915";
-import { blockWeek } from "./blocks.js?v=202610160915";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610160915";
+} from "../utils/plan.js?v=202610161542";
+import { openSheet } from "../utils/sheet.js?v=202610161542";
+import { showToast } from "../utils/toast.js?v=202610161542";
+import { loadWorkout } from "../utils/workout.js?v=202610161542";
+import { blockWeek } from "./blocks.js?v=202610161542";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610161542";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
