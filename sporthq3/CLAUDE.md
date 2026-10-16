@@ -104,6 +104,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-16: phone fixes: date boxes no longer stick out of the card on iPhone (Safari ignores
+  width: 100% on date inputs; fixed with appearance: none + min-width: 0 for every date box); the log's
+  duration hint now says ":", "," and "." all work between the numbers (parsing already accepted them).
 - 2026-10-16: laptop planner: the 7 day frames are all the same size (the tallest day sets the
   height for the whole week); month view: every week row the same height.
 - 2026-10-16: workout + planner feedback (14, from Rom's first days on the phone):

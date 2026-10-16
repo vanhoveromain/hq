@@ -5,14 +5,14 @@
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate,
-} from "../storage.js?v=202610160915";
-import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610160915";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610160915";
-import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610160915";
-import { openSheet } from "../utils/sheet.js?v=202610160915";
-import { showToast } from "../utils/toast.js?v=202610160915";
-import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610160915";
-import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610160915";
+} from "../storage.js?v=202610161542";
+import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610161542";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610161542";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610161542";
+import { openSheet } from "../utils/sheet.js?v=202610161542";
+import { showToast } from "../utils/toast.js?v=202610161542";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610161542";
+import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610161542";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
@@ -99,7 +99,8 @@ function drawForm(container, activity, shoes, planned) {
         <label for="f-duration">Duration</label>
         <input id="f-duration" name="duration" type="text" inputmode="decimal" autocomplete="off"
                placeholder="45:00 or 1:02:30" required value="${escapeHtml(formatDuration(a.duration_s))}">
-        <p class="hint">Minutes:seconds or hours:minutes:seconds. "45" = 45 minutes.</p>
+        <p class="hint">Minutes:seconds or hours:minutes:seconds. You can type ":", "," or "."
+          between the numbers (45.30 = 45 min 30 s, 1,02,30 = 1 h 2 min 30 s). "45" alone = 45 minutes.</p>
       </div>
 
       <div data-field="distance">

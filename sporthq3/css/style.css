@@ -117,6 +117,13 @@ input {
   margin-bottom: 12px;
 }
 input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* iPhone Safari draws date boxes at their own width and ignores width: 100%,
+   so they stuck out of the card. Drop the built-in look so they obey the width. */
+input[type="date"] {
+  -webkit-appearance: none; appearance: none;
+  display: block; min-width: 0; max-width: 100%; min-height: 48px; text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
 .button {
   display: inline-block;
