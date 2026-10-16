@@ -2,8 +2,8 @@
 // workout mode: how a planned session is named, which details it shows,
 // and how it is marked done / reopened.
 
-import { updatePlannedSession } from "../storage.js?v=202610142257";
-import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610142257";
+import { updatePlannedSession, saveSessionTemplate } from "../storage.js?v=202610160904";
+import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610160904";
 
 // The name shown on a session card.
 //   own title > recipe name > session type > sport ("Running")
@@ -15,9 +15,49 @@ export function sessionName(session) {
   return sportLabel(session.sport);
 }
 
-// Which details to show: the frozen "photo" once done, otherwise the live recipe.
+// Which details to show: the frozen "photo" once done, otherwise the live
+// recipe. A custom session (made in the planner, not in the catalogue) keeps
+// its own details on the session itself, marked { custom: true }.
 export function sessionDetails(session) {
   return session.details || session.template || null;
+}
+
+export function isCustomSession(session) {
+  return Boolean(!session.template_id && session.details && session.details.custom);
+}
+
+// A custom session's details without the "how many sets were ticked" counts
+// (for copying it to another week, or opening it again).
+export function customDetails(details) {
+  return {
+    ...details,
+    custom: true,
+    exercises: (details.exercises || []).map(({ done_sets, total_sets, ...line }) => line),
+  };
+}
+
+// Puts a session in the catalogue as a new recipe and links the session to
+// it. `content` = { rounds, exercises } to use (default: the session's own
+// details, e.g. today's version after a workout). A planned session then
+// follows the recipe; a done one keeps its frozen photo.
+export async function addToCatalogue(session, name, content = null) {
+  const own = sessionDetails(session) || {};
+  const source = content || own;
+  const recipe = await saveSessionTemplate({
+    name,
+    sport: session.sport,
+    session_type: session.session_type,
+    description: own.description || null,
+    target_duration_s: own.target_duration_s || null,
+    target_distance_km: own.target_distance_km || null,
+    rounds: source.rounds || null,
+    exercises: customDetails(source).exercises,
+    archived: false,
+  });
+  await updatePlannedSession(session.id, session.status === "planned"
+    ? { template_id: recipe.id, details: null }
+    : { template_id: recipe.id });
+  return recipe;
 }
 
 // Takes the "photo" of a recipe, to freeze it on a done session.
@@ -40,13 +80,18 @@ export function completeSession(session, activityId = null, details = undefined)
   return updatePlannedSession(session.id, {
     status: "done",
     activity_id: activityId,
-    details: details !== undefined ? details : snapshotOf(session.template),
+    // (a custom session has no recipe: its own details are its photo)
+    details: details !== undefined ? details : (session.template ? snapshotOf(session.template) : session.details || null),
   });
 }
 
 // Back to "planned": unlink, unfreeze (it follows the recipe again).
-export function reopenSession(sessionId) {
-  return updatePlannedSession(sessionId, { status: "planned", activity_id: null, details: null });
+// A custom session keeps its details (they ARE the session).
+export function reopenSession(session) {
+  return updatePlannedSession(session.id, {
+    status: "planned", activity_id: null,
+    details: isCustomSession(session) ? customDetails(session.details) : null,
+  });
 }
 
 // What really counts on the calendar, for the training rules:

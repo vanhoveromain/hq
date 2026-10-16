@@ -142,6 +142,8 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .status:empty { display: none; }
 .status.ok { color: var(--ok); }
 .status.error { color: var(--error); }
+.status.warning { color: #b45309; }
+@media (prefers-color-scheme: dark) { .status.warning { color: #fbbf24; } }
 
 .login { margin-top: 24px; }
 
@@ -522,7 +524,14 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 }
 .rest-banner strong { font-variant-numeric: tabular-nums; }
 .rest-banner[hidden] { display: none; }
-.workout-rounds { margin: 0 0 8px; }
+.workout-rounds { margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.workout-rounds[hidden] { display: none; }
+/* timed sets ("45s"): the countdown banner and the ▶ button */
+.set-banner { background: var(--topbar-bg); color: #fff; }
+.set-timer-button { width: 100%; margin-top: 12px; }
+.add-exercise { width: 100%; margin: 4px 0 8px; }
+.sheet .row-2 label, .sheet .row-3 label { font-size: 0.8rem; font-weight: 600; margin: 0; }
+.sheet .row-2 input, .sheet .row-3 input { margin: 4px 0 8px; }
 .exercise h3 { margin: 0; font-size: 1.05rem; }
 .exercise.is-complete { border-color: #15803d; }
 .exercise-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }

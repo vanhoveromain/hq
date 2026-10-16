@@ -54,6 +54,8 @@
 13. In 4 parts: 13a JSON export (done 2026-10-14), 13b drag and drop of planner cards (laptop + phone:
     press and hold) (done 2026-10-14), 13c design pass + polish (done 2026-10-14: "A + C", violet), 13d switch day
     (final Notion re-import, big clean, merge to live, phone check)
+14. Phone feedback round 1 (2026-10-16): 14a timer for timed sets, 14b change the session during a
+    workout (+ update the recipe), 14c custom sessions (+ add to catalogue)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -102,6 +104,23 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-16: workout + planner feedback (14, from Rom's first days on the phone):
+  14a timed sets: an exercise whose "Reps / time" is a time ("45s", "1:00", "1 min", "1min30", "2'30";
+  bare "m" is NOT minutes: 20m = metres) gets a "▶ Start 45 s · set 2" button: 3 s "get ready", one
+  beep = go, at 0 three beeps, the set ticks itself, then the rest timer starts (if on). Stop = no tick.
+  The countdown lives in the saved workout, so it survives a reload / locked phone (no beep while locked).
+  14b during a workout: ✎ on each exercise = name, sets, reps/time, kg, or remove; "+ Add an exercise";
+  circuits: ✎ next to the rounds. Ticks already done are kept when sets change. At the end, if anything
+  differs from the recipe: one sheet listing the changes ("Squat: 3 → 4 sets, 25 kg → 30 kg", "+ Lunges",
+  "− Crunch (removed)") -> "Update the recipe" replaces the recipe's exercises (and rounds) with today's
+  version (whole list, not line by line), or "Only today". The done session's photo = what was really done.
+  14c custom sessions: Plan -> + -> "Custom session" (#/custom/new/<date>, same editor as the catalogue,
+  option "Also add it to my catalogue"). Stored on the planned session itself: template_id null, details =
+  the content + custom: true (no migration). Card shows "custom"; menu: Edit this session (#/custom/<id>),
+  Add to my catalogue (planned -> follows the new recipe; done -> keeps its photo, gets the link).
+  "Not done" keeps a custom session's content; Copy last week copies it; a week template only keeps its
+  sport (warning when saving). Finishing a workout on a session without a recipe (custom, or "just a sport"
+  where you added exercises) offers "Add it to your catalogue?" with today's version.
 - 2026-10-14: Stats page (Log tab -> List | Stats, #/log/stats). Filters: period (week, month, year,
   last 12 months, all time) + sport (all or one), remembered per device. Cards: Overview (sessions,
   per week, time, km or D+, avg RPE, sessions per sport), Year to date vs same day last year, Volume

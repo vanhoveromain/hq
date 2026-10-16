@@ -4,12 +4,12 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610142257";
-import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610142257";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610142257";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610142257";
-import * as logForm from "./logForm.js?v=202610142257";
-import * as statsView from "./stats.js?v=202610142257";
+import { listActivities } from "../storage.js?v=202610160904";
+import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610160904";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610160904";
+import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610160904";
+import * as logForm from "./logForm.js?v=202610160904";
+import * as statsView from "./stats.js?v=202610160904";
 
 const PAGE_SIZE = 30;
 

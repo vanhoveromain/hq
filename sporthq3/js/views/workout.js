@@ -1,20 +1,22 @@
 // Workout mode (opened from the planner): #/workout/<plannedSessionId>
 //
-// A timer, one tick box per set, weights you can change on the spot and an
-// optional rest timer. Everything is saved on the phone as you go (see
-// utils/workout.js). "Finish" opens the log form, pre-filled; saving it
-// marks the session done and freezes what you really did.
+// A timer, one tick box per set, a countdown for timed sets ("45s"), an
+// optional rest timer, and the session can be changed on the spot (sets,
+// reps/time, weight, add/remove exercises). Everything is saved on the phone
+// as you go (see utils/workout.js). "Finish" opens the log form, pre-filled;
+// saving it marks the session done, freezes what you really did and offers
+// to update the recipe.
 
-import { getPlannedSession } from "../storage.js?v=202610142257";
-import { getSport } from "../rules.js?v=202610142257";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610142257";
-import { startOfWeek } from "../utils/dates.js?v=202610142257";
-import { sessionName, sessionDetails } from "../utils/plan.js?v=202610142257";
-import { openSheet } from "../utils/sheet.js?v=202610142257";
+import { getPlannedSession } from "../storage.js?v=202610160904";
+import { getSport } from "../rules.js?v=202610160904";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610160904";
+import { startOfWeek } from "../utils/dates.js?v=202610160904";
+import { sessionName, sessionDetails } from "../utils/plan.js?v=202610160904";
+import { openSheet } from "../utils/sheet.js?v=202610160904";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
-  REST_CHOICES, parseRest, ticksDone, ticksTotal,
-} from "../utils/workout.js?v=202610142257";
+  REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
+} from "../utils/workout.js?v=202610160904";
 
 export async function render(container, { params = [] } = {}) {
   const plannedId = params[0];
@@ -86,8 +88,14 @@ function drawWorkout(container, session, workout, backToPlan) {
       <button type="button" class="button small-button" id="rest-skip">Skip</button>
     </div>
 
-    ${workout.rounds ? `<p class="workout-rounds"><strong>${workout.rounds} rounds</strong> · tick each exercise once per round</p>` : ""}
+    <div id="set-banner" class="rest-banner set-banner" hidden>
+      <span><span id="set-label"></span> <strong id="set-left">0:00</strong></span>
+      <button type="button" class="button small-button" id="set-stop">Stop</button>
+    </div>
+
+    <p class="workout-rounds" id="rounds-line" hidden></p>
     <div id="exercises"></div>
+    <button type="button" class="button add-exercise" id="add-exercise">+ Add an exercise</button>
 
     <div class="workout-actions">
       <button type="button" class="button primary" id="finish">🏁 Finish</button>
@@ -100,29 +108,77 @@ function drawWorkout(container, session, workout, backToPlan) {
   const progressEl = container.querySelector("#progress");
   const restBanner = container.querySelector("#rest-banner");
   const restLeftEl = container.querySelector("#rest-left");
+  const setBanner = container.querySelector("#set-banner");
+  const setLabelEl = container.querySelector("#set-label");
+  const setLeftEl = container.querySelector("#set-left");
+  const roundsLine = container.querySelector("#rounds-line");
+  const setWord = workout.rounds ? "round" : "set";
 
   function drawExercises() {
     exercisesEl.innerHTML = workout.exercises.map((e, i) => {
       const done = e.ticks.filter(Boolean).length;
-      const amount = e.reps ? (workout.rounds ? e.reps : `${e.sets ? e.sets + " × " : ""}${e.reps}`) : (e.sets ? `${e.sets} sets` : "");
+      const timed = parseExerciseTime(e.reps);
+      const next = e.ticks.indexOf(false);
+      const running = workout.setTimer && workout.setTimer.index === i;
       return `
         <section class="card exercise ${done === e.ticks.length ? "is-complete" : ""}">
           <div class="exercise-head">
             <div>
-              <h3>${escapeHtml(e.name)}</h3>
-              <p class="muted small">${escapeHtml([amount, e.note].filter(Boolean).join(" · "))}</p>
+              <h3>${escapeHtml(e.name)}${e.origIndex == null ? ` <span class="muted small">(added)</span>` : ""}</h3>
+              <p class="muted small">${escapeHtml([amountText(e, workout.rounds), e.note].filter(Boolean).join(" · "))}</p>
             </div>
-            <button type="button" class="button small-button weight-button" data-weight="${i}">
-              ${e.weight_kg != null ? `${Number(e.weight_kg)} kg` : "+ kg"} ✎</button>
+            <button type="button" class="button small-button weight-button" data-edit="${i}"
+              aria-label="Change ${escapeHtml(e.name)}">${e.weight_kg != null ? `${Number(e.weight_kg)} kg ✎` : "✎ Edit"}</button>
           </div>
           <div class="tick-row">${e.ticks.map((ticked, t) => `
             <button type="button" class="tick ${ticked ? "is-ticked" : ""}" data-tick="${i}:${t}"
               aria-pressed="${ticked}" aria-label="${workout.rounds ? "Round" : "Set"} ${t + 1}">
               ${ticked ? "✓" : t + 1}</button>`).join("")}</div>
+          ${timed ? `<button type="button" class="button primary set-timer-button" data-timer="${i}" ${next < 0 || running ? "disabled" : ""}>
+            ${running ? "⏱ Running…" : next < 0 ? "✓ All done" : `▶ Start ${formatRest(timed)} · ${setWord} ${next + 1}`}</button>` : ""}
         </section>`;
     }).join("");
     const total = ticksTotal(workout);
     progressEl.textContent = total ? `${ticksDone(workout)} / ${total} ${workout.rounds ? "ticks" : "sets"} done` : "";
+    roundsLine.hidden = !workout.rounds;
+    if (workout.rounds) {
+      roundsLine.innerHTML = `<strong>${workout.rounds} rounds</strong> · tick each exercise once per round
+        <button type="button" class="button small-button" id="edit-rounds">✎</button>`;
+    }
+  }
+
+  // Starts the countdown for the next open set of a timed exercise
+  // (3 seconds "get ready" first, to get into position).
+  function startSetTimer(index) {
+    const e = workout.exercises[index];
+    const seconds = parseExerciseTime(e.reps);
+    const next = e.ticks.indexOf(false);
+    if (!seconds || next < 0) return;
+    unlockSound(); // sound needs a tap first on iPhone
+    restEndsAt = null;
+    restBanner.hidden = true;
+    const readyEndsAt = Date.now() + GET_READY_S * 1000;
+    workout.setTimer = { index, tick: next, readyEndsAt, endsAt: readyEndsAt + seconds * 1000, goBeeped: false };
+    saveWorkout(workout);
+    drawExercises();
+    tick();
+  }
+
+  function stopSetTimer() {
+    workout.setTimer = null;
+    saveWorkout(workout);
+    setBanner.hidden = true;
+    drawExercises();
+  }
+
+  // Time's up: tick that set, beep, then the rest timer (if on).
+  function finishSetTimer() {
+    const { index, tick: t } = workout.setTimer;
+    const e = workout.exercises[index];
+    if (e && t < e.ticks.length) e.ticks[t] = true;
+    stopSetTimer();
+    beep();
+    if (restSeconds) restEndsAt = Date.now() + restSeconds * 1000;
   }
 
   // Runs every second: the main timer and the rest countdown.
@@ -136,6 +192,26 @@ function drawWorkout(container, session, workout, backToPlan) {
       return;
     }
     timerEl.textContent = formatDuration(Math.floor((Date.now() - workout.startedAt) / 1000)) || "0:00";
+    const timer = workout.setTimer;
+    if (timer) {
+      const now = Date.now();
+      const e = workout.exercises[timer.index];
+      if (!e) {
+        stopSetTimer();
+      } else if (now >= timer.endsAt) {
+        finishSetTimer();
+      } else {
+        const ready = now < timer.readyEndsAt;
+        if (!ready && !timer.goBeeped) {
+          timer.goBeeped = true; // one short beep = go!
+          saveWorkout(workout);
+          beep(1);
+        }
+        setLabelEl.textContent = ready ? `Get ready · ${e.name}` : `${e.name} · ${setWord} ${timer.tick + 1}`;
+        setLeftEl.textContent = formatDuration(Math.ceil(((ready ? timer.readyEndsAt : timer.endsAt) - now) / 1000));
+        setBanner.hidden = false;
+      }
+    }
     if (restEndsAt) {
       const left = Math.ceil((restEndsAt - Date.now()) / 1000);
       if (left <= 0) {
@@ -156,26 +232,69 @@ function drawWorkout(container, session, workout, backToPlan) {
       const [i, t] = tickButton.dataset.tick.split(":").map(Number);
       const ticks = workout.exercises[i].ticks;
       ticks[t] = !ticks[t];
+      // Ticked by hand while its countdown runs: the countdown stops.
+      if (workout.setTimer && workout.setTimer.index === i && workout.setTimer.tick === t) {
+        workout.setTimer = null;
+        setBanner.hidden = true;
+      }
       saveWorkout(workout);
       drawExercises();
       // A set just done -> start the rest countdown (if the rest timer is on).
-      if (ticks[t] && restSeconds) {
+      if (ticks[t] && restSeconds && !workout.setTimer) {
         unlockSound(); // sound needs a tap first on iPhone
         restEndsAt = Date.now() + restSeconds * 1000;
         tick();
       }
       return;
     }
-    const weightButton = event.target.closest("[data-weight]");
-    if (weightButton) {
-      const exercise = workout.exercises[Number(weightButton.dataset.weight)];
-      const value = await askWeight(exercise);
-      if (value === undefined) return;
-      exercise.weight_kg = value;
+    const timerButton = event.target.closest("[data-timer]");
+    if (timerButton) {
+      startSetTimer(Number(timerButton.dataset.timer));
+      return;
+    }
+    const editButton = event.target.closest("[data-edit]");
+    if (editButton) {
+      const index = Number(editButton.dataset.edit);
+      const exercise = workout.exercises[index];
+      const result = await askExercise(exercise, workout.rounds);
+      if (!result) return;
+      // Its countdown (if running) belongs to the old version: stop it.
+      if (workout.setTimer && (result.remove || workout.setTimer.index === index)) workout.setTimer = null;
+      if (result.remove) {
+        if (workout.setTimer && workout.setTimer.index > index) workout.setTimer.index--;
+        workout.exercises.splice(index, 1);
+      } else {
+        Object.assign(exercise, result.values);
+        resizeTicks(exercise, workout.rounds);
+      }
+      setBanner.hidden = !workout.setTimer;
       saveWorkout(workout);
       drawExercises();
     }
   });
+
+  // A circuit: change the number of rounds (every exercise gets that many boxes).
+  roundsLine.addEventListener("click", async (event) => {
+    if (!event.target.closest("#edit-rounds")) return;
+    const rounds = await askRounds(workout.rounds);
+    if (!rounds) return;
+    workout.rounds = rounds;
+    workout.exercises.forEach((e) => resizeTicks(e, rounds));
+    saveWorkout(workout);
+    drawExercises();
+  });
+
+  container.querySelector("#add-exercise").addEventListener("click", async () => {
+    const result = await askExercise(null, workout.rounds);
+    if (!result || result.remove) return;
+    const exercise = { name: "", sets: null, reps: null, weight_kg: null, note: null, origIndex: null, ticks: [], ...result.values };
+    resizeTicks(exercise, workout.rounds);
+    workout.exercises.push(exercise);
+    saveWorkout(workout);
+    drawExercises();
+  });
+
+  container.querySelector("#set-stop").addEventListener("click", stopSetTimer);
 
   // The rest choices: Off, the usual times, and "Custom" (shows your own
   // time once you've set one).
@@ -234,6 +353,8 @@ function drawWorkout(container, session, workout, backToPlan) {
 }
 
 
+const GET_READY_S = 3; // seconds to get into position before a timed set
+
 function targetsHtml(details) {
   const targets = [details.target_duration_s ? formatDuration(details.target_duration_s) : "",
     details.target_distance_km ? `${Number(details.target_distance_km)} km` : ""].filter(Boolean);
@@ -277,31 +398,87 @@ function askRest(current) {
   }).then((value) => (value == null ? null : Number(value)));
 }
 
-// Pop-up to change a weight. Resolves to a number, null (no weight) or
-// undefined (closed without saving).
-async function askWeight(exercise) {
+// Pop-up to change an exercise (or add one when `exercise` is null):
+// name, sets (not in a circuit: rounds decide), reps or time, weight.
+// Resolves to { values }, { remove: true } or null (closed).
+async function askExercise(exercise, rounds) {
+  const e = exercise || {};
   const value = await openSheet({
-    title: exercise.name,
+    title: exercise ? exercise.name : "Add an exercise",
     html: `
-      <label for="weight-input" class="sheet-subtitle">Weight (kg)</label>
-      <input id="weight-input" type="text" inputmode="decimal" autocomplete="off"
-             value="${exercise.weight_kg ?? ""}">
-      <p class="muted small">Leave empty for no weight.</p>
-      <button type="button" class="button primary" id="weight-go">Save</button>`,
+      <label for="ex-name" class="sheet-subtitle">Exercise</label>
+      <input id="ex-name" type="text" autocomplete="off" placeholder="e.g. Plank" value="${escapeHtml(e.name || "")}">
+      <div class="${rounds ? "row-2" : "row-3"}">
+        ${rounds ? "" : `<label>Sets<input id="ex-sets" type="number" inputmode="numeric" min="1" max="50" value="${e.sets ?? ""}"></label>`}
+        <label>Reps / time<input id="ex-reps" type="text" autocomplete="off" placeholder="10 or 45s" value="${escapeHtml(e.reps ?? "")}"></label>
+        <label>kg<input id="ex-kg" type="text" inputmode="decimal" autocomplete="off" value="${e.weight_kg ?? ""}"></label>
+      </div>
+      <p class="muted small">"10" = reps. "45s" or "1:00" = a timed set: you get a ▶ countdown button.</p>
+      <p id="ex-error" class="status error" hidden></p>
+      <div class="sheet-actions">
+        <button type="button" class="button primary" id="ex-go">${exercise ? "Save" : "Add"}</button>
+        ${exercise ? `<button type="button" class="button danger" data-value="remove">Remove this exercise</button>` : ""}
+      </div>`,
     onReady: (dialog, close) => {
-      const input = dialog.querySelector("#weight-input");
-      // "go:" prefix so an empty box is not mistaken for "closed".
-      const go = () => close("go:" + input.value.replace(",", ".").trim());
-      dialog.querySelector("#weight-go").addEventListener("click", go);
+      const field = (id) => dialog.querySelector(id);
+      const fail = (text) => {
+        field("#ex-error").textContent = text;
+        field("#ex-error").hidden = false;
+      };
+      const go = () => {
+        const name = field("#ex-name").value.trim();
+        if (!name) return fail("Give the exercise a name.");
+        const values = { name, reps: field("#ex-reps").value.trim() || null };
+        if (!rounds) {
+          const setsText = field("#ex-sets").value.trim();
+          const sets = setsText === "" ? null : Number(setsText);
+          if (sets !== null && !(Number.isInteger(sets) && sets >= 1 && sets <= 50)) return fail("Sets: a whole number between 1 and 50.");
+          values.sets = sets;
+        }
+        const kgText = field("#ex-kg").value.replace(",", ".").trim();
+        const kg = kgText === "" ? null : Number(kgText);
+        if (kg !== null && !(Number.isFinite(kg) && kg >= 0 && kg <= 500)) return fail("Weight: a number between 0 and 500 (or empty).");
+        values.weight_kg = kg;
+        close(JSON.stringify(values));
+      };
+      field("#ex-go").addEventListener("click", go);
+      dialog.querySelectorAll("input").forEach((input) =>
+        input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); go(); } }));
+      if (!exercise) field("#ex-name").focus();
+    },
+  });
+  if (!value) return null;
+  if (value === "remove") return { remove: true };
+  return { values: JSON.parse(value) };
+}
+
+// Pop-up to change the number of rounds of a circuit. Resolves to a number or null.
+async function askRounds(current) {
+  const value = await openSheet({
+    title: "Rounds",
+    html: `
+      <label for="rounds-input" class="sheet-subtitle">How many rounds?</label>
+      <input id="rounds-input" type="number" inputmode="numeric" min="1" max="50" value="${current ?? ""}">
+      <p id="rounds-error" class="status error" hidden></p>
+      <button type="button" class="button primary" id="rounds-go">Save</button>`,
+    onReady: (dialog, close) => {
+      const input = dialog.querySelector("#rounds-input");
+      const go = () => {
+        const rounds = Number(input.value);
+        if (!(Number.isInteger(rounds) && rounds >= 1 && rounds <= 50)) {
+          const errorEl = dialog.querySelector("#rounds-error");
+          errorEl.textContent = "A whole number between 1 and 50.";
+          errorEl.hidden = false;
+          return;
+        }
+        close(String(rounds));
+      };
+      dialog.querySelector("#rounds-go").addEventListener("click", go);
       input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); go(); } });
       input.select();
     },
   });
-  if (!value || !value.startsWith("go:")) return undefined;
-  const text = value.slice(3);
-  if (text === "") return null;
-  const number = Number(text);
-  return Number.isFinite(number) && number >= 0 && number <= 500 ? number : undefined;
+  return value ? Number(value) : null;
 }
 
 
@@ -319,11 +496,11 @@ function unlockSound() {
   } catch { /* no sound on this device */ }
 }
 
-// Three short beeps (and a buzz on phones that support it).
-function beep() {
-  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch { /* ignore */ }
+// Three short beeps (and a buzz on phones that support it); beep(1) = one.
+function beep(count = 3) {
+  try { navigator.vibrate && navigator.vibrate(count === 1 ? 150 : [200, 100, 200]); } catch { /* ignore */ }
   if (!audio) return;
-  [0, 0.3, 0.6].forEach((delay) => {
+  [0, 0.3, 0.6].slice(0, count).forEach((delay) => {
     const oscillator = audio.createOscillator();
     const volume = audio.createGain();
     oscillator.frequency.value = 880;
