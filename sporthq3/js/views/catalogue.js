@@ -13,11 +13,11 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202610160904";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610160904";
-import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610160904";
-import { startOfWeek } from "../utils/dates.js?v=202610160904";
-import { isCustomSession } from "../utils/plan.js?v=202610160904";
+} from "../storage.js?v=202610160915";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610160915";
+import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610160915";
+import { startOfWeek } from "../utils/dates.js?v=202610160915";
+import { isCustomSession } from "../utils/plan.js?v=202610160915";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);

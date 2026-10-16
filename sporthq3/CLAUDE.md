@@ -104,6 +104,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-16: laptop planner: the 7 day frames are all the same size (the tallest day sets the
+  height for the whole week); month view: every week row the same height.
 - 2026-10-16: workout + planner feedback (14, from Rom's first days on the phone):
   14a timed sets: an exercise whose "Reps / time" is a time ("45s", "1:00", "1 min", "1min30", "2'30";
   bare "m" is NOT minutes: 20m = metres) gets a "▶ Start 45 s · set 2" button: 3 s "get ready", one

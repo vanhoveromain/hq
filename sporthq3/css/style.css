@@ -444,7 +444,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (min-width: 1000px) {
   .view:has(.days) { max-width: 1400px; }
   .view:has(.month) { max-width: 1100px; }
-  .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: start; }
+  /* every day the same width AND height (the tallest day sets the height) */
+  .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
   .day { min-height: 160px; padding: 8px; }
   .day-title { align-items: flex-start; gap: 4px; font-size: 0.85rem; }
   .day-add { width: 28px; height: 28px; font-size: 1.05rem; flex-shrink: 0; }
@@ -689,6 +690,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Laptop: the catalogue / templates links go below the calendar */
 @media (min-width: 1000px) {
   .planner-menu { order: 99; margin-top: 16px; }
+  .month-grid { grid-auto-rows: 1fr; } /* all weeks of the month the same height */
   .month-day { min-height: 92px; align-items: flex-start; padding: 6px 8px; }
   .month-icons { font-size: 1.2rem; text-align: left; }
 }
