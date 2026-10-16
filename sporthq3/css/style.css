@@ -81,7 +81,7 @@ p { margin: 0 0 12px; }
   background: var(--topbar-bg);
   color: var(--topbar-text);
 }
-.brand { font-weight: 800; color: var(--brand); letter-spacing: -0.02em; }
+.brand { font-weight: 800; color: var(--brand); letter-spacing: -0.02em; text-decoration: none; }
 .page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); }
 
 /* ---------- Main area ---------- */
@@ -636,6 +636,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .dash-card { border-top: 3px solid var(--accent-strong); }
 .dash-card h2 { margin: 0 0 8px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 .dash-card h2 a { color: inherit; text-decoration: none; }
+/* the whole card opens its screen (see dashboard.js) */
+.dash-card:has(h2 a) { cursor: pointer; }
 .dash-card h2 a::after { content: " →"; color: var(--accent); }
 .dash-big { font-size: 1.6rem; font-weight: 700; margin: 4px 0; line-height: 1.2; letter-spacing: -0.02em; }
 .dash-big .muted { font-size: 0.95rem; font-weight: 400; }

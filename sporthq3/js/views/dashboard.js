@@ -4,15 +4,15 @@
 import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
-} from "../storage.js?v=202610161542";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610161542";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610161542";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610161542";
-import { sessionName, calendarItems, daySummary } from "../utils/plan.js?v=202610161542";
-import { loadWorkout } from "../utils/workout.js?v=202610161542";
-import { weightTrend } from "../utils/body.js?v=202610161542";
-import { currentSeason } from "../utils/season.js?v=202610161542";
-import { blockWeek } from "./blocks.js?v=202610161542";
+} from "../storage.js?v=202610161549";
+import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610161549";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610161549";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610161549";
+import { sessionName, calendarItems, daySummary } from "../utils/plan.js?v=202610161549";
+import { loadWorkout } from "../utils/workout.js?v=202610161549";
+import { weightTrend } from "../utils/body.js?v=202610161549";
+import { currentSeason } from "../utils/season.js?v=202610161549";
+import { blockWeek } from "./blocks.js?v=202610161549";
 
 export function render(container) {
   container.innerHTML = `
@@ -35,6 +35,14 @@ export function render(container) {
   `;
   const $ = (id) => container.querySelector(id);
   const today = todayISO();
+
+  // A tap anywhere on a card = a tap on its title (opens that screen).
+  // Links and buttons inside the card (Start, Log, …) keep their own job.
+  container.querySelector(".dashboard").addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) return;
+    const titleLink = event.target.closest(".dash-card")?.querySelector("h2 a");
+    if (titleLink) window.location.hash = titleLink.getAttribute("href");
+  });
   // Each card is its own little task; a failing one shows its error only.
   const card = (el, task) => task().catch((error) => {
     el.hidden = false;

@@ -9,7 +9,7 @@
 // One colour (the accent), a thin grid, a few labels; tap / hover a bar to
 // read its exact value.
 
-import { escapeHtml } from "./format.js?v=202610161542";
+import { escapeHtml } from "./format.js?v=202610161549";
 
 const HEIGHT = 200;
 const PAD = { top: 14, right: 8, bottom: 24, left: 36 };
