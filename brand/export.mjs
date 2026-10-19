@@ -98,6 +98,8 @@ const SVGS = {
   "brand/sporthq/sporthq-favicon.svg": favicon32,
   "brand/sporthq/sporthq-favicon-16.svg": favicon16,
   "sporthq3/icons/icon.svg": favicon32,
+  // App header: the top bar is always charcoal, so light violet letters (same as the old text logo)
+  "sporthq3/icons/logo.svg": shqMark(C.violetLight, "rgba(167,139,250,0.25)", C.violetLight),
 };
 
 // [output path, svg source, size in px]

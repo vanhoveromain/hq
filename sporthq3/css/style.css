@@ -22,7 +22,6 @@
   --accent-text: #ffffff;
   --topbar-bg: #1c1917;         /* charcoal top bar */
   --topbar-text: #ffffff;
-  --brand: #a78bfa;
   --ok: #15803d;
   --done-line: #16a34a;
   --error: #b91c1c;
@@ -95,7 +94,8 @@ p { margin: 0 0 12px; }
   background: var(--topbar-bg);
   color: var(--topbar-text);
 }
-.brand { font-weight: 800; color: var(--brand); letter-spacing: -0.02em; text-decoration: none; }
+.brand { display: flex; align-self: center; text-decoration: none; }
+.brand img { display: block; height: 30px; width: auto; }  /* logo is 188 x 104 */
 .page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); }
 
 /* ---------- Main area ---------- */
