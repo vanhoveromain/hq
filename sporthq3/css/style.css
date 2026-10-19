@@ -26,6 +26,14 @@
   --ok: #15803d;
   --done-line: #16a34a;
   --error: #b91c1c;
+  /* One colour per sport (planner cards, month, Home strip). Never green /
+     amber / red (done / warning / error) and not the violet accent. */
+  --sport-running: #2563eb;   /* blue */
+  --sport-football: #0891b2;  /* cyan */
+  --sport-muscle: #db2777;    /* pink */
+  --sport-biking: #ea580c;    /* orange */
+  --sport-swimming: #4f46e5;  /* indigo */
+  --sport-stairs: #8b5e3c;    /* brown */
   --radius: 14px;
   --tabbar-height: 64px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -49,6 +57,12 @@
     --ok: #4ade80;
     --done-line: #4ade80;
     --error: #f87171;
+    --sport-running: #60a5fa;
+    --sport-football: #22d3ee;
+    --sport-muscle: #f472b6;
+    --sport-biking: #fb923c;
+    --sport-swimming: #818cf8;
+    --sport-stairs: #c08a5e;
   }
 }
 
@@ -441,6 +455,23 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .plan-card.status-cancelled .activity-title { text-decoration: line-through; }
 .plan-card.extra { border: 1px dashed var(--border); border-left: 4px dashed var(--muted); opacity: 0.8; }
 .plan-status { font-size: 1.1rem; }
+
+/* Sport badge: the sport icon on a soft circle in the sport's colour
+   (utils/plan.js sportBadge). The card's left line keeps showing the status. */
+.sport-badge {
+  --sport: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 2.2rem; height: 2.2rem; border-radius: 50%; font-size: 1.2rem; line-height: 1;
+  background: color-mix(in srgb, var(--sport) 20%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sport) 45%, transparent);
+}
+.sport-badge.small { width: 1.6rem; height: 1.6rem; font-size: 0.85rem; }
+.sport-running  { --sport: var(--sport-running); }
+.sport-football { --sport: var(--sport-football); }
+.sport-muscle   { --sport: var(--sport-muscle); }
+.sport-biking   { --sport: var(--sport-biking); }
+.sport-swimming { --sport: var(--sport-swimming); }
+.sport-stairs   { --sport: var(--sport-stairs); }
 .week-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .week-actions .button { width: 100%; }
 @media (min-width: 700px) {
@@ -457,7 +488,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .day-title { align-items: flex-start; gap: 4px; font-size: 0.85rem; }
   .day-add { width: 28px; height: 28px; font-size: 1.05rem; flex-shrink: 0; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
-  .plan-card .activity-icon { font-size: 1.1rem; }
+  .plan-card .sport-badge { width: 1.8rem; height: 1.8rem; font-size: 1rem; }
 }
 
 /* ---------- Bottom sheet (pop-up panel) ---------- */
@@ -654,6 +685,17 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .strip-day { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; border-radius: 8px; }
 .strip-day.is-today { outline: 2px solid var(--accent); }
 .dash-warnings { border-top-color: #d97706; }
+/* Home "Training load": hours per week as columns (not ".bar": that's the shoe bar) */
+.load-chart { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px;
+  align-items: end; height: 84px; margin-top: 4px; }
+.load-week { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
+.load-value { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
+.load-track { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.load-column { width: 100%; max-width: 28px; min-height: 2px; border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--accent-strong) 35%, transparent); }
+.load-week.is-current .load-column { background: var(--accent-strong); }
+.load-week.is-current .load-value { color: var(--text); font-weight: 600; }
+.load-caption { margin: 4px 0 0; }
 .sparkline { display: block; width: 100%; height: 40px; margin-top: 8px; }
 .sparkline path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 @media (min-width: 900px) {
@@ -675,7 +717,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .weigh-form .button { width: auto; flex: 0 0 auto; }
 @media (min-width: 700px) { .weigh-form { max-width: 460px; } }
 .strip-day.is-done { background: color-mix(in srgb, var(--done-line) 16%, transparent); }
-.strip-icons { font-size: 1rem; line-height: 1.2; word-break: break-all; min-height: 1.2em; }
+.strip-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px;
+  font-size: 1rem; line-height: 1.2; min-height: 1.6rem; }
 
 /* Planner: Week | Month switch */
 .planner { display: flex; flex-direction: column; }
@@ -694,14 +737,15 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .month-day.is-today { outline: 2px solid var(--accent-strong); }
 .month-day.is-done { background: color-mix(in srgb, var(--done-line) 16%, var(--surface)); }
 .month-date { font-size: 0.8rem; font-weight: 600; }
-.month-icons { font-size: 0.95rem; line-height: 1.15; text-align: center; word-break: break-all; }
+.month-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
 
 /* Laptop: the catalogue / templates links go below the calendar */
 @media (min-width: 1000px) {
   .planner-menu { order: 99; margin-top: 16px; }
   .month-grid { grid-auto-rows: 1fr; } /* all weeks of the month the same height */
   .month-day { min-height: 92px; align-items: flex-start; padding: 6px 8px; }
-  .month-icons { font-size: 1.2rem; text-align: left; }
+  .month-icons { justify-content: flex-start; }
+  .month-icons .sport-badge.small { width: 1.9rem; height: 1.9rem; font-size: 1.05rem; }
 }
 
 /* ---------- Laptop: wider list screens ---------- */

@@ -15,7 +15,7 @@ import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWee
 import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610161549";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
-  isCustomSession, addToCatalogue,
+  isCustomSession, isPlainSession, addToCatalogue, sportBadge,
 } from "../utils/plan.js?v=202610161549";
 import { openSheet } from "../utils/sheet.js?v=202610161549";
 import { showToast } from "../utils/toast.js?v=202610161549";
@@ -392,6 +392,7 @@ async function drawWeek(container, monday) {
           <button type="button" class="button" data-value="swap">⇄ Swap this day with another day</button>` : ""}
           ${session.template_id ? `<button type="button" class="button" data-value="recipe">📚 Edit the recipe</button>` : ""}
           ${isCustomSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">✏️ Edit this session</button>` : ""}
+          ${isPlainSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">✏️ Add details (name, exercises…)</button>` : ""}
           ${isCustomSession(session) ? `<button type="button" class="button" data-value="to-catalogue">📚 Add to my catalogue</button>` : ""}
           ${session.race_id ? `<button type="button" class="button" data-value="race">🏁 Open the race</button>` : ""}
           <button type="button" class="button danger" data-value="delete">🗑 Remove from plan</button>
@@ -543,7 +544,7 @@ function sessionCardHtml(session) {
   }
   return `
     <button type="button" class="plan-card status-${session.status}" data-session="${session.id}">
-      <span class="activity-icon" aria-hidden="true">${sportIcon(session.sport)}</span>
+      ${sportBadge(session.sport, sportIcon)}
       <span class="activity-main">
         <span class="activity-title">${escapeHtml(sessionName(session))}</span>
         ${bits.length ? `<span class="muted small">${escapeHtml(bits.join(" · "))}</span>` : ""}
@@ -555,7 +556,7 @@ function sessionCardHtml(session) {
 function extraCardHtml(a) {
   return `
     <button type="button" class="plan-card extra" data-activity="${a.id}">
-      <span class="activity-icon" aria-hidden="true">${sportIcon(a.sport)}</span>
+      ${sportBadge(a.sport, sportIcon)}
       <span class="activity-main">
         <span class="activity-title">${escapeHtml(a.title || sessionTypeLabel(a.sport, a.session_type))}</span>
         <span class="muted small">Not planned · ${escapeHtml([formatDuration(a.duration_s), a.distance_km != null ? formatKm(a.distance_km) : ""].filter(Boolean).join(" · "))}</span>
@@ -634,7 +635,7 @@ async function drawMonth(container, month) {
     const days = [];
     for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) days.push(day);
     grid.innerHTML = days.map((day) => {
-      const { icons, done } = daySummary(day, sessions, activities, sportIcon);
+      const { icons, done } = daySummary(day, sessions, activities, (sport) => sportBadge(sport, sportIcon, "small"));
       const classes = ["month-day", day.slice(0, 7) !== month ? "is-other" : "", day === today ? "is-today" : "",
         done ? "is-done" : ""].join(" ");
       return `<a class="${classes}" href="#/planner/${day}" aria-label="${escapeHtml(formatDayLabel(day))}: ${icons.length ? icons.length + " session(s)" : "rest"}">

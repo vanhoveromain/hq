@@ -4,6 +4,7 @@
 
 import { updatePlannedSession, saveSessionTemplate } from "../storage.js?v=202610161549";
 import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610161549";
+import { escapeHtml } from "./format.js?v=202610161549";
 
 // The name shown on a session card.
 //   own title > recipe name > session type > sport ("Running")
@@ -24,6 +25,20 @@ export function sessionDetails(session) {
 
 export function isCustomSession(session) {
   return Boolean(!session.template_id && session.details && session.details.custom);
+}
+
+// "Just a sport": planned without a recipe and without details of its own
+// (e.g. "Running" added with the quick sport buttons). A done one may carry
+// a photo, so only call this on planned sessions.
+export function isPlainSession(session) {
+  return !session.template_id && !isCustomSession(session);
+}
+
+// A sport icon in a small round badge tinted with the sport's colour
+// (colours live in style.css: --sport-running, …). `size` "small" for the
+// compact views (Home strip, month calendar).
+export function sportBadge(sportKey, iconOf, size = "") {
+  return `<span class="sport-badge ${size} sport-${escapeHtml(sportKey)}" aria-hidden="true">${iconOf(sportKey)}</span>`;
 }
 
 // A custom session's details without the "how many sets were ticked" counts
