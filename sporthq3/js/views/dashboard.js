@@ -4,15 +4,16 @@
 import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
-} from "../storage.js?v=202610161549";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610161549";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610161549";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610161549";
-import { sessionName, calendarItems, daySummary } from "../utils/plan.js?v=202610161549";
-import { loadWorkout } from "../utils/workout.js?v=202610161549";
-import { weightTrend } from "../utils/body.js?v=202610161549";
-import { currentSeason } from "../utils/season.js?v=202610161549";
-import { blockWeek } from "./blocks.js?v=202610161549";
+} from "../storage.js?v=202610192038";
+import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610192038";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610192038";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610192038";
+import { overview } from "../utils/stats.js?v=202610192038";
+import { sessionName, calendarItems, daySummary, sportBadge } from "../utils/plan.js?v=202610192038";
+import { loadWorkout } from "../utils/workout.js?v=202610192038";
+import { weightTrend } from "../utils/body.js?v=202610192038";
+import { currentSeason } from "../utils/season.js?v=202610192038";
+import { blockWeek } from "./blocks.js?v=202610192038";
 
 export function render(container) {
   container.innerHTML = `
@@ -22,6 +23,7 @@ export function render(container) {
       <div class="dash-main">
         <section class="card dash-card" id="dash-today"><p class="muted">Loading…</p></section>
         <section class="card dash-card" id="dash-week"><p class="muted">Loading…</p></section>
+        <section class="card dash-card" id="dash-load"><p class="muted">Loading…</p></section>
         <section class="card dash-card dash-warnings" id="dash-warnings" hidden></section>
       </div>
       <div class="dash-side">
@@ -50,6 +52,7 @@ export function render(container) {
     el.querySelector(".status").textContent = "Could not load: " + error.message;
   });
   card($("#dash-today"), () => drawWeek($("#dash-today"), $("#dash-week"), $("#dash-warnings"), today));
+  card($("#dash-load"), () => drawLoad($("#dash-load"), today));
   card($("#dash-race"), () => drawRace($("#dash-race"), today));
   card($("#dash-block"), () => drawBlock($("#dash-block"), today));
   card($("#dash-weight"), () => drawWeight($("#dash-weight")));
@@ -97,7 +100,7 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
   // The 7 days: the sport icons planned (or logged) that day, nothing else;
   // a done day gets a light green background.
   const strip = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => {
-    const { icons, done } = daySummary(day, sessions, activities, sportIcon);
+    const { icons, done } = daySummary(day, sessions, activities, (sport) => sportBadge(sport, sportIcon, "small"));
     const name = new Date(day + "T12:00:00").toLocaleDateString("en-GB", { weekday: "narrow" });
     const label = icons.length ? (done ? "done" : "planned") : "rest";
     return `<span class="strip-day ${day === today ? "is-today" : ""} ${done ? "is-done" : ""}" title="${label}">
@@ -119,6 +122,70 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
       <h2><a href="#/planner">⚠️ ${warnings.length} warning${warnings.length === 1 ? "" : "s"}</a></h2>
       <ul class="dash-list">${warnings.map((w) => `<li class="small">${escapeHtml(w.message)}</li>`).join("")}</ul>`;
   }
+}
+
+
+// ---------- Training load: hours per week ----------
+
+const LOAD_WEEKS = 8;     // weeks in the little chart (this week included)
+const AVERAGE_WEEKS = 4;  // "average" = the 4 full weeks before this one
+
+async function drawLoad(el, today) {
+  const monday = startOfWeek(today);
+  const firstMonday = addDays(monday, -7 * (LOAD_WEEKS - 1));
+  const activities = await listActivitiesBetween(firstMonday, addDays(monday, 6));
+
+  // The weeks, oldest first: [{ monday, activities }]
+  const weeks = Array.from({ length: LOAD_WEEKS }, (_, i) => {
+    const start = addDays(firstMonday, 7 * i);
+    const end = addDays(start, 6);
+    return { monday: start, activities: activities.filter((a) => a.activity_date >= start && a.activity_date <= end) };
+  });
+  const thisWeek = overview(weeks[weeks.length - 1].activities);
+  const secondsOf = (week) => overview(week.activities).seconds;
+  const previous = weeks.slice(-1 - AVERAGE_WEEKS, -1);
+  const average = previous.reduce((total, week) => total + secondsOf(week), 0) / previous.length;
+  const runKm = weeks[weeks.length - 1].activities.filter((a) => a.sport === "running")
+    .reduce((total, a) => total + Number(a.distance_km || 0), 0);
+  const noTime = weeks[weeks.length - 1].activities.filter((a) => a.duration_s == null).length;
+
+  el.innerHTML = `
+    <h2><a href="#/log/stats">⏱️ Training load</a></h2>
+    <p class="dash-big">${formatHours(thisWeek.seconds)} <span class="muted">this week · avg ${formatHours(average)}</span></p>
+    <div class="stat-grid">
+      <div><strong>${thisWeek.sessions}</strong><span class="muted small">sessions</span></div>
+      <div><strong>${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })}</strong><span class="muted small">km run</span></div>
+      <div><strong>${Math.round(thisWeek.elevation)}</strong><span class="muted small">m D+</span></div>
+      <div><strong>${thisWeek.avgRpe ? thisWeek.avgRpe.toFixed(1) : "–"}</strong><span class="muted small">avg RPE</span></div>
+    </div>
+    ${loadChartHtml(weeks.map((week) => ({ monday: week.monday, seconds: secondsOf(week) })), monday)}
+    ${noTime ? `<p class="hint">${noTime} session${noTime === 1 ? "" : "s"} this week without a duration (not in the hours).</p>` : ""}
+  `;
+}
+
+// 16200 -> "4h30", 2700 -> "45 min", 0 -> "0h"
+function formatHours(seconds) {
+  const minutes = Math.round(seconds / 60);
+  if (minutes === 0) return "0h";
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}`;
+}
+
+// Hours per week as simple columns (plain HTML boxes, no chart library).
+// The tallest week fills the box; this week is in the accent colour.
+function loadChartHtml(weeks, thisMonday) {
+  const highest = Math.max(...weeks.map((w) => w.seconds), 1);
+  return `<div class="load-chart" role="img" aria-label="Hours per week, last ${weeks.length} weeks">
+    ${weeks.map((w) => {
+      const percent = Math.round((w.seconds / highest) * 100);
+      const label = new Date(w.monday + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      return `<div class="load-week ${w.monday === thisMonday ? "is-current" : ""}" title="Week of ${label}: ${formatHours(w.seconds)}">
+        <span class="load-value">${w.seconds ? formatHours(w.seconds) : ""}</span>
+        <span class="load-track"><span class="load-column" style="height: ${percent}%"></span></span>
+      </div>`;
+    }).join("")}
+  </div>
+  <p class="muted small load-caption">Last ${weeks.length} weeks</p>`;
 }
 
 

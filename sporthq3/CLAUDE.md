@@ -56,6 +56,8 @@
     (final Notion re-import, big clean, merge to live, phone check)
 14. Phone feedback round 1 (2026-10-16): 14a timer for timed sets, 14b change the session during a
     workout (+ update the recipe), 14c custom sessions (+ add to catalogue)
+15. Phone feedback round 2 (2026-10-19): 15a Home training load (hours per week), 15b sport colours on
+    the planner, 15c add details to a "just a sport" session
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -104,6 +106,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-19: phone feedback round 2 (15): (a) Home "Training load" card (after This week, opens Stats):
+  hours this week vs average of the 4 weeks before, sessions, km run, D+, avg RPE, columns of hours per
+  week for the last 8 weeks (this week in violet). Hours = logged activities' durations (a match = minutes
+  played); sessions without a duration are left out and counted in a hint. (b) One colour per sport
+  (--sport-running … tokens in style.css, never green/amber/red/violet): Rom chose "A, subtle" = the icon
+  sits on a soft circle in the sport colour (utils/plan.js sportBadge), the card's left line still shows
+  the status; same badges in the month view and on Home's week strip. (c) A planned "just a sport"
+  session (no recipe, no details: isPlainSession) gets "✏️ Add details" -> #/custom/<id> pre-filled
+  (name = the session's name); saving makes it a custom session (title cleared so the typed name shows).
 - 2026-10-16: the SportHQ3 logo (top left) is a link to Home, on phone and laptop. Home: a tap anywhere
   on a card opens that card's screen (same as its title); links and buttons inside a card keep their job.
 - 2026-10-16: phone fixes: date boxes no longer stick out of the card on iPhone (Safari ignores

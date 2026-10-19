@@ -13,11 +13,11 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202610161549";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610161549";
-import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610161549";
-import { startOfWeek } from "../utils/dates.js?v=202610161549";
-import { isCustomSession } from "../utils/plan.js?v=202610161549";
+} from "../storage.js?v=202610192038";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610192038";
+import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610192038";
+import { startOfWeek } from "../utils/dates.js?v=202610192038";
+import { isCustomSession, isPlainSession, sessionName } from "../utils/plan.js?v=202610192038";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -146,7 +146,10 @@ async function renderCustomEditor(container, { date, plannedId }) {
       container.querySelector(".status").textContent = "Could not load: " + error.message;
       return;
     }
-    if (!planned || !isCustomSession(planned) || planned.status !== "planned") {
+    // Editable: a custom session, or a "just a sport" one (no recipe, no
+    // details yet: saving gives it its own details = it becomes custom).
+    const editable = planned && (isCustomSession(planned) || isPlainSession(planned));
+    if (!editable || planned.status !== "planned") {
       container.innerHTML = `<section class="card"><p>This custom session can't be edited (any more).</p>
         <a class="button" href="#/planner">Back to the plan</a></section>`;
       return;
@@ -154,12 +157,13 @@ async function renderCustomEditor(container, { date, plannedId }) {
     date = planned.session_date;
   }
   const backToPlan = `#/planner/${startOfWeek(date)}`;
-  const t = planned
-    ? { ...planned.details, sport: planned.sport, session_type: planned.session_type }
-    : { sport: "muscle", exercises: [] };
+  const addingDetails = Boolean(planned && isPlainSession(planned));
+  let t = { sport: "muscle", exercises: [] };
+  if (addingDetails) t = { name: sessionName(planned), sport: planned.sport, session_type: planned.session_type, exercises: [] };
+  else if (planned) t = { ...planned.details, sport: planned.sport, session_type: planned.session_type };
 
   drawEditor(container, t, {
-    title: planned ? "Edit custom session" : "Custom session",
+    title: addingDetails ? "Add details" : planned ? "Edit custom session" : "Custom session",
     intro: "Just for this day. It isn't added to your catalogue unless you tick the box below.",
     saveLabel: planned ? "Save changes" : "Add to the plan",
     cancelHref: backToPlan,
@@ -167,7 +171,9 @@ async function renderCustomEditor(container, { date, plannedId }) {
     onSave: async (recipe, { addToCatalogue }) => {
       // archived is a catalogue thing; the rest is the session's content.
       const { archived, ...content } = recipe;
-      const values = { sport: recipe.sport, session_type: recipe.session_type };
+      // title: null so the name typed here is the one shown (a session's
+      // own title would win over it, see sessionName).
+      const values = { sport: recipe.sport, session_type: recipe.session_type, title: null };
       if (addToCatalogue) {
         const saved = await saveSessionTemplate({ ...content, archived: false });
         Object.assign(values, { template_id: saved.id, details: null });

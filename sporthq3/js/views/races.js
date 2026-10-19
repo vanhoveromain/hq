@@ -6,12 +6,12 @@
 import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610161549";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610161549";
-import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610161549";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610161549";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610161549";
-import { showToast } from "../utils/toast.js?v=202610161549";
+} from "../storage.js?v=202610192038";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610192038";
+import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610192038";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610192038";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610192038";
+import { showToast } from "../utils/toast.js?v=202610192038";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
