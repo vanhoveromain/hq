@@ -687,7 +687,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .dash-warnings { border-top-color: #d97706; }
 /* Home "Training load": hours per week as columns (not ".bar": that's the shoe bar) */
 .load-chart { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px;
-  align-items: end; height: 84px; margin-top: 4px; }
+  align-items: end; height: 100px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 .load-week { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
 .load-value { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
 .load-track { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
