@@ -18,3 +18,7 @@ Open `webinar-landing/index.html` in a browser, or serve the folder with any sta
 
 `sporthq3/` — training planner, activity log, races, shoes, body & goals. Vanilla HTML/CSS/JS + Supabase.
 See `sporthq3/CLAUDE.md` for the brief, rules and decisions. Database schema lives in `sporthq3/supabase/migrations/`.
+
+## Brand
+
+`brand/` — hq (umbrella) and sporthq logos, app icons and favicons. See `brand/README.md`.
