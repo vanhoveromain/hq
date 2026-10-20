@@ -58,7 +58,8 @@
     workout (+ update the recipe), 14c custom sessions (+ add to catalogue)
 15. Phone feedback round 2 (2026-10-19): 15a Home training load (hours per week), 15b sport colours on
     the planner, 15c add details to a "just a sport" session
-16. Strava sync (AFTER switch day 13d): a Strava activity is logged in SportHQ3 automatically.
+v2 (not v1, starts after switch day 13d):
+- Strava sync: a Strava activity is logged in SportHQ3 automatically.
     Supabase Edge Function (webhook + OAuth, holds the Strava secret), additive migrations
     (`strava_id` on activities, `strava_tokens` table only the server can read), "Connect Strava" in
     Settings, Strava sport type -> sport, Strava gear -> shoe. Can be built switched off before 13d.
@@ -113,7 +114,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
-- 2026-10-20: Strava sync becomes milestone 16, after switch day 13d. While Notion is the source of
+- 2026-10-20: Strava sync is a v2 feature (still out of scope for v1), after switch day 13d. While Notion is the source of
   truth, synced runs would be duplicated by the next Notion re-import and wiped by the big clean.
   Automatic = Strava webhook -> Supabase Edge Function (the Strava client secret can't live in browser
   code). Strava won't fill session type, match card and maybe not RPE: completed in the app afterwards.
