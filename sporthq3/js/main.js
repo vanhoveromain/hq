@@ -19,6 +19,7 @@ import * as catalogueView from "./views/catalogue.js?v=202610201000";
 import * as weekTemplatesView from "./views/weekTemplates.js?v=202610201000";
 import * as workoutView from "./views/workout.js?v=202610201000";
 import * as customSessionView from "./views/customSession.js?v=202610201000";
+import * as reviewView from "./views/review.js?v=202610201000";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
@@ -36,6 +37,7 @@ const routes = {
   weektemplates: { title: "Week templates", view: weekTemplatesView, tab: "planner" },
   workout:   { title: "Workout", view: workoutView, tab: "planner" },
   custom:    { title: "Custom session", view: customSessionView, tab: "planner" },
+  review:    { title: "Week review", view: reviewView, tab: "planner" },
 };
 const DEFAULT_ROUTE = "dashboard";
 

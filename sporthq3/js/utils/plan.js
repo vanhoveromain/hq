@@ -113,18 +113,32 @@ export function reopenSession(session) {
 //   - planned sessions that aren't cancelled (a done one counts as what was
 //     logged, if it's linked to an activity)
 //   - logged activities that aren't linked to a session ("extras")
-// Returns [{ date, sport, session_type }].
-export function calendarItems(sessions, activities) {
+//   - races from the Races tab (registered / to register) that aren't in the
+//     planner yet as a race-routine session, so a match on race day still warns
+// Returns [{ date, sport, session_type, title? }].
+export function calendarItems(sessions, activities, races = []) {
   const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
   const fromPlan = sessions
     .filter((s) => s.status !== "cancelled")
     .map((s) => (s.activity
       ? { date: s.session_date, sport: s.activity.sport, session_type: s.activity.session_type }
-      : { date: s.session_date, sport: s.sport, session_type: s.session_type }));
+      // a race-routine session keeps its title, so warnings name the race
+      : { date: s.session_date, sport: s.sport, session_type: s.session_type, title: s.race_id ? s.title : null }));
   const extras = activities
     .filter((a) => !linkedIds.has(a.id))
     .map((a) => ({ date: a.activity_date, sport: a.sport, session_type: a.session_type }));
-  return [...fromPlan, ...extras];
+  return [...fromPlan, ...extras, ...raceItems(races, sessions)];
+}
+
+// Races not yet on the planner (no race-routine race-day session for them).
+export function racesNotPlanned(races, sessions) {
+  const planned = new Set(sessions.filter((s) => s.race_id && s.session_type === "race").map((s) => s.race_id));
+  return races.filter((race) => race.race_date && !planned.has(race.id));
+}
+
+function raceItems(races, sessions) {
+  return racesNotPlanned(races, sessions)
+    .map((race) => ({ date: race.race_date, sport: "running", session_type: "race", title: race.name }));
 }
 
 // One day in a compact view (Home strip, month calendar): which sport icons

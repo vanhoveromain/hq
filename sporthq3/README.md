@@ -38,8 +38,8 @@ The app must be opened through a small local web server (not by double-clicking
 | `js/storage.js` | The only file that talks to Supabase |
 | `js/main.js` | Starts the app, login check, switches screens (hash router) |
 | `js/rules.js` | The rulebook: sports, session types, categories (later: training rules) |
-| `js/utils/*.js` | Helpers: dates, formatting, planned-session helpers (`plan.js`), workout in progress (`workout.js`), race routine (`raceRoutine.js`), body maths (`body.js`), weight chart (`weightChart.js`), football season (`season.js`), drag and drop (`dragDrop.js`), stats maths (`stats.js`), bar chart (`barChart.js`), pop-up sheet, toast |
-| `js/views/*.js` | One file per screen (`shoes.js`, `blocks.js`, `body.js` and `settings.js` open from Me, `catalogue.js`, `weekTemplates.js` and `workout.js` from Plan; `races.js` = Races tab) |
+| `js/utils/*.js` | Helpers: dates, formatting, planned-session helpers (`plan.js`), workout in progress (`workout.js`), race routine (`raceRoutine.js`), body maths (`body.js`), weight chart (`weightChart.js`), football season (`season.js`), drag and drop (`dragDrop.js`), stats maths (`stats.js`), bar chart (`barChart.js`), training-load check (`load.js`), pop-up sheet, toast |
+| `js/views/*.js` | One file per screen (`shoes.js`, `blocks.js`, `body.js` and `settings.js` open from Me, `catalogue.js`, `weekTemplates.js`, `workout.js` and `review.js` (week review) from Plan; `races.js` = Races tab) |
 | `serve.py` | Local test server (no saved copies) |
 | `tools/bump-version.mjs` | Stamps a new `?v=` version on every file address before each release |
 | `manifest.webmanifest`, `icons/` | Name and icon for "Add to Home Screen" |

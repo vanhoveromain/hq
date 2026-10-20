@@ -60,7 +60,7 @@
     the planner, 15c add details to a "just a sport" session
 16. Test round (2026-10-20, Claude tested as a user on a fake database): 16a data fixes, 16b small fixes,
     16c races on the planner, 16d missed-session nudge, 16e smarter warnings, 16f load / taper check,
-    16g Sunday weekly review
+    16g Sunday weekly review (all built 2026-10-20; 16e + 16g need migration 20261020000001)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -69,6 +69,9 @@ Rules are data + small pure functions so future users can define their own.
 - Leg explosivity OR intervals, never both on the same day (any day; was "Monday" until 2026-10-14).
 - Race routine (RACE_ROUTINE): race day + light activation jog 2 days before; full rest the day before
   (rule rest_before_race warns if anything is planned then). A planned match wins over the jog.
+- Nothing else on race day (race_day_clash); races from the Races tab count even before their routine is planned.
+- Load (LOAD_RULES): warn on a week > 1.3 × your usual (4-week average); race week: ~70% of usual sessions max.
+- Habit rules can be muted per pattern ("this is my normal pattern"); race rules can't.
 - Shoes: warn from 700 km, suggest replacing at 800 km (configurable in SHOE_RULES).
 - No automatic default week (decided 2026-10-13): Rom plans each week himself (catalogue, quick-add,
   copy last week, later templates). The Thu/Fri A/B swap was dropped.
@@ -109,6 +112,28 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-20: 16c–16g (Claude's calls after the test round; Rom tests them together). MIGRATION
+  20261020000001_reviews_and_muted_warnings.sql (additive: planned_weeks.review_notes + reviewed_at,
+  settings.muted_warnings jsonb) must be pasted in the SQL Editor before 16e / 16g work; without it the
+  rest of the app works (muted list reads as empty, saving a review / mute shows the error).
+  (c) Races (registered / to register, listRacesBetween) show on their planner day as a dashed 🏁 card
+  (link to the race) and 🏁 in the month, until the race routine puts a race-day session there. They
+  count for the rules (calendarItems(sessions, activities, races)); new rule race_day_clash = anything
+  else planned on race day. (d) Home "📋 Did you do it?" = sessions still "planned" in the last 7 days
+  (max 5 shown): ✅ (done, no log) / ✍️ Log / Skipped (= cancelled). Planner: a past open session gets a
+  dashed amber line + "Missed?". (e) Home shows only warnings about today or later. Warnings of rules
+  with canMute (heavy legs back to back, explosivity + intervals; not race rules) are buttons in the
+  planner: "🔕 This is my normal pattern" stores the warning TEXT in settings.muted_warnings (the text
+  has weekdays + session types, no dates, so it mutes the same pattern every week); muted = greyed in
+  the planner, not counted, not popped up, not on Home; Settings lists them with "Warn me again".
+  (f) LOAD_RULES + checkLoad in rules.js, utils/load.js: "usual week" = average sessions / hours of
+  the 4 weeks before (for a future week: before this week). Big jump = sessions (or hours already
+  logged) > 1.3 × usual. Race week (a race in the week): sessions before race day > 70% of usual ->
+  "about N or fewer". Shown on Home's Training load card and as a 📈 banner in the planner week.
+  (g) Week review #/review/<monday> (views/review.js): plan vs done (skipped, never ticked), logged
+  numbers, football, weight vs the week before, note "How did it go?" saved on planned_weeks. Home
+  nudge on Sunday (this week) and Monday / Tuesday (last week) until reviewed; planner link
+  "📝 Week review" for this and past weeks; a block page lists its week notes (for the recap).
 - 2026-10-20: small fixes (16b): formatDayLabel adds the year when it isn't this year ("Sat 1 Nov
   2025"); durations also accept ' and " (44'30); decimal boxes (log distance, catalogue kg and target
   km) are text boxes read by parseDecimal ("11,2" = 11.2; type="number" can refuse the iPhone comma);

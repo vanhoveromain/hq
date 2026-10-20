@@ -4,12 +4,15 @@
 import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
+  listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
 } from "../storage.js?v=202610201000";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610201000";
+import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus, LOAD_RULES } from "../rules.js?v=202610201000";
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201000";
 import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610201000";
 import { overview } from "../utils/stats.js?v=202610201000";
-import { sessionName, calendarItems, daySummary, sportBadge } from "../utils/plan.js?v=202610201000";
+import { sessionName, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610201000";
+import { weekLoadNotes } from "../utils/load.js?v=202610201000";
+import { showToast } from "../utils/toast.js?v=202610201000";
 import { loadWorkout } from "../utils/workout.js?v=202610201000";
 import { weightTrend } from "../utils/body.js?v=202610201000";
 import { currentSeason } from "../utils/season.js?v=202610201000";
@@ -21,6 +24,8 @@ export function render(container) {
       <!-- Laptop: "now" on the left (wide), the overview on the right (narrow).
            Phone: one column, left part first. -->
       <div class="dash-main">
+        <section class="card dash-card dash-missed" id="dash-missed" hidden></section>
+        <section class="card dash-card dash-review" id="dash-review" hidden></section>
         <section class="card dash-card" id="dash-today"><p class="muted">Loading…</p></section>
         <section class="card dash-card" id="dash-week"><p class="muted">Loading…</p></section>
         <section class="card dash-card" id="dash-load"><p class="muted">Loading…</p></section>
@@ -51,6 +56,8 @@ export function render(container) {
     el.innerHTML = `<p class="status error"></p>`;
     el.querySelector(".status").textContent = "Could not load: " + error.message;
   });
+  card($("#dash-missed"), () => drawMissed($("#dash-missed"), today));
+  card($("#dash-review"), () => drawReviewNudge($("#dash-review"), today));
   card($("#dash-today"), () => drawWeek($("#dash-today"), $("#dash-week"), $("#dash-warnings"), today));
   card($("#dash-load"), () => drawLoad($("#dash-load"), today));
   card($("#dash-race"), () => drawRace($("#dash-race"), today));
@@ -67,9 +74,11 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
   const monday = startOfWeek(today);
   const sunday = addDays(monday, 6);
   // One extra day on each side, for the rules (Sunday -> next Monday).
-  const [allSessions, allActivities] = await Promise.all([
+  const [allSessions, allActivities, races, muted] = await Promise.all([
     listPlannedSessions(addDays(monday, -1), addDays(sunday, 1)),
     listActivitiesBetween(addDays(monday, -1), addDays(sunday, 1)),
+    listRacesBetween(addDays(monday, -1), addDays(sunday, 1)),
+    getMutedWarnings().catch(() => []),
   ]);
   const inWeek = (date) => date >= monday && date <= sunday;
   const sessions = allSessions.filter((s) => inWeek(s.session_date));
@@ -114,8 +123,10 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
     <p class="muted small">🏃 ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km run this week</p>
   `;
 
-  // Warnings of this week
-  const warnings = checkTrainingRules(calendarItems(allSessions, allActivities)).filter((w) => w.days.some(inWeek));
+  // Warnings of this week that still matter: not muted ("my normal pattern"),
+  // and not only about days already gone (those are history now).
+  const warnings = checkTrainingRules(calendarItems(allSessions, allActivities, races), muted)
+    .filter((w) => w.days.some(inWeek) && !w.muted && w.days.some((day) => day >= today));
   if (warnings.length) {
     warningsEl.hidden = false;
     warningsEl.innerHTML = `
@@ -125,15 +136,80 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
 }
 
 
+// ---------- Still open: sessions of the last days never ticked (16d) ----------
+
+const MISSED_DAYS = 7; // look back this many days (yesterday included)
+const MISSED_SHOWN = 5; // more than that: "+ n more in the plan"
+
+async function drawMissed(el, today) {
+  const sessions = (await listPlannedSessions(addDays(today, -MISSED_DAYS), addDays(today, -1)))
+    .filter((s) => s.status === "planned");
+  el.hidden = !sessions.length;
+  if (!sessions.length) return;
+  el.innerHTML = `
+    <h2><a href="#/planner/${startOfWeek(sessions[0].session_date)}">📋 Did you do it?</a></h2>
+    <ul class="dash-list">${sessions.slice(0, MISSED_SHOWN).map((s) => `
+      <li data-id="${s.id}">
+        <span>${sportIcon(s.sport)} ${escapeHtml(sessionName(s))}
+          <span class="muted small">${escapeHtml(formatDayLabel(s.session_date))}</span></span>
+        <span class="dash-actions">
+          <button type="button" class="button small-button" data-missed="done" aria-label="Done">✅</button>
+          <a class="button small-button" href="#/log/new/${s.id}">✍️ Log</a>
+          <button type="button" class="button small-button" data-missed="skip">Skipped</button>
+        </span>
+      </li>`).join("")}</ul>
+    ${sessions.length > MISSED_SHOWN ? `<p class="muted small">+ ${sessions.length - MISSED_SHOWN} more
+      <a href="#/planner/${startOfWeek(sessions[0].session_date)}">in the plan</a></p>` : ""}`;
+  // ✅ = done without a log; Skipped = cancelled (it stays in the plan, struck through).
+  el.onclick = async (event) => {
+    const button = event.target.closest("[data-missed]");
+    if (!button) return;
+    const session = sessions.find((s) => s.id === button.closest("li").dataset.id);
+    button.disabled = true;
+    try {
+      if (button.dataset.missed === "done") await completeSession(session);
+      else await updatePlannedSession(session.id, { status: "cancelled" });
+      showToast(button.dataset.missed === "done" ? `✅ ${sessionName(session)} marked done` : `${sessionName(session)} marked skipped`);
+      await drawMissed(el, today);
+    } catch (error) {
+      showToast("Could not save: " + error.message);
+      button.disabled = false;
+    }
+  };
+}
+
+
+// ---------- Weekly review nudge (16g): Sunday for this week, Mon / Tue for last week ----------
+
+async function drawReviewNudge(el, today) {
+  const weekday = (new Date(today + "T12:00:00").getDay() + 6) % 7; // Monday = 0 … Sunday = 6
+  let monday = null;
+  if (weekday === 6) monday = startOfWeek(today);
+  else if (weekday <= 1) monday = addDays(startOfWeek(today), -7);
+  if (!monday) return;
+  const review = await getWeekReview(monday);
+  if (review && review.reviewed_at) return; // already done
+  el.hidden = false;
+  el.innerHTML = `
+    <h2><a href="#/review/${monday}">📝 Week review</a></h2>
+    <p>${weekday === 6 ? "Your week is done" : "Last week is done"}: two minutes to look back?</p>
+    <a class="button small-button" href="#/review/${monday}">Review the week</a>`;
+}
+
+
 // ---------- Training load: hours per week ----------
 
 const LOAD_WEEKS = 8;     // weeks in the little chart (this week included)
-const AVERAGE_WEEKS = 4;  // "average" = the 4 full weeks before this one
+// "average" = the LOAD_RULES.averageWeeks full weeks before this one (rules.js)
 
 async function drawLoad(el, today) {
   const monday = startOfWeek(today);
   const firstMonday = addDays(monday, -7 * (LOAD_WEEKS - 1));
-  const activities = await listActivitiesBetween(firstMonday, addDays(monday, 6));
+  const [activities, sessions, races] = await Promise.all([
+    listActivitiesBetween(firstMonday, addDays(monday, 6)),
+    listPlannedSessions(monday, addDays(monday, 6)),
+    listRacesBetween(monday, addDays(monday, 6)),
+  ]);
 
   // The weeks, oldest first: [{ monday, activities }]
   const weeks = Array.from({ length: LOAD_WEEKS }, (_, i) => {
@@ -143,14 +219,20 @@ async function drawLoad(el, today) {
   });
   const thisWeek = overview(weeks[weeks.length - 1].activities);
   const secondsOf = (week) => overview(week.activities).seconds;
-  const previous = weeks.slice(-1 - AVERAGE_WEEKS, -1);
+  const previous = weeks.slice(-1 - LOAD_RULES.averageWeeks, -1);
   const average = previous.reduce((total, week) => total + secondsOf(week), 0) / previous.length;
   const runKm = weeks[weeks.length - 1].activities.filter((a) => a.sport === "running")
     .reduce((total, a) => total + Number(a.distance_km || 0), 0);
   const noTime = weeks[weeks.length - 1].activities.filter((a) => a.duration_s == null).length;
+  // Big jump / race week notes (same check as the planner).
+  const notes = weekLoadNotes({
+    sessions, activities: weeks[weeks.length - 1].activities, races,
+    previousActivities: weeks.slice(-1 - LOAD_RULES.averageWeeks, -1).flatMap((week) => week.activities),
+  });
 
   el.innerHTML = `
     <h2><a href="#/log/stats">⏱️ Training load</a></h2>
+    ${notes.map((note) => `<p class="status warning small">📈 ${escapeHtml(note)}</p>`).join("")}
     <p class="dash-big">${formatHours(thisWeek.seconds)} <span class="muted">this week · avg ${formatHours(average)}</span></p>
     <div class="stat-grid">
       <div><strong>${thisWeek.sessions}</strong><span class="muted small">sessions</span></div>
