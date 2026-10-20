@@ -112,8 +112,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - 2026-10-20: data fixes (16a): deleting a logged activity puts its planned session back to "planned"
   (it was left "done" with nothing behind it); changing a linked activity's date moves its planned
   session to that day too (toast says so); "Swap day" leaves done sessions on their day; the shoe
-  pre-selected for a new run = the shoe of your last run in the DATABASE (getLastUsedShoeId), not
-  localStorage (a new phone / the home-screen app used to save runs with no shoe).
+  pre-selected for a new run comes from the DATABASE (listRecentShoeIds), not localStorage (a new
+  phone / the home-screen app used to save runs with no shoe), and is picked BY SURFACE (Rom's choice):
+  session types in SHOE_RULES.trailSessionTypes (trail) -> your last trail pair, others -> your last
+  road pair (fallback: last pair used). It follows the session type until you pick a shoe by hand.
 - 2026-10-20: Log list: sport filter = chips (All sports + each sport, same look as Stats), filtered in
   the database (listActivities({ sport })) so "Load more" pages stay 30 sessions of that sport; choice
   remembered per device (localStorage "sporthq3.logSport", separate from the Stats filter); week totals

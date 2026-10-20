@@ -4,10 +4,10 @@
 
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
-  getSessionTemplate, saveSessionTemplate, getLastUsedShoeId, findSessionsLinkedTo, listPlannedSessions,
+  getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
   updatePlannedSession,
 } from "../storage.js?v=202610201000";
-import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610201000";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor } from "../rules.js?v=202610201000";
 import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201000";
 import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610201000";
 import { openSheet } from "../utils/sheet.js?v=202610201000";
@@ -21,15 +21,15 @@ export async function render(container, { activityId, plannedId = null }) {
   let activity = null;
   let shoes = [];
   let planned = null; // the planned session this activity is logged for (from the planner)
-  let lastShoeId = null; // the pair of your last run, pre-selected for a new run
+  let recentShoeIds = []; // shoes of your last runs, to pre-select one for a new run
   container.innerHTML = `<p class="muted">Loading…</p>`;
   try {
     // Load the activity (when editing) and the shoe list at the same time.
-    [activity, shoes, planned, lastShoeId] = await Promise.all([
+    [activity, shoes, planned, recentShoeIds] = await Promise.all([
       activityId ? getActivity(activityId) : null,
       listShoes(),
       plannedId ? getPlannedSession(plannedId) : null,
-      activityId ? null : getLastUsedShoeId(),
+      activityId ? [] : listRecentShoeIds(),
     ]);
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
@@ -41,7 +41,7 @@ export async function render(container, { activityId, plannedId = null }) {
       <a class="button" href="#/log">Back to the log</a></section>`;
     return;
   }
-  drawForm(container, activity, shoes, planned, lastShoeId);
+  drawForm(container, activity, shoes, planned, recentShoeIds);
 }
 
 // The shoe list for the picker: pairs in use, plus the pair already linked
@@ -53,7 +53,7 @@ function shoeOptionsHtml(shoes, selectedId) {
     .join("");
 }
 
-function drawForm(container, activity, shoes, planned, lastShoeId) {
+function drawForm(container, activity, shoes, planned, recentShoeIds) {
   const isEdit = Boolean(activity);
   // A new activity from the planner starts with the planned day, sport, type and name.
   const fromPlan = !isEdit && planned ? {
@@ -119,7 +119,7 @@ function drawForm(container, activity, shoes, planned, lastShoeId) {
 
       <div data-field="shoe">
         <label for="f-shoe">Shoes</label>
-        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : suggestedShoe(shoes, lastShoeId))}</select>
+        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : null)}</select>
       </div>
 
       <div data-field="stairs">
@@ -188,14 +188,29 @@ function drawForm(container, activity, shoes, planned, lastShoeId) {
   updateSpeed(form);
   updateRpeLabel(form);
 
+  // A new run: pre-select the pair for its surface (trail session -> trail pair).
+  // It follows the session type until you pick a shoe yourself.
+  const shoeSelect = form.querySelector("#f-shoe");
+  let shoePickedByHand = false;
+  const suggestShoe = () => {
+    if (isEdit || shoePickedByHand) return;
+    shoeSelect.value = suggestedShoe(shoes, recentShoeIds, shoeSurfaceFor(typeSelect.value)) || "";
+  };
+  suggestShoe();
+  shoeSelect.addEventListener("change", () => { shoePickedByHand = true; });
+
   // When the sport changes: new list of session types, new boxes.
   sportSelect.addEventListener("change", () => {
     form.dataset.editing = "no"; // a new sport starts on its first type
     fillSessionTypes(form, undefined);
     updateVisibleFields(form);
     updateSpeed(form);
+    suggestShoe();
   });
-  typeSelect.addEventListener("change", () => updateVisibleFields(form));
+  typeSelect.addEventListener("change", () => {
+    updateVisibleFields(form);
+    suggestShoe();
+  });
 
   // Recalculate the pace while you type.
   for (const name of ["duration", "distance_km"]) {
@@ -401,9 +416,13 @@ function saveLastSport(key) {
   try { localStorage.setItem(LAST_SPORT_KEY, key); } catch { /* not important */ }
 }
 
-// Suggest the pair of your last run, if it isn't retired since.
-function suggestedShoe(shoes, lastShoeId) {
-  return shoes.some((shoe) => shoe.id === lastShoeId && !shoe.retired) ? lastShoeId : null;
+// The pair to suggest: the last one you ran in with the right surface
+// ("road" / "trail"); if you never did, the last pair you used at all.
+// Retired pairs are never suggested.
+function suggestedShoe(shoes, recentShoeIds, surface) {
+  const inUse = (id) => shoes.find((shoe) => shoe.id === id && !shoe.retired);
+  const sameSurface = recentShoeIds.find((id) => inUse(id) && inUse(id).surface === surface);
+  return sameSurface || recentShoeIds.find((id) => inUse(id)) || null;
 }
 
 // An activity got a new date: its planned session ("done" with it) moves

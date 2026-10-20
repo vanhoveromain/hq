@@ -201,18 +201,20 @@ export async function listShoes() {
   return data;
 }
 
-// The shoe of your most recent run that has one (or null). Read from the
-// database, so every phone / browser suggests the same pair.
-export async function getLastUsedShoeId() {
+// The shoes of your most recent runs, newest first (one id per run, so the
+// same pair can appear many times). Read from the database, so every phone /
+// browser suggests the same pair. 50 runs is plenty to find your last road
+// pair AND your last trail pair.
+export async function listRecentShoeIds() {
   const { data, error } = await supabase
     .from("activities")
     .select("shoe_id")
     .not("shoe_id", "is", null)
     .order("activity_date", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(1);
+    .limit(50);
   if (error) throw error;
-  return data.length ? data[0].shoe_id : null;
+  return data.map((row) => row.shoe_id);
 }
 
 export async function getShoe(id) {

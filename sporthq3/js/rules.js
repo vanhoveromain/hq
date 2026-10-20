@@ -98,7 +98,14 @@ export const RPE_LABELS = {
 export const SHOE_RULES = {
   warnKm: 700,
   replaceKm: 800,
+  // Which surface of shoe a new run suggests: these session types -> trail pair, any other -> road pair.
+  trailSessionTypes: ["trail"],
 };
+
+// "trail" or "road": the kind of shoe a run of this session type needs.
+export function shoeSurfaceFor(sessionType) {
+  return SHOE_RULES.trailSessionTypes.includes(sessionType) ? "trail" : "road";
+}
 
 // "ok" | "warn" | "replace" for a pair that has done `km` kilometres.
 export function shoeStatus(km) {
