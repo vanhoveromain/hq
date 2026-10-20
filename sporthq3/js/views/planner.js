@@ -9,19 +9,19 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610200955";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610200955";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610200955";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610200955";
+} from "../storage.js?v=202610201000";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610201000";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610201000";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge,
-} from "../utils/plan.js?v=202610200955";
-import { openSheet } from "../utils/sheet.js?v=202610200955";
-import { showToast } from "../utils/toast.js?v=202610200955";
-import { loadWorkout } from "../utils/workout.js?v=202610200955";
-import { blockWeek } from "./blocks.js?v=202610200955";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610200955";
+} from "../utils/plan.js?v=202610201000";
+import { openSheet } from "../utils/sheet.js?v=202610201000";
+import { showToast } from "../utils/toast.js?v=202610201000";
+import { loadWorkout } from "../utils/workout.js?v=202610201000";
+import { blockWeek } from "./blocks.js?v=202610201000";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610201000";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)

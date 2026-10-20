@@ -3,15 +3,15 @@
 //
 // The period and sport you pick are remembered on this device.
 
-import { listActivitiesForStats, listPlannedForStats, listWeighIns } from "../storage.js?v=202610200955";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel, STATS_RULES } from "../rules.js?v=202610200955";
-import { todayISO, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610200955";
-import { escapeHtml, formatDuration, formatSpeed } from "../utils/format.js?v=202610200955";
+import { listActivitiesForStats, listPlannedForStats, listWeighIns } from "../storage.js?v=202610201000";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel, STATS_RULES } from "../rules.js?v=202610201000";
+import { todayISO, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
+import { escapeHtml, formatDuration, formatSpeed } from "../utils/format.js?v=202610201000";
 import {
   PERIODS, periodRange, bucketUnit, bucketKey, bucketKeys, overview, runningStats, footballStats,
   countByType, adherence, currentStreak, busiestWeek,
-} from "../utils/stats.js?v=202610200955";
-import { drawBarChart } from "../utils/barChart.js?v=202610200955";
+} from "../utils/stats.js?v=202610201000";
+import { drawBarChart } from "../utils/barChart.js?v=202610201000";
 
 const FILTER_KEY = "sporthq3.statsFilter";
 

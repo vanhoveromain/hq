@@ -4,12 +4,12 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610200955";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610200955";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610200955";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610200955";
-import * as logForm from "./logForm.js?v=202610200955";
-import * as statsView from "./stats.js?v=202610200955";
+import { listActivities } from "../storage.js?v=202610201000";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610201000";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
+import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
+import * as logForm from "./logForm.js?v=202610201000";
+import * as statsView from "./stats.js?v=202610201000";
 
 const PAGE_SIZE = 30;
 const SPORT_FILTER_KEY = "sporthq3.logSport"; // the sport picked on this device ("all" or a sport key)
@@ -29,8 +29,11 @@ async function renderList(container) {
       <a href="#/log" role="tab" aria-selected="true">List</a>
       <a href="#/log/stats" role="tab" aria-selected="false">Stats</a>
     </div>
-    <a href="#/log/new" class="button primary add-button">+ Add activity</a>
-    <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
+    <!-- Phone: button above the sport chips. Laptop: chips left, button right, one line. -->
+    <div class="log-toolbar">
+      <a href="#/log/new" class="button primary add-button">+ Add activity</a>
+      <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
+    </div>
     <div id="activity-list"><p class="muted">Loading…</p></div>
     <button id="load-more" class="button load-more" hidden>Load more</button>
     <p id="list-status" class="status" role="status"></p>
