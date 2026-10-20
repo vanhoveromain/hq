@@ -233,6 +233,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   overflow: hidden;            /* keeps the rounded corners on the first/last row */
 }
 .activity-list li + li { border-top: 1px solid var(--border); }
+.activity-list .log-head + li { border-top: none; } /* the titles row draws its own line (laptop), or is hidden (phone) */
 
 .activity-item {
   display: flex;
@@ -759,7 +760,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
     grid-template-columns: 32px 130px minmax(0, 1fr) 80px 150px 100px 44px;
     gap: 12px; align-items: center;
   }
-  .log-head { padding: 0 16px 6px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  /* Column titles = first row inside each week card */
+  .log-head { padding: 8px 16px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); border-bottom: 1px solid var(--border); }
   .log-page .activity-item { min-height: 0; padding: 10px 16px; }
   .log-page .activity-item:hover { background: var(--bg); }
   .log-page .activity-item .col { display: block; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
@@ -823,6 +826,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Log: List | Stats switch */
 .log-page, .stats-page { display: flex; flex-direction: column; }
 .log-switch { align-self: center; }
+/* Log: sport chips scroll sideways on a phone instead of wrapping onto 3 lines */
+.log-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
+.log-filters .chip-button { white-space: nowrap; }
 
 /* Stats page */
 .stats-filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }

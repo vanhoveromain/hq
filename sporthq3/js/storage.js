@@ -118,10 +118,14 @@ function withMatchStats(row) {
 // Newest first. `offset` skips rows already shown ("Load more").
 // The select text "*, match_stats(*)" means: every column of the activity,
 // plus every column of its match card if it has one.
-export async function listActivities({ limit = 30, offset = 0 } = {}) {
-  const { data, error } = await supabase
+// `sport` = a sport key to keep only that sport, or "all" / nothing for every sport.
+export async function listActivities({ limit = 30, offset = 0, sport = "all" } = {}) {
+  let query = supabase
     .from("activities")
-    .select("*, match_stats(*)")
+    .select("*, match_stats(*)");
+  // Filtered in the database (not in the browser), so each page is 30 sessions OF that sport.
+  if (sport && sport !== "all") query = query.eq("sport", sport);
+  const { data, error } = await query
     .order("activity_date", { ascending: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
