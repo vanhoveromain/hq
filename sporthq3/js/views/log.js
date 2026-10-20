@@ -4,12 +4,12 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610200955";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610200955";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610200955";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610200955";
-import * as logForm from "./logForm.js?v=202610200955";
-import * as statsView from "./stats.js?v=202610200955";
+import { listActivities } from "../storage.js?v=202610201000";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610201000";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
+import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
+import * as logForm from "./logForm.js?v=202610201000";
+import * as statsView from "./stats.js?v=202610201000";
 
 const PAGE_SIZE = 30;
 const SPORT_FILTER_KEY = "sporthq3.logSport"; // the sport picked on this device ("all" or a sport key)
