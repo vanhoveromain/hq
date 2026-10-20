@@ -5,18 +5,18 @@ import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
-} from "../storage.js?v=202610201000";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus, LOAD_RULES } from "../rules.js?v=202610201000";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201000";
-import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610201000";
-import { overview } from "../utils/stats.js?v=202610201000";
-import { sessionName, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610201000";
-import { weekLoadNotes } from "../utils/load.js?v=202610201000";
-import { showToast } from "../utils/toast.js?v=202610201000";
-import { loadWorkout } from "../utils/workout.js?v=202610201000";
-import { weightTrend } from "../utils/body.js?v=202610201000";
-import { currentSeason } from "../utils/season.js?v=202610201000";
-import { blockWeek } from "./blocks.js?v=202610201000";
+} from "../storage.js?v=202610201505";
+import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus, LOAD_RULES } from "../rules.js?v=202610201505";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201505";
+import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610201505";
+import { overview } from "../utils/stats.js?v=202610201505";
+import { sessionName, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610201505";
+import { weekLoadNotes } from "../utils/load.js?v=202610201505";
+import { showToast } from "../utils/toast.js?v=202610201505";
+import { loadWorkout } from "../utils/workout.js?v=202610201505";
+import { weightTrend } from "../utils/body.js?v=202610201505";
+import { currentSeason } from "../utils/season.js?v=202610201505";
+import { blockWeek } from "./blocks.js?v=202610201505";
 
 export function render(container) {
   container.innerHTML = `
