@@ -15,7 +15,7 @@ import {
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
 } from "../storage.js?v=202610201000";
 import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610201000";
-import { escapeHtml, formatDuration, parseDuration } from "../utils/format.js?v=202610201000";
+import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610201000";
 import { startOfWeek } from "../utils/dates.js?v=202610201000";
 import { isCustomSession, isPlainSession, sessionName } from "../utils/plan.js?v=202610201000";
 
@@ -231,7 +231,7 @@ function drawEditor(container, t, options) {
         </div>
         <div data-field="distance">
           <label for="t-distance">Target distance (km)</label>
-          <input id="t-distance" name="distance" type="number" inputmode="decimal" min="0" step="0.1"
+          <input id="t-distance" name="distance" type="text" inputmode="decimal" autocomplete="off"
                  value="${t.target_distance_km ?? ""}">
         </div>
       </div>
@@ -286,7 +286,7 @@ function drawEditor(container, t, options) {
         <div class="row-3">
           <label>Sets<input type="number" data-key="sets" inputmode="numeric" min="1" max="50" value="${e.sets ?? ""}"></label>
           <label>Reps / time<input type="text" data-key="reps" autocomplete="off" placeholder="10 or 45s" value="${escapeHtml(e.reps ?? "")}"></label>
-          <label>kg<input type="number" data-key="weight_kg" inputmode="decimal" min="0" step="0.5" value="${e.weight_kg ?? ""}"></label>
+          <label>kg<input type="text" data-key="weight_kg" inputmode="decimal" autocomplete="off" value="${e.weight_kg ?? ""}"></label>
         </div>
         <input type="text" data-key="note" placeholder="Note (optional)" autocomplete="off"
                value="${escapeHtml(e.note || "")}" aria-label="Note">
@@ -378,7 +378,7 @@ function readTemplate(form, exercises) {
   if (durationText && !duration) return { error: 'Target duration not understood. Try "45:00".' };
 
   const sport = getSport(f.sport.value);
-  const distance = sport.fields.includes("distance") && f.distance.value !== "" ? Number(f.distance.value) : null;
+  const distance = sport.fields.includes("distance") ? parseDecimal(f.distance.value) : null;
   if (distance !== null && !(distance > 0)) return { error: "Target distance must be more than 0." };
 
   const rounds = f.rounds.value === "" ? null : Number(f.rounds.value);
@@ -391,7 +391,7 @@ function readTemplate(form, exercises) {
     const exerciseName = (e.name || "").trim();
     if (!exerciseName) continue;
     const sets = e.sets === "" || e.sets == null ? null : Number(e.sets);
-    const weight = e.weight_kg === "" || e.weight_kg == null ? null : Number(e.weight_kg);
+    const weight = parseDecimal(e.weight_kg); // "27,5" works too
     if (sets !== null && !(Number.isInteger(sets) && sets >= 1 && sets <= 50)) {
       return { error: `"${exerciseName}": sets must be a whole number between 1 and 50.` };
     }

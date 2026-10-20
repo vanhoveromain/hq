@@ -6,7 +6,7 @@
 import { listActivitiesForStats, listPlannedForStats, listWeighIns } from "../storage.js?v=202610201000";
 import { SPORTS, getSport, sportIcon, sessionTypeLabel, STATS_RULES } from "../rules.js?v=202610201000";
 import { todayISO, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
-import { escapeHtml, formatDuration, formatSpeed } from "../utils/format.js?v=202610201000";
+import { escapeHtml, formatDuration, formatHours, formatSpeed } from "../utils/format.js?v=202610201000";
 import {
   PERIODS, periodRange, bucketUnit, bucketKey, bucketKeys, overview, runningStats, footballStats,
   countByType, adherence, currentStreak, busiestWeek,
@@ -137,7 +137,7 @@ function overviewCard(activities, sport, weeks) {
       <h2>Overview</h2>
       <div class="stat-grid">
         ${stat(o.sessions, `sessions · ${one(o.sessions / weeks)}/week`)}
-        ${stat(formatDuration(o.seconds) || "0:00", o.missingTime ? "time (at least)" : "time")}
+        ${stat(formatHours(o.seconds), o.missingTime ? "time (at least)" : "time")}
         ${showKm ? stat(km(o.km), "distance") : stat(one(o.elevation) + " m", "D+")}
         ${stat(o.avgRpe ? one(o.avgRpe) : "–", "average RPE")}
       </div>

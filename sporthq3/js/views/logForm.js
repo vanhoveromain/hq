@@ -13,7 +13,7 @@ import { sessionName, sessionDetails, completeSession, reopenSession, addToCatal
 import { openSheet } from "../utils/sheet.js?v=202610201000";
 import { showToast } from "../utils/toast.js?v=202610201000";
 import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610201000";
-import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
@@ -107,7 +107,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
 
       <div data-field="distance">
         <label for="f-distance">Distance (km)</label>
-        <input id="f-distance" name="distance_km" type="number" inputmode="decimal" min="0" step="0.01"
+        <input id="f-distance" name="distance_km" type="text" inputmode="decimal" autocomplete="off"
                value="${a.distance_km ?? ""}">
       </div>
 
@@ -323,7 +323,7 @@ function updateVisibleFields(form) {
 function updateSpeed(form) {
   const sport = getSport(form.elements.sport.value);
   const seconds = parseDuration(form.elements.duration.value);
-  const km = Number(form.elements.distance_km.value);
+  const km = parseDecimal(form.elements.distance_km.value);
   const text = sport.fields.includes("distance") ? formatSpeed(sport.speed, seconds, km) : "";
   form.querySelector("#f-speed").textContent = text ? "⏱ " + text : "";
 }
@@ -363,7 +363,8 @@ function readForm(form, { allowEmptyDuration = false } = {}) {
     }
   }
 
-  const distance = shows("distance") ? number(f.distance_km) : null;
+  // Typed as text so "11,2" (iPhone comma keypad) works like "11.2".
+  const distance = shows("distance") ? parseDecimal(f.distance_km.value) : null;
   const elevation = shows("elevation") ? number(f.elevation_m) : null;
   const stairs = shows("stairs") ? number(f.stairs_climbed) : null;
   if ([distance, elevation, stairs].some((n) => n !== null && (Number.isNaN(n) || n < 0))) {

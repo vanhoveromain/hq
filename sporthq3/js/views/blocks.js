@@ -8,7 +8,7 @@ import {
 } from "../storage.js?v=202610201000";
 import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610201000";
 import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610201000";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610201000";
+import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610201000";
 import { showToast } from "../utils/toast.js?v=202610201000";
 
 export function render(container, { params = [] } = {}) {
@@ -261,7 +261,7 @@ async function drawStats(el, block, today) {
         <div><strong>${activities.length}</strong><span class="muted small">sessions · ${round1(activities.length / weeks)}/week</span></div>
         <div><strong>${round1(runKm)} km</strong><span class="muted small">running · ${round1(runKm / weeks)}/week</span></div>
         <div><strong>${elevation.toLocaleString("en-GB")} m</strong><span class="muted small">D+</span></div>
-        <div><strong>${formatDuration(seconds) || "0:00"}</strong><span class="muted small">total time</span></div>
+        <div><strong>${formatHours(seconds)}</strong><span class="muted small">total time</span></div>
       </div>
       <p class="small">${perSport.map((x) => `${x.sport.icon} ${escapeHtml(x.sport.label)} ${x.count}`).join(" · ")}</p>
       ${activities.some((a) => a.duration_s == null) ? `<p class="hint">Some sessions have no duration (e.g. imported football), so total time is a minimum.</p>` : ""}`

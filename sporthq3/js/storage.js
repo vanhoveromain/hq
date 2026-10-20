@@ -413,7 +413,8 @@ function customCopy(details) {
 }
 
 export async function copyWeek(fromMonday, toMonday, addDays) {
-  const sessions = await listPlannedSessions(fromMonday, addDays(fromMonday, 6));
+  // Race-routine sessions belong to their race (date), so they're not copied.
+  const sessions = (await listPlannedSessions(fromMonday, addDays(fromMonday, 6))).filter((s) => !s.race_id);
   if (!sessions.length) return 0;
   const shift = (date) => {
     // same weekday, other week: count the days from Monday and add them to the target Monday

@@ -109,6 +109,14 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-20: small fixes (16b): formatDayLabel adds the year when it isn't this year ("Sat 1 Nov
+  2025"); durations also accept ' and " (44'30); decimal boxes (log distance, catalogue kg and target
+  km) are text boxes read by parseDecimal ("11,2" = 11.2; type="number" can refuse the iPhone comma);
+  totals of time use formatHours ("6h55", "103h40": log week totals, Stats, block page; one session
+  keeps 52:30); a match row hides its title when it already names the opponent; a 2-day warning shows
+  once, on its later day of the week. Copy last week / apply a template on a non-empty week: sheet
+  "Replace this week" (removes sessions not done and not from a race routine) or "Add on top" (was a
+  browser confirm). Race-routine sessions are never copied to another week nor saved in a template.
 - 2026-10-20: data fixes (16a): deleting a logged activity puts its planned session back to "planned"
   (it was left "done" with nothing behind it); changing a linked activity's date moves its planned
   session to that day too (toast says so); "Swap day" leaves done sessions on their day; the shoe

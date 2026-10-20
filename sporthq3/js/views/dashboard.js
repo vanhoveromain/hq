@@ -7,7 +7,7 @@ import {
 } from "../storage.js?v=202610201000";
 import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus } from "../rules.js?v=202610201000";
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201000";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610201000";
+import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610201000";
 import { overview } from "../utils/stats.js?v=202610201000";
 import { sessionName, calendarItems, daySummary, sportBadge } from "../utils/plan.js?v=202610201000";
 import { loadWorkout } from "../utils/workout.js?v=202610201000";
@@ -161,14 +161,6 @@ async function drawLoad(el, today) {
     ${loadChartHtml(weeks.map((week) => ({ monday: week.monday, seconds: secondsOf(week) })), monday)}
     ${noTime ? `<p class="hint">${noTime} session${noTime === 1 ? "" : "s"} this week without a duration (not in the hours).</p>` : ""}
   `;
-}
-
-// 16200 -> "4h30", 2700 -> "45 min", 0 -> "0h"
-function formatHours(seconds) {
-  const minutes = Math.round(seconds / 60);
-  if (minutes === 0) return "0h";
-  if (minutes < 60) return `${minutes} min`;
-  return `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}`;
 }
 
 // Hours per week as simple columns (plain HTML boxes, no chart library).

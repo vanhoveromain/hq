@@ -125,6 +125,12 @@ async function drawWeek(container, monday) {
   function drawDays() {
     const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
     const today = todayISO();
+    // A warning about two days ("Mon X → Tue Y") shows once, on the later day
+    // of this week (the day you'd change), not on both.
+    function warningDay(w) {
+      const inWeek = w.days.filter((d) => d >= monday && d <= sunday).sort();
+      return inWeek[inWeek.length - 1];
+    }
 
     daysEl.innerHTML = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => {
       const daySessions = sessions.filter((s) => s.session_date === day);
@@ -138,7 +144,7 @@ async function drawWeek(container, monday) {
           ${daySessions.map(sessionCardHtml).join("")}
           ${extras.map(extraCardHtml).join("")}
           ${!daySessions.length && !extras.length ? `<p class="day-empty muted">Rest</p>` : ""}
-          ${warnings.filter((w) => w.days.includes(day)).map((w) =>
+          ${warnings.filter((w) => warningDay(w) === day).map((w) =>
             `<p class="day-warning" role="note">⚠️ ${escapeHtml(w.message)}</p>`).join("")}
         </section>`;
     }).join("");
@@ -175,8 +181,10 @@ async function drawWeek(container, monday) {
 
   container.querySelector("#copy-week").addEventListener("click", async () => {
     const lastMonday = addDays(monday, -7);
-    if (sessions.length && !window.confirm("This week already has sessions. Add last week's sessions on top?")) return;
+    const mode = await askAddOrReplace("last week's sessions");
+    if (!mode) return;
     try {
+      if (mode === "replace") await clearWeekForReplace();
       const count = await copyWeek(lastMonday, monday, addDays);
       showToast(count ? `Copied ${count} session${count === 1 ? "" : "s"} from last week` : "Last week was empty");
       await load();
@@ -228,7 +236,8 @@ async function drawWeek(container, monday) {
     } catch (error) {
       return showToast("Could not load the templates: " + error.message);
     }
-    const toSave = sessions.filter((s) => s.status !== "cancelled");
+    // Cancelled and race-routine sessions aren't part of a "normal" week.
+    const toSave = sessions.filter((s) => s.status !== "cancelled" && !s.race_id);
     const choice = await openSheet({
       title: "Week templates",
       html: `
@@ -258,7 +267,7 @@ async function drawWeek(container, monday) {
         <label for="template-name" class="sheet-subtitle">Name</label>
         <input id="template-name" type="text" maxlength="60" placeholder="e.g. Normal week" list="template-names">
         <datalist id="template-names">${templates.map((t) => `<option value="${escapeHtml(t.name)}">`).join("")}</datalist>
-        <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled ones are left out).
+        <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled and race-routine ones are left out).
           Use an existing name to replace that template.</p>
         ${customCount ? `<p class="status warning">⚠️ ${customCount} custom session${customCount === 1 ? " is" : "s are"} not in your catalogue:
           the template only keeps ${customCount === 1 ? "its" : "their"} sport, not the exercises.
@@ -301,10 +310,41 @@ async function drawWeek(container, monday) {
     }
   }
 
+  // The week isn't empty: add on top, or replace what's planned?
+  // Returns "add", "replace" or null (closed). An empty week just adds.
+  async function askAddOrReplace(what) {
+    const replaceable = sessions.filter(isReplaceable);
+    if (!sessions.length) return "add";
+    const kept = sessions.length - replaceable.length;
+    return openSheet({
+      title: "This week already has sessions",
+      html: `
+        <p>Add ${escapeHtml(what)} on top of them, or replace them?</p>
+        ${kept ? `<p class="muted small">Replace keeps the ${kept} session${kept === 1 ? "" : "s"} already done
+          or from a race routine.</p>` : ""}
+        <div class="sheet-actions">
+          <button type="button" class="button primary" data-value="replace" ${replaceable.length ? "" : "disabled"}>
+            Replace this week</button>
+          <button type="button" class="button" data-value="add">Add on top</button>
+        </div>`,
+    });
+  }
+
+  // "Replace" removes the sessions not done yet. Done ones (they match a
+  // log) and race-routine ones (they belong to a race) stay.
+  function isReplaceable(s) {
+    return s.status !== "done" && !s.race_id;
+  }
+  async function clearWeekForReplace() {
+    await Promise.all(sessions.filter(isReplaceable).map((s) => deletePlannedSession(s.id)));
+  }
+
   async function applyTemplate(template) {
     if (!template.items.length) return showToast("This template is empty");
-    if (sessions.length && !window.confirm(`This week already has sessions. Add "${template.name}" on top?`)) return;
+    const mode = await askAddOrReplace(`"${template.name}"`);
+    if (!mode) return;
     try {
+      if (mode === "replace") await clearWeekForReplace();
       const count = await applyWeekTemplate(template, monday, addDays, sessions);
       showToast(`Added ${count} session${count === 1 ? "" : "s"} from "${template.name}"`);
       await load();

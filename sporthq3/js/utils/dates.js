@@ -39,10 +39,13 @@ export function startOfWeek(iso) {
   return addDays(iso, -daysSinceMonday);
 }
 
-// "Mon 12 Oct"
+// "Mon 12 Oct" this year, "Sat 1 Nov 2025" another year (otherwise an old
+// date reads like a future one).
 export function formatDayLabel(iso) {
-  return parseISODate(iso).toLocaleDateString("en-GB", {
-    weekday: "short", day: "numeric", month: "short",
+  const date = parseISODate(iso);
+  const otherYear = date.getFullYear() !== new Date().getFullYear();
+  return date.toLocaleDateString("en-GB", {
+    weekday: "short", day: "numeric", month: "short", ...(otherYear ? { year: "numeric" } : {}),
   });
 }
 
