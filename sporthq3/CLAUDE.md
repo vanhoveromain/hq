@@ -106,6 +106,13 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-20: Log list: sport filter = chips (All sports + each sport, same look as Stats), filtered in
+  the database (listActivities({ sport })) so "Load more" pages stay 30 sessions of that sport; choice
+  remembered per device (localStorage "sporthq3.logSport", separate from the Stats filter); week totals
+  count only that sport. Laptop: column titles are the first row INSIDE each week card (they used to
+  float above "This week" and looked like a second week label); chips left + "+ Add activity" right on
+  one line (.log-toolbar). Phone: button above, chips scroll sideways. Week total hides the time when
+  no session has a duration (was "0:00").
 - 2026-10-19: phone feedback round 2 (15): (a) Home "Training load" card (after This week, opens Stats):
   hours this week vs average of the 4 weeks before, sessions, km run, D+, avg RPE, columns of hours per
   week for the last 8 weeks (this week in violet). Hours = logged activities' durations (a match = minutes

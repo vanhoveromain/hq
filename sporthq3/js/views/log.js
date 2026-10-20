@@ -29,8 +29,11 @@ async function renderList(container) {
       <a href="#/log" role="tab" aria-selected="true">List</a>
       <a href="#/log/stats" role="tab" aria-selected="false">Stats</a>
     </div>
-    <a href="#/log/new" class="button primary add-button">+ Add activity</a>
-    <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
+    <!-- Phone: button above the sport chips. Laptop: chips left, button right, one line. -->
+    <div class="log-toolbar">
+      <a href="#/log/new" class="button primary add-button">+ Add activity</a>
+      <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
+    </div>
     <div id="activity-list"><p class="muted">Loading…</p></div>
     <button id="load-more" class="button load-more" hidden>Load more</button>
     <p id="list-status" class="status" role="status"></p>

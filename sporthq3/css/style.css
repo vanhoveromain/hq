@@ -769,7 +769,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .log-page .col-date { color: var(--muted); }
   .log-page .activity-meta { display: none; }
   .log-page .activity-icon { font-size: 1.2rem; }
-  .log-page .add-button { max-width: 260px; margin-left: auto; }
+  .log-toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+  .log-toolbar .log-filters { order: -1; flex: 1; min-width: 0; margin-bottom: 0; padding-bottom: 0; }
+  .log-toolbar .add-button { flex: none; width: auto; margin: 0; padding-left: 24px; padding-right: 24px; }
 
   /* Races, blocks, shoes: cards side by side */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
