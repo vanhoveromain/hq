@@ -4,14 +4,15 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610192113";
-import { sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610192113";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610192113";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610192113";
-import * as logForm from "./logForm.js?v=202610192113";
-import * as statsView from "./stats.js?v=202610192113";
+import { listActivities } from "../storage.js?v=202610200955";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610200955";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610200955";
+import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610200955";
+import * as logForm from "./logForm.js?v=202610200955";
+import * as statsView from "./stats.js?v=202610200955";
 
 const PAGE_SIZE = 30;
+const SPORT_FILTER_KEY = "sporthq3.logSport"; // the sport picked on this device ("all" or a sport key)
 
 export function render(container, { params = [] } = {}) {
   // #/log/new/<plannedId> = "Log it now" from the planner: pre-filled + linked
@@ -29,10 +30,7 @@ async function renderList(container) {
       <a href="#/log/stats" role="tab" aria-selected="false">Stats</a>
     </div>
     <a href="#/log/new" class="button primary add-button">+ Add activity</a>
-    <!-- Column titles: only shown on a laptop, where each line becomes a table row -->
-    <div class="log-head" aria-hidden="true">
-      <span></span><span>Date</span><span>Session</span><span>Time</span><span>Distance</span><span>Pace</span><span>RPE</span>
-    </div>
+    <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
     <div id="activity-list"><p class="muted">Loading…</p></div>
     <button id="load-more" class="button load-more" hidden>Load more</button>
     <p id="list-status" class="status" role="status"></p>
@@ -42,16 +40,28 @@ async function renderList(container) {
   const moreButton = container.querySelector("#load-more");
   const status = container.querySelector("#list-status");
 
-  let activities = []; // everything loaded so far
+  const chips = container.querySelector("#sport-chips");
+
+  let sport = readSportFilter();
+  let activities = []; // everything loaded so far (for the chosen sport)
+
+  function drawChips() {
+    chips.innerHTML =
+      `<button type="button" class="chip-button" data-sport="all" aria-pressed="${sport === "all"}">All sports</button>` +
+      SPORTS.map((s) => `<button type="button" class="chip-button" data-sport="${s.key}" aria-pressed="${s.key === sport}">${s.icon} ${escapeHtml(s.label)}</button>`).join("");
+  }
 
   async function loadPage() {
     moreButton.disabled = true;
+    const sportAsked = sport;
     try {
-      const page = await listActivities({ limit: PAGE_SIZE, offset: activities.length });
+      const page = await listActivities({ limit: PAGE_SIZE, offset: activities.length, sport: sportAsked });
+      // Another chip was tapped while this page was loading: drop this stale answer.
+      if (sportAsked !== sport) return;
       activities = activities.concat(page);
       listEl.innerHTML = activities.length
         ? groupByWeek(activities).map(weekHtml).join("")
-        : `<section class="card placeholder"><p>No activities yet. Tap <strong>+ Add activity</strong> to log your first one.</p></section>`;
+        : emptyHtml(sport);
       // A full page means there may be more; a short page means we reached the end.
       moreButton.hidden = page.length < PAGE_SIZE;
     } catch (error) {
@@ -61,8 +71,42 @@ async function renderList(container) {
     moreButton.disabled = false;
   }
 
+  chips.addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-sport]");
+    if (!chip || chip.dataset.sport === sport) return;
+    sport = chip.dataset.sport;
+    saveSportFilter(sport);
+    drawChips();
+    // Start again from the top for the new sport
+    activities = [];
+    moreButton.hidden = true;
+    status.textContent = "";
+    listEl.innerHTML = `<p class="muted">Loading…</p>`;
+    loadPage();
+  });
+
   moreButton.addEventListener("click", loadPage);
+  drawChips();
   await loadPage();
+}
+
+function emptyHtml(sport) {
+  if (sport === "all") {
+    return `<section class="card placeholder"><p>No activities yet. Tap <strong>+ Add activity</strong> to log your first one.</p></section>`;
+  }
+  return `<section class="card placeholder"><p>No ${escapeHtml(getSport(sport).label.toLowerCase())} sessions logged yet.</p></section>`;
+}
+
+// The remembered sport, if it still exists (a sport could be renamed or removed in rules.js).
+function readSportFilter() {
+  try {
+    const saved = localStorage.getItem(SPORT_FILTER_KEY);
+    if (saved && (saved === "all" || getSport(saved))) return saved;
+  } catch { /* private window: no memory, that's fine */ }
+  return "all";
+}
+function saveSportFilter(sport) {
+  try { localStorage.setItem(SPORT_FILTER_KEY, sport); } catch { /* not important */ }
 }
 
 // [activities] -> [{ monday, activities: [...] }, ...], keeping the order.
@@ -87,9 +131,13 @@ function weekHtml(week) {
     <section class="week">
       <h2 class="week-title">
         <span>${formatWeekLabel(week.monday)}</span>
-        <span class="muted">${count} session${count === 1 ? "" : "s"} · ${formatDuration(totalSeconds)}</span>
+        <span class="muted">${count} session${count === 1 ? "" : "s"}${totalSeconds ? " · " + formatDuration(totalSeconds) : ""}</span>
       </h2>
       <ul class="activity-list">
+        <!-- Column titles: only shown on a laptop, where each line becomes a table row -->
+        <li class="log-head" aria-hidden="true">
+          <span></span><span>Date</span><span>Session</span><span>Time</span><span>Distance</span><span>Pace</span><span>RPE</span>
+        </li>
         ${week.activities.map(activityHtml).join("")}
       </ul>
     </section>
