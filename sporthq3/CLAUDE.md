@@ -58,6 +58,9 @@
     workout (+ update the recipe), 14c custom sessions (+ add to catalogue)
 15. Phone feedback round 2 (2026-10-19): 15a Home training load (hours per week), 15b sport colours on
     the planner, 15c add details to a "just a sport" session
+16. Test round (2026-10-20, Claude tested as a user on a fake database): 16a data fixes, 16b small fixes,
+    16c races on the planner, 16d missed-session nudge, 16e smarter warnings, 16f load / taper check,
+    16g Sunday weekly review
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -106,6 +109,11 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-20: data fixes (16a): deleting a logged activity puts its planned session back to "planned"
+  (it was left "done" with nothing behind it); changing a linked activity's date moves its planned
+  session to that day too (toast says so); "Swap day" leaves done sessions on their day; the shoe
+  pre-selected for a new run = the shoe of your last run in the DATABASE (getLastUsedShoeId), not
+  localStorage (a new phone / the home-screen app used to save runs with no shoe).
 - 2026-10-20: Log list: sport filter = chips (All sports + each sport, same look as Stats), filtered in
   the database (listActivities({ sport })) so "Load more" pages stay 30 sessions of that sport; choice
   remembered per device (localStorage "sporthq3.logSport", separate from the Stats filter); week totals

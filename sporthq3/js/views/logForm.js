@@ -4,7 +4,8 @@
 
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
-  getSessionTemplate, saveSessionTemplate,
+  getSessionTemplate, saveSessionTemplate, getLastUsedShoeId, findSessionsLinkedTo, listPlannedSessions,
+  updatePlannedSession,
 } from "../storage.js?v=202610201000";
 import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610201000";
 import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201000";
@@ -15,19 +16,20 @@ import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWo
 import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
-const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
 
 export async function render(container, { activityId, plannedId = null }) {
   let activity = null;
   let shoes = [];
   let planned = null; // the planned session this activity is logged for (from the planner)
+  let lastShoeId = null; // the pair of your last run, pre-selected for a new run
   container.innerHTML = `<p class="muted">Loading…</p>`;
   try {
     // Load the activity (when editing) and the shoe list at the same time.
-    [activity, shoes, planned] = await Promise.all([
+    [activity, shoes, planned, lastShoeId] = await Promise.all([
       activityId ? getActivity(activityId) : null,
       listShoes(),
       plannedId ? getPlannedSession(plannedId) : null,
+      activityId ? null : getLastUsedShoeId(),
     ]);
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
@@ -39,7 +41,7 @@ export async function render(container, { activityId, plannedId = null }) {
       <a class="button" href="#/log">Back to the log</a></section>`;
     return;
   }
-  drawForm(container, activity, shoes, planned);
+  drawForm(container, activity, shoes, planned, lastShoeId);
 }
 
 // The shoe list for the picker: pairs in use, plus the pair already linked
@@ -51,7 +53,7 @@ function shoeOptionsHtml(shoes, selectedId) {
     .join("");
 }
 
-function drawForm(container, activity, shoes, planned) {
+function drawForm(container, activity, shoes, planned, lastShoeId) {
   const isEdit = Boolean(activity);
   // A new activity from the planner starts with the planned day, sport, type and name.
   const fromPlan = !isEdit && planned ? {
@@ -117,7 +119,7 @@ function drawForm(container, activity, shoes, planned) {
 
       <div data-field="shoe">
         <label for="f-shoe">Shoes</label>
-        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : readLastShoe(shoes))}</select>
+        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : suggestedShoe(shoes, lastShoeId))}</select>
       </div>
 
       <div data-field="stairs">
@@ -225,7 +227,6 @@ function drawForm(container, activity, shoes, planned) {
       if (isEdit) result.activity.id = activity.id;
       const saved = await saveActivity(result.activity, result.matchStats);
       saveLastSport(result.activity.sport);
-      if (result.activity.shoe_id) saveLastShoe(result.activity.shoe_id);
 
       if (fromPlan) {
         // Logged from the planner: tick that exact session, then go back to the plan.
@@ -243,6 +244,7 @@ function drawForm(container, activity, shoes, planned) {
         return;
       }
       if (!isEdit) await linkToPlan(saved);
+      if (isEdit && saved.activity_date !== activity.activity_date) await moveLinkedSessions(saved);
       window.location.hash = "#/log"; // back to the list
     } catch (error) {
       showStatus(status, "Could not save: " + error.message, "error");
@@ -256,7 +258,12 @@ function drawForm(container, activity, shoes, planned) {
       // confirm() shows the browser's built-in "OK / Cancel" box.
       if (!window.confirm("Delete this activity? This can't be undone.")) return;
       try {
+        // Look up its planned session BEFORE deleting (afterwards the link is gone).
+        const linked = await findSessionsLinkedTo(activity.id);
         await deleteActivity(activity.id);
+        // Nothing was logged any more, so the planned session isn't done any more.
+        await Promise.all(linked.map((session) => reopenSession(session)));
+        if (linked.length) showToast(`Deleted · ${sessionName(linked[0])} is open again in your plan`);
         window.location.hash = "#/log";
       } catch (error) {
         showStatus(status, "Could not delete: " + error.message, "error");
@@ -394,14 +401,26 @@ function saveLastSport(key) {
   try { localStorage.setItem(LAST_SPORT_KEY, key); } catch { /* not important */ }
 }
 
-// Only suggest the last shoe if it still exists and isn't retired.
-function readLastShoe(shoes) {
-  let id = null;
-  try { id = localStorage.getItem(LAST_SHOE_KEY); } catch { /* ignore */ }
-  return shoes.some((shoe) => shoe.id === id && !shoe.retired) ? id : null;
+// Suggest the pair of your last run, if it isn't retired since.
+function suggestedShoe(shoes, lastShoeId) {
+  return shoes.some((shoe) => shoe.id === lastShoeId && !shoe.retired) ? lastShoeId : null;
 }
-function saveLastShoe(id) {
-  try { localStorage.setItem(LAST_SHOE_KEY, id); } catch { /* not important */ }
+
+// An activity got a new date: its planned session ("done" with it) moves
+// along, so the plan shows it on the day you really did it.
+// Never blocks: the activity itself is already saved.
+async function moveLinkedSessions(activity) {
+  try {
+    const linked = await findSessionsLinkedTo(activity.id);
+    const toMove = linked.filter((session) => session.session_date !== activity.activity_date);
+    if (!toMove.length) return;
+    const sameDay = await listPlannedSessions(activity.activity_date, activity.activity_date);
+    await Promise.all(toMove.map((session, i) =>
+      updatePlannedSession(session.id, { session_date: activity.activity_date, position: sameDay.length + i })));
+    showToast(`Saved · ${sessionName(toMove[0])} moved to ${formatDayLabel(activity.activity_date)} in your plan`);
+  } catch (error) {
+    showToast("Saved, but could not move its planned session: " + error.message);
+  }
 }
 
 // After logging a NEW activity: if that day has an open planned session of

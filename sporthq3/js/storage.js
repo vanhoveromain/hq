@@ -201,6 +201,20 @@ export async function listShoes() {
   return data;
 }
 
+// The shoe of your most recent run that has one (or null). Read from the
+// database, so every phone / browser suggests the same pair.
+export async function getLastUsedShoeId() {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("shoe_id")
+    .not("shoe_id", "is", null)
+    .order("activity_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data.length ? data[0].shoe_id : null;
+}
+
 export async function getShoe(id) {
   const { data, error } = await supabase.from("shoes").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
@@ -374,6 +388,17 @@ export async function findOpenPlannedSessions(date, sport) {
     .eq("sport", sport)
     .eq("status", "planned")
     .order("position", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// The planned sessions ticked "done" with this activity (usually 0 or 1).
+// Used to keep the plan right when the activity is moved to another day or deleted.
+export async function findSessionsLinkedTo(activityId) {
+  const { data, error } = await supabase
+    .from("planned_sessions")
+    .select(PLANNED_SELECT)
+    .eq("activity_id", activityId);
   if (error) throw error;
   return data;
 }

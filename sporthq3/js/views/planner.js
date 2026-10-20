@@ -490,14 +490,17 @@ async function drawWeek(container, monday) {
   }
 
   // Swap: every session of day A goes to day B and the other way round.
+  // Done sessions stay put: they happened on their day (and match a logged activity).
   async function swapDay(day) {
     const other = await openSheet({
       title: `Swap ${formatDayLabel(day)} with…`,
-      html: weekdayButtons(monday, day),
+      html: `${weekdayButtons(monday, day)}
+        <p class="muted small">Sessions already done stay on their day.</p>`,
     });
     if (!other || other === day) return;
-    const a = sessions.filter((s) => s.session_date === day);
-    const b = sessions.filter((s) => s.session_date === other);
+    const notDone = (s) => s.status !== "done";
+    const a = sessions.filter((s) => s.session_date === day && notDone(s));
+    const b = sessions.filter((s) => s.session_date === other && notDone(s));
     await Promise.all([
       ...a.map((s) => updatePlannedSession(s.id, { session_date: other })),
       ...b.map((s) => updatePlannedSession(s.id, { session_date: day })),
