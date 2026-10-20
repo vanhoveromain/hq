@@ -58,6 +58,10 @@
     workout (+ update the recipe), 14c custom sessions (+ add to catalogue)
 15. Phone feedback round 2 (2026-10-19): 15a Home training load (hours per week), 15b sport colours on
     the planner, 15c add details to a "just a sport" session
+16. Strava sync (AFTER switch day 13d): a Strava activity is logged in SportHQ3 automatically.
+    Supabase Edge Function (webhook + OAuth, holds the Strava secret), additive migrations
+    (`strava_id` on activities, `strava_tokens` table only the server can read), "Connect Strava" in
+    Settings, Strava sport type -> sport, Strava gear -> shoe. Can be built switched off before 13d.
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -75,6 +79,9 @@ Rules are data + small pure functions so future users can define their own.
   e.g. which session types count as "heavy legs", rest days needed, max sessions per day). The rules
   are already data in rules.js (TRAINING_RULES) so they can later move to a per-user table.
 - Each user defines their own sports / session types / categories (same reason).
+- More sports built in (beyond Rom's six); at sign-up, each user picks which sports they do and the
+  app only shows those.
+- Customisation: colours (accent, sport colours), home page (which blocks show, in what order), etc.
 
 ## Out of scope for v1
 Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
@@ -106,6 +113,11 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-20: Strava sync becomes milestone 16, after switch day 13d. While Notion is the source of
+  truth, synced runs would be duplicated by the next Notion re-import and wiped by the big clean.
+  Automatic = Strava webhook -> Supabase Edge Function (the Strava client secret can't live in browser
+  code). Strava won't fill session type, match card and maybe not RPE: completed in the app afterwards.
+  Once on, runs are no longer logged by hand (no duplicates).
 - 2026-10-20: Log list: sport filter = chips (All sports + each sport, same look as Stats), filtered in
   the database (listActivities({ sport })) so "Load more" pages stay 30 sessions of that sport; choice
   remembered per device (localStorage "sporthq3.logSport", separate from the Stats filter); week totals
