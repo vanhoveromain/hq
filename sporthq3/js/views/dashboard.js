@@ -5,39 +5,52 @@ import {
   listPlannedSessions, listActivitiesBetween, listRaces, getRace, findBlockOn,
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
+  getTrainingBlock, listPersonalBests,
 } from "../storage.js?v=202610211550";
-import { checkTrainingRules, sportIcon, SHOE_RULES, shoeStatus, LOAD_RULES } from "../rules.js?v=202610211550";
+import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES } from "../rules.js?v=202610211550";
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610211550";
-import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610211550";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610211550";
 import { overview } from "../utils/stats.js?v=202610211550";
-import { sessionName, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610211550";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610211550";
 import { weekLoadNotes } from "../utils/load.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
 import { loadWorkout } from "../utils/workout.js?v=202610211550";
-import { weightTrend } from "../utils/body.js?v=202610211550";
 import { currentSeason } from "../utils/season.js?v=202610211550";
 import { blockWeek } from "./blocks.js?v=202610211550";
 import { icon } from "../utils/icons.js?v=202610211550";
 
+// Home layout (step 17c, "Today first"):
+//   1. Today hero (violet): today's sessions with one big button, and the
+//      "Did you do it?" sessions of the last days inside it
+//   2. small notes (Sunday review, load warnings)
+//   3. next race   4. this week (+ one warnings line)   5. training load
+//   6. small tiles (weight, season, shoes, block, 10k best)
+// Laptop: left column = 1, 2, 4, 5; right column = 3, 6. On a phone the two
+// columns melt into one list and CSS `order` sets the sequence above.
 export function render(container) {
   container.innerHTML = `
     <div class="dashboard">
-      <!-- Laptop: "now" on the left (wide), the overview on the right (narrow).
-           Phone: one column, left part first. -->
       <div class="dash-main">
-        <section class="card dash-card dash-missed" id="dash-missed" hidden></section>
-        <section class="card dash-card dash-review" id="dash-review" hidden></section>
-        <section class="card dash-card" id="dash-today"><p class="muted">Loading…</p></section>
+        <section class="dash-hero" id="dash-hero">
+          <div id="dash-today"><p>Loading…</p></div>
+          <div class="hero-missed" id="dash-missed" hidden></div>
+        </section>
+        <div class="dash-notes" id="dash-notes">
+          <section class="card dash-card dash-note" id="dash-review" hidden></section>
+          <div id="dash-load-notes"></div>
+        </div>
         <section class="card dash-card" id="dash-week"><p class="muted">Loading…</p></section>
         <section class="card dash-card" id="dash-load"><p class="muted">Loading…</p></section>
-        <section class="card dash-card dash-warnings" id="dash-warnings" hidden></section>
       </div>
       <div class="dash-side">
-        <section class="card dash-card" id="dash-race" hidden></section>
-        <section class="card dash-card" id="dash-block" hidden></section>
-        <section class="card dash-card" id="dash-weight" hidden></section>
-        <section class="card dash-card" id="dash-football"></section>
-        <section class="card dash-card" id="dash-shoes" hidden></section>
+        <section class="card dash-card dash-race" id="dash-race" hidden></section>
+        <div class="dash-tiles">
+          <a class="dash-tile" id="tile-block" hidden></a>
+          <a class="dash-tile" id="tile-weight" hidden></a>
+          <a class="dash-tile" id="tile-football" hidden></a>
+          <a class="dash-tile" id="tile-shoes" hidden></a>
+          <a class="dash-tile" id="tile-pb" hidden></a>
+        </div>
       </div>
     </div>
   `;
@@ -48,7 +61,7 @@ export function render(container) {
   // Links and buttons inside the card (Start, Log, …) keep their own job.
   container.querySelector(".dashboard").addEventListener("click", (event) => {
     if (event.target.closest("a, button")) return;
-    const titleLink = event.target.closest(".dash-card")?.querySelector("h2 a");
+    const titleLink = event.target.closest(".dash-card, .dash-hero")?.querySelector("h2 a");
     if (titleLink) window.location.hash = titleLink.getAttribute("href");
   });
   // Each card is its own little task; a failing one shows its error only.
@@ -59,19 +72,21 @@ export function render(container) {
   });
   card($("#dash-missed"), () => drawMissed($("#dash-missed"), today));
   card($("#dash-review"), () => drawReviewNudge($("#dash-review"), today));
-  card($("#dash-today"), () => drawWeek($("#dash-today"), $("#dash-week"), $("#dash-warnings"), today));
-  card($("#dash-load"), () => drawLoad($("#dash-load"), today));
-  card($("#dash-race"), () => drawRace($("#dash-race"), today));
-  card($("#dash-block"), () => drawBlock($("#dash-block"), today));
-  card($("#dash-weight"), () => drawWeight($("#dash-weight")));
-  card($("#dash-football"), () => drawFootball($("#dash-football"), today));
-  card($("#dash-shoes"), () => drawShoes($("#dash-shoes")));
+  card($("#dash-today"), () => drawWeek($("#dash-today"), $("#dash-week"), today));
+  card($("#dash-load"), () => drawLoad($("#dash-load"), $("#dash-load-notes"), today));
+  // The block tile only shows when the race card doesn't already show the block.
+  const race = card($("#dash-race"), () => drawRace($("#dash-race"), today));
+  card($("#tile-block"), async () => drawBlockTile($("#tile-block"), today, await race));
+  card($("#tile-weight"), () => drawWeight($("#tile-weight")));
+  card($("#tile-football"), () => drawFootball($("#tile-football"), today));
+  card($("#tile-shoes"), () => drawShoes($("#tile-shoes")));
+  card($("#tile-pb"), () => drawBest($("#tile-pb")));
 }
 
 
-// ---------- Today + this week + warnings (one load for all three) ----------
+// ---------- Today (the hero) + this week (one load for both) ----------
 
-async function drawWeek(todayEl, weekEl, warningsEl, today) {
+async function drawWeek(todayEl, weekEl, today) {
   const monday = startOfWeek(today);
   const sunday = addDays(monday, 6);
   // One extra day on each side, for the rules (Sunday -> next Monday).
@@ -89,24 +104,17 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
   const todays = sessions.filter((s) => s.session_date === today);
   const workout = loadWorkout();
   todayEl.innerHTML = `
-    <h2><a href="#/planner">Today</a> <span class="muted small">${escapeHtml(formatDayLabel(today))}</span></h2>
-    ${workout ? `<a class="plan-banner workout-banner" href="#/workout/${escapeHtml(workout.plannedId)}">
-      ${icon("dumbbell")} Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>` : ""}
-    ${todays.length ? `<ul class="dash-list">${todays.map((s) => `
-      <li>
-        <span>${sportIcon(s.sport)} ${escapeHtml(sessionName(s))}
-          ${s.status === "done" ? icon("check", { label: "done", className: "is-ok" }) : s.status === "cancelled" ? icon("x", { label: "cancelled", className: "is-error" }) : ""}</span>
-        ${s.status === "planned" ? `<span class="dash-actions">
-          <a class="button small-button" href="#/workout/${s.id}">${icon("play")} Start</a>
-          <a class="button small-button" href="#/log/new/${s.id}">${icon("square-pen")} Log</a></span>` : ""}
-      </li>`).join("")}</ul>`
-      : `<p class="muted">Nothing planned: rest day ${icon("moon")} <a href="#/planner">Plan something</a></p>`}
+    <h2 class="hero-label"><a href="#/planner">Today · ${escapeHtml(formatDayLabel(today))}</a></h2>
+    ${workout ? `<a class="hero-resume" href="#/workout/${escapeHtml(workout.plannedId)}">
+      ${icon("dumbbell")} <span>Workout in progress: <strong>${escapeHtml(workout.name)}</strong></span> ${icon("chevron-right")}</a>` : ""}
+    ${todays.length ? todays.map(heroSessionHtml).join("")
+      : `<p class="hero-rest">${icon("moon")} Nothing planned: rest day</p>
+         <a class="hero-button is-quiet" href="#/planner">${icon("plus")} Plan something</a>`}
   `;
 
-  // This week: done / planned, the 7-day strip, running km
+  // This week: done / planned, the 7-day strip
   const counted = sessions.filter((s) => s.status !== "cancelled");
   const done = counted.filter((s) => s.status === "done").length;
-  const runKm = activities.filter((a) => a.sport === "running").reduce((sum, a) => sum + Number(a.distance_km || 0), 0);
   // The 7 days: the sport icons planned (or logged) that day, nothing else;
   // a done day gets a light green background.
   const strip = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => {
@@ -117,27 +125,65 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
       <span class="muted small">${name}</span>
       <span class="strip-icons" aria-label="${label}">${icons.length ? icons.join("") : "–"}</span></span>`;
   }).join("");
-  weekEl.innerHTML = `
-    <h2><a href="#/planner">This week</a></h2>
-    <p class="dash-big">${counted.length ? `${done} <span class="muted">of ${counted.length} done</span>` : `<span class="muted">Nothing planned yet</span>`}</p>
-    <div class="week-strip">${strip}</div>
-    <p class="muted small">${sportIcon("running")} ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km run this week</p>
-  `;
 
   // Warnings of this week that still matter: not muted ("my normal pattern"),
-  // and not only about days already gone (those are history now).
+  // and not only about days already gone (those are history now). Home shows
+  // them as ONE line; the planner shows each one on its day.
   const warnings = checkTrainingRules(calendarItems(allSessions, allActivities, races), muted)
     .filter((w) => w.days.some(inWeek) && !w.muted && w.days.some((day) => day >= today));
-  if (warnings.length) {
-    warningsEl.hidden = false;
-    warningsEl.innerHTML = `
-      <h2><a href="#/planner">${icon("alert-triangle")} ${warnings.length} warning${warnings.length === 1 ? "" : "s"}</a></h2>
-      <ul class="dash-list">${warnings.map((w) => `<li class="small">${escapeHtml(w.message)}</li>`).join("")}</ul>`;
+  const warningLine = warnings.length ? `
+    <a class="warning-line" href="#/planner">${icon("alert-triangle")}
+      <span><strong>${warnings.length} warning${warnings.length === 1 ? "" : "s"}</strong> · ${escapeHtml(warnings[0].message)}</span>
+      ${icon("chevron-right")}</a>` : "";
+
+  weekEl.innerHTML = `
+    <div class="dash-head">
+      <h2><a href="#/planner">This week</a></h2>
+      ${counted.length ? `<p class="dash-count">${numHtml(done)}<span class="num of"> / ${counted.length}</span> <span class="unit">done</span></p>` : ""}
+    </div>
+    ${counted.length ? "" : `<p class="muted">Nothing planned yet</p>`}
+    <div class="week-strip">${strip}</div>
+    ${warningLine}
+  `;
+}
+
+// One of today's sessions inside the hero: icon, name, a few numbers and
+// one big button. With a recipe the big button starts the workout; without
+// one ("just a run") it logs it. The small button next to it does the other.
+function heroSessionHtml(s) {
+  const details = sessionDetails(s);
+  const facts = [];
+  if (details && details.exercises && details.exercises.length) facts.push(numHtml(details.exercises.length, "exercises"));
+  if (details && details.rounds) facts.push(numHtml(details.rounds, "rounds"));
+  if (details && details.target_duration_s) facts.push(numHtml(Math.round(details.target_duration_s / 60), "min"));
+  if (details && details.target_distance_km) facts.push(numHtml(Number(details.target_distance_km), "km"));
+  const withRecipe = !isPlainSession(s);
+  let actions = "";
+  if (s.status === "planned") {
+    actions = withRecipe
+      ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Start workout</a>
+         <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
+      : `<a class="hero-button" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>
+         <a class="hero-icon-button" href="#/workout/${s.id}" aria-label="Start with the timer">${icon("play")}</a>`;
   }
+  return `
+    <div class="hero-session status-${s.status}">
+      <div class="hero-session-top">
+        <span class="hero-badge" aria-hidden="true">${sportIcon(s.sport)}</span>
+        <div class="hero-session-text">
+          <p class="hero-name">${escapeHtml(sessionName(s))}</p>
+          ${facts.length ? `<p class="hero-facts">${facts.map((f) => `<span>${f}</span>`).join("")}</p>` : ""}
+        </div>
+        ${s.status === "done" ? `<span class="hero-state">${icon("check")} Done</span>`
+          : s.status === "cancelled" ? `<span class="hero-state">Skipped</span>` : ""}
+      </div>
+      ${actions ? `<div class="hero-actions">${actions}</div>` : ""}
+    </div>`;
 }
 
 
 // ---------- Still open: sessions of the last days never ticked (16d) ----------
+// Shown inside the Today hero (17c), one compact row each.
 
 const MISSED_DAYS = 7; // look back this many days (yesterday included)
 const MISSED_SHOWN = 5; // more than that: "+ n more in the plan"
@@ -147,21 +193,20 @@ async function drawMissed(el, today) {
     .filter((s) => s.status === "planned");
   el.hidden = !sessions.length;
   if (!sessions.length) return;
+  const week = startOfWeek(sessions[0].session_date);
   el.innerHTML = `
-    <h2><a href="#/planner/${startOfWeek(sessions[0].session_date)}">${icon("clipboard-list")} Did you do it?</a></h2>
-    <ul class="dash-list">${sessions.slice(0, MISSED_SHOWN).map((s) => `
+    <p class="hero-missed-title"><a href="#/planner/${week}">Did you do it?</a></p>
+    <ul class="hero-missed-list">${sessions.slice(0, MISSED_SHOWN).map((s) => `
       <li data-id="${s.id}">
-        <span>${sportIcon(s.sport)} ${escapeHtml(sessionName(s))}
-          <span class="muted small">${escapeHtml(formatDayLabel(s.session_date))}</span></span>
-        <span class="dash-actions">
-          <button type="button" class="button small-button" data-missed="done" aria-label="Done">${icon("check", { className: "is-ok" })}</button>
-          <a class="button small-button" href="#/log/new/${s.id}">${icon("square-pen")} Log</a>
-          <button type="button" class="button small-button" data-missed="skip">Skipped</button>
-        </span>
+        <span class="hero-missed-name">${escapeHtml(sessionName(s))}
+          <span class="small">${escapeHtml(formatDayLabel(s.session_date))}</span></span>
+        <button type="button" class="hero-small-button" data-missed="done" aria-label="Done">${icon("check")}</button>
+        <a class="hero-small-button" href="#/log/new/${s.id}">Log</a>
+        <button type="button" class="hero-small-button is-quiet" data-missed="skip">Skip</button>
       </li>`).join("")}</ul>
-    ${sessions.length > MISSED_SHOWN ? `<p class="muted small">+ ${sessions.length - MISSED_SHOWN} more
-      <a href="#/planner/${startOfWeek(sessions[0].session_date)}">in the plan</a></p>` : ""}`;
-  // ✅ = done without a log; Skipped = cancelled (it stays in the plan, struck through).
+    ${sessions.length > MISSED_SHOWN ? `<p class="small">+ ${sessions.length - MISSED_SHOWN} more
+      <a href="#/planner/${week}">in the plan</a></p>` : ""}`;
+  // Done = done without a log; Skip = cancelled (it stays in the plan, struck through).
   el.onclick = async (event) => {
     const button = event.target.closest("[data-missed]");
     if (!button) return;
@@ -203,7 +248,8 @@ async function drawReviewNudge(el, today) {
 const LOAD_WEEKS = 8;     // weeks in the little chart (this week included)
 // "average" = the LOAD_RULES.averageWeeks full weeks before this one (rules.js)
 
-async function drawLoad(el, today) {
+// `notesEl` = where the big jump / race week notes go (under the hero).
+async function drawLoad(el, notesEl, today) {
   const monday = startOfWeek(today);
   const firstMonday = addDays(monday, -7 * (LOAD_WEEKS - 1));
   const [activities, sessions, races] = await Promise.all([
@@ -225,87 +271,147 @@ async function drawLoad(el, today) {
   const runKm = weeks[weeks.length - 1].activities.filter((a) => a.sport === "running")
     .reduce((total, a) => total + Number(a.distance_km || 0), 0);
   const noTime = weeks[weeks.length - 1].activities.filter((a) => a.duration_s == null).length;
+  const planned = plannedSeconds(sessions);
   // Big jump / race week notes (same check as the planner).
   const notes = weekLoadNotes({
     sessions, activities: weeks[weeks.length - 1].activities, races,
     previousActivities: weeks.slice(-1 - LOAD_RULES.averageWeeks, -1).flatMap((week) => week.activities),
   });
+  notesEl.innerHTML = notes.map((note) => `<p class="card dash-note status warning small">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("");
 
   el.innerHTML = `
-    <h2><a href="#/log/stats">${icon("timer")} Training load</a></h2>
-    ${notes.map((note) => `<p class="status warning small">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("")}
-    <p class="dash-big">${formatHours(thisWeek.seconds)} <span class="muted">this week · avg ${formatHours(average)}</span></p>
-    <div class="stat-grid">
-      <div><strong>${thisWeek.sessions}</strong><span class="muted small">sessions</span></div>
-      <div><strong>${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })}</strong><span class="muted small">km run</span></div>
-      <div><strong>${Math.round(thisWeek.elevation)}</strong><span class="muted small">m D+</span></div>
-      <div><strong>${thisWeek.avgRpe ? thisWeek.avgRpe.toFixed(1) : "–"}</strong><span class="muted small">avg RPE</span></div>
+    <div class="dash-head">
+      <h2><a href="#/log/stats">Training load</a></h2>
+      <p class="small muted">avg ${numHtml(formatHours(average))}</p>
     </div>
-    ${loadChartHtml(weeks.map((week) => ({ monday: week.monday, seconds: secondsOf(week) })), monday)}
+    <p class="dash-load-total">${numHtml(formatHours(thisWeek.seconds))} <span class="unit">done</span>
+      ${planned.seconds ? `<span class="dash-load-planned">· ${numHtml(formatHours(planned.seconds))} <span class="unit">planned</span></span>` : ""}</p>
+    <div class="stat-grid dash-load-stats">
+      <div><strong>${numHtml(thisWeek.sessions)}</strong><span class="muted small">sessions</span></div>
+      <div><strong>${numHtml(runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 }))}</strong><span class="muted small">km run</span></div>
+      <div><strong>${numHtml(Math.round(thisWeek.elevation))}</strong><span class="muted small">m D+</span></div>
+      <div><strong>${numHtml(thisWeek.avgRpe ? thisWeek.avgRpe.toFixed(1) : "–")}</strong><span class="muted small">avg RPE</span></div>
+    </div>
+    ${loadChartHtml(weeks.map((week) => ({ monday: week.monday, seconds: secondsOf(week) })), monday, planned.seconds)}
     ${noTime ? `<p class="hint">${noTime} session${noTime === 1 ? "" : "s"} this week without a duration (not in the hours).</p>` : ""}
+    ${planned.missing ? `<p class="hint">${planned.missing} planned session${planned.missing === 1 ? "" : "s"} without a duration (not in the planned hours).</p>` : ""}
   `;
 }
 
+// This week's planned hours (17c): the recipe's target time of every session
+// not cancelled; a done session without a target counts with its logged time.
+//   -> { seconds, missing: how many sessions had neither }
+function plannedSeconds(sessions) {
+  let seconds = 0;
+  let missing = 0;
+  for (const s of sessions.filter((x) => x.status !== "cancelled")) {
+    const details = sessionDetails(s);
+    const time = (details && details.target_duration_s) || (s.activity && s.activity.duration_s) || 0;
+    if (time) seconds += time;
+    else missing += 1;
+  }
+  return { seconds, missing };
+}
+
 // Hours per week as simple columns (plain HTML boxes, no chart library).
-// The tallest week fills the box; this week is in the accent colour.
-function loadChartHtml(weeks, thisMonday) {
-  const highest = Math.max(...weeks.map((w) => w.seconds), 1);
+// The tallest week fills the box; this week is in the accent colour, with
+// its planned hours as a dashed "ghost" column behind it.
+function loadChartHtml(weeks, thisMonday, plannedThisWeek = 0) {
+  const highest = Math.max(...weeks.map((w) => w.seconds), plannedThisWeek, 1);
+  const percentOf = (seconds) => Math.round((seconds / highest) * 100);
   return `<div class="load-chart" role="img" aria-label="Hours per week, last ${weeks.length} weeks">
     ${weeks.map((w) => {
-      const percent = Math.round((w.seconds / highest) * 100);
+      const current = w.monday === thisMonday;
       const label = new Date(w.monday + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-      return `<div class="load-week ${w.monday === thisMonday ? "is-current" : ""}" title="Week of ${label}: ${formatHours(w.seconds)}">
+      const ghost = current && plannedThisWeek > w.seconds
+        ? `<span class="load-ghost" style="height: ${percentOf(plannedThisWeek)}%"></span>` : "";
+      return `<div class="load-week ${current ? "is-current" : ""}" title="Week of ${label}: ${formatHours(w.seconds)}${current && plannedThisWeek ? ` (${formatHours(plannedThisWeek)} planned)` : ""}">
         <span class="load-value">${w.seconds ? formatHours(w.seconds) : ""}</span>
-        <span class="load-track"><span class="load-column" style="height: ${percent}%"></span></span>
+        <span class="load-track">${ghost}<span class="load-column" style="height: ${percentOf(w.seconds)}%"></span></span>
       </div>`;
     }).join("")}
   </div>
-  <p class="muted small load-caption">Last ${weeks.length} weeks</p>`;
+  <p class="muted small load-caption"><span>${weeks.length} weeks ago</span><span class="load-caption-now">This week</span></p>`;
 }
 
 
 // ---------- Next race ----------
 
+// Returns the id of the block it shows (so the block tile can stay hidden).
 async function drawRace(el, today) {
   const races = await listRaces();
   const next = races
     .filter((r) => r.race_date && r.race_date >= today && (r.status === "registered" || r.status === "to_register"))
     .sort((a, b) => a.race_date.localeCompare(b.race_date))[0];
-  if (!next) return;
+  if (!next) return null;
   const race = await getRace(next.id);
+  // The race's own block, else the block running today.
+  const block = race.training_block_id ? await getTrainingBlock(race.training_block_id) : await findBlockOn(today);
+  el.hidden = false;
+  el.innerHTML = raceHeroHtml(race, block, today);
+  return block ? block.id : null;
+}
+
+// The countdown, the race's numbers, the block's weeks and the checklist.
+function raceHeroHtml(race, block, today) {
   const days = Math.round((Date.parse(race.race_date) - Date.parse(today)) / 86400000);
   const ready = race.checklist.filter((i) => i.done).length;
-  el.hidden = false;
-  el.innerHTML = `
-    <h2><a href="#/races/${race.id}">${icon("flag")} ${escapeHtml(race.name)}</a></h2>
-    <p class="dash-big">${days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `${days} <span class="muted">days to go</span>`}</p>
-    <p class="muted small">${escapeHtml(formatDayLabel(race.race_date))}
-      ${race.distance_km ? ` · ${Number(race.distance_km)} km` : ""}
-      ${race.goal_time_s ? ` · goal ${formatDuration(race.goal_time_s)}` : ""}
-      ${race.status === "to_register" ? " · <strong>not registered yet</strong>" : ""}</p>
-    ${race.checklist.length ? `<p class="small">Checklist: ${ready} / ${race.checklist.length} ready</p>` : ""}
+  const facts = [
+    race.distance_km ? numHtml(Number(race.distance_km), "km") : "",
+    race.elevation_m ? numHtml(Number(race.elevation_m), "m D+") : "",
+    race.goal_time_s ? `<span class="unit">goal</span> ${numHtml(formatDuration(race.goal_time_s))}` : "",
+  ].filter(Boolean);
+  return `
+    <div class="dash-head">
+      <h2><a href="#/races/${race.id}">Next race</a></h2>
+      <span class="chip ${race.status === "registered" ? "is-ok" : ""}">${race.status === "registered" ? "Registered" : "To register"}</span>
+    </div>
+    <div class="race-hero-top">
+      <p class="race-hero-days">${days === 0 ? `<span class="num">Today!</span>` : days === 1 ? `<span class="num">Tomorrow</span>`
+        : `<span class="num">${days}</span> <span class="race-hero-days-label">days</span>`}</p>
+      <div class="race-hero-name">
+        <p class="race-hero-title">${escapeHtml(race.name)}</p>
+        <p class="muted small">${escapeHtml(formatDayLabel(race.race_date))}${race.location ? ` · ${escapeHtml(race.location)}` : ""}</p>
+      </div>
+    </div>
+    ${facts.length ? `<p class="race-hero-facts">${facts.map((f) => `<span>${f}</span>`).join("")}</p>` : ""}
+    ${block ? blockBarHtml(block, today) : ""}
+    ${race.checklist.length ? `
+      <div class="race-hero-bar">
+        <p class="small"><strong>Checklist</strong> <span class="muted">${ready} of ${race.checklist.length} ready</span></p>
+        <span class="bar" role="img" aria-label="${ready} of ${race.checklist.length} ready">
+          <span class="bar-fill" style="width: ${Math.round((ready / race.checklist.length) * 100)}%"></span></span>
+      </div>` : ""}
   `;
 }
 
-
-// ---------- Current training block ----------
-
-async function drawBlock(el, today) {
-  const block = await findBlockOn(today);
-  if (!block) return;
+// A block as one small segment per week: done weeks filled, this week half.
+function blockBarHtml(block, today) {
   const week = blockWeek(block, today);
-  const total = Math.max(1, Date.parse(block.end_date) - Date.parse(block.start_date));
-  const percent = Math.round(((Date.parse(today) - Date.parse(block.start_date)) / total) * 100);
-  el.hidden = false;
-  el.innerHTML = `
-    <h2><a href="#/blocks/${block.id}">${icon("book-open")} ${escapeHtml(block.name)}</a></h2>
-    <p class="dash-big">Week ${week.current} <span class="muted">of ${week.total}</span></p>
-    <span class="bar" role="img" aria-label="${percent}% of the block"><span class="bar-fill" style="width: ${percent}%"></span></span>
-  `;
+  const segments = Array.from({ length: week.total }, (_, i) =>
+    `<span class="${i + 1 < week.current ? "is-done" : i + 1 === week.current ? "is-now" : ""}"></span>`).join("");
+  return `
+    <div class="race-hero-bar">
+      <p class="small"><strong>${escapeHtml(block.name)}</strong> <span class="muted">week ${week.current} of ${week.total}</span></p>
+      <span class="week-segments" role="img" aria-label="Week ${week.current} of ${week.total}">${segments}</span>
+    </div>`;
 }
 
 
-// ---------- Weight ----------
+// ---------- Small tiles ----------
+
+// Current training block, unless the race card already shows it.
+async function drawBlockTile(el, today, shownBlockId) {
+  const block = await findBlockOn(today);
+  if (!block || block.id === shownBlockId) return;
+  const week = blockWeek(block, today);
+  el.href = `#/blocks/${block.id}`;
+  el.hidden = false;
+  el.innerHTML = `
+    <span class="tile-label">${icon("book-open")} Block</span>
+    <span class="tile-value">${numHtml(week.current)}<span class="unit"> of ${week.total} weeks</span></span>
+    <span class="tile-note">${escapeHtml(block.name)}</span>`;
+}
 
 async function drawWeight(el) {
   const [weighIns, settings] = await Promise.all([listWeighIns(), getSettings()]);
@@ -314,76 +420,60 @@ async function drawWeight(el) {
   const start = settings.start_weight_kg != null ? Number(settings.start_weight_kg) : Number(weighIns[0].weight_kg);
   const target = settings.target_weight_kg != null ? Number(settings.target_weight_kg) : null;
   const kg = (n) => Number(n).toLocaleString("en-GB", { maximumFractionDigits: 1 });
-  let goalText = "";
+  const change = Number(latest.weight_kg) - start;
+  let note = escapeHtml(formatDayLabel(latest.weigh_date));
   if (target) {
     const goal = start - target;
-    const done = start - Number(latest.weight_kg);
-    const percent = goal ? Math.max(0, Math.min(100, Math.round((done / goal) * 100))) : 0;
-    goalText = `${percent}% of your goal (${kg(target)} kg)`;
+    const percent = goal ? Math.max(0, Math.min(100, Math.round((-change / goal) * 100))) : 0;
+    note = `${change < 0 ? "−" : change > 0 ? "+" : ""}${kg(Math.abs(change))} kg · ${percent}% to goal`;
   }
+  el.href = "#/body";
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/body">${icon("scale")} Weight</a></h2>
-    <p class="dash-big">${kg(latest.weight_kg)} kg</p>
-    <p class="muted small">${escapeHtml(formatDayLabel(latest.weigh_date))}${goalText ? ` · ${goalText}` : ""}</p>
-    ${sparklineHtml(weightTrend(weighIns).slice(-12))}
-  `;
+    <span class="tile-label">${icon("scale")} Weight</span>
+    <span class="tile-value">${numHtml(kg(latest.weight_kg), "kg")}</span>
+    <span class="tile-note">${note}</span>`;
 }
-
-// A tiny trend line without axes: just the shape of the last weeks.
-function sparklineHtml(points) {
-  if (points.length < 2) return "";
-  const width = 200;
-  const height = 40;
-  const values = points.map((p) => p.kg);
-  const low = Math.min(...values);
-  const high = Math.max(...values);
-  const x = (i) => 2 + (i / (points.length - 1)) * (width - 4);
-  const y = (v) => 4 + (1 - (v - low) / Math.max(0.1, high - low)) * (height - 8);
-  const path = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.kg).toFixed(1)}`).join(" ");
-  return `<svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img"
-    aria-label="Weight trend, last ${points.length} weigh-ins"><path d="${path}"></path></svg>`;
-}
-
-
-// ---------- Football season ----------
 
 async function drawFootball(el, today) {
   const season = currentSeason(today);
   const matches = await listMatchesBetween(season.from, season.to);
+  if (!matches.length) return;
   const cards = matches.map((m) => m.match_stats).filter(Boolean);
   const sum = (key) => cards.reduce((total, c) => total + Number(c[key] || 0), 0);
-  el.innerHTML = `
-    <h2><a href="#/log">${sportIcon("football")} Season ${season.label}</a> ${season.finished ? `<span class="muted small">finished</span>` : ""}</h2>
-    <div class="stat-grid">
-      <div><strong>${matches.length}</strong><span class="muted small">matches</span></div>
-      <div><strong>${sum("minutes_played")}</strong><span class="muted small">minutes</span></div>
-      <div><strong>${sum("goals")}</strong><span class="muted small">goals</span></div>
-      <div><strong>${sum("assists")}</strong><span class="muted small">assists</span></div>
-    </div>
-    ${matches.length > cards.length ? `<p class="hint">${matches.length - cards.length} match${matches.length - cards.length === 1 ? "" : "es"} without a match card (minutes, goals and assists only count from match cards).</p>` : ""}
-  `;
-}
-
-
-// ---------- Shoes ----------
-
-async function drawShoes(el) {
-  const [shoes, distances] = await Promise.all([listShoes(), getShoeDistances()]);
-  const inUse = shoes.filter((s) => !s.retired);
-  if (!inUse.length) return;
+  el.href = "#/log/stats";
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/shoes">${icon("footprints")} Shoes</a></h2>
-    <ul class="dash-list">${inUse.map((shoe) => {
-      const km = (distances[shoe.id] || { km: 0 }).km;
-      const status = shoeStatus(km);
-      const percent = Math.min(100, Math.round((km / SHOE_RULES.replaceKm) * 100));
-      return `<li class="dash-shoe status-${status}">
-        <span>${escapeHtml(shoe.name)} <span class="muted small">${km.toFixed(0)} km</span>
-          ${status === "replace" ? " · <strong>replace</strong>" : status === "warn" ? " · getting worn" : ""}</span>
-        <span class="bar"><span class="bar-fill" style="width: ${percent}%"></span></span>
-      </li>`;
-    }).join("")}</ul>
-  `;
+    <span class="tile-label">${sportIcon("football")} Season ${escapeHtml(season.label)}</span>
+    <span class="tile-value">${numHtml(matches.length, matches.length === 1 ? "match" : "matches")}</span>
+    <span class="tile-note">${sum("goals")} G · ${sum("assists")} A · ${sum("minutes_played")}′</span>`;
+}
+
+// The most worn pair still in use (amber note when it's getting worn).
+async function drawShoes(el) {
+  const [shoes, distances] = await Promise.all([listShoes(), getShoeDistances()]);
+  const inUse = shoes.filter((s) => !s.retired)
+    .map((shoe) => ({ shoe, km: (distances[shoe.id] || { km: 0 }).km }))
+    .sort((a, b) => b.km - a.km);
+  if (!inUse.length) return;
+  const { shoe, km } = inUse[0];
+  const status = shoeStatus(km);
+  el.href = "#/shoes";
+  el.hidden = false;
+  el.innerHTML = `
+    <span class="tile-label">${icon("footprints")} Shoes</span>
+    <span class="tile-value">${numHtml(km.toFixed(0), "km")}</span>
+    <span class="tile-note ${status === "ok" ? "" : "is-warning"}">${escapeHtml(shoe.name)}${status === "replace" ? " · replace" : status === "warn" ? " · getting worn" : ""}</span>`;
+}
+
+// The 10k record typed in Body & goals (the one Rom tracks), if there is one.
+async function drawBest(el) {
+  const best = (await listPersonalBests()).find((pb) => Number(pb.distance_km) === 10);
+  if (!best) return;
+  el.href = "#/body";
+  el.hidden = false;
+  el.innerHTML = `
+    <span class="tile-label">${icon("timer")} 10k best</span>
+    <span class="tile-value">${numHtml(formatDuration(best.time_s))}</span>
+    <span class="tile-note">${escapeHtml(formatSpeed("per_km", best.time_s, 10))}</span>`;
 }

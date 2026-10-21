@@ -56,6 +56,18 @@
   --rpe-mid-bg: #ede9fe;  --rpe-mid-text: #5b21b6;
   --rpe-high-bg: #fce7f3; --rpe-high-text: #9d174d;
   --rpe-max-bg: #831843;  --rpe-max-text: #ffffff;
+  /* Home (17c): the Today hero, the amber warning line, empty bar segments */
+  --hero-bg: #6d28d9;
+  --hero-text: #ffffff;
+  --hero-muted: rgba(255, 255, 255, 0.82);
+  --hero-soft: rgba(255, 255, 255, 0.16);
+  --hero-line: rgba(255, 255, 255, 0.26);
+  --hero-button-bg: #ffffff;
+  --hero-button-text: #6d28d9;
+  --warn-bg: #fef3c7;
+  --warn-text: #92400e;
+  --segment-empty: #e4e4e7;
+  --load-past: #ddd6fe;         /* past weeks in the load chart */
 }
 
 /* Dark mode follows the phone's setting automatically. Shadows don't show
@@ -86,6 +98,12 @@
     --rpe-mid-bg: #3b2a66;  --rpe-mid-text: #ddd6fe;
     --rpe-high-bg: #5c1d3f; --rpe-high-text: #fbcfe8;
     --rpe-max-bg: #f9a8d4;  --rpe-max-text: #500724;
+    --hero-bg: #4c1d95;
+    --hero-button-text: #4c1d95;
+    --warn-bg: #3b2b0b;
+    --warn-text: #fcd34d;
+    --segment-empty: #3a3632;
+    --load-past: #4c3d7a;
   }
 }
 
@@ -746,14 +764,12 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
 }
 .pb-row a { color: var(--accent); }
 
-/* Dashboard */
-.dashboard { display: grid; gap: 0; }
+/* Dashboard: shared bits (also used by the week review and settings) */
 .dash-card { min-width: 0; }
-.dash-card { border-top: 3px solid var(--accent-strong); }
 .dash-card h2 { margin: 0 0 8px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 .dash-card h2 a { color: inherit; text-decoration: none; }
 /* the whole card opens its screen (see dashboard.js) */
-.dash-card:has(h2 a) { cursor: pointer; }
+.dash-card:has(h2 a), .dash-hero { cursor: pointer; }
 .dash-card h2 a::after { content: " →"; color: var(--accent); }
 .dash-big { font-family: var(--font-num); font-size: 2.2rem; font-weight: 700; margin: 4px 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .dash-big .muted { font-family: var(--font); font-size: 0.95rem; font-weight: 400; }
@@ -763,29 +779,148 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
 .dash-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
   padding: 6px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
 .dash-list li:first-child { border-top: 0; }
-.dash-actions { display: flex; gap: 6px; }
-.dash-actions .button { text-decoration: none; }
-.dash-shoe { flex-direction: column; align-items: stretch !important; }
 .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 8px 0; text-align: center; }
 .strip-day { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; border-radius: 8px; }
 .strip-day.is-today { outline: 2px solid var(--accent); }
-.dash-warnings { border-top-color: #d97706; }
-/* Home "Training load": hours per week as columns (not ".bar": that's the shoe bar) */
+
+/* ---------- Home (step 17c, "Today first") ----------
+   Phone: the two columns melt into one list (display: contents) and `order`
+   sets the sequence: hero, notes, race, week, load, tiles.
+   Only the hero (and the race countdown) stand out; the rest is quiet. */
+.dashboard { display: flex; flex-direction: column; }
+.dash-main, .dash-side { display: contents; }
+.dash-hero { order: 1; }
+.dash-notes { order: 2; }
+.dash-race { order: 3; }
+#dash-week { order: 4; }
+#dash-load { order: 5; }
+.dash-tiles { order: 6; }
+.dash-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.dash-head h2 { margin: 0; }
+.dash-head p { margin: 0; }
+.dash-count .num { font-size: 1.7rem; }
+.dash-count .num.of { font-size: 1.25rem; color: var(--muted); }
+
+/* The Today hero: violet block, white text, one big button */
+.dash-hero {
+  background: var(--hero-bg); color: var(--hero-text);
+  border-radius: 20px; padding: 18px; margin-bottom: 16px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.dash-hero a { color: inherit; }
+.dash-hero .unit { color: var(--hero-muted); }
+.hero-label, .hero-missed-title { margin: 0; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--hero-muted); }
+.hero-label a, .hero-missed-title a { text-decoration: none; }
+#dash-today { display: flex; flex-direction: column; gap: 14px; }
+#dash-today > p:only-child { margin: 0; }
+.hero-session + .hero-session { border-top: 1px solid var(--hero-line); padding-top: 14px; }
+.hero-session-top { display: flex; align-items: center; gap: 12px; }
+.hero-badge { flex: none; width: 48px; height: 48px; border-radius: 14px; background: var(--hero-soft); display: grid; place-items: center; }
+.hero-badge .icon { width: 26px; height: 26px; }
+.hero-session-text { flex: 1; min-width: 0; }
+.hero-name { margin: 0; font-size: 1.4rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.hero-facts { margin: 4px 0 0; display: flex; flex-wrap: wrap; column-gap: 14px; }
+.hero-facts .num { font-size: 1.35rem; }
+.hero-state { flex: none; display: flex; align-items: center; gap: 4px; font-size: 0.9rem; font-weight: 600; color: var(--hero-muted); }
+.hero-session.status-cancelled .hero-name { text-decoration: line-through; opacity: 0.8; }
+.hero-actions { display: flex; gap: 10px; margin-top: 14px; }
+.hero-button {
+  flex: 1; min-height: 52px; padding: 0 16px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--hero-button-bg); color: var(--hero-button-text) !important;
+  font-weight: 700; font-size: 1.05rem; text-decoration: none;
+}
+.hero-button.is-quiet { flex: none; align-self: flex-start; min-height: 44px; background: var(--hero-soft); color: var(--hero-text) !important; font-size: 0.95rem; }
+.hero-icon-button { flex: none; width: 52px; min-height: 52px; border-radius: 14px; border: 1px solid var(--hero-line); display: grid; place-items: center; }
+.hero-button .icon, .hero-icon-button .icon { width: 20px; height: 20px; }
+.hero-rest { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 600; }
+.hero-resume { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--hero-soft); text-decoration: none; }
+.hero-resume span { flex: 1; min-width: 0; }
+/* "Did you do it?" inside the hero */
+.hero-missed { border-top: 1px solid var(--hero-line); padding-top: 12px; }
+.hero-missed-title { margin-bottom: 6px; }
+.hero-missed-list { list-style: none; margin: 0; padding: 0; }
+.hero-missed-list li { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.hero-missed-name { flex: 1; min-width: 0; font-weight: 600; line-height: 1.25; }
+.hero-missed-name .small { display: block; font-weight: 400; color: var(--hero-muted); }
+.hero-small-button {
+  flex: none; min-width: 44px; height: 44px; padding: 0 12px; border: 0; border-radius: 12px;
+  display: grid; place-items: center; background: var(--hero-soft); color: var(--hero-text);
+  font: inherit; font-size: 0.9rem; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.hero-small-button.is-quiet { background: transparent; }
+.hero-small-button .icon { width: 20px; height: 20px; }
+.hero-missed p.small { margin: 4px 0 0; color: var(--hero-muted); }
+
+/* Small notes under the hero (week review, load jump) */
+.dash-notes { display: flex; flex-direction: column; }
+.dash-note { padding: 12px 16px; }
+p.dash-note { margin-bottom: 16px; }
+
+/* Next race */
+.chip.is-ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); border-color: transparent; }
+.race-hero-top { display: flex; align-items: flex-end; gap: 14px; margin: 4px 0 12px; }
+.race-hero-days { margin: 0; color: var(--accent); white-space: nowrap; }
+.race-hero-days .num { font-size: 4.4rem; line-height: 0.82; }
+.race-hero-days-label { font-size: 0.95rem; font-weight: 700; }
+.race-hero-name { flex: 1; min-width: 0; }
+.race-hero-title { margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+.race-hero-name .muted { margin: 0; }
+.race-hero-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 4px; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+.race-hero-facts .num { font-size: 1.35rem; }
+.race-hero-bar { margin-top: 10px; }
+.race-hero-bar p { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 4px; }
+.race-hero-bar .bar { height: 6px; border: 0; background: var(--segment-empty); }
+.week-segments { display: flex; gap: 3px; }
+.week-segments span { flex: 1; height: 6px; border-radius: 3px; background: var(--segment-empty); }
+.week-segments .is-done { background: var(--accent-strong); }
+.week-segments .is-now { background: color-mix(in srgb, var(--accent-strong) 50%, var(--segment-empty)); }
+
+/* This week: all warnings as one amber line (each one is on its day in the planner) */
+.warning-line {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--warn-bg); color: var(--warn-text); font-size: 0.88rem; text-decoration: none;
+}
+.warning-line span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Training load: hours per week as columns (not ".bar": that's the shoe bar) */
+.dash-load-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 0 0 12px; }
+.dash-load-total > .num { font-size: 2.6rem; }
+.dash-load-planned .num { font-size: 1.35rem; color: var(--muted); }
+.dash-card .dash-load-stats strong { font-size: 1.3rem; }
 .load-chart { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px;
-  align-items: end; height: 100px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  align-items: end; height: 100px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .load-week { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
-.load-value { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
-.load-track { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.load-column { width: 100%; max-width: 28px; min-height: 2px; border-radius: 4px 4px 0 0;
-  background: color-mix(in srgb, var(--accent-strong) 35%, transparent); }
+.load-value { font-size: 0.62rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.load-track { position: relative; flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.load-column { position: relative; width: 100%; max-width: 28px; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--load-past); }
 .load-week.is-current .load-column { background: var(--accent-strong); }
 .load-week.is-current .load-value { color: var(--text); font-weight: 600; }
-.load-caption { margin: 4px 0 0; }
-.sparkline { display: block; width: 100%; height: 40px; margin-top: 8px; }
-.sparkline path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+/* This week's planned hours: a dashed outline behind the done column */
+.load-ghost { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 28px;
+  border: 1.5px dashed var(--accent-strong); border-bottom: 0; border-radius: 4px 4px 0 0; }
+.load-caption { display: flex; justify-content: space-between; margin: 4px 0 0; }
+.load-caption-now { color: var(--accent); font-weight: 600; }
+#dash-load .hint { margin: 8px 0 0; }
+
+/* Small tiles: two per row */
+.dash-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.dash-tiles:not(:has(.dash-tile:not([hidden]))) { display: none; }
+.dash-tile {
+  min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--card-border); box-shadow: var(--shadow); border-radius: var(--radius);
+  color: inherit; text-decoration: none;
+}
+.tile-label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; color: var(--muted); overflow: hidden; white-space: nowrap; }
+.tile-value .num { font-size: 1.8rem; }
+.tile-note { font-size: 0.8rem; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
+.tile-note.is-warning { color: var(--warn-text); font-weight: 600; }
+
+/* Laptop: two real columns (left "now", right overview) */
 @media (min-width: 900px) {
   .view:has(.dashboard) { max-width: 1200px; }   /* the page may be wider than the phone layout */
-  .dashboard { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
+  .dashboard { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
+  .dash-main, .dash-side { display: block; }
 }
 
 /* Drag and drop in the planner */
