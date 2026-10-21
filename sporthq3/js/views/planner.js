@@ -10,20 +10,20 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610211529";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES } from "../rules.js?v=202610211529";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211529";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610211529";
+} from "../storage.js?v=202610211550";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES } from "../rules.js?v=202610211550";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211550";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610211550";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned,
-} from "../utils/plan.js?v=202610211529";
-import { weekLoadNotes } from "../utils/load.js?v=202610211529";
-import { openSheet } from "../utils/sheet.js?v=202610211529";
-import { showToast } from "../utils/toast.js?v=202610211529";
-import { loadWorkout } from "../utils/workout.js?v=202610211529";
-import { blockWeek } from "./blocks.js?v=202610211529";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610211529";
+} from "../utils/plan.js?v=202610211550";
+import { weekLoadNotes } from "../utils/load.js?v=202610211550";
+import { openSheet } from "../utils/sheet.js?v=202610211550";
+import { showToast } from "../utils/toast.js?v=202610211550";
+import { loadWorkout } from "../utils/workout.js?v=202610211550";
+import { blockWeek } from "./blocks.js?v=202610211550";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610211550";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
