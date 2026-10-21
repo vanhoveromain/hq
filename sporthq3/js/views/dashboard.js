@@ -6,18 +6,18 @@ import {
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
   getTrainingBlock, listPersonalBests,
-} from "../storage.js?v=202610211727";
-import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610211727";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610211727";
-import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610211727";
-import { overview } from "../utils/stats.js?v=202610211727";
-import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610211727";
-import { weekLoadNotes } from "../utils/load.js?v=202610211727";
-import { showToast } from "../utils/toast.js?v=202610211727";
-import { loadWorkout } from "../utils/workout.js?v=202610211727";
-import { currentSeason } from "../utils/season.js?v=202610211727";
-import { blockWeek } from "./blocks.js?v=202610211727";
-import { icon } from "../utils/icons.js?v=202610211727";
+} from "../storage.js?v=202610211800";
+import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610211800";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610211800";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610211800";
+import { overview } from "../utils/stats.js?v=202610211800";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610211800";
+import { weekLoadNotes } from "../utils/load.js?v=202610211800";
+import { showToast } from "../utils/toast.js?v=202610211800";
+import { loadWorkout } from "../utils/workout.js?v=202610211800";
+import { currentSeason } from "../utils/season.js?v=202610211800";
+import { blockWeek } from "./blocks.js?v=202610211800";
+import { icon } from "../utils/icons.js?v=202610211800";
 
 // Home layout (step 17c, "Today first"):
 //   1. Today hero (violet): today's sessions with one big button, and the

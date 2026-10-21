@@ -10,21 +10,21 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610211727";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES } from "../rules.js?v=202610211727";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211727";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610211727";
+} from "../storage.js?v=202610211800";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES } from "../rules.js?v=202610211800";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211800";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610211800";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned,
-} from "../utils/plan.js?v=202610211727";
-import { weekLoadNotes } from "../utils/load.js?v=202610211727";
-import { openSheet } from "../utils/sheet.js?v=202610211727";
-import { showToast } from "../utils/toast.js?v=202610211727";
-import { loadWorkout } from "../utils/workout.js?v=202610211727";
-import { blockWeek } from "./blocks.js?v=202610211727";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610211727";
-import { icon } from "../utils/icons.js?v=202610211727";
+} from "../utils/plan.js?v=202610211800";
+import { weekLoadNotes } from "../utils/load.js?v=202610211800";
+import { openSheet } from "../utils/sheet.js?v=202610211800";
+import { showToast } from "../utils/toast.js?v=202610211800";
+import { loadWorkout } from "../utils/workout.js?v=202610211800";
+import { blockWeek } from "./blocks.js?v=202610211800";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610211800";
+import { icon } from "../utils/icons.js?v=202610211800";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)

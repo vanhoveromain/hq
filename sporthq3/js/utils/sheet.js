@@ -13,8 +13,8 @@
 // Any element with a data-value closes the sheet and returns that value.
 // For forms inside a sheet, pass onReady(dialog, close) and call close(value).
 
-import { escapeHtml } from "./format.js?v=202610211727";
-import { icon } from "./icons.js?v=202610211727";
+import { escapeHtml } from "./format.js?v=202610211800";
+import { icon } from "./icons.js?v=202610211800";
 
 export function openSheet({ title, html, onReady }) {
   return new Promise((resolve) => {

@@ -6,13 +6,13 @@
 import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610211727";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610211727";
-import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610211727";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610211727";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610211727";
-import { showToast } from "../utils/toast.js?v=202610211727";
-import { icon } from "../utils/icons.js?v=202610211727";
+} from "../storage.js?v=202610211800";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610211800";
+import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610211800";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610211800";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610211800";
+import { showToast } from "../utils/toast.js?v=202610211800";
+import { icon } from "../utils/icons.js?v=202610211800";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
