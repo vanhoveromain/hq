@@ -60,7 +60,7 @@
     the planner, 15c add details to a "just a sport" session
 16. Test round (2026-10-20, Claude tested as a user on a fake database): 16a data fixes, 16b small fixes,
     16c races on the planner, 16d missed-session nudge, 16e smarter warnings, 16f load / taper check,
-    16g Sunday weekly review (all built 2026-10-20; 16e + 16g need migration 20261020000001)
+    16g Sunday weekly review (all built 2026-10-20; migration 20261020000001 applied 2026-10-21)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -114,8 +114,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 ## Decisions log
 - 2026-10-20: 16c–16g (Claude's calls after the test round; Rom tests them together). MIGRATION
   20261020000001_reviews_and_muted_warnings.sql (additive: planned_weeks.review_notes + reviewed_at,
-  settings.muted_warnings jsonb) must be pasted in the SQL Editor before 16e / 16g work; without it the
-  rest of the app works (muted list reads as empty, saving a review / mute shows the error).
+  settings.muted_warnings jsonb) applied by Rom in the SQL Editor on 2026-10-21 (without it the rest of
+  the app still works: muted list reads as empty, saving a review / mute shows the error).
   (c) Races (registered / to register, listRacesBetween) show on their planner day as a dashed 🏁 card
   (link to the race) and 🏁 in the month, until the race routine puts a race-day session there. They
   count for the rules (calendarItems(sessions, activities, races)); new rule race_day_clash = anything
