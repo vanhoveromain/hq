@@ -6,14 +6,14 @@ import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
   updatePlannedSession,
-} from "../storage.js?v=202610201505";
-import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor } from "../rules.js?v=202610201505";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201505";
-import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610201505";
-import { openSheet } from "../utils/sheet.js?v=202610201505";
-import { showToast } from "../utils/toast.js?v=202610201505";
-import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610201505";
-import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201505";
+} from "../storage.js?v=202610211529";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor } from "../rules.js?v=202610211529";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610211529";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610211529";
+import { openSheet } from "../utils/sheet.js?v=202610211529";
+import { showToast } from "../utils/toast.js?v=202610211529";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610211529";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610211529";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
@@ -226,10 +226,9 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    // Imported activities (gym, football) can have no duration; editing them
-    // shouldn't force you to invent one. New activities always need one.
-    const allowEmptyDuration = isEdit && activity.duration_s == null;
-    const result = readForm(form, { allowEmptyDuration });
+    // Every activity needs a duration (since switch day 2026-10-21 all of
+    // them have one, imported ones included), so the training load is complete.
+    const result = readForm(form);
     if (result.error) {
       showStatus(status, result.error, "error");
       return;
@@ -336,7 +335,7 @@ function updateRpeLabel(form) {
 // Reads the form into { activity, matchStats } or { error: "message" }.
 // Hidden boxes are saved as empty (null), so switching from Running to
 // Football doesn't keep an old distance.
-function readForm(form, { allowEmptyDuration = false } = {}) {
+function readForm(form) {
   const f = form.elements;
   const sport = getSport(f.sport.value);
   const type = getSessionType(sport.key, f.session_type.value);
@@ -356,9 +355,11 @@ function readForm(form, { allowEmptyDuration = false } = {}) {
     }
     duration = minutes > 0 ? minutes * 60 : null;
   } else {
-    const empty = f.duration.value.trim() === "";
-    duration = empty && allowEmptyDuration ? null : parseDuration(f.duration.value);
-    if (!duration && !(empty && allowEmptyDuration)) {
+    if (f.duration.value.trim() === "") {
+      return { error: 'Please fill in the duration, e.g. "45:00" or "1:02:30".' };
+    }
+    duration = parseDuration(f.duration.value);
+    if (!duration) {
       return { error: 'Duration not understood. Try "45:00" or "1:02:30".' };
     }
   }
