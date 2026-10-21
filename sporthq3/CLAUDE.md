@@ -65,6 +65,9 @@
 17. Design round 2 (2026-10-21): 17a line icons, 17b number style, 17c Home A (Today first), 17d race mode =
     Home B in the last 21 days before a REGISTERED race, 17e polish (all built 2026-10-21 in one batch on the
     draft; Rom tests everything locally, then merge to main)
+18. Workout mode redesign (2026-10-21, after canvas mock-ups): 18a current exercise as a big card, 18b other
+    exercises as short rows, 18c dark strip on top + tab bar hidden, 18d rest bar pinned at the bottom +
+    "screen stays on" toggle, 18e polish (built 2026-10-21 on the draft, same way as 17: Rom tests locally, then main)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -118,6 +121,28 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-21: workout mode redesign (18, views/workout.js; no migration). Rom approved two canvas mock-ups
+  (lifting / resting). 18a "Now" card = the exercise you're on: the one you tapped (workout.currentIndex,
+  saved with the workout), else the next one with a set left; a circuit goes round by round (first exercise
+  with the fewest ticks). Reps (or time) and kg in the stat font, 48px set circles (done = filled accent +
+  check with a short pop, next = accent ring; tap a circle to tick / untick), one 64px "Set N done" button
+  (timed exercise: "Start 45 s · set N", the 14a countdown), hint "Rest 90 s starts when you tap". When its
+  sets are done it moves on by itself; all done = a "All N sets done" card with Finish (the bottom Finish
+  hides then). ✎ (edit / remove) is on the Now card only: tap a row to make it current, then edit.
+  18b "Up next" rows (name, sets × reps · kg, progress dots, timer icon if timed) and "Done" rows (greyed,
+  green check); tap = make it current (also to fix a done one). 18c dark strip at the top of the screen:
+  ‹ Plan, elapsed time, sets done N / total + thin bar, chips "Rest 90 s ▾" (sheet: Off / 1 min / 90 s /
+  2 min / 3 min / Custom…, still remembered per device) and "Screen stays on"; the description / targets
+  in one small line. main.js hides the tab bar on the workout route only (phone and laptop) and sets
+  body.is-workout. 18d bar pinned at the bottom (safe-area aware): rest countdown + filling bar, "+15 s",
+  Skip, "Next: <exercise> · set N"; a timed set uses the same bar (Get ready / set N, Stop). While resting
+  the "Set done" button turns outline but still works (tap early). The rest is now saved with the workout
+  (workout.rest = { endsAt, totalS }), so it carries on after a reload. Wake lock: on by default for each
+  workout (workout.keepAwake), the chip turns it off / on, asked again when the app comes back; the chip is
+  hidden where the browser has no wake lock and says "Screen lock: not available" if the phone refuses.
+  iPhone home-screen apps may not honour it: Rom checks it on his phone. No vibration on iPhone (Safari has
+  no vibrate), so the feedback is visual (+ the existing beeps); elsewhere a buzz only after a tap on the
+  page (browsers refuse it otherwise). 18e checked in light / dark, 320px and laptop (workout column 560px).
 - 2026-10-21: design round 2 (17), after Claude's sports-designer review and canvas mock-ups. Rom's
   choices: Home A (Today first) on normal days, Home B (race first) in the last 3 weeks (21 days) before
   a race, REGISTERED races only (not "to register"); line icons in the sport badges too (no emoji left);
