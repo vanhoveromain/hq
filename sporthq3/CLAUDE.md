@@ -68,6 +68,9 @@
 18. Workout mode redesign (2026-10-21, after canvas mock-ups): 18a current exercise as a big card, 18b other
     exercises as short rows, 18c dark strip on top + tab bar hidden, 18d rest bar pinned at the bottom +
     "screen stays on" toggle, 18e polish (built 2026-10-21 on the draft, same way as 17: Rom tests locally, then main)
+19. Race page redesign (2026-10-21, after canvas mock-ups): 19a summary first (hero per state), 19b details form
+    behind "Edit", 19c routine as day rows + tappable checklist, 19d "Add your result" on a past race (found in
+    your log + PB offer), 19e polish (built 2026-10-21 on the draft, same way as 17: Rom tests locally, then main)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -121,6 +124,30 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-21: race page redesign (19, views/races.js; no migration). Rom approved three canvas mock-ups
+  (upcoming / past with result / past without result). 19a raceState(): upcoming (date from today, registered /
+  to register / potential) = dark block like Home's race mode (status pill, date · place, name, countdown
+  "N days to go" / "Race day!", km / D+ / goal / goal pace, the race's block as one segment per week while it
+  runs, else "Part of <block>"); past (finished or date passed) with a result = white card, result big in
+  the accent, "↑ m:ss under goal" green or "m:ss over goal" grey (never red), km / D+ / pace; idea (no date) =
+  white card + "Set a date" (opens Edit on the date box); cancelled = greyed + struck. "Your run" = activities
+  linked to the race (race_id, tap -> log). Notes shown as text (line breaks kept). A past race folds its
+  block and checklist into one-line rows (checklist opens in place); routine + checklist cards only for
+  races not past. 19b the details form (all fields as before) opens with the Edit pill; Cancel / Save go
+  back to the summary (date change still moves / removes the routine), Delete stays in the form; a new race
+  opens straight on the form. 19c routine planned = one row per day (activation jog, Full rest with a check
+  that nothing else is planned that day, Race day with a flag), each opening that week in the planner, and
+  "In your plan" when complete; not planned = the explanation + the button, as before; "Remove the routine"
+  is a small link. Checklist = count + green bar, 48px rows (tap anywhere to tick), the remove buttons only
+  after "Edit list" (no accidental deletes), "Untick all" a small link, + button to add. 19d a past race
+  without a result (date passed or finished, not cancelled) gets "Add your result": the run found in the log
+  (one linked to the race, else a run on race day: a "race" session first, then the closest distance) with
+  "Use this" (saves its time as the result, marks the race finished, links the run to the race), or type a
+  time + Save (does NOT link the found run: it may not be this race). If the time beats a PB typed in Body &
+  goals for the same distance (within 2 %), a ticked box "Save it as your new PB too" updates that PB (time,
+  date, race name). "I didn't run it" = status cancelled (asked first). storage.js: listRaceActivities,
+  listRunsOn, linkActivityToRace (only sets race_id). 19e checked light / dark, 320px and laptop (summary or
+  form left, routine + checklist right; a past race = one centred column).
 - 2026-10-21: workout mode redesign (18, views/workout.js; no migration). Rom approved two canvas mock-ups
   (lifting / resting). 18a "Now" card = the exercise you're on: the one you tapped (workout.currentIndex,
   saved with the workout), else the next one with a set left; a circuit goes round by round (first exercise
