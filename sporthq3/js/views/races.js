@@ -1,15 +1,17 @@
 // Races tab.
 //   #/races        -> Upcoming / Ideas / Past
 //   #/races/new    -> a new race
-//   #/races/<id>   -> a race: details, checklist, race routine
+//   #/races/<id>   -> a race: summary (Edit = details form), checklist, race routine
 
 import {
-  listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions,
+  listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
 } from "../storage.js?v=202610211800";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE } from "../rules.js?v=202610211800";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610211800";
 import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610211800";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610211800";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610211800";
+import { sportBadge } from "../utils/plan.js?v=202610211800";
+import { blockWeek } from "./blocks.js?v=202610211800";
 import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610211800";
 import { showToast } from "../utils/toast.js?v=202610211800";
 import { icon } from "../utils/icons.js?v=202610211800";
@@ -77,14 +79,6 @@ async function renderList(container) {
   }
 }
 
-// "in 23 days", "tomorrow", "today!"
-function countdown(raceDate, today) {
-  const days = Math.round((Date.parse(raceDate) - Date.parse(today)) / 86400000);
-  if (days === 0) return "Today!";
-  if (days === 1) return "Tomorrow";
-  return `in ${days} days`;
-}
-
 // Each group has its own card:
 //   upcoming = the big countdown, goal and checklist progress
 //   ideas    = light and dashed: a "maybe"
@@ -141,15 +135,32 @@ function paceText(seconds, km) {
 
 
 // ---------------------------------------------------------------------
-// One race: details form + checklist + race routine
+// One race: a summary first (step 19), the details form behind "Edit"
 // ---------------------------------------------------------------------
 
-async function renderRace(container, raceId) {
+// What the page shows depends on where the race stands:
+//   upcoming  = a date from today on, and you're going (registered, to register, potential)
+//   past      = finished, or its date has passed
+//   cancelled = cancelled (greyed)
+//   idea      = no date yet, or an idea with a date
+function raceState(race, today) {
+  if (race.status === "cancelled") return "cancelled";
+  if (!race.race_date) return "idea";
+  if (race.status === "finished" || race.race_date < today) return "past";
+  if (race.status === "registered" || race.status === "to_register" || race.status === "potential") return "upcoming";
+  return "idea";
+}
+
+// editing: true = show the details form instead of the summary.
+// focus: the id of a form box to put the cursor in (e.g. "r-date").
+async function renderRace(container, raceId, { editing = false, focus = null } = {}) {
   container.innerHTML = `<p class="muted">Loading…</p>`;
   let race = null;
   let blocks = [];
+  let runs = [];
   try {
     [race, blocks] = await Promise.all([raceId ? getRace(raceId) : null, listTrainingBlocks()]);
+    if (race) runs = await listRaceActivities(race.id);
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
     container.querySelector(".status").textContent = "Could not load: " + error.message;
@@ -161,29 +172,235 @@ async function renderRace(container, raceId) {
     return;
   }
 
-  const isEdit = Boolean(race);
-  const r = race || { status: "registered" };
-  // Phone: header, routine, checklist, then the form (one column).
-  // Laptop: header across the top, the form on the left (fields in 2
-  // columns), routine + checklist as a sidebar on the right.
+  const today = todayISO();
+  const state = race ? raceState(race, today) : null;
+  const showForm = !race || editing;
+  const block = race && race.training_block_id ? blocks.find((b) => b.id === race.training_block_id) : null;
+  // Routine + checklist sit next to the summary (laptop) or under it (phone).
+  // A past race folds them into one-line rows inside the summary instead.
+  const hasSide = race && state !== "past";
+
   container.innerHTML = `
     <div class="race-page">
-    <a href="#/races" class="back-link">‹ Races</a>
-    ${isEdit ? `
-      <header class="race-header">
-        <h2 class="race-title">${escapeHtml(race.name)}</h2>
-        <p class="muted race-subtitle">${race.race_date ? escapeHtml(formatDayLabel(race.race_date)) : "No date yet"}
-          ${race.race_date && race.race_date >= todayISO() && race.status !== "finished" && race.status !== "cancelled"
-            ? ` · <strong class="countdown">${countdown(race.race_date, todayISO())}</strong>` : ""}</p>
-      </header>` : ""}
+    <div class="race-topline">
+      <a href="#/races" class="back-link">‹ Races</a>
+      ${race && !showForm ? `<button type="button" class="pill-button" id="edit-race">${icon("pencil")} Edit</button>` : ""}
+    </div>
     <div class="race-layout">
-    ${isEdit ? `
-      <aside class="race-side">
-        <section class="card" id="routine"><p class="muted">Loading…</p></section>
-        <section class="card" id="checklist"></section>
-      </aside>` : ""}
+      <div class="race-main">
+        ${showForm ? raceFormHtml(race, blocks) : summaryHtml(race, state, block, runs, today)}
+      </div>
+      ${hasSide ? `
+        <aside class="race-side">
+          <section class="card" id="routine"><p class="muted">Loading…</p></section>
+          <section class="card" id="checklist"></section>
+        </aside>` : ""}
+    </div>
+    </div>
+  `;
+
+  const refresh = (options) => renderRace(container, race.id, options);
+  if (showForm) setUpForm(container, race, refresh, focus);
+  else setUpSummary(container, race, refresh);
+
+  if (race) {
+    const routineEl = container.querySelector("#routine");
+    if (routineEl) drawRoutine(routineEl, race, () => refresh());
+    const checklistEl = container.querySelector("#checklist");
+    if (checklistEl) drawChecklist(checklistEl, race);
+  }
+}
+
+function setUpSummary(container, race, refresh) {
+  container.querySelector("#edit-race").addEventListener("click", () => {
+    window.scrollTo(0, 0);
+    refresh({ editing: true });
+  });
+  const setDate = container.querySelector("#set-date");
+  if (setDate) setDate.addEventListener("click", () => refresh({ editing: true, focus: "r-date" }));
+}
+
+
+// ---------- The summary ----------
+
+function summaryHtml(race, state, block, runs, today) {
+  const hero = state === "upcoming" ? upcomingHeroHtml(race, block, today)
+    : state === "past" ? pastHeroHtml(race)
+    : plainHeroHtml(race, state);
+  return `
+    ${hero}
+    ${state === "past" && !race.result_time_s ? noResultHtml() : ""}
+    ${runs.length ? `
+      <h3 class="section-label">Your run</h3>
+      <div class="card race-runs">${runs.map(runRowHtml).join("")}</div>` : ""}
+    ${race.notes ? `
+      <section class="card race-notes">
+        <h3 class="section-label">Notes</h3>
+        <p>${escapeHtml(race.notes)}</p>
+      </section>` : ""}
+    ${state === "past" ? foldedRowsHtml(race, block) : ""}
+  `;
+}
+
+// "Sat 14 Nov · La Roche-en-Ardenne" with the status pill in front.
+function metaHtml(race, pillClass = "") {
+  const status = RACE_STATUSES[race.status];
+  const where = [race.race_date ? formatDayLabel(race.race_date) : "No date yet", race.location || ""].filter(Boolean).join(" · ");
+  return `<p class="race-sum-meta">${status ? `<span class="race-pill ${pillClass}">${escapeHtml(status.label)}</span>` : ""}
+    <span>${escapeHtml(where)}</span></p>`;
+}
+
+// A row of numbers: [value, label] pairs, empty ones left out.
+function factsHtml(facts) {
+  const shown = facts.filter(([value]) => value);
+  if (!shown.length) return "";
+  return `<div class="race-sum-facts">${shown.map(([value, label]) =>
+    `<div><span class="num">${escapeHtml(value)}</span><span class="race-sum-label">${escapeHtml(label)}</span></div>`).join("")}</div>`;
+}
+
+// "6:48" (the pace alone, without " /km"), or "".
+function paceOnly(seconds, km) {
+  return formatSpeed("per_km", seconds, Number(km)).replace(" /km", "");
+}
+
+function upcomingHeroHtml(race, block, today) {
+  const days = Math.round((Date.parse(race.race_date) - Date.parse(today)) / 86400000);
+  const countdown = days === 0 ? `<span class="num">Race day!</span>`
+    : `<span class="num">${days}</span> <span class="race-sum-days-label">${days === 1 ? "day to go" : "days to go"}</span>`;
+  return `
+    <section class="card race-sum is-dark">
+      ${metaHtml(race, race.status === "registered" ? "is-ok" : "")}
+      <h2 class="race-sum-name">${escapeHtml(race.name)}</h2>
+      <p class="race-sum-days">${countdown}</p>
+      ${factsHtml([
+        [race.distance_km ? String(Number(race.distance_km)) : "", "km"],
+        [race.elevation_m ? String(race.elevation_m) : "", "m D+"],
+        [race.goal_time_s ? formatDuration(race.goal_time_s) : "", "goal"],
+        [race.goal_time_s ? paceOnly(race.goal_time_s, race.distance_km) : "", "/km goal"],
+      ])}
+      ${block ? blockBarHtml(block, today) : ""}
+    </section>`;
+}
+
+// The race's block: one segment per week while it runs, else just its name.
+function blockBarHtml(block, today) {
+  const link = `<a href="#/blocks/${encodeURIComponent(block.id)}">${escapeHtml(block.name)}</a>`;
+  if (today < block.start_date || today > block.end_date) {
+    return `<p class="race-sum-block small">${icon("book-open")} Part of ${link}</p>`;
+  }
+  const week = blockWeek(block, today);
+  const segments = Array.from({ length: week.total }, (_, i) =>
+    `<span class="${i + 1 < week.current ? "is-done" : i + 1 === week.current ? "is-now" : ""}"></span>`).join("");
+  return `
+    <div class="race-sum-bar">
+      <p class="small">${link}<span>week ${week.current} of ${week.total}</span></p>
+      <span class="week-segments" role="img" aria-label="Week ${week.current} of ${week.total}">${segments}</span>
+    </div>`;
+}
+
+function pastHeroHtml(race) {
+  if (!race.result_time_s) {
+    return `
+      <section class="card race-sum">
+        ${metaHtml(race)}
+        <h2 class="race-sum-name">${escapeHtml(race.name)}</h2>
+        ${factsHtml([
+          [race.distance_km ? String(Number(race.distance_km)) : "", "km"],
+          [race.elevation_m ? String(race.elevation_m) : "", "m D+"],
+          [race.goal_time_s ? formatDuration(race.goal_time_s) : "", "goal"],
+        ])}
+      </section>`;
+  }
+  return `
+    <section class="card race-sum">
+      ${metaHtml(race)}
+      <h2 class="race-sum-name">${escapeHtml(race.name)}</h2>
+      <p class="race-sum-label-top">Result</p>
+      <p class="race-sum-result"><span class="num">${formatDuration(race.result_time_s)}</span></p>
+      ${goalDeltaHtml(race)}
+      <div class="race-sum-box">${factsHtml([
+        [race.distance_km ? String(Number(race.distance_km)) : "", "km"],
+        [race.elevation_m ? String(race.elevation_m) : "", "m D+"],
+        [paceOnly(race.result_time_s, race.distance_km), "/km"],
+      ])}</div>
+    </section>`;
+}
+
+// "↑ 2:20 under goal" (green) or "3:05 over goal" (quiet grey, never red:
+// a slower race is not an error).
+function goalDeltaHtml(race) {
+  if (!race.goal_time_s) return "";
+  const diff = race.goal_time_s - race.result_time_s;
+  const goal = `<span class="muted small">goal ${numHtml(formatDuration(race.goal_time_s))}</span>`;
+  if (diff === 0) return `<p class="race-delta"><span class="race-pill is-ok">Right on goal</span> ${goal}</p>`;
+  return diff > 0
+    ? `<p class="race-delta"><span class="race-pill is-ok">${icon("arrow-up")} ${formatDuration(diff)} under goal</span> ${goal}</p>`
+    : `<p class="race-delta"><span class="race-pill">${formatDuration(-diff)} over goal</span> ${goal}</p>`;
+}
+
+// Ideas (no date: "Set a date") and cancelled races (greyed).
+function plainHeroHtml(race, state) {
+  return `
+    <section class="card race-sum ${state === "cancelled" ? "is-not-run" : ""}">
+      ${metaHtml(race)}
+      <h2 class="race-sum-name">${escapeHtml(race.name)}</h2>
+      ${factsHtml([
+        [race.distance_km ? String(Number(race.distance_km)) : "", "km"],
+        [race.elevation_m ? String(race.elevation_m) : "", "m D+"],
+        [race.goal_time_s ? formatDuration(race.goal_time_s) : "", "goal"],
+      ])}
+      ${!race.race_date ? `<button type="button" class="button primary" id="set-date">${icon("calendar")} Set a date</button>` : ""}
+    </section>`;
+}
+
+// Filled in by step 19d (look for the run in the log).
+function noResultHtml() {
+  return `<section class="card"><p class="muted">No result yet: tap Edit to add your time.</p></section>`;
+}
+
+// One activity linked to the race: tap = open it in the log.
+function runRowHtml(a) {
+  const name = a.title || sessionTypeLabel(a.sport, a.session_type);
+  const facts = [
+    formatDayLabel(a.activity_date),
+    a.distance_km ? numHtml(formatKm(a.distance_km)) : "",
+    a.duration_s ? numHtml(formatDuration(a.duration_s)) : "",
+    a.rpe ? `RPE ${numHtml(String(a.rpe))}` : "",
+  ].filter(Boolean);
+  return `
+    <a class="race-run" href="#/log/${encodeURIComponent(a.id)}">
+      ${sportBadge(a.sport, sportIcon)}
+      <span class="race-run-text"><strong>${escapeHtml(name)}</strong>
+        <span class="muted small">${facts.map((f) => f.startsWith("<") || f.startsWith("RPE") ? f : escapeHtml(f)).join(" · ")}</span></span>
+      ${icon("chevron-right", { className: "is-muted" })}
+    </a>`;
+}
+
+// A past race: its block and its checklist as short rows (checklist opens on tap).
+function foldedRowsHtml(race, block) {
+  const done = race.checklist.filter((i) => i.done).length;
+  return `
+    <section class="card race-folds">
+      ${block ? `<a class="race-fold-row" href="#/blocks/${encodeURIComponent(block.id)}">
+        ${icon("book-open", { className: "is-muted" })}<span>${escapeHtml(block.name)}</span>${icon("chevron-right", { className: "is-muted" })}</a>` : ""}
+      <details class="race-fold">
+        <summary class="race-fold-row">${icon("clipboard-list", { className: "is-muted" })}
+          <span>Checklist${race.checklist.length ? ` <span class="muted">· ${done} / ${race.checklist.length}</span>` : ""}</span>
+          ${icon("chevron-down", { className: "is-muted" })}</summary>
+        <div id="checklist" class="race-fold-body"></div>
+      </details>
+    </section>`;
+}
+
+
+// ---------- The details form ("Edit", or a new race) ----------
+
+function raceFormHtml(race, blocks) {
+  const isEdit = Boolean(race);
+  const r = race || { status: "registered" };
+  return `
     <form id="race-form" class="card form race-form" novalidate>
-      <h2>${isEdit ? "Race details" : "New race"}</h2>
+      <h2>${isEdit ? "Edit race" : "New race"}</h2>
       <div class="form-grid">
         <div class="field">
           <label for="r-name">Name</label>
@@ -243,14 +460,14 @@ async function renderRace(container, raceId) {
       <p id="race-status" class="status" role="status"></p>
       <div class="form-actions">
         <button type="submit" class="button primary">${isEdit ? "Save changes" : "Save race"}</button>
-        <a href="#/races" class="button">Cancel</a>
+        ${isEdit ? `<button type="button" class="button" id="cancel-edit">Cancel</button>` : `<a href="#/races" class="button">Cancel</a>`}
         ${isEdit ? `<button type="button" id="delete" class="button danger">Delete</button>` : ""}
       </div>
-    </form>
-    </div>
-    </div>
-  `;
+    </form>`;
+}
 
+function setUpForm(container, race, refresh, focus) {
+  const isEdit = Boolean(race);
   const form = container.querySelector("#race-form");
   const status = form.querySelector("#race-status");
 
@@ -267,6 +484,10 @@ async function renderRace(container, raceId) {
     if (status.classList.contains("error")) showStatus(status, "", "");
   });
   updatePaces();
+  if (focus) {
+    const box = form.querySelector("#" + focus);
+    if (box) box.focus();
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -280,7 +501,7 @@ async function renderRace(container, raceId) {
     showStatus(status, "Saving…", "");
     try {
       const saved = await saveRace(values);
-      // New race: stay on its page, so the checklist and routine are right there.
+      // New race: go to its page, so the checklist and routine are right there.
       if (!isEdit) {
         window.location.hash = `#/races/${saved.id}`;
         return;
@@ -297,12 +518,15 @@ async function renderRace(container, raceId) {
         }
       }
       showToast(message);
-      renderRace(container, race.id);
+      refresh();
     } catch (error) {
       showStatus(status, "Could not save: " + error.message, "error");
       button.disabled = false;
     }
   });
+
+  const cancel = form.querySelector("#cancel-edit");
+  if (cancel) cancel.addEventListener("click", () => refresh());
 
   const deleteButton = form.querySelector("#delete");
   if (deleteButton) {
@@ -315,11 +539,6 @@ async function renderRace(container, raceId) {
         showStatus(status, "Could not delete: " + error.message, "error");
       }
     });
-  }
-
-  if (isEdit) {
-    drawRoutine(container.querySelector("#routine"), race, () => renderRace(container, race.id));
-    drawChecklist(container.querySelector("#checklist"), race);
   }
 }
 

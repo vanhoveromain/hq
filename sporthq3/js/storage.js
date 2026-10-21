@@ -678,6 +678,36 @@ export async function listRaceSessions(raceId) {
   return data;
 }
 
+// The race page (step 19): the activities linked to a race ("Your run")
+// and the runs logged on a day (to find a race's result in the log).
+const RACE_ACTIVITY_SELECT = "id, activity_date, sport, session_type, title, duration_s, distance_km, elevation_m, rpe, race_id";
+
+export async function listRaceActivities(raceId) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select(RACE_ACTIVITY_SELECT)
+    .eq("race_id", raceId)
+    .order("activity_date", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function listRunsOn(date) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select(RACE_ACTIVITY_SELECT)
+    .eq("sport", "running")
+    .eq("activity_date", date);
+  if (error) throw error;
+  return data;
+}
+
+// Links an activity to a race, without touching anything else on it.
+export async function linkActivityToRace(activityId, raceId) {
+  const { error } = await supabase.from("activities").update({ race_id: raceId }).eq("id", activityId);
+  if (error) throw error;
+}
+
 
 // ---------------------------------------------------------------------
 // Body & goals: weigh-ins, weight goal (settings), personal bests
