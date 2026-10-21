@@ -277,6 +277,21 @@ export function checkTrainingRules(items, muted = []) {
 
 
 // ---------- Training load (hours and sessions per week) ----------
+// Home (step 17d): in the last days before a race you're REGISTERED for,
+// Home switches to "race mode": the race countdown on top, today's session
+// under it. 21 = the last 3 weeks (race day itself included). A race still
+// "to register" never switches it (Rom's choice, 2026-10-21).
+export const HOME_RULES = {
+  raceModeDays: 21,
+};
+
+// Is Home in race mode for this race today? (race = { race_date, status })
+export function isRaceMode(race, today) {
+  if (!race || race.status !== "registered" || !race.race_date || race.race_date < today) return false;
+  const days = Math.round((Date.parse(race.race_date) - Date.parse(today)) / 86400000);
+  return days <= HOME_RULES.raceModeDays;
+}
+
 // "Usual" = the average of the LOAD_RULES.averageWeeks full weeks before the week shown.
 // Warn only, never block (same as the training rules).
 export const LOAD_RULES = {

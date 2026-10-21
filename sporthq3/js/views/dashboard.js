@@ -7,7 +7,7 @@ import {
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
   getTrainingBlock, listPersonalBests,
 } from "../storage.js?v=202610211550";
-import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES } from "../rules.js?v=202610211550";
+import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610211550";
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610211550";
 import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610211550";
 import { overview } from "../utils/stats.js?v=202610211550";
@@ -27,6 +27,10 @@ import { icon } from "../utils/icons.js?v=202610211550";
 //   6. small tiles (weight, season, shoes, block, 10k best)
 // Laptop: left column = 1, 2, 4, 5; right column = 3, 6. On a phone the two
 // columns melt into one list and CSS `order` sets the sequence above.
+// Race mode (step 17d, HOME_RULES in rules.js): in the last 3 weeks before a
+// registered race, the race comes first as a dark block, Today becomes a
+// white card under it, and a one-line status strip (week, load, warnings)
+// sums up the week. The class "race-mode" on .dashboard switches the look.
 export function render(container) {
   container.innerHTML = `
     <div class="dashboard">
@@ -35,6 +39,11 @@ export function render(container) {
           <div id="dash-today"><p>Loading…</p></div>
           <div class="hero-missed" id="dash-missed" hidden></div>
         </section>
+        <a class="card dash-strip" id="dash-strip" href="#/planner" hidden>
+          <span><span class="strip-label">Week</span><span id="strip-week">–</span></span>
+          <span><span class="strip-label">Load</span><span id="strip-load">–</span></span>
+          <span><span class="strip-label">Warnings</span><span id="strip-warnings">–</span></span>
+        </a>
         <div class="dash-notes" id="dash-notes">
           <section class="card dash-card dash-note" id="dash-review" hidden></section>
           <div id="dash-load-notes"></div>
@@ -72,10 +81,10 @@ export function render(container) {
   });
   card($("#dash-missed"), () => drawMissed($("#dash-missed"), today));
   card($("#dash-review"), () => drawReviewNudge($("#dash-review"), today));
-  card($("#dash-today"), () => drawWeek($("#dash-today"), $("#dash-week"), today));
-  card($("#dash-load"), () => drawLoad($("#dash-load"), $("#dash-load-notes"), today));
+  card($("#dash-today"), () => drawWeek($("#dash-today"), $("#dash-week"), today, container));
+  card($("#dash-load"), () => drawLoad($("#dash-load"), $("#dash-load-notes"), today, container));
   // The block tile only shows when the race card doesn't already show the block.
-  const race = card($("#dash-race"), () => drawRace($("#dash-race"), today));
+  const race = card($("#dash-race"), () => drawRace($("#dash-race"), today, container));
   card($("#tile-block"), async () => drawBlockTile($("#tile-block"), today, await race));
   card($("#tile-weight"), () => drawWeight($("#tile-weight")));
   card($("#tile-football"), () => drawFootball($("#tile-football"), today));
@@ -86,7 +95,7 @@ export function render(container) {
 
 // ---------- Today (the hero) + this week (one load for both) ----------
 
-async function drawWeek(todayEl, weekEl, today) {
+async function drawWeek(todayEl, weekEl, today, container) {
   const monday = startOfWeek(today);
   const sunday = addDays(monday, 6);
   // One extra day on each side, for the rules (Sunday -> next Monday).
@@ -145,6 +154,13 @@ async function drawWeek(todayEl, weekEl, today) {
     <div class="week-strip">${strip}</div>
     ${warningLine}
   `;
+
+  // Race mode's status strip (hidden otherwise)
+  container.querySelector("#strip-week").innerHTML = counted.length
+    ? `${numHtml(done)}<span class="num of">/${counted.length}</span>` : "–";
+  const stripWarnings = container.querySelector("#strip-warnings");
+  stripWarnings.innerHTML = numHtml(warnings.length);
+  stripWarnings.classList.toggle("is-warning", warnings.length > 0);
 }
 
 // One of today's sessions inside the hero: icon, name, a few numbers and
@@ -249,7 +265,7 @@ const LOAD_WEEKS = 8;     // weeks in the little chart (this week included)
 // "average" = the LOAD_RULES.averageWeeks full weeks before this one (rules.js)
 
 // `notesEl` = where the big jump / race week notes go (under the hero).
-async function drawLoad(el, notesEl, today) {
+async function drawLoad(el, notesEl, today, container) {
   const monday = startOfWeek(today);
   const firstMonday = addDays(monday, -7 * (LOAD_WEEKS - 1));
   const [activities, sessions, races] = await Promise.all([
@@ -277,6 +293,8 @@ async function drawLoad(el, notesEl, today) {
     sessions, activities: weeks[weeks.length - 1].activities, races,
     previousActivities: weeks.slice(-1 - LOAD_RULES.averageWeeks, -1).flatMap((week) => week.activities),
   });
+  container.querySelector("#strip-load").innerHTML = `${numHtml(formatHours(thisWeek.seconds))}${planned.seconds
+    ? ` <span class="unit">/ ${escapeHtml(formatHours(planned.seconds))}</span>` : ""}`;
   notesEl.innerHTML = notes.map((note) => `<p class="card dash-note status warning small">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("");
 
   el.innerHTML = `
@@ -338,18 +356,56 @@ function loadChartHtml(weeks, thisMonday, plannedThisWeek = 0) {
 // ---------- Next race ----------
 
 // Returns the id of the block it shows (so the block tile can stay hidden).
-async function drawRace(el, today) {
-  const races = await listRaces();
-  const next = races
+// Also switches Home to race mode when a registered race is close (17d).
+async function drawRace(el, today, container) {
+  const upcoming = (await listRaces())
     .filter((r) => r.race_date && r.race_date >= today && (r.status === "registered" || r.status === "to_register"))
-    .sort((a, b) => a.race_date.localeCompare(b.race_date))[0];
+    .sort((a, b) => a.race_date.localeCompare(b.race_date));
+  // Race mode follows the next REGISTERED race, even if a "to register" one comes first.
+  const modeRace = upcoming.find((r) => r.status === "registered");
+  const raceMode = isRaceMode(modeRace, today);
+  const next = raceMode ? modeRace : upcoming[0];
   if (!next) return null;
   const race = await getRace(next.id);
   // The race's own block, else the block running today.
   const block = race.training_block_id ? await getTrainingBlock(race.training_block_id) : await findBlockOn(today);
+  container.querySelector(".dashboard").classList.toggle("race-mode", raceMode);
+  container.querySelector("#dash-strip").hidden = !raceMode;
   el.hidden = false;
-  el.innerHTML = raceHeroHtml(race, block, today);
+  el.innerHTML = raceMode ? raceModeHtml(race, block, today) : raceHeroHtml(race, block, today);
   return block ? block.id : null;
+}
+
+// Race mode's dark block: huge countdown, the race's numbers, block and checklist.
+function raceModeHtml(race, block, today) {
+  const days = Math.round((Date.parse(race.race_date) - Date.parse(today)) / 86400000);
+  const ready = race.checklist.filter((i) => i.done).length;
+  const facts = [
+    race.distance_km ? numHtml(Number(race.distance_km), "km") : "",
+    race.elevation_m ? numHtml(Number(race.elevation_m), "m D+") : "",
+    race.goal_time_s ? numHtml(formatDuration(race.goal_time_s), "goal") : "",
+  ].filter(Boolean);
+  const week = block ? blockWeek(block, today) : null;
+  return `
+    <div class="dash-head">
+      <h2><a href="#/races/${race.id}">Next race · ${escapeHtml(formatDayLabel(race.race_date))}</a></h2>
+      <span class="race-mode-tag">${icon("flag")} Race mode</span>
+    </div>
+    <div class="race-mode-top">
+      ${days === 0 ? `<p class="race-mode-days"><span class="num">Race day</span></p>`
+        : `<p class="race-mode-days"><span class="num">${days}</span></p>
+           <p class="race-mode-name"><span class="race-mode-to">${days === 1 ? "day to" : "days to"}</span>${escapeHtml(race.name)}</p>`}
+    </div>
+    ${days === 0 ? `<p class="race-mode-name">${escapeHtml(race.name)}</p>` : ""}
+    ${facts.length ? `<p class="race-mode-facts">${facts.map((f) => `<span>${f}</span>`).join("")}</p>` : ""}
+    ${week || race.checklist.length ? `
+      <div class="race-mode-bar">
+        <p class="small">${block ? `<span>${escapeHtml(block.name)}</span>` : "<span></span>"}
+          <span>${[week ? `week ${week.current} of ${week.total}` : "", race.checklist.length ? `checklist ${ready}/${race.checklist.length}` : ""].filter(Boolean).join(" · ")}</span></p>
+        ${week ? `<span class="week-segments" role="img" aria-label="Week ${week.current} of ${week.total}">${Array.from({ length: week.total }, (_, i) =>
+          `<span class="${i + 1 < week.current ? "is-done" : i + 1 === week.current ? "is-now" : ""}"></span>`).join("")}</span>` : ""}
+      </div>` : ""}
+  `;
 }
 
 // The countdown, the race's numbers, the block's weeks and the checklist.

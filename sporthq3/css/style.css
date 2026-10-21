@@ -68,6 +68,14 @@
   --warn-text: #92400e;
   --segment-empty: #e4e4e7;
   --load-past: #ddd6fe;         /* past weeks in the load chart */
+  /* Race mode (17d): the dark race block on top of Home */
+  --race-mode-bg: #1c1917;
+  --race-mode-text: #ffffff;
+  --race-mode-muted: #d6d3d1;
+  --race-mode-accent: #a78bfa;
+  --race-mode-soft: rgba(255, 255, 255, 0.14);
+  --race-mode-empty: #44403c;
+  --race-mode-button: #6d28d9;
 }
 
 /* Dark mode follows the phone's setting automatically. Shadows don't show
@@ -104,6 +112,8 @@
     --warn-text: #fcd34d;
     --segment-empty: #3a3632;
     --load-past: #4c3d7a;
+    --race-mode-bg: #241d38;   /* a touch of violet, so the block stands out from the dark page */
+    --race-mode-button: #6d28d9;
   }
 }
 
@@ -916,11 +926,59 @@ p.dash-note { margin-bottom: 16px; }
 .tile-note { font-size: 0.8rem; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
 .tile-note.is-warning { color: var(--warn-text); font-weight: 600; }
 
+/* ---------- Race mode (step 17d): the last 3 weeks before a registered race ----------
+   Race first (a dark block glued to the top bar), Today as a white card,
+   then a one-line status strip; the rest follows like normal. */
+.race-mode .dash-race { order: 0; }
+.race-mode .dash-hero { order: 1; }
+.race-mode .dash-strip { order: 2; }
+.race-mode .dash-notes { order: 3; }
+.race-mode .dash-tiles { order: 4; }
+.race-mode #dash-week { order: 5; }
+.race-mode #dash-load { order: 6; }
+.race-mode .dash-race {
+  margin: -16px -16px 16px; padding: 18px 16px 22px; border: 0; border-radius: 0 0 28px 28px;
+  background: var(--race-mode-bg); color: var(--race-mode-text); box-shadow: none;
+}
+.race-mode .dash-race h2 { color: var(--race-mode-accent); }
+.race-mode .dash-race h2 a::after { color: var(--race-mode-accent); }
+.race-mode-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700; background: var(--race-mode-soft); color: var(--race-mode-text); white-space: nowrap; }
+.race-mode-top { display: flex; align-items: flex-end; gap: 14px; margin: 8px 0 0; }
+.race-mode-days { margin: 0; color: var(--race-mode-accent); }
+.race-mode-days .num { font-size: 6.5rem; line-height: 0.8; }
+.race-mode-name { margin: 0; padding-bottom: 4px; font-size: 1.35rem; font-weight: 700; line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
+.race-mode-to { display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--race-mode-accent); }
+.race-mode-facts { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 16px 0 0; }
+.race-mode-facts .num { font-size: 1.6rem; }
+.race-mode-facts .unit, .race-mode-bar p { color: var(--race-mode-muted); }
+.race-mode-bar { margin-top: 16px; }
+.race-mode-bar p { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 6px; }
+.race-mode-bar .week-segments span { height: 8px; border-radius: 4px; background: var(--race-mode-empty); }
+.race-mode-bar .week-segments .is-done { background: var(--race-mode-accent); }
+.race-mode-bar .week-segments .is-now { background: var(--race-mode-text); }
+/* Today becomes a white card with a violet button: the hero colours swap */
+.race-mode .dash-hero {
+  --hero-bg: var(--surface); --hero-text: var(--text); --hero-muted: var(--muted);
+  --hero-soft: var(--bg); --hero-line: var(--border);
+  --hero-button-bg: var(--race-mode-button); --hero-button-text: #ffffff;
+  border: 1px solid var(--card-border); box-shadow: var(--shadow);
+}
+.race-mode .hero-badge { color: var(--accent); }
+/* The status strip: week, load, warnings in one line */
+.dash-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 12px 14px; color: inherit; text-decoration: none; }
+.dash-strip > span { display: flex; flex-direction: column; min-width: 0; }
+.strip-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.dash-strip .num { font-size: 1.6rem; }
+.dash-strip .num.of { font-size: 1.2rem; color: var(--muted); }
+.dash-strip .is-warning, .dash-strip .is-warning .num { color: var(--warn-text); }
+
 /* Laptop: two real columns (left "now", right overview) */
 @media (min-width: 900px) {
   .view:has(.dashboard) { max-width: 1200px; }   /* the page may be wider than the phone layout */
   .dashboard { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
   .dash-main, .dash-side { display: block; }
+  .race-mode .dash-race { margin: 0 0 16px; border-radius: 20px; }
 }
 
 /* Drag and drop in the planner */
