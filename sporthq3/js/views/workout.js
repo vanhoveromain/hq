@@ -7,17 +7,17 @@
 // saving it marks the session done, freezes what you really did and offers
 // to update the recipe.
 
-import { getPlannedSession } from "../storage.js?v=202610211550";
-import { getSport, sportIcon } from "../rules.js?v=202610211550";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610211550";
-import { startOfWeek } from "../utils/dates.js?v=202610211550";
-import { sessionName, sessionDetails } from "../utils/plan.js?v=202610211550";
-import { openSheet } from "../utils/sheet.js?v=202610211550";
-import { icon } from "../utils/icons.js?v=202610211550";
+import { getPlannedSession } from "../storage.js?v=202610211727";
+import { getSport, sportIcon } from "../rules.js?v=202610211727";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610211727";
+import { startOfWeek } from "../utils/dates.js?v=202610211727";
+import { sessionName, sessionDetails } from "../utils/plan.js?v=202610211727";
+import { openSheet } from "../utils/sheet.js?v=202610211727";
+import { icon } from "../utils/icons.js?v=202610211727";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
   REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
-} from "../utils/workout.js?v=202610211550";
+} from "../utils/workout.js?v=202610211727";
 
 export async function render(container, { params = [] } = {}) {
   const plannedId = params[0];

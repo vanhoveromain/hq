@@ -1,6 +1,6 @@
 // "Me" tab: the menu to everything about you and the app.
 
-import { icon } from "../utils/icons.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211727";
 
 export function render(container) {
   container.innerHTML = `
