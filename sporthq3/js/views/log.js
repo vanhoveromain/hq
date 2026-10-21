@@ -7,7 +7,7 @@
 import { listActivities } from "../storage.js?v=202610211550";
 import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610211550";
 import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211550";
-import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610211550";
+import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610211550";
 import { sportBadge } from "../utils/plan.js?v=202610211550";
 import * as logForm from "./logForm.js?v=202610211550";
 import * as statsView from "./stats.js?v=202610211550";
@@ -149,32 +149,44 @@ function weekHtml(week) {
 }
 
 // One line in the list. Everything you typed goes through escapeHtml.
+// Phone: title, date, then a row of numbers (step 17b: value big in the stat
+// font, unit small). Laptop: the "col-…" boxes become table columns instead.
 function activityHtml(a) {
   const sport = getSport(a.sport);
   const type = getSessionType(a.sport, a.session_type);
   const stats = a.match_stats;
   const hasMatchCard = Boolean(type && type.matchCard && stats);
+  const speed = formatSpeed(sport && sport.speed, a.duration_s, a.distance_km);
 
-  const details = [
-    hasMatchCard ? "" : formatDuration(a.duration_s), // a match shows minutes played instead
-    a.distance_km != null ? formatKm(a.distance_km) : "",
-    a.elevation_m ? `${a.elevation_m} m D+` : "",
-    a.stairs_climbed ? `${a.stairs_climbed} stairs` : "",
-    formatSpeed(sport && sport.speed, a.duration_s, a.distance_km),
-  ].filter(Boolean).join(" · ");
+  // The numbers of the row, in reading order. A match shows its match card
+  // (minutes played, goals, assists) instead of the duration.
+  const cells = hasMatchCard
+    ? [
+      stats.minutes_played != null ? numHtml(stats.minutes_played + "′", "played") : "",
+      numHtml(stats.goals, stats.goals === 1 ? "goal" : "goals"),
+      numHtml(stats.assists, stats.assists === 1 ? "assist" : "assists"),
+    ]
+    : [
+      a.distance_km != null ? numHtml(formatKm(a.distance_km)) : "",
+      a.duration_s ? numHtml(formatDuration(a.duration_s)) : "",
+      speed ? numHtml(speed) : "",
+      a.elevation_m ? numHtml(a.elevation_m, "m D+") : "",
+      a.stairs_climbed ? numHtml(a.stairs_climbed, "stairs") : "",
+    ];
+  const statRow = cells.filter(Boolean).map((cell) => `<span class="stat">${cell}</span>`).join("");
 
-  const matchLine = hasMatchCard
-    ? `<span class="match-line">vs ${escapeHtml(stats.opponent || "?")} · ${stats.goals} G · ${stats.assists} A${stats.minutes_played != null ? ` · ${stats.minutes_played}'` : ""}</span>`
-    : "";
+  const matchLine = hasMatchCard ? `<span class="match-line">vs ${escapeHtml(stats.opponent || "?")}</span>` : "";
 
   // A match title like "vs RC Mons" says the same as the match line: show it once.
   const opponent = hasMatchCard && stats.opponent ? stats.opponent.toLowerCase() : "";
   const showTitle = a.title && !(opponent && a.title.toLowerCase().includes(opponent));
 
-  // On a laptop the "col-…" boxes become table columns and the combined
-  // line (activity-meta) is hidden; on a phone it's the other way round.
-  const distance = [a.distance_km != null ? formatKm(a.distance_km) : "", a.elevation_m ? `${a.elevation_m} m D+` : "",
-    a.stairs_climbed ? `${a.stairs_climbed} stairs` : ""].filter(Boolean).join(" · ");
+  // Laptop columns (hidden on a phone, where activity-meta shows instead).
+  const distance = [a.distance_km != null ? numHtml(formatKm(a.distance_km)) : "", a.elevation_m ? numHtml(a.elevation_m, "m D+") : "",
+    a.stairs_climbed ? numHtml(a.stairs_climbed, "stairs") : ""].filter(Boolean).join(" · ");
+  const time = hasMatchCard
+    ? (stats.minutes_played != null ? numHtml(stats.minutes_played + "′") : "")
+    : (a.duration_s ? numHtml(formatDuration(a.duration_s)) : "");
   return `
     <li>
       <a class="activity-item" href="#/log/${encodeURIComponent(a.id)}">
@@ -183,13 +195,14 @@ function activityHtml(a) {
         <span class="activity-main">
           <span class="activity-title">${escapeHtml(sessionTypeLabel(a.sport, a.session_type))}</span>
           ${showTitle ? `<span class="activity-subtitle">${escapeHtml(a.title)}</span>` : ""}
-          <span class="muted activity-meta">${formatDayLabel(a.activity_date)}${details ? " · " + details : ""}</span>
           ${matchLine}
+          <span class="muted activity-meta activity-date">${formatDayLabel(a.activity_date)}</span>
+          ${statRow ? `<span class="activity-meta stat-row">${statRow}</span>` : ""}
         </span>
-        <span class="col">${hasMatchCard ? (stats.minutes_played != null ? `${stats.minutes_played}'` : "") : formatDuration(a.duration_s)}</span>
-        <span class="col">${escapeHtml(distance)}</span>
-        <span class="col">${formatSpeed(sport && sport.speed, a.duration_s, a.distance_km)}</span>
-        <span class="col-rpe">${a.rpe ? `<span class="rpe-chip" title="RPE">${a.rpe}</span>` : ""}</span>
+        <span class="col">${time}</span>
+        <span class="col">${distance}</span>
+        <span class="col">${speed ? numHtml(speed) : ""}</span>
+        <span class="col-rpe">${a.rpe ? `<span class="rpe-chip rpe-${rpeLevel(a.rpe)}" title="RPE ${a.rpe}">${a.rpe}</span>` : ""}</span>
       </a>
     </li>
   `;

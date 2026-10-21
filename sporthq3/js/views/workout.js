@@ -129,7 +129,7 @@ function drawWorkout(container, session, workout, backToPlan) {
               <p class="muted small">${escapeHtml([amountText(e, workout.rounds), e.note].filter(Boolean).join(" · "))}</p>
             </div>
             <button type="button" class="button small-button weight-button" data-edit="${i}"
-              aria-label="Change ${escapeHtml(e.name)}">${e.weight_kg != null ? `${Number(e.weight_kg)} kg ${icon("pencil")}` : `${icon("pencil")} Edit`}</button>
+              aria-label="Change ${escapeHtml(e.name)}">${e.weight_kg != null ? `<span class="num">${Number(e.weight_kg)}</span> kg ${icon("pencil")}` : `${icon("pencil")} Edit`}</button>
           </div>
           <div class="tick-row">${e.ticks.map((ticked, t) => `
             <button type="button" class="tick ${ticked ? "is-ticked" : ""}" data-tick="${i}:${t}"

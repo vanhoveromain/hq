@@ -9,7 +9,7 @@ import {
 } from "../storage.js?v=202610211550";
 import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610211550";
 import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610211550";
-import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610211550";
+import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
 import { icon } from "../utils/icons.js?v=202610211550";
 
@@ -265,10 +265,10 @@ async function drawStats(el, block, today) {
     <h2>Stats ${block.end_date >= today ? `<span class="muted small">so far</span>` : ""}</h2>
     ${activities.length ? `
       <div class="stat-grid">
-        <div><strong>${activities.length}</strong><span class="muted small">sessions · ${round1(activities.length / weeks)}/week</span></div>
-        <div><strong>${round1(runKm)} km</strong><span class="muted small">running · ${round1(runKm / weeks)}/week</span></div>
-        <div><strong>${elevation.toLocaleString("en-GB")} m</strong><span class="muted small">D+</span></div>
-        <div><strong>${formatHours(seconds)}</strong><span class="muted small">total time</span></div>
+        <div><strong>${numHtml(activities.length)}</strong><span class="muted small">sessions · ${round1(activities.length / weeks)}/week</span></div>
+        <div><strong>${numHtml(round1(runKm), "km")}</strong><span class="muted small">running · ${round1(runKm / weeks)}/week</span></div>
+        <div><strong>${numHtml(elevation.toLocaleString("en-GB"), "m")}</strong><span class="muted small">D+</span></div>
+        <div><strong>${numHtml(formatHours(seconds))}</strong><span class="muted small">total time</span></div>
       </div>
       <p class="small">${perSport.map((x) => `${sportIcon(x.sport.key)} ${escapeHtml(x.sport.label)} ${x.count}`).join(" · ")}</p>
       ${activities.some((a) => a.duration_s == null) ? `<p class="hint">Some sessions have no duration (e.g. imported football), so total time is a minimum.</p>` : ""}`

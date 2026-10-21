@@ -99,3 +99,33 @@ export function formatExercise(e) {
   const detail = [amount, weight].filter(Boolean).join(" ");
   return detail ? `${e.name} — ${detail}` : e.name;
 }
+
+// Number style (step 17b): a value in the stat font (.num) with its unit
+// small and light (.unit), like a sports watch.
+//   numHtml("19.5 km")     -> <span class="num">19.5</span> <span class="unit">km</span>
+//   numHtml("5:29 /km")    -> 5:29 big, "/km" small
+//   numHtml(46, "kg")      -> the unit given separately
+//   numHtml("1h57")        -> all of it is the number
+// Without a unit, everything after the first space is taken as the unit.
+// Both parts go through escapeHtml, so it is safe on any text.
+export function numHtml(value, unit) {
+  let number = String(value ?? "");
+  let rest = unit ?? "";
+  if (unit === undefined) {
+    const space = number.indexOf(" ");
+    if (space > 0 && /\d/.test(number.slice(0, space))) {
+      rest = number.slice(space + 1);
+      number = number.slice(0, space);
+    }
+  }
+  return `<span class="num">${escapeHtml(number)}</span>${rest ? ` <span class="unit">${escapeHtml(rest)}</span>` : ""}`;
+}
+
+// RPE 1–10 -> a colour band, cool to warm (never green / amber / red,
+// which mean done / warning / error). Used as a class: rpe-low, rpe-mid…
+export function rpeLevel(rpe) {
+  if (rpe <= 3) return "low";
+  if (rpe <= 6) return "mid";
+  if (rpe <= 8) return "high";
+  return "max";
+}

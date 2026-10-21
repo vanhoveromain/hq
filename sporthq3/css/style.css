@@ -9,6 +9,20 @@
    HQ family: every HQ shares this style and only changes its ACCENT
    (hub = ink, Sport = violet, Work = blue, Personal = raspberry). Green,
    amber and red keep their meaning (done / warning / error) in every HQ. */
+/* Number font (step 17b): Barlow Condensed, stored in the app (fonts/, SIL Open
+   Font License) instead of loaded from Google: works offline, nothing sent to
+   Google. Only for numbers (.num); the rest stays in the phone's own font. */
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("../fonts/barlow-condensed-latin-600-normal.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("../fonts/barlow-condensed-latin-700-normal.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
 :root {
   --bg: #f4f4f5;
   --surface: #ffffff;
@@ -36,6 +50,12 @@
   --radius: 14px;
   --tabbar-height: 64px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-num: "Barlow Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* RPE bands, cool to warm (never green / amber / red): background + text */
+  --rpe-low-bg: #dbeafe;  --rpe-low-text: #1d4ed8;
+  --rpe-mid-bg: #ede9fe;  --rpe-mid-text: #5b21b6;
+  --rpe-high-bg: #fce7f3; --rpe-high-text: #9d174d;
+  --rpe-max-bg: #831843;  --rpe-max-text: #ffffff;
 }
 
 /* Dark mode follows the phone's setting automatically. Shadows don't show
@@ -62,6 +82,10 @@
     --sport-biking: #fb923c;
     --sport-swimming: #818cf8;
     --sport-stairs: #c08a5e;
+    --rpe-low-bg: #1e3a5f;  --rpe-low-text: #bfdbfe;
+    --rpe-mid-bg: #3b2a66;  --rpe-mid-text: #ddd6fe;
+    --rpe-high-bg: #5c1d3f; --rpe-high-text: #fbcfe8;
+    --rpe-max-bg: #f9a8d4;  --rpe-max-text: #500724;
   }
 }
 
@@ -85,6 +109,11 @@ h1, h2 { line-height: 1.2; margin: 0 0 8px; }
 .icon.is-ok { color: var(--ok); }
 .icon.is-error { color: var(--error); }
 .icon.is-muted { color: var(--muted); }
+
+/* Numbers (step 17b): value in the condensed stat font, digits all the same
+   width (so 1:11 and 8:88 line up), unit small and light next to it. */
+.num { font-family: var(--font-num); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 0.01em; }
+.unit { font-family: var(--font); font-size: 0.8rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
 h2 { font-size: 1.15rem; }
 p { margin: 0 0 12px; }
 .muted { color: var(--muted); }
@@ -274,6 +303,19 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   background: var(--bg);
   border: 1px solid var(--border);
 }
+/* RPE colour bands (step 17b): cool (easy) to warm (very hard). */
+.rpe-chip.rpe-low, .rpe-chip.rpe-mid, .rpe-chip.rpe-high, .rpe-chip.rpe-max { border-color: transparent; }
+.rpe-low { background: var(--rpe-low-bg); color: var(--rpe-low-text); }
+.rpe-mid { background: var(--rpe-mid-bg); color: var(--rpe-mid-text); }
+.rpe-high { background: var(--rpe-high-bg); color: var(--rpe-high-text); }
+.rpe-max { background: var(--rpe-max-bg); color: var(--rpe-max-text); }
+.rpe-chip { font-family: var(--font-num); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+
+/* The numbers of a log row (phone): distance, time, pace, D+ side by side. */
+.activity-date { font-size: 0.8rem; }
+.stat-row { display: flex; flex-wrap: wrap; column-gap: 12px; row-gap: 0; margin-top: 4px; }
+.stat-row .num { font-size: 1.2rem; }
+.stat-row .unit { font-size: 0.75rem; }
 
 /* ---------- Activity log: form ---------- */
 select, textarea {
@@ -456,6 +498,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 }
 .day-empty { margin: 0; font-size: 0.85rem; }
 
+/* Planner meta lines: digits the same width, so durations line up (17b). */
+.plan-card .muted { font-variant-numeric: tabular-nums; }
 .plan-card {
   display: flex; align-items: center; gap: 10px; width: 100%;
   text-align: left; font: inherit; color: inherit; cursor: pointer;
@@ -568,7 +612,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 
 /* Workout mode */
 .workout-head h2 { margin: 4px 0; }
-.workout-timer { font-size: 2.6rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 4px 0; }
+.workout-timer { font-family: var(--font-num); font-size: 3.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin: 4px 0 8px; }
 .rest-settings h3 { margin: 0 0 8px; font-size: 1rem; }
 .chip-button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 .rest-banner {
@@ -591,6 +635,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .exercise.is-complete { border-color: #15803d; }
 .exercise-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .weight-button { white-space: nowrap; }
+.weight-button .num { font-size: 1.25rem; }
 .tick-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .tick {
   width: 52px; height: 52px; border-radius: 50%;
@@ -657,7 +702,8 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
 .block-goal { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 .stat-grid div { display: flex; flex-direction: column; min-width: 0; }
-.stat-grid strong { font-size: 1.3rem; overflow-wrap: anywhere; }
+/* Big values in the stat font (17b); a unit inside (.unit) stays small. */
+.stat-grid strong { font-family: var(--font-num); font-size: 1.75rem; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 @media (min-width: 700px) { .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .week-block { display: block; text-align: center; margin: -4px 0 12px; font-size: 0.9rem; color: var(--accent); text-decoration: none; }
 .week-block[hidden] { display: none; }
@@ -673,6 +719,8 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
 #goal-form .button { grid-column: 1 / -1; }
 .pb-list { list-style: none; margin: 0 0 8px; padding: 0; }
 .pb-row { display: flex; gap: 12px; align-items: baseline; border-top: 1px solid var(--border); padding: 8px 0; }
+.pb-row strong { font-family: var(--font-num); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.weight-latest .num { font-size: 1.6rem; }
 .pb-label { width: 7.5em; flex-shrink: 0; font-weight: 600; }
 
 /* Weight chart (colours come from the theme tokens, so dark mode works) */
@@ -707,10 +755,10 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
 /* the whole card opens its screen (see dashboard.js) */
 .dash-card:has(h2 a) { cursor: pointer; }
 .dash-card h2 a::after { content: " →"; color: var(--accent); }
-.dash-big { font-size: 1.6rem; font-weight: 700; margin: 4px 0; line-height: 1.2; letter-spacing: -0.02em; }
-.dash-big .muted { font-size: 0.95rem; font-weight: 400; }
+.dash-big { font-family: var(--font-num); font-size: 2.2rem; font-weight: 700; margin: 4px 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.dash-big .muted { font-family: var(--font); font-size: 0.95rem; font-weight: 400; }
+.dash-card .stat-grid strong { font-size: 1.5rem; }
 .dash-card .stat-grid { gap: 8px; }
-.dash-card .stat-grid strong { font-size: 1.15rem; }
 .dash-list { list-style: none; margin: 0; padding: 0; }
 .dash-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
   padding: 6px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
@@ -802,6 +850,7 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
   .log-page .activity-item { min-height: 0; padding: 10px 16px; }
   .log-page .activity-item:hover { background: var(--bg); }
   .log-page .activity-item .col { display: block; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+  .log-page .activity-item .col .num { font-size: 1.15rem; }
   .log-page .col-date { color: var(--muted); }
   .log-page .activity-meta { display: none; }
   .log-page .sport-badge { width: 2rem; height: 2rem; }
@@ -829,12 +878,12 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
 
 /* Race cards: one look per group */
 .race-upcoming { border-left: 4px solid var(--accent-strong); }
-.race-countdown { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--accent); margin: 2px 0; }
-.race-countdown span { font-size: 1rem; font-weight: 600; }
+.race-countdown { font-family: var(--font-num); font-size: 2.8rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: var(--accent); margin: 4px 0; }
+.race-countdown span { font-family: var(--font); font-size: 1rem; font-weight: 600; }
 .race-idea { background: transparent; box-shadow: none; border: 1px dashed var(--border); }
 .race-idea strong { font-weight: 600; }
-.race-result { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.race-result .muted { font-size: 0.85rem; font-weight: 400; margin-left: 4px; letter-spacing: 0; }
+.race-result { font-family: var(--font-num); font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.race-result .muted { font-family: var(--font); font-size: 0.85rem; font-weight: 400; margin-left: 4px; }
 .race-past.is-not-run { opacity: 0.6; }
 .race-past.is-not-run strong { text-decoration: line-through; }
 /* Race and training-block cards: the same size WITHIN a group (every row

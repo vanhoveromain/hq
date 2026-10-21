@@ -6,7 +6,7 @@
 import { listActivitiesForStats, listPlannedForStats, listWeighIns } from "../storage.js?v=202610211550";
 import { SPORTS, getSport, sportIcon, sessionTypeLabel, STATS_RULES } from "../rules.js?v=202610211550";
 import { todayISO, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211550";
-import { escapeHtml, formatDuration, formatHours, formatSpeed } from "../utils/format.js?v=202610211550";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610211550";
 import {
   PERIODS, periodRange, bucketUnit, bucketKey, bucketKeys, overview, runningStats, footballStats,
   countByType, adherence, currentStreak, busiestWeek,
@@ -118,7 +118,8 @@ function saveFilter(filter) {
 
 const km = (n) => `${Number(n).toLocaleString("en-GB", { maximumFractionDigits: 1 })} km`;
 const one = (n) => Number(n).toLocaleString("en-GB", { maximumFractionDigits: 1 });
-const stat = (value, label) => `<div><strong>${value}</strong><span class="muted small">${label}</span></div>`;
+// value = text we built ("898.2 km", "5:29 /km"): number big, unit small (17b).
+const stat = (value, label) => `<div><strong>${numHtml(value)}</strong><span class="muted small">${label}</span></div>`;
 
 // Does this sport have distances (so km make sense)?
 function hasDistance(sport) {

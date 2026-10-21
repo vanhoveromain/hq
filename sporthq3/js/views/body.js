@@ -8,7 +8,7 @@ import {
 } from "../storage.js?v=202610211550";
 import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610211550";
 import { todayISO, addDays, formatDayLabel } from "../utils/dates.js?v=202610211550";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610211550";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, numHtml } from "../utils/format.js?v=202610211550";
 import { autoPersonalBests, distanceKeyOf, weightTrend } from "../utils/body.js?v=202610211550";
 import { drawWeightChart } from "../utils/weightChart.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
@@ -72,7 +72,7 @@ async function drawWeight(container) {
       <button type="submit" class="button primary">Save</button>
     </form>
     <p id="weigh-status" class="status" role="status"></p>
-    ${latest ? `<p>Latest: <strong>${kgText(latest.weight_kg)}</strong> <span class="muted small">· ${escapeHtml(formatDayLabel(latest.weigh_date))}</span></p>` : ""}
+    ${latest ? `<p class="weight-latest">Latest: <strong>${numHtml(kgText(latest.weight_kg))}</strong> <span class="muted small">· ${escapeHtml(formatDayLabel(latest.weigh_date))}</span></p>` : ""}
     ${goalHtml(start, target, latest)}
     <details class="goal-edit">
       <summary>${target ? "Change my goal" : "Set my goal"}</summary>
