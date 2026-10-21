@@ -1,15 +1,15 @@
 // Workout mode (opened from the planner): #/workout/<plannedSessionId>
 //
-// A timer, one tick box per set, a countdown for timed sets ("45s"), an
-// optional rest timer, and the session can be changed on the spot (sets,
-// reps/time, weight, add/remove exercises). Everything is saved on the phone
+// The exercise you're on as a big card with one big "Set done" button, the
+// others as short rows, a countdown for timed sets ("45s"), an optional rest
+// timer (bar pinned at the bottom), and the session can be changed on the
+// spot (sets, reps/time, weight, add/remove exercises). Everything is saved on the phone
 // as you go (see utils/workout.js). "Finish" opens the log form, pre-filled;
 // saving it marks the session done, freezes what you really did and offers
 // to update the recipe.
 
 import { getPlannedSession } from "../storage.js?v=202610211727";
-import { getSport, sportIcon } from "../rules.js?v=202610211727";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610211727";
+import { escapeHtml, formatDuration, numHtml } from "../utils/format.js?v=202610211727";
 import { startOfWeek } from "../utils/dates.js?v=202610211727";
 import { sessionName, sessionDetails } from "../utils/plan.js?v=202610211727";
 import { openSheet } from "../utils/sheet.js?v=202610211727";
@@ -62,91 +62,247 @@ export async function render(container, { params = [] } = {}) {
 }
 
 
+// The workout screen (step 18): a slim dark strip on top (time, sets done,
+// rest + screen chips), the exercise you're on as a big card ("Now"), the
+// others as short rows (Up next / Done), and a bar pinned at the bottom
+// while you rest or while a timed set runs.
 function drawWorkout(container, session, workout, backToPlan) {
   const details = sessionDetails(session) || {};
-  const sport = getSport(session.sport);
   let restSeconds = readRestSeconds();
-  let restEndsAt = null; // when the current rest countdown ends (ms), or null
+  let justTicked = null; // "exercise:set" of the circle you just ticked (for the little animation)
+  if (workout.keepAwake === undefined) workout.keepAwake = true; // screen stays on by default
+  const setWord = workout.rounds ? "round" : "set";
+  const SetWord = workout.rounds ? "Round" : "Set";
 
   container.innerHTML = `
-    <a href="${backToPlan}" class="back-link">‹ Plan (the workout keeps running)</a>
-    <section class="card workout-head">
-      <p class="muted small">${sport ? sportIcon(sport.key) + " " + escapeHtml(sport.label) : ""}</p>
-      <h2>${escapeHtml(workout.name)}</h2>
-      <p class="workout-timer" id="timer" aria-live="off">0:00</p>
-      <p class="muted small" id="progress"></p>
-      ${details.description ? `<p class="pre-line">${escapeHtml(details.description)}</p>` : ""}
-      ${targetsHtml(details)}
+    <section class="workout-strip">
+      <div class="strip-top">
+        <a href="${backToPlan}" class="strip-back" aria-label="Back to the plan (the workout keeps running)">${icon("chevron-left")}Plan</a>
+        <div class="strip-time">
+          <span class="num" id="timer" aria-live="off">0:00</span>
+          <span class="strip-name">${escapeHtml(workout.name)}</span>
+        </div>
+        <div class="strip-sets" id="progress"></div>
+      </div>
+      <div class="strip-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+      <div class="strip-chips">
+        <button type="button" class="strip-chip" id="rest-chip"></button>
+        <button type="button" class="strip-chip" id="awake-chip" hidden></button>
+      </div>
+      ${details.description || targetsText(details) ? `<p class="strip-about">${escapeHtml([details.description, targetsText(details)].filter(Boolean).join(" · "))}</p>` : ""}
     </section>
 
-    <section class="card rest-settings">
-      <h3>Rest timer</h3>
-      <div class="chip-row" id="rest-choices"></div>
-    </section>
-
-    <div id="rest-banner" class="rest-banner" hidden>
-      <span>Rest <strong id="rest-left">0:00</strong></span>
-      <button type="button" class="button small-button" id="rest-skip">Skip</button>
-    </div>
-
-    <div id="set-banner" class="rest-banner set-banner" hidden>
-      <span><span id="set-label"></span> <strong id="set-left">0:00</strong></span>
-      <button type="button" class="button small-button" id="set-stop">Stop</button>
-    </div>
-
-    <p class="workout-rounds" id="rounds-line" hidden></p>
     <div id="exercises"></div>
-    <button type="button" class="button add-exercise" id="add-exercise">+ Add an exercise</button>
 
+    <button type="button" class="button add-exercise" id="add-exercise">${icon("plus")} Add an exercise</button>
     <div class="workout-actions">
-      <button type="button" class="button primary" id="finish">${icon("flag")} Finish</button>
+      <button type="button" class="button finish-button" id="finish">${icon("flag")} Finish workout</button>
       <button type="button" class="button danger" id="abandon">Stop without saving</button>
+    </div>
+
+    <div class="workout-bar" id="workout-bar" role="timer" hidden>
+      <div class="bar-row">
+        <div class="bar-text">
+          <span class="bar-label" id="bar-label">Rest</span>
+          <span class="num bar-left" id="bar-left">0:00</span>
+        </div>
+        <button type="button" class="button bar-more" id="rest-more">+15 s</button>
+        <button type="button" class="button bar-skip" id="rest-skip">Skip</button>
+        <button type="button" class="button bar-skip" id="set-stop" hidden>Stop</button>
+      </div>
+      <div class="bar-track" aria-hidden="true"><span id="bar-fill"></span></div>
+      <p class="bar-next" id="bar-next"></p>
     </div>
   `;
 
   const exercisesEl = container.querySelector("#exercises");
   const timerEl = container.querySelector("#timer");
   const progressEl = container.querySelector("#progress");
-  const restBanner = container.querySelector("#rest-banner");
-  const restLeftEl = container.querySelector("#rest-left");
-  const setBanner = container.querySelector("#set-banner");
-  const setLabelEl = container.querySelector("#set-label");
-  const setLeftEl = container.querySelector("#set-left");
-  const roundsLine = container.querySelector("#rounds-line");
-  const setWord = workout.rounds ? "round" : "set";
+  const progressFill = container.querySelector("#progress-fill");
+  const restChip = container.querySelector("#rest-chip");
+  const awakeChip = container.querySelector("#awake-chip");
+  const barEl = container.querySelector("#workout-bar");
+  const barLabel = container.querySelector("#bar-label");
+  const barLeft = container.querySelector("#bar-left");
+  const barFill = container.querySelector("#bar-fill");
+  const barNext = container.querySelector("#bar-next");
+  const restMore = container.querySelector("#rest-more");
+  const restSkip = container.querySelector("#rest-skip");
+  const setStop = container.querySelector("#set-stop");
+  const finishButton = container.querySelector("#finish");
 
-  function drawExercises() {
-    exercisesEl.innerHTML = workout.exercises.map((e, i) => {
-      const done = e.ticks.filter(Boolean).length;
-      const timed = parseExerciseTime(e.reps);
-      const next = e.ticks.indexOf(false);
-      const running = workout.setTimer && workout.setTimer.index === i;
-      return `
-        <section class="card exercise ${done === e.ticks.length ? "is-complete" : ""}">
-          <div class="exercise-head">
-            <div>
-              <h3>${escapeHtml(e.name)}${e.origIndex == null ? ` <span class="muted small">(added)</span>` : ""}</h3>
-              <p class="muted small">${escapeHtml([amountText(e, workout.rounds), e.note].filter(Boolean).join(" · "))}</p>
-            </div>
-            <button type="button" class="button small-button weight-button" data-edit="${i}"
-              aria-label="Change ${escapeHtml(e.name)}">${e.weight_kg != null ? `<span class="num">${Number(e.weight_kg)}</span> kg ${icon("pencil")}` : `${icon("pencil")} Edit`}</button>
-          </div>
-          <div class="tick-row">${e.ticks.map((ticked, t) => `
-            <button type="button" class="tick ${ticked ? "is-ticked" : ""}" data-tick="${i}:${t}"
-              aria-pressed="${ticked}" aria-label="${workout.rounds ? "Round" : "Set"} ${t + 1}">
-              ${ticked ? icon("check") : t + 1}</button>`).join("")}</div>
-          ${timed ? `<button type="button" class="button primary set-timer-button" data-timer="${i}" ${next < 0 || running ? "disabled" : ""}>
-            ${running ? `${icon("timer")} Running…` : next < 0 ? `${icon("check")} All done` : `${icon("play")} Start ${formatRest(timed)} · ${setWord} ${next + 1}`}</button>` : ""}
-        </section>`;
-    }).join("");
-    const total = ticksTotal(workout);
-    progressEl.textContent = total ? `${ticksDone(workout)} / ${total} ${workout.rounds ? "ticks" : "sets"} done` : "";
-    roundsLine.hidden = !workout.rounds;
-    if (workout.rounds) {
-      roundsLine.innerHTML = `<strong>${workout.rounds} rounds</strong> · tick each exercise once per round
-        <button type="button" class="button small-button" id="edit-rounds" aria-label="Change the rounds">${icon("pencil")}</button>`;
-    }
+  // ---- Which exercise is "now" ----
+
+  // The one you tapped, else the next one with a set left (null = all done).
+  function currentIndex() {
+    const i = workout.currentIndex;
+    if (Number.isInteger(i) && workout.exercises[i]) return i;
+    return nextOpenIndex(-1);
   }
+
+  // The next exercise with a set (or round) left, looking after `after`.
+  // A circuit goes round by round: the first exercise with the fewest ticks.
+  function nextOpenIndex(after) {
+    const list = workout.exercises;
+    if (workout.rounds) {
+      let best = null;
+      let bestDone = Infinity;
+      list.forEach((e, i) => {
+        const done = e.ticks.filter(Boolean).length;
+        if (e.ticks.includes(false) && done < bestDone) { best = i; bestDone = done; }
+      });
+      return best;
+    }
+    for (let step = 1; step <= list.length; step++) {
+      const i = (after + step + list.length) % list.length;
+      if (list[i].ticks.includes(false)) return i;
+    }
+    return null;
+  }
+
+  // After a tick: stay on this exercise while it has sets left, else move on.
+  function moveOnIfDone(index) {
+    const e = workout.exercises[index];
+    if (workout.rounds) workout.currentIndex = null; // circuits pick the next one themselves
+    else if (e && !e.ticks.includes(false)) workout.currentIndex = nextOpenIndex(index);
+  }
+
+  // ---- Drawing ----
+
+  function draw() {
+    const cur = currentIndex();
+    const resting = Boolean(workout.rest);
+    let html = cur == null ? doneCardHtml() : nowCardHtml(cur, resting);
+
+    if (workout.rounds) {
+      html += `<p class="workout-rounds"><strong>${workout.rounds} rounds</strong> · tick each exercise once per round
+        <button type="button" class="button small-button" id="edit-rounds" aria-label="Change the rounds">${icon("pencil")}</button></p>`;
+    }
+    const others = workout.exercises.map((e, i) => i).filter((i) => i !== cur);
+    const upNext = others.filter((i) => workout.exercises[i].ticks.includes(false));
+    const done = others.filter((i) => !workout.exercises[i].ticks.includes(false));
+    if (upNext.length) {
+      html += `<h2 class="week-title">Up next</h2>
+        <section class="card ex-list">${upNext.map((i) => rowHtml(i, false)).join("")}</section>`;
+    }
+    if (done.length) {
+      html += `<h2 class="week-title">Done</h2>
+        <section class="card ex-list is-done-list">${done.map((i) => rowHtml(i, true)).join("")}</section>`;
+    }
+    exercisesEl.innerHTML = html;
+    justTicked = null;
+
+    const total = ticksTotal(workout);
+    const doneCount = ticksDone(workout);
+    progressEl.innerHTML = total
+      ? `<span class="strip-count"><span class="num">${doneCount}</span><span class="strip-of">/ ${total}</span></span><span class="strip-unit">${workout.rounds ? "ticks" : "sets"}</span>`
+      : "";
+    // All done: the big card has the Finish button, so the one at the bottom steps aside.
+    finishButton.hidden = cur == null;
+    progressFill.style.width = total ? `${Math.round((doneCount / total) * 100)}%` : "0%";
+  }
+
+  // The big card: the exercise you're on.
+  function nowCardHtml(i, resting) {
+    const e = workout.exercises[i];
+    const timed = parseExerciseTime(e.reps);
+    const next = e.ticks.indexOf(false);
+    const running = workout.setTimer && workout.setTimer.index === i;
+    const doneCount = e.ticks.filter(Boolean).length;
+    const label = workout.rounds
+      ? `Now · round ${Math.min(doneCount + 1, e.ticks.length)} of ${e.ticks.length} · exercise ${i + 1} of ${workout.exercises.length}`
+      : `Now · exercise ${i + 1} of ${workout.exercises.length}`;
+
+    let button;
+    if (next < 0) {
+      const later = nextOpenIndex(i);
+      button = later == null ? "" : `<button type="button" class="button now-button is-outline" data-pick="${later}">
+        ${icon("chevron-right")} Next: ${escapeHtml(workout.exercises[later].name)}</button>`;
+    } else if (timed) {
+      button = `<button type="button" class="button now-button" data-timer="${i}" ${running ? "disabled" : ""}>
+        ${running ? `${icon("timer")} Running…` : `${icon("play")} Start ${escapeHtml(formatRest(timed))} · ${setWord} ${next + 1}`}</button>`;
+    } else {
+      button = `<button type="button" class="button now-button ${resting ? "is-outline" : ""}" data-tick="${i}:${next}">
+        ${icon("check")} ${SetWord} ${next + 1} done</button>`;
+    }
+    let hint = "";
+    if (next >= 0 && resting) hint = "Resting · you can still tap early";
+    else if (next >= 0 && restSeconds && !running) hint = `Rest ${formatRest(restSeconds)} starts when you ${timed ? "finish" : "tap"}`;
+    else if (next < 0) hint = `All ${e.ticks.length} ${setWord}s done`;
+
+    return `
+      <section class="card workout-now">
+        <div class="now-head">
+          <p class="now-label">${escapeHtml(label)}</p>
+          <button type="button" class="now-edit" data-edit="${i}" aria-label="Change ${escapeHtml(e.name)}">${icon("pencil")}</button>
+        </div>
+        <h2 class="now-name">${escapeHtml(e.name)}${e.origIndex == null ? ` <span class="muted small">(added)</span>` : ""}</h2>
+        ${factsHtml(e, timed)}
+        ${e.note ? `<p class="now-note">${escapeHtml(e.note)}</p>` : ""}
+        <div class="tick-row">${e.ticks.map((ticked, t) => `
+          <button type="button" class="tick ${ticked ? "is-ticked" : t === next ? "is-next" : ""} ${justTicked === `${i}:${t}` ? "just-ticked" : ""}"
+            data-tick="${i}:${t}" aria-pressed="${ticked}" aria-label="${SetWord} ${t + 1}${ticked ? ", done" : ""}">
+            ${ticked ? icon("check") : `<span class="num">${t + 1}</span>`}</button>`).join("")}</div>
+        ${button}
+        ${hint ? `<p class="now-hint">${escapeHtml(hint)}</p>` : ""}
+      </section>`;
+  }
+
+  // Reps (or time) and weight in big numbers.
+  function factsHtml(e, timed) {
+    const facts = [];
+    if (timed) facts.push(`<span class="now-fact">${numHtml(formatRest(timed))}</span>`);
+    else if (e.reps && /^\d+(\s*[-–]\s*\d+)?$/.test(String(e.reps).trim())) facts.push(`<span class="now-fact">${numHtml(String(e.reps).trim(), "reps")}</span>`);
+    else if (e.reps) facts.push(`<span class="now-fact now-fact-text">${escapeHtml(e.reps)}</span>`);
+    if (e.weight_kg != null) facts.push(`<span class="now-fact is-weight">${numHtml(Number(e.weight_kg), "kg")}</span>`);
+    return facts.length ? `<div class="now-facts">${facts.join("")}</div>` : "";
+  }
+
+  // When every set is ticked.
+  function doneCardHtml() {
+    const total = ticksTotal(workout);
+    return `
+      <section class="card workout-now is-all-done">
+        <p class="now-label">${icon("check", { className: "is-ok" })} All done</p>
+        <h2 class="now-name">${total ? `All ${total} ${workout.rounds ? "ticks" : "sets"} done` : "No exercises yet"}</h2>
+        <p class="now-hint">${total ? "Nice one. Finish to log it." : "Add an exercise below, or finish to log the session."}</p>
+        <button type="button" class="button now-button" data-finish>${icon("flag")} Finish workout</button>
+      </section>`;
+  }
+
+  // One short row in "Up next" / "Done": tap it to make it the current exercise.
+  function rowHtml(i, isDone) {
+    const e = workout.exercises[i];
+    const timed = parseExerciseTime(e.reps);
+    const meta = [amountText(e, workout.rounds), e.weight_kg != null ? `${Number(e.weight_kg)} kg` : ""].filter(Boolean).join(" · ");
+    const doneCount = e.ticks.filter(Boolean).length;
+    const dots = e.ticks.map((ticked) => `<span class="ex-dot ${ticked ? "is-ticked" : ""}"></span>`).join("");
+    return `
+      <button type="button" class="ex-row" data-pick="${i}" aria-label="${escapeHtml(e.name)}, ${doneCount} of ${e.ticks.length} ${setWord}s done. Make it the current exercise">
+        ${isDone ? `<span class="ex-done-badge">${icon("check")}</span>` : ""}
+        <span class="ex-row-main">
+          <span class="ex-row-name">${escapeHtml(e.name)}${timed ? " " + icon("timer", { className: "is-muted" }) : ""}${e.origIndex == null ? ` <span class="muted small">(added)</span>` : ""}</span>
+          ${meta ? `<span class="ex-row-meta">${escapeHtml(meta)}</span>` : ""}
+        </span>
+        ${isDone ? "" : `<span class="ex-dots" aria-hidden="true">${dots}</span>`}
+      </button>`;
+  }
+
+  // The rest chip in the strip ("Rest 90 s ▾" / "Rest off ▾").
+  function drawRestChip() {
+    restChip.innerHTML = `${icon("timer")} ${restSeconds ? `Rest ${escapeHtml(formatRest(restSeconds))}` : "Rest off"} ${icon("chevron-down")}`;
+    restChip.setAttribute("aria-label", `Rest timer: ${restSeconds ? formatRest(restSeconds) : "off"}. Change it`);
+  }
+
+  // The screen chip: only shown where the phone can keep the screen on.
+  function drawAwakeChip() {
+    if (!("wakeLock" in navigator)) { awakeChip.hidden = true; return; }
+    awakeChip.hidden = false;
+    awakeChip.setAttribute("aria-pressed", String(workout.keepAwake));
+    awakeChip.innerHTML = `${icon("smartphone")} ${wakeLockFailed && workout.keepAwake ? "Screen lock: not available" : workout.keepAwake ? "Screen stays on" : "Screen can sleep"}`;
+  }
+
+  // ---- Timers ----
 
   // Starts the countdown for the next open set of a timed exercise
   // (3 seconds "get ready" first, to get into position).
@@ -156,33 +312,80 @@ function drawWorkout(container, session, workout, backToPlan) {
     const next = e.ticks.indexOf(false);
     if (!seconds || next < 0) return;
     unlockSound(); // sound needs a tap first on iPhone
-    restEndsAt = null;
-    restBanner.hidden = true;
+    workout.rest = null;
+    workout.currentIndex = index;
     const readyEndsAt = Date.now() + GET_READY_S * 1000;
     workout.setTimer = { index, tick: next, readyEndsAt, endsAt: readyEndsAt + seconds * 1000, goBeeped: false };
     saveWorkout(workout);
-    drawExercises();
+    draw();
     tick();
   }
 
   function stopSetTimer() {
     workout.setTimer = null;
     saveWorkout(workout);
-    setBanner.hidden = true;
-    drawExercises();
+    draw();
+    tick();
   }
 
   // Time's up: tick that set, beep, then the rest timer (if on).
   function finishSetTimer() {
     const { index, tick: t } = workout.setTimer;
     const e = workout.exercises[index];
-    if (e && t < e.ticks.length) e.ticks[t] = true;
-    stopSetTimer();
+    if (e && t < e.ticks.length) {
+      e.ticks[t] = true;
+      justTicked = `${index}:${t}`;
+      moveOnIfDone(index);
+    }
+    workout.setTimer = null;
     beep();
-    if (restSeconds) restEndsAt = Date.now() + restSeconds * 1000;
+    startRest();
+    saveWorkout(workout);
+    draw();
   }
 
-  // Runs every second: the main timer and the rest countdown.
+  // A rest countdown, if the rest timer is on. It's saved with the workout,
+  // so it carries on after a reload.
+  function startRest() {
+    if (!restSeconds) return;
+    unlockSound(); // sound needs a tap first on iPhone
+    workout.rest = { endsAt: Date.now() + restSeconds * 1000, totalS: restSeconds };
+  }
+
+  function stopRest() {
+    workout.rest = null;
+    saveWorkout(workout);
+    draw();
+    tick();
+  }
+
+  // What comes after the rest / the timed set, for the bottom bar.
+  function nextText() {
+    const cur = currentIndex();
+    if (cur == null) return "All done: finish when you're ready";
+    const e = workout.exercises[cur];
+    const next = e.ticks.indexOf(false);
+    return next < 0 ? e.name : `${e.name} · ${setWord} ${next + 1}`;
+  }
+
+  // The bar pinned at the bottom: the rest countdown or a timed set.
+  function drawBar(mode, label, secondsLeft, fraction) {
+    barEl.hidden = !mode;
+    container.classList.toggle("has-workout-bar", Boolean(mode));
+    if (!mode) return;
+    barEl.classList.toggle("is-set", mode === "set");
+    barLabel.textContent = label;
+    barLeft.textContent = formatDuration(Math.max(0, secondsLeft)) || "0:00";
+    barEl.setAttribute("aria-label", `${label}, ${formatDuration(Math.max(0, secondsLeft)) || "0:00"} left`);
+    barFill.style.width = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%`;
+    restMore.hidden = mode !== "rest";
+    restSkip.hidden = mode !== "rest";
+    setStop.hidden = mode !== "set";
+    if (mode === "rest") barNext.innerHTML = `Next: <strong>${escapeHtml(nextText())}</strong>`;
+    else barNext.textContent = "Tap Stop to cancel (the set isn't ticked)";
+  }
+
+  // Runs every second: the main timer, the timed set and the rest countdown.
   // Times come from the clock (Date.now), so they stay right even if the
   // phone slept for a while.
   function tick() {
@@ -193,39 +396,49 @@ function drawWorkout(container, session, workout, backToPlan) {
       return;
     }
     timerEl.textContent = formatDuration(Math.floor((Date.now() - workout.startedAt) / 1000)) || "0:00";
+    const now = Date.now();
     const timer = workout.setTimer;
     if (timer) {
-      const now = Date.now();
       const e = workout.exercises[timer.index];
       if (!e) {
         stopSetTimer();
-      } else if (now >= timer.endsAt) {
+        return;
+      }
+      if (now >= timer.endsAt) {
         finishSetTimer();
-      } else {
-        const ready = now < timer.readyEndsAt;
-        if (!ready && !timer.goBeeped) {
-          timer.goBeeped = true; // one short beep = go!
-          saveWorkout(workout);
-          beep(1);
-        }
-        setLabelEl.textContent = ready ? `Get ready · ${e.name}` : `${e.name} · ${setWord} ${timer.tick + 1}`;
-        setLeftEl.textContent = formatDuration(Math.ceil(((ready ? timer.readyEndsAt : timer.endsAt) - now) / 1000));
-        setBanner.hidden = false;
+        return tick();
       }
+      const ready = now < timer.readyEndsAt;
+      if (!ready && !timer.goBeeped) {
+        timer.goBeeped = true; // one short beep = go!
+        saveWorkout(workout);
+        beep(1);
+      }
+      const total = (timer.endsAt - timer.readyEndsAt) / 1000;
+      drawBar("set",
+        ready ? `Get ready · ${e.name}` : `${e.name} · ${setWord} ${timer.tick + 1}`,
+        Math.ceil(((ready ? timer.readyEndsAt : timer.endsAt) - now) / 1000),
+        ready ? 0 : 1 - (timer.endsAt - now) / 1000 / total);
+      return;
     }
-    if (restEndsAt) {
-      const left = Math.ceil((restEndsAt - Date.now()) / 1000);
+    if (workout.rest) {
+      const left = Math.ceil((workout.rest.endsAt - now) / 1000);
       if (left <= 0) {
-        restEndsAt = null;
-        restBanner.hidden = true;
+        workout.rest = null;
+        saveWorkout(workout);
         beep();
-      } else {
-        restLeftEl.textContent = formatDuration(left);
-        restBanner.hidden = false;
+        draw(); // the "Set done" button goes back to full colour
+        drawBar(null);
+        return;
       }
+      drawBar("rest", "Rest", left, 1 - left / workout.rest.totalS);
+      return;
     }
+    drawBar(null);
   }
   const interval = setInterval(tick, 1000);
+
+  // ---- Taps ----
 
   exercisesEl.addEventListener("click", async (event) => {
     const tickButton = event.target.closest("[data-tick]");
@@ -234,23 +447,44 @@ function drawWorkout(container, session, workout, backToPlan) {
       const ticks = workout.exercises[i].ticks;
       ticks[t] = !ticks[t];
       // Ticked by hand while its countdown runs: the countdown stops.
-      if (workout.setTimer && workout.setTimer.index === i && workout.setTimer.tick === t) {
-        workout.setTimer = null;
-        setBanner.hidden = true;
+      if (workout.setTimer && workout.setTimer.index === i && workout.setTimer.tick === t) workout.setTimer = null;
+      if (ticks[t]) {
+        justTicked = `${i}:${t}`;
+        workout.currentIndex = i;
+        moveOnIfDone(i);
+        // A set just done -> start the rest countdown (if the rest timer is on).
+        if (!workout.setTimer) startRest();
       }
       saveWorkout(workout);
-      drawExercises();
-      // A set just done -> start the rest countdown (if the rest timer is on).
-      if (ticks[t] && restSeconds && !workout.setTimer) {
-        unlockSound(); // sound needs a tap first on iPhone
-        restEndsAt = Date.now() + restSeconds * 1000;
-        tick();
-      }
+      draw();
+      tick();
       return;
     }
     const timerButton = event.target.closest("[data-timer]");
     if (timerButton) {
       startSetTimer(Number(timerButton.dataset.timer));
+      return;
+    }
+    const pickButton = event.target.closest("[data-pick]");
+    if (pickButton) {
+      workout.currentIndex = Number(pickButton.dataset.pick);
+      saveWorkout(workout);
+      draw();
+      tick();
+      exercisesEl.querySelector(".workout-now").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    if (event.target.closest("[data-finish]")) {
+      finish();
+      return;
+    }
+    if (event.target.closest("#edit-rounds")) {
+      const rounds = await askRounds(workout.rounds);
+      if (!rounds) return;
+      workout.rounds = rounds;
+      workout.exercises.forEach((e) => resizeTicks(e, rounds));
+      saveWorkout(workout);
+      draw();
       return;
     }
     const editButton = event.target.closest("[data-edit]");
@@ -264,25 +498,17 @@ function drawWorkout(container, session, workout, backToPlan) {
       if (result.remove) {
         if (workout.setTimer && workout.setTimer.index > index) workout.setTimer.index--;
         workout.exercises.splice(index, 1);
+        // The exercise list moved up by one: keep pointing at the same one.
+        if (workout.currentIndex === index) workout.currentIndex = null;
+        else if (workout.currentIndex > index) workout.currentIndex--;
       } else {
         Object.assign(exercise, result.values);
         resizeTicks(exercise, workout.rounds);
       }
-      setBanner.hidden = !workout.setTimer;
       saveWorkout(workout);
-      drawExercises();
+      draw();
+      tick();
     }
-  });
-
-  // A circuit: change the number of rounds (every exercise gets that many boxes).
-  roundsLine.addEventListener("click", async (event) => {
-    if (!event.target.closest("#edit-rounds")) return;
-    const rounds = await askRounds(workout.rounds);
-    if (!rounds) return;
-    workout.rounds = rounds;
-    workout.exercises.forEach((e) => resizeTicks(e, rounds));
-    saveWorkout(workout);
-    drawExercises();
   });
 
   container.querySelector("#add-exercise").addEventListener("click", async () => {
@@ -292,74 +518,74 @@ function drawWorkout(container, session, workout, backToPlan) {
     resizeTicks(exercise, workout.rounds);
     workout.exercises.push(exercise);
     saveWorkout(workout);
-    drawExercises();
+    draw();
   });
 
-  container.querySelector("#set-stop").addEventListener("click", stopSetTimer);
+  setStop.addEventListener("click", stopSetTimer);
+  restSkip.addEventListener("click", stopRest);
+  restMore.addEventListener("click", () => {
+    if (!workout.rest) return;
+    workout.rest.endsAt += 15 * 1000;
+    workout.rest.totalS += 15;
+    saveWorkout(workout);
+    tick();
+  });
 
-  // The rest choices: Off, the usual times, and "Custom" (shows your own
-  // time once you've set one).
-  const restChoicesEl = container.querySelector("#rest-choices");
-  function drawRestChoices() {
-    const isCustom = !REST_CHOICES.includes(restSeconds);
-    restChoicesEl.innerHTML = REST_CHOICES.map((s) => `
-      <button type="button" class="chip-button" data-rest="${s}" aria-pressed="${s === restSeconds}">
-        ${s === 0 ? "Off" : formatRest(s)}</button>`).join("") + `
-      <button type="button" class="chip-button" data-rest="custom" aria-pressed="${isCustom}">
-        ${isCustom ? `${formatRest(restSeconds)} ${icon("pencil")}` : "Custom"}</button>`;
-  }
-
-  restChoicesEl.addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-rest]");
-    if (!button) return;
-    if (button.dataset.rest === "custom") {
-      const seconds = await askRest(restSeconds);
-      if (seconds == null) return;
-      restSeconds = seconds;
-    } else {
-      restSeconds = Number(button.dataset.rest);
-    }
+  // Rest chip -> Off, the usual times, or Custom (remembered on this phone).
+  restChip.addEventListener("click", async () => {
+    const seconds = await askRestChoice(restSeconds);
+    if (seconds == null) return;
+    restSeconds = seconds;
     saveRestSeconds(restSeconds);
-    drawRestChoices();
-    if (!restSeconds) {
-      restEndsAt = null;
-      restBanner.hidden = true;
-    }
+    if (!restSeconds) workout.rest = null;
+    saveWorkout(workout);
+    drawRestChip();
+    draw();
+    tick();
   });
 
-  container.querySelector("#rest-skip").addEventListener("click", () => {
-    restEndsAt = null;
-    restBanner.hidden = true;
+  // Screen chip -> keep the screen on, or let it sleep.
+  awakeChip.addEventListener("click", async () => {
+    workout.keepAwake = !workout.keepAwake;
+    saveWorkout(workout);
+    if (workout.keepAwake) await keepScreenAwake();
+    else releaseWakeLock();
+    drawAwakeChip();
   });
 
-  container.querySelector("#finish").addEventListener("click", () => {
+  function finish() {
     const open = ticksTotal(workout) - ticksDone(workout);
-    if (open && !window.confirm(`${open} set${open === 1 ? "" : "s"} not ticked. Finish anyway?`)) return;
+    if (open && !window.confirm(`${open} ${setWord}${open === 1 ? "" : "s"} not ticked. Finish anyway?`)) return;
     workout.finishedAt = Date.now();
     workout.durationS = Math.round((workout.finishedAt - workout.startedAt) / 1000);
+    workout.rest = null;
+    workout.setTimer = null;
     saveWorkout(workout);
+    releaseWakeLock();
     window.location.hash = `#/log/new/${session.id}`; // the log form picks up the workout
-  });
+  }
+  finishButton.addEventListener("click", finish);
 
   container.querySelector("#abandon").addEventListener("click", () => {
     if (!window.confirm("Stop this workout? Your ticks are thrown away and nothing is logged.")) return;
     clearWorkout();
+    releaseWakeLock();
     window.location.hash = backToPlan;
   });
 
-  drawRestChoices();
-  drawExercises();
+  drawRestChip();
+  draw();
   tick();
-  keepScreenAwake();
+  if (workout.keepAwake) keepScreenAwake().then(drawAwakeChip);
+  drawAwakeChip();
 }
-
 
 const GET_READY_S = 3; // seconds to get into position before a timed set
 
-function targetsHtml(details) {
-  const targets = [details.target_duration_s ? formatDuration(details.target_duration_s) : "",
-    details.target_distance_km ? `${Number(details.target_distance_km)} km` : ""].filter(Boolean);
-  return targets.length ? `<p><strong>Target:</strong> ${escapeHtml(targets.join(" · "))}</p>` : "";
+// "45:00 · 8 km": the session's targets in a few words ("" when none).
+function targetsText(details) {
+  return [details.target_duration_s ? `target ${formatDuration(details.target_duration_s)}` : "",
+    details.target_distance_km ? `${Number(details.target_distance_km)} km` : ""].filter(Boolean).join(" · ");
 }
 
 // 45 -> "45 s", 90 -> "90 s", 120 -> "2 min", 75 -> "1:15"
@@ -367,6 +593,26 @@ function formatRest(seconds) {
   if (seconds < 60 || seconds === 90) return `${seconds} s`;
   if (seconds % 60 === 0) return `${seconds / 60} min`;
   return formatDuration(seconds);
+}
+
+// Pop-up from the rest chip: Off, the usual times, or Custom.
+// Resolves to seconds (0 = off), or null when closed.
+async function askRestChoice(current) {
+  const isCustom = !REST_CHOICES.includes(current);
+  const value = await openSheet({
+    title: "Rest timer",
+    html: `
+      <p class="muted small">Starts by itself when you tick a set.</p>
+      <div class="sheet-list">
+        ${REST_CHOICES.map((s) => `<button type="button" class="sheet-item ${s === current ? "is-current" : ""}" data-value="${s}"
+          aria-pressed="${s === current}">${s === 0 ? "Off" : escapeHtml(formatRest(s))}${s === current ? icon("check") : ""}</button>`).join("")}
+        <button type="button" class="sheet-item ${isCustom ? "is-current" : ""}" data-value="custom" aria-pressed="${isCustom}">
+          ${isCustom ? `Custom · ${escapeHtml(formatRest(current))}` : "Custom…"}${isCustom ? icon("check") : ""}</button>
+      </div>`,
+  });
+  if (value == null) return null;
+  if (value === "custom") return askRest(current);
+  return Number(value);
 }
 
 // Pop-up to type your own rest time. Resolves to seconds, or null.
@@ -499,7 +745,10 @@ function unlockSound() {
 
 // Three short beeps (and a buzz on phones that support it); beep(1) = one.
 function beep(count = 3) {
-  try { navigator.vibrate && navigator.vibrate(count === 1 ? 150 : [200, 100, 200]); } catch { /* ignore */ }
+  // (Buzz only after a tap on this page: browsers refuse it otherwise, e.g. a
+  // timed set that ended while the app was reloading. iPhones never buzz.)
+  const tapped = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+  try { if (tapped && navigator.vibrate) navigator.vibrate(count === 1 ? 150 : [200, 100, 200]); } catch { /* ignore */ }
   if (!audio) return;
   [0, 0.3, 0.6].slice(0, count).forEach((delay) => {
     const oscillator = audio.createOscillator();
@@ -512,21 +761,29 @@ function beep(count = 3) {
   });
 }
 
-// Ask the phone not to go to sleep during the workout (where supported).
-// The lock is dropped when the app goes to the background, so we ask again
-// when it comes back.
+// Ask the phone not to go to sleep during the workout (where supported,
+// and only while the "Screen stays on" chip is on). The lock is dropped when
+// the app goes to the background, so we ask again when it comes back.
+// Note: iPhone home-screen apps may not honour it (Safari does since iOS 16.4);
+// Rom checks it on his phone. If it fails, the chip says so; never an error.
 let wakeLock = null;
+let wakeLockFailed = false;
 async function keepScreenAwake() {
   try {
     if ("wakeLock" in navigator && document.visibilityState === "visible") {
       wakeLock = await navigator.wakeLock.request("screen");
+      wakeLockFailed = false;
     }
-  } catch { /* not allowed or not supported: fine */ }
+  } catch {
+    wakeLockFailed = true; // not allowed here: the chip shows "not available"
+  }
 }
 function releaseWakeLock() {
   if (wakeLock) wakeLock.release().catch(() => {});
   wakeLock = null;
 }
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && document.querySelector(".workout-head")) keepScreenAwake();
+  if (document.visibilityState !== "visible" || !document.querySelector(".workout-strip")) return;
+  const workout = loadWorkout();
+  if (workout && workout.keepAwake !== false) keepScreenAwake();
 });

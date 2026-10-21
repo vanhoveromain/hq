@@ -82,7 +82,10 @@ function render() {
     return render();
   }
 
-  tabbarEl.hidden = false;
+  // Workout mode is full screen: no tab bar (the pinned rest bar lives there).
+  const isWorkout = name === "workout";
+  tabbarEl.hidden = isWorkout;
+  document.body.classList.toggle("is-workout", isWorkout);
   titleEl.textContent = routes[name].title;
   for (const link of tabbarEl.querySelectorAll("a")) {
     link.classList.toggle("active", link.dataset.route === (routes[name].tab || name));
