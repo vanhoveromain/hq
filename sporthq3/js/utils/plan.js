@@ -2,9 +2,9 @@
 // workout mode: how a planned session is named, which details it shows,
 // and how it is marked done / reopened.
 
-import { updatePlannedSession, saveSessionTemplate } from "../storage.js?v=202610201505";
-import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610201505";
-import { escapeHtml } from "./format.js?v=202610201505";
+import { updatePlannedSession, saveSessionTemplate } from "../storage.js?v=202610211529";
+import { sessionTypeLabel, sportLabel } from "../rules.js?v=202610211529";
+import { escapeHtml } from "./format.js?v=202610211529";
 
 // The name shown on a session card.
 //   own title > recipe name > session type > sport ("Running")

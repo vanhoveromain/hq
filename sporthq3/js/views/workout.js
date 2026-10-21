@@ -7,16 +7,16 @@
 // saving it marks the session done, freezes what you really did and offers
 // to update the recipe.
 
-import { getPlannedSession } from "../storage.js?v=202610201505";
-import { getSport } from "../rules.js?v=202610201505";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610201505";
-import { startOfWeek } from "../utils/dates.js?v=202610201505";
-import { sessionName, sessionDetails } from "../utils/plan.js?v=202610201505";
-import { openSheet } from "../utils/sheet.js?v=202610201505";
+import { getPlannedSession } from "../storage.js?v=202610211529";
+import { getSport } from "../rules.js?v=202610211529";
+import { escapeHtml, formatDuration } from "../utils/format.js?v=202610211529";
+import { startOfWeek } from "../utils/dates.js?v=202610211529";
+import { sessionName, sessionDetails } from "../utils/plan.js?v=202610211529";
+import { openSheet } from "../utils/sheet.js?v=202610211529";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
   REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
-} from "../utils/workout.js?v=202610201505";
+} from "../utils/workout.js?v=202610211529";
 
 export async function render(container, { params = [] } = {}) {
   const plannedId = params[0];
