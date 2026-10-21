@@ -4,11 +4,11 @@
 //   #/races/<id>   -> a race: summary (Edit = details form), checklist, race routine
 
 import {
-  listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities,
+  listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
 } from "../storage.js?v=202610211800";
 import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610211800";
-import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=202610211800";
+import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610211800";
 import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610211800";
 import { sportBadge } from "../utils/plan.js?v=202610211800";
 import { blockWeek } from "./blocks.js?v=202610211800";
@@ -593,10 +593,18 @@ function showStatus(element, text, kind) {
 
 // ---------- Race routine card ----------
 
+// Not planned yet: what the routine is + one button. Planned: one row per
+// day (jog, rest day, race day), each opening that week in the planner.
 async function drawRoutine(el, race, refresh) {
   let sessions = [];
+  let busyRestDay = [];
+  const restDate = race.race_date ? addDays(race.race_date, -1) : null;
   try {
     sessions = await listRaceSessions(race.id);
+    // The day before should stay empty: anything else planned that day?
+    if (restDate && sessions.length) {
+      busyRestDay = (await listPlannedSessions(restDate, restDate)).filter((s) => s.status !== "cancelled");
+    }
   } catch (error) {
     el.innerHTML = `<p class="status error"></p>`;
     el.querySelector(".status").textContent = "Could not load the routine: " + error.message;
@@ -607,20 +615,26 @@ async function drawRoutine(el, race, refresh) {
   const canPlan = race.race_date && race.status !== "finished" && race.status !== "cancelled";
   const missing = RACE_ROUTINE.length - sessions.length;
 
+  // The rows, in date order: the routine sessions + the rest day between them.
+  const rows = sessions.map((s) => ({ date: s.session_date, html: routineRowHtml(s) }));
+  if (sessions.length && restDate) rows.push({ date: restDate, html: restRowHtml(restDate, busyRestDay) });
+  rows.sort((a, b) => a.date.localeCompare(b.date));
+
   el.innerHTML = `
-    <h2>Race routine</h2>
-    <p class="muted small">Race day + an activation jog 2 days before, and full rest the day before
-      (you get a warning if something is planned then). A planned match always wins over the jog.</p>
-    ${sessions.length ? `<ul class="routine-list">${sessions.map((s) => `
-      <li><a href="#/planner/${startOfWeek(s.session_date)}">${escapeHtml(formatDayLabel(s.session_date))}</a> ·
-        ${escapeHtml(s.title || "")} ${s.status === "done" ? icon("check", { label: "done", className: "is-ok" }) : s.status === "cancelled" ? icon("x", { label: "cancelled", className: "is-error" }) : ""}</li>`).join("")}</ul>` : ""}
+    <div class="card-head">
+      <h2>Race routine</h2>
+      ${sessions.length && missing <= 0 ? `<span class="race-pill is-ok">${icon("check")} In your plan</span>` : ""}
+    </div>
+    ${sessions.length ? `<div class="routine-rows">${rows.map((r) => r.html).join("")}</div>` : `
+      <p class="muted small">Race day + an activation jog 2 days before, and full rest the day before
+        (you get a warning if something is planned then). A planned match always wins over the jog.</p>`}
     ${logged && race.result_time_s !== logged.duration_s && logged.duration_s ? `
-      <p>Logged race time: <strong>${formatDuration(logged.duration_s)}</strong></p>
+      <p>Logged race time: ${numHtml(formatDuration(logged.duration_s))}</p>
       <button type="button" class="button primary" id="use-result">Use my logged time as result</button>` : ""}
-    ${canPlan && missing > 0 ? `<button type="button" class="button primary" id="add-routine">${icon("calendar")} ${sessions.length
+    ${canPlan && missing > 0 ? `<button type="button" class="button ${sessions.length ? "" : "primary"}" id="add-routine">${icon("calendar")} ${sessions.length
       ? "Add the missing routine sessions" : "Add race routine to my planner"}</button>` : ""}
     ${!race.race_date ? `<p class="muted">Give the race a date to plan its routine.</p>` : ""}
-    ${sessions.some((s) => s.status !== "done") ? `<button type="button" class="button" id="remove-routine">Remove the routine from the planner</button>` : ""}
+    ${sessions.some((s) => s.status !== "done") ? `<button type="button" class="link-button" id="remove-routine">Remove the routine from the planner</button>` : ""}
   `;
 
   const add = el.querySelector("#add-routine");
@@ -663,32 +677,77 @@ async function drawRoutine(el, race, refresh) {
   });
 }
 
+// "THU / 12": the day box at the start of a routine row.
+function dayBoxHtml(iso, isRaceDay = false) {
+  const date = parseISODate(iso);
+  const weekday = date.toLocaleDateString("en-GB", { weekday: "short" });
+  return `<span class="routine-day ${isRaceDay ? "is-race" : ""}"><span>${weekday}</span><span class="num">${date.getDate()}</span></span>`;
+}
+
+function routineRowHtml(s) {
+  const isRace = s.session_type === "race";
+  const state = s.status === "done" ? `${icon("check", { className: "is-ok" })} done`
+    : s.status === "cancelled" ? `${icon("x", { className: "is-error" })} cancelled` : "planned";
+  return `
+    <a class="routine-row" href="#/planner/${startOfWeek(s.session_date)}">
+      ${dayBoxHtml(s.session_date, isRace)}
+      ${isRace ? `<span class="sport-badge routine-race" aria-hidden="true">${icon("flag")}</span>` : sportBadge(s.sport, sportIcon)}
+      <span class="routine-text"><strong>${escapeHtml(isRace ? "Race day" : s.title || sessionTypeLabel(s.sport, s.session_type))}</strong>
+        <span class="muted small">${isRace ? escapeHtml(s.title || "") + " · " : ""}${state}</span></span>
+    </a>`;
+}
+
+function restRowHtml(iso, busy) {
+  return `
+    <a class="routine-row" href="#/planner/${startOfWeek(iso)}">
+      ${dayBoxHtml(iso)}
+      <span class="sport-badge routine-rest" aria-hidden="true">${icon("moon")}</span>
+      <span class="routine-text"><strong>Full rest</strong>
+        ${busy.length
+          ? `<span class="small routine-warn">${icon("alert-triangle")} ${busy.length} session${busy.length === 1 ? "" : "s"} planned that day</span>`
+          : `<span class="muted small">Nothing planned · good</span>`}</span>
+    </a>`;
+}
+
 
 // ---------- Checklist card ----------
 
+// Tap anywhere on a row to tick it. The remove buttons only show after
+// "Edit list", so a quick tap never deletes an item by accident.
 function drawChecklist(el, race) {
   let items = race.checklist.slice();
+  let editing = false;
 
   function draw() {
     const done = items.filter((i) => i.done).length;
     el.innerHTML = `
-      <h2>Checklist ${items.length ? `<span class="muted small">${done} / ${items.length} ready</span>` : ""}</h2>
-      ${items.length ? `<ul class="checklist">${items.map((item) => `
-        <li class="${item.done ? "is-done" : ""}">
-          <label class="checkbox"><input type="checkbox" data-toggle="${item.id}" ${item.done ? "checked" : ""}>
-            ${escapeHtml(item.label)}</label>
-          <button type="button" class="button small-button danger" data-remove="${item.id}" aria-label="Remove ${escapeHtml(item.label)}">${icon("x")}</button>
-        </li>`).join("")}</ul>` : `
+      <div class="card-head">
+        <h2>Checklist</h2>
+        ${items.length ? `<span>${numHtml(String(done))}<span class="unit"> / ${items.length} ready</span></span>` : ""}
+      </div>
+      ${items.length ? `
+        <span class="bar checklist-bar" role="img" aria-label="${done} of ${items.length} ready">
+          <span class="bar-fill" style="width: ${Math.round((done / items.length) * 100)}%"></span></span>
+        <ul class="checklist">${items.map((item) => `
+          <li class="${item.done ? "is-done" : ""}">
+            <label class="check-row"><input type="checkbox" data-toggle="${item.id}" ${item.done ? "checked" : ""}>
+              <span>${escapeHtml(item.label)}</span></label>
+            ${editing ? `<button type="button" class="button small-button danger" data-remove="${item.id}" aria-label="Remove ${escapeHtml(item.label)}">${icon("x")}</button>` : ""}
+          </li>`).join("")}</ul>` : `
         <p class="muted">No checklist yet.</p>
         <div class="sheet-actions">
-          <button type="button" class="button" id="copy-last">⧉ Copy from my last race</button>
+          <button type="button" class="button" id="copy-last">${icon("copy")} Copy from my last race</button>
           <button type="button" class="button" id="use-starter">Use the starter list</button>
         </div>`}
       <form id="add-item" class="add-item">
         <input type="text" name="label" placeholder="Add an item" autocomplete="off" aria-label="New checklist item">
-        <button type="submit" class="button">Add</button>
+        <button type="submit" class="button icon-only" aria-label="Add item">${icon("plus")}</button>
       </form>
-      ${done ? `<button type="button" class="button small-button" id="untick-all">Untick all</button>` : ""}
+      ${items.length ? `
+        <div class="checklist-links">
+          <button type="button" class="link-button" id="edit-list">${editing ? "Done editing" : "Edit list"}</button>
+          ${done ? `<button type="button" class="link-button is-quiet" id="untick-all">Untick all</button>` : ""}
+        </div>` : ""}
     `;
   }
 
@@ -714,10 +773,16 @@ function drawChecklist(el, race) {
 
   el.addEventListener("click", async (event) => {
     try {
+      if (event.target.closest("#edit-list")) {
+        editing = !editing;
+        draw();
+        return;
+      }
       const remove = event.target.closest("[data-remove]");
       if (remove) {
         await deleteChecklistItem(remove.dataset.remove);
         items = items.filter((i) => i.id !== remove.dataset.remove);
+        if (!items.length) editing = false;
         draw();
       }
       if (event.target.closest("#use-starter")) await addLabels(STARTER_CHECKLIST);
