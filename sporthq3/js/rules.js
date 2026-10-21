@@ -11,6 +11,7 @@
 // Later steps add more to this file: personal-best distances.
 
 import { addDays } from "./utils/dates.js?v=202610211550";
+import { icon } from "./utils/icons.js?v=202610211550";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -22,6 +23,7 @@ export const CATEGORIES = {
   other:      { label: "Other" }, // counts as training, never triggers leg warnings
 };
 
+// icon: the name of the sport's line icon in utils/icons.js (sportIcon() draws it).
 // Which extra boxes the activity form shows for a sport:
 //   distance  -> km          elevation -> D+ in metres
 //   stairs    -> stairs climbed
@@ -32,7 +34,7 @@ export const CATEGORIES = {
 //            assists. "Minutes played" is then also used as the duration.
 export const SPORTS = [
   {
-    key: "running", label: "Running", icon: "🏃",
+    key: "running", label: "Running", icon: "footprints",
     fields: ["distance", "elevation", "shoe"], speed: "per_km",
     sessionTypes: [
       { key: "easy_run",        label: "Easy run (EF)",   category: "easy_run" },
@@ -46,7 +48,7 @@ export const SPORTS = [
     ],
   },
   {
-    key: "football", label: "Football", icon: "⚽",
+    key: "football", label: "Football", icon: "football",
     fields: [], speed: null,
     sessionTypes: [
       { key: "team_training", label: "Team training", category: "heavy_legs" },
@@ -55,7 +57,7 @@ export const SPORTS = [
     ],
   },
   {
-    key: "muscle", label: "Muscle training", icon: "🏋️",
+    key: "muscle", label: "Muscle training", icon: "dumbbell",
     fields: [], speed: null,
     sessionTypes: [
       { key: "explosivity",     label: "Leg explosivity",   category: "heavy_legs" },
@@ -64,21 +66,21 @@ export const SPORTS = [
     ],
   },
   {
-    key: "biking", label: "Biking", icon: "🚴",
+    key: "biking", label: "Biking", icon: "bike",
     fields: ["distance", "elevation"], speed: "kmh",
     sessionTypes: [
       { key: "ride", label: "Ride", category: "other" },
     ],
   },
   {
-    key: "swimming", label: "Swimming", icon: "🏊",
+    key: "swimming", label: "Swimming", icon: "waves",
     fields: ["distance"], speed: "per_100m",
     sessionTypes: [
       { key: "swim", label: "Swim", category: "other" },
     ],
   },
   {
-    key: "stairs", label: "Stair stepper", icon: "🪜",
+    key: "stairs", label: "Stair stepper", icon: "stairs",
     fields: ["stairs"], speed: null,
     sessionTypes: [
       { key: "stairs", label: "Stairs", category: "other" },
@@ -143,9 +145,12 @@ export function sportLabel(sportKey) {
   const sport = getSport(sportKey);
   return sport ? sport.label : sportKey;
 }
+// Returns the sport's line icon as <svg> markup (utils/icons.js); an unknown
+// sport gets the fallback dot. Only for HTML: plain text (an <option>, a
+// toast) shows the label alone.
 export function sportIcon(sportKey) {
   const sport = getSport(sportKey);
-  return sport ? sport.icon : "•";
+  return icon(sport ? sport.icon : "");
 }
 export function sessionTypeLabel(sportKey, typeKey) {
   const type = getSessionType(sportKey, typeKey);

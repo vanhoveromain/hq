@@ -12,6 +12,7 @@ import { todayISO, formatDayLabel, startOfWeek } from "../utils/dates.js?v=20261
 import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils/format.js?v=202610211550";
 import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -55,13 +56,13 @@ async function renderList(container) {
 
     listEl.innerHTML = `
       <section class="week">
-        <h2 class="week-title"><span>🏁 Upcoming</span><span class="muted">${upcoming.length}</span></h2>
+        <h2 class="week-title"><span>${icon("flag")} Upcoming</span><span class="muted">${upcoming.length}</span></h2>
         ${upcoming.length ? `<div class="card-grid">${upcoming.map((r) => raceCardHtml(r, today, "upcoming")).join("")}</div>`
           : `<p class="muted">No race booked. Set a race to "To register" or "Registered" (with a date) to see it here.</p>`}
       </section>
       ${ideas.length ? `
         <section class="week">
-          <h2 class="week-title"><span>💡 Ideas</span><span class="muted">${ideas.length}</span></h2>
+          <h2 class="week-title"><span>${icon("lightbulb")} Ideas</span><span class="muted">${ideas.length}</span></h2>
           <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today, "ideas")).join("")}</div>
         </section>` : ""}
       ${past.length ? `
@@ -107,15 +108,15 @@ function raceCardHtml(race, today, group) {
         <span class="race-top"><strong>${escapeHtml(race.name)}</strong>${chip}</span>
         <span class="race-countdown">${days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `${days} <span>days</span>`}</span>
         <span class="muted small">${formatDayLabel(race.race_date)}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
-        ${race.goal_time_s ? `<span class="small">🎯 Goal ${formatDuration(race.goal_time_s)}${escapeHtml(paceText(race.goal_time_s, race.distance_km))}</span>` : ""}
-        ${total ? `<span class="small">✅ Checklist ${ready} / ${total}</span>` : ""}
+        ${race.goal_time_s ? `<span class="small">${icon("target")} Goal ${formatDuration(race.goal_time_s)}${escapeHtml(paceText(race.goal_time_s, race.distance_km))}</span>` : ""}
+        ${total ? `<span class="small">${icon("check", { className: "is-ok" })} Checklist ${ready} / ${total}</span>` : ""}
       </a>`;
   }
 
   if (group === "ideas") {
     return `
       <a class="card race-card race-idea" href="${href}">
-        <span class="race-top"><strong>💡 ${escapeHtml(race.name)}</strong>${chip}</span>
+        <span class="race-top"><strong>${icon("lightbulb")} ${escapeHtml(race.name)}</strong>${chip}</span>
         <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date yet"}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
       </a>`;
   }
@@ -128,7 +129,7 @@ function raceCardHtml(race, today, group) {
       ${ran && race.result_time_s ? `<span class="race-result">${formatDuration(race.result_time_s)}
         <span class="muted small">${escapeHtml(paceText(race.result_time_s, race.distance_km).replace(/[()]/g, "").trim())}</span></span>` : ""}
       <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date"}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
-      ${ran && !race.result_time_s ? `<span class="small muted">🏁 Finished · no result time yet</span>` : ""}
+      ${ran && !race.result_time_s ? `<span class="small muted">${icon("flag")} Finished · no result time yet</span>` : ""}
     </a>`;
 }
 
@@ -285,7 +286,7 @@ async function renderRace(container, raceId) {
         return;
       }
       // The date changed: the routine sessions follow (or go, if no date any more).
-      let message = "✅ Race saved";
+      let message = "Race saved";
       if (race.race_date && values.race_date !== race.race_date) {
         if (values.race_date) {
           const moved = await moveRaceRoutine(race.id, race.race_date, values.race_date);
@@ -393,11 +394,11 @@ async function drawRoutine(el, race, refresh) {
       (you get a warning if something is planned then). A planned match always wins over the jog.</p>
     ${sessions.length ? `<ul class="routine-list">${sessions.map((s) => `
       <li><a href="#/planner/${startOfWeek(s.session_date)}">${escapeHtml(formatDayLabel(s.session_date))}</a> ·
-        ${escapeHtml(s.title || "")} ${s.status === "done" ? "✅" : s.status === "cancelled" ? "❌" : ""}</li>`).join("")}</ul>` : ""}
+        ${escapeHtml(s.title || "")} ${s.status === "done" ? icon("check", { label: "done", className: "is-ok" }) : s.status === "cancelled" ? icon("x", { label: "cancelled", className: "is-error" }) : ""}</li>`).join("")}</ul>` : ""}
     ${logged && race.result_time_s !== logged.duration_s && logged.duration_s ? `
       <p>Logged race time: <strong>${formatDuration(logged.duration_s)}</strong></p>
       <button type="button" class="button primary" id="use-result">Use my logged time as result</button>` : ""}
-    ${canPlan && missing > 0 ? `<button type="button" class="button primary" id="add-routine">📅 ${sessions.length
+    ${canPlan && missing > 0 ? `<button type="button" class="button primary" id="add-routine">${icon("calendar")} ${sessions.length
       ? "Add the missing routine sessions" : "Add race routine to my planner"}</button>` : ""}
     ${!race.race_date ? `<p class="muted">Give the race a date to plan its routine.</p>` : ""}
     ${sessions.some((s) => s.status !== "done") ? `<button type="button" class="button" id="remove-routine">Remove the routine from the planner</button>` : ""}
@@ -410,8 +411,8 @@ async function drawRoutine(el, race, refresh) {
       const { added, notes } = await addRaceRoutine(race);
       // One message only (a second toast would hide the first).
       const parts = [];
-      if (added) parts.push(`📅 Added ${added} session${added === 1 ? "" : "s"} to your planner.`);
-      notes.forEach((note) => parts.push("⚠️ " + note));
+      if (added) parts.push(`Added ${added} session${added === 1 ? "" : "s"} to your planner.`);
+      notes.forEach((note) => parts.push(note));
       if (parts.length) showToast(parts.join(" "), { seconds: notes.length ? 10 : 6 });
       refresh();
     } catch (error) {
@@ -435,7 +436,7 @@ async function drawRoutine(el, race, refresh) {
   if (useResult) useResult.addEventListener("click", async () => {
     try {
       await saveRace({ ...race, result_time_s: logged.duration_s, status: "finished" });
-      showToast("🏁 Result saved, race marked finished");
+      showToast("Result saved, race marked finished");
       refresh();
     } catch (error) {
       showToast("Could not save: " + error.message);
@@ -457,7 +458,7 @@ function drawChecklist(el, race) {
         <li class="${item.done ? "is-done" : ""}">
           <label class="checkbox"><input type="checkbox" data-toggle="${item.id}" ${item.done ? "checked" : ""}>
             ${escapeHtml(item.label)}</label>
-          <button type="button" class="button small-button danger" data-remove="${item.id}" aria-label="Remove ${escapeHtml(item.label)}">✕</button>
+          <button type="button" class="button small-button danger" data-remove="${item.id}" aria-label="Remove ${escapeHtml(item.label)}">${icon("x")}</button>
         </li>`).join("")}</ul>` : `
         <p class="muted">No checklist yet.</p>
         <div class="sheet-actions">

@@ -7,13 +7,14 @@ import {
   getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
   updatePlannedSession,
 } from "../storage.js?v=202610211550";
-import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor } from "../rules.js?v=202610211550";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610211550";
 import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610211550";
 import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610211550";
 import { openSheet } from "../utils/sheet.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
 import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610211550";
 import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
@@ -76,8 +77,8 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
   container.innerHTML = `
     <form id="activity-form" class="card form" novalidate>
       <h2>${isEdit ? "Edit activity" : "New activity"}</h2>
-      ${fromPlan ? `<p class="plan-banner">📅 For your planned <strong>${escapeHtml(sessionName(planned))}</strong> · ${escapeHtml(formatDayLabel(planned.session_date))}</p>` : ""}
-      ${workout ? `<p class="plan-banner">🏋️ Workout finished${ticksTotal(workout) ? ` · ${ticksDone(workout)} / ${ticksTotal(workout)} sets ticked` : ""}.
+      ${fromPlan ? `<p class="plan-banner">${icon("calendar")} For your planned <strong>${escapeHtml(sessionName(planned))}</strong> · ${escapeHtml(formatDayLabel(planned.session_date))}</p>` : ""}
+      ${workout ? `<p class="plan-banner">${icon("dumbbell")} Workout finished${ticksTotal(workout) ? ` · ${ticksDone(workout)} / ${ticksTotal(workout)} sets ticked` : ""}.
         Check the duration, add how it felt, then save.
         <a href="#/workout/${escapeHtml(planned.id)}">‹ Back to the workout</a></p>` : ""}
 
@@ -86,7 +87,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
 
       <label for="f-sport">Sport</label>
       <select id="f-sport" name="sport">
-        ${SPORTS.map((s) => `<option value="${s.key}">${s.icon} ${escapeHtml(s.label)}</option>`).join("")}
+        ${SPORTS.map((s) => `<option value="${s.key}">${escapeHtml(s.label)}</option>`).join("")}
       </select>
 
       <label for="f-type">Session type</label>
@@ -131,7 +132,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
       <p id="f-speed" class="speed" aria-live="polite"></p>
 
       <fieldset id="match-card" class="match-card">
-        <legend>⚽ Match card</legend>
+        <legend>${sportIcon("football")} Match card</legend>
         <label for="f-opponent">Opponent</label>
         <input id="f-opponent" name="opponent" type="text" autocomplete="off" value="${escapeHtml(stats.opponent || "")}">
         <div class="row-3">
@@ -253,7 +254,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
           recipeNote = await offerRecipeUpdate({ ...planned, status: "done" }, workout);
         }
         // One message only (a second toast would hide the first).
-        showToast(`✅ ${sessionName(planned)} marked done${recipeNote ? " · 📚 " + recipeNote : ""}`);
+        showToast(`${sessionName(planned)} marked done${recipeNote ? " · " + recipeNote : ""}`);
         window.location.hash = `#/planner/${startOfWeek(saved.activity_date)}`;
         return;
       }
@@ -324,7 +325,7 @@ function updateSpeed(form) {
   const seconds = parseDuration(form.elements.duration.value);
   const km = parseDecimal(form.elements.distance_km.value);
   const text = sport.fields.includes("distance") ? formatSpeed(sport.speed, seconds, km) : "";
-  form.querySelector("#f-speed").textContent = text ? "⏱ " + text : "";
+  form.querySelector("#f-speed").innerHTML = text ? `${icon("timer")} ${escapeHtml(text)}` : "";
 }
 
 function updateRpeLabel(form) {
@@ -465,7 +466,7 @@ async function linkToPlan(activity) {
     }
 
     await completeSession(session, activity.id);
-    showToast(`Linked to your planned ${sessionName(session)} ✅`, {
+    showToast(`Linked to your planned ${sessionName(session)}`, {
       actionLabel: "Undo",
       onAction: async () => {
         await reopenSession(session);
@@ -523,7 +524,7 @@ async function offerAddToCatalogue(planned, workout) {
       <input id="recipe-name" type="text" maxlength="80" autocomplete="off" value="${escapeHtml(workout.name)}">
       <p id="recipe-error" class="status error" hidden></p>
       <div class="sheet-actions">
-        <button type="button" class="button primary" id="recipe-go">📚 Add to the catalogue</button>
+        <button type="button" class="button primary" id="recipe-go">${icon("library")} Add to the catalogue</button>
         <button type="button" class="button" data-value="">No thanks</button>
       </div>`,
     onReady: (dialog, close) => {

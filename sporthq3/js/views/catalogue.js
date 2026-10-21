@@ -18,6 +18,7 @@ import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202
 import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610211550";
 import { startOfWeek } from "../utils/dates.js?v=202610211550";
 import { isCustomSession, isPlainSession, sessionName } from "../utils/plan.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -53,7 +54,7 @@ async function renderList(container) {
       .filter((group) => group.items.length)
       .map((group) => `
         <section class="week">
-          <h2 class="week-title"><span>${group.sport.icon} ${escapeHtml(group.sport.label)}</span>
+          <h2 class="week-title"><span>${sportIcon(group.sport.key)} ${escapeHtml(group.sport.label)}</span>
             <span class="muted">${group.items.length}</span></h2>
           <ul class="activity-list">${group.items.map(templateItemHtml).join("")}</ul>
         </section>`)
@@ -198,7 +199,7 @@ async function renderCustomEditor(container, { date, plannedId }) {
 function drawEditor(container, t, options) {
 
   // The exercise lines live in this list while you edit; the boxes on screen
-  // write into it as you type, and buttons (↑ ↓ ✕ +) change it and redraw.
+  // write into it as you type, and buttons (↑ ↓ remove +) change it and redraw.
   const exercises = t.exercises.map((e) => ({ ...e }));
 
   container.innerHTML = `
@@ -212,7 +213,7 @@ function drawEditor(container, t, options) {
 
       <label for="t-sport">Sport</label>
       <select id="t-sport" name="sport">
-        ${SPORTS.map((s) => `<option value="${s.key}">${s.icon} ${escapeHtml(s.label)}</option>`).join("")}
+        ${SPORTS.map((s) => `<option value="${s.key}">${escapeHtml(s.label)}</option>`).join("")}
       </select>
 
       <label for="t-type">Session type</label>
@@ -293,7 +294,7 @@ function drawEditor(container, t, options) {
         <div class="row-actions">
           <button type="button" class="button small-button" data-move="-1" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
           <button type="button" class="button small-button" data-move="1" ${i === exercises.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
-          <button type="button" class="button small-button danger" data-remove aria-label="Remove">✕</button>
+          <button type="button" class="button small-button danger" data-remove aria-label="Remove">${icon("x")}</button>
         </div>
       </div>`).join("");
   }

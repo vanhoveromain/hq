@@ -7,10 +7,11 @@ import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
   listWeekReviews,
 } from "../storage.js?v=202610211550";
-import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610211550";
+import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610211550";
 import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610211550";
 import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -62,7 +63,7 @@ async function renderList(container) {
       </section>` : "";
 
     listEl.innerHTML = blocks.length
-      ? section("📘 Current", current) + section("🔜 Upcoming", upcoming) + section("📚 Past", past)
+      ? section(`${icon("book-open")} Current`, current) + section(`${icon("clock")} Upcoming`, upcoming) + section(`${icon("library")} Past`, past)
       : `<section class="card placeholder"><p>No training blocks yet. Tap <strong>+ New block</strong>.</p></section>`;
   } catch (error) {
     listEl.innerHTML = `<p class="status error"></p>`;
@@ -85,9 +86,9 @@ function blockCardHtml(block, today) {
       ${isCurrent ? `
         <span class="small"><strong>Week ${week.current} / ${week.total}</strong> · ${daysLeft} day${daysLeft === 1 ? "" : "s"} left</span>
         <span class="bar" role="img" aria-label="${percent}% done"><span class="bar-fill" style="width: ${percent}%"></span></span>` : ""}
-      ${goal ? `<span class="small block-goal">🎯 ${escapeHtml(goal)}</span>` : ""}
-      ${block.races.length ? `<span class="small">🏁 ${block.races.map((r) => escapeHtml(r.name)).join(", ")}</span>` : ""}
-      ${needsRecap(block, today) ? `<span class="small block-reminder">✍️ Just ended: write your recap</span>` : ""}
+      ${goal ? `<span class="small block-goal">${icon("target")} ${escapeHtml(goal)}</span>` : ""}
+      ${block.races.length ? `<span class="small">${icon("flag")} ${block.races.map((r) => escapeHtml(r.name)).join(", ")}</span>` : ""}
+      ${needsRecap(block, today) ? `<span class="small block-reminder">${icon("square-pen")} Just ended: write your recap</span>` : ""}
     </a>`;
 }
 
@@ -124,7 +125,7 @@ async function renderBlock(container, blockId) {
       <h2 class="race-title">${escapeHtml(block.name)}</h2>
       <p class="muted race-subtitle">${formatDayLabel(block.start_date)} → ${formatDayLabel(block.end_date)}
         ${block.start_date <= today && !ended ? ` · <strong>week ${blockWeek(block, today).current} / ${blockWeek(block, today).total}</strong>` : ""}</p>
-      ${needsRecap(block, today) ? `<p class="plan-banner">✍️ This block just ended: write your recap below while it's fresh. What worked, what didn't?</p>` : ""}
+      ${needsRecap(block, today) ? `<p class="plan-banner">${icon("square-pen")} This block just ended: write your recap below while it's fresh. What worked, what didn't?</p>` : ""}
       <section class="card" id="block-stats"><p class="muted">Counting…</p></section>
       ${block.races.length ? `<section class="card"><h2>Races</h2><ul class="routine-list">${block.races
         .sort((x, y) => (x.race_date || "").localeCompare(y.race_date || ""))
@@ -196,7 +197,7 @@ async function renderBlock(container, blockId) {
     showStatus(status, "Saving…", "");
     try {
       const saved = await saveTrainingBlock(values);
-      showToast("✅ Block saved");
+      showToast("Block saved");
       if (isEdit) renderBlock(container, block.id);
       else window.location.hash = `#/blocks/${saved.id}`;
     } catch (error) {
@@ -269,7 +270,7 @@ async function drawStats(el, block, today) {
         <div><strong>${elevation.toLocaleString("en-GB")} m</strong><span class="muted small">D+</span></div>
         <div><strong>${formatHours(seconds)}</strong><span class="muted small">total time</span></div>
       </div>
-      <p class="small">${perSport.map((x) => `${x.sport.icon} ${escapeHtml(x.sport.label)} ${x.count}`).join(" · ")}</p>
+      <p class="small">${perSport.map((x) => `${sportIcon(x.sport.key)} ${escapeHtml(x.sport.label)} ${x.count}`).join(" · ")}</p>
       ${activities.some((a) => a.duration_s == null) ? `<p class="hint">Some sessions have no duration (e.g. imported football), so total time is a minimum.</p>` : ""}`
     : `<p class="muted">Nothing logged in this period.</p>`}
     ${reviewsHtml(reviews)}
@@ -281,7 +282,7 @@ function reviewsHtml(reviews) {
   const withNotes = reviews.filter((r) => r.review_notes);
   if (!withNotes.length) return "";
   return `
-    <h3 class="sheet-subtitle">📝 Your week notes</h3>
+    <h3 class="sheet-subtitle">${icon("notebook-pen")} Your week notes</h3>
     ${withNotes.map((r) => `
       <div class="block-review">
         <a href="#/review/${r.week_start}" class="small">${escapeHtml(formatWeekLabel(r.week_start))}</a>

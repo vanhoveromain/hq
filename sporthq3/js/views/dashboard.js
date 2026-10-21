@@ -17,6 +17,7 @@ import { loadWorkout } from "../utils/workout.js?v=202610211550";
 import { weightTrend } from "../utils/body.js?v=202610211550";
 import { currentSeason } from "../utils/season.js?v=202610211550";
 import { blockWeek } from "./blocks.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 export function render(container) {
   container.innerHTML = `
@@ -90,16 +91,16 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
   todayEl.innerHTML = `
     <h2><a href="#/planner">Today</a> <span class="muted small">${escapeHtml(formatDayLabel(today))}</span></h2>
     ${workout ? `<a class="plan-banner workout-banner" href="#/workout/${escapeHtml(workout.plannedId)}">
-      🏋️ Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>` : ""}
+      ${icon("dumbbell")} Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>` : ""}
     ${todays.length ? `<ul class="dash-list">${todays.map((s) => `
       <li>
         <span>${sportIcon(s.sport)} ${escapeHtml(sessionName(s))}
-          ${s.status === "done" ? "✅" : s.status === "cancelled" ? "❌" : ""}</span>
+          ${s.status === "done" ? icon("check", { label: "done", className: "is-ok" }) : s.status === "cancelled" ? icon("x", { label: "cancelled", className: "is-error" }) : ""}</span>
         ${s.status === "planned" ? `<span class="dash-actions">
-          <a class="button small-button" href="#/workout/${s.id}">▶️ Start</a>
-          <a class="button small-button" href="#/log/new/${s.id}">✍️ Log</a></span>` : ""}
+          <a class="button small-button" href="#/workout/${s.id}">${icon("play")} Start</a>
+          <a class="button small-button" href="#/log/new/${s.id}">${icon("square-pen")} Log</a></span>` : ""}
       </li>`).join("")}</ul>`
-      : `<p class="muted">Nothing planned: rest day 😴 <a href="#/planner">Plan something</a></p>`}
+      : `<p class="muted">Nothing planned: rest day ${icon("moon")} <a href="#/planner">Plan something</a></p>`}
   `;
 
   // This week: done / planned, the 7-day strip, running km
@@ -120,7 +121,7 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
     <h2><a href="#/planner">This week</a></h2>
     <p class="dash-big">${counted.length ? `${done} <span class="muted">of ${counted.length} done</span>` : `<span class="muted">Nothing planned yet</span>`}</p>
     <div class="week-strip">${strip}</div>
-    <p class="muted small">🏃 ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km run this week</p>
+    <p class="muted small">${sportIcon("running")} ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km run this week</p>
   `;
 
   // Warnings of this week that still matter: not muted ("my normal pattern"),
@@ -130,7 +131,7 @@ async function drawWeek(todayEl, weekEl, warningsEl, today) {
   if (warnings.length) {
     warningsEl.hidden = false;
     warningsEl.innerHTML = `
-      <h2><a href="#/planner">⚠️ ${warnings.length} warning${warnings.length === 1 ? "" : "s"}</a></h2>
+      <h2><a href="#/planner">${icon("alert-triangle")} ${warnings.length} warning${warnings.length === 1 ? "" : "s"}</a></h2>
       <ul class="dash-list">${warnings.map((w) => `<li class="small">${escapeHtml(w.message)}</li>`).join("")}</ul>`;
   }
 }
@@ -147,14 +148,14 @@ async function drawMissed(el, today) {
   el.hidden = !sessions.length;
   if (!sessions.length) return;
   el.innerHTML = `
-    <h2><a href="#/planner/${startOfWeek(sessions[0].session_date)}">📋 Did you do it?</a></h2>
+    <h2><a href="#/planner/${startOfWeek(sessions[0].session_date)}">${icon("clipboard-list")} Did you do it?</a></h2>
     <ul class="dash-list">${sessions.slice(0, MISSED_SHOWN).map((s) => `
       <li data-id="${s.id}">
         <span>${sportIcon(s.sport)} ${escapeHtml(sessionName(s))}
           <span class="muted small">${escapeHtml(formatDayLabel(s.session_date))}</span></span>
         <span class="dash-actions">
-          <button type="button" class="button small-button" data-missed="done" aria-label="Done">✅</button>
-          <a class="button small-button" href="#/log/new/${s.id}">✍️ Log</a>
+          <button type="button" class="button small-button" data-missed="done" aria-label="Done">${icon("check", { className: "is-ok" })}</button>
+          <a class="button small-button" href="#/log/new/${s.id}">${icon("square-pen")} Log</a>
           <button type="button" class="button small-button" data-missed="skip">Skipped</button>
         </span>
       </li>`).join("")}</ul>
@@ -169,7 +170,7 @@ async function drawMissed(el, today) {
     try {
       if (button.dataset.missed === "done") await completeSession(session);
       else await updatePlannedSession(session.id, { status: "cancelled" });
-      showToast(button.dataset.missed === "done" ? `✅ ${sessionName(session)} marked done` : `${sessionName(session)} marked skipped`);
+      showToast(button.dataset.missed === "done" ? `${sessionName(session)} marked done` : `${sessionName(session)} marked skipped`);
       await drawMissed(el, today);
     } catch (error) {
       showToast("Could not save: " + error.message);
@@ -191,7 +192,7 @@ async function drawReviewNudge(el, today) {
   if (review && review.reviewed_at) return; // already done
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/review/${monday}">📝 Week review</a></h2>
+    <h2><a href="#/review/${monday}">${icon("notebook-pen")} Week review</a></h2>
     <p>${weekday === 6 ? "Your week is done" : "Last week is done"}: two minutes to look back?</p>
     <a class="button small-button" href="#/review/${monday}">Review the week</a>`;
 }
@@ -231,8 +232,8 @@ async function drawLoad(el, today) {
   });
 
   el.innerHTML = `
-    <h2><a href="#/log/stats">⏱️ Training load</a></h2>
-    ${notes.map((note) => `<p class="status warning small">📈 ${escapeHtml(note)}</p>`).join("")}
+    <h2><a href="#/log/stats">${icon("timer")} Training load</a></h2>
+    ${notes.map((note) => `<p class="status warning small">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("")}
     <p class="dash-big">${formatHours(thisWeek.seconds)} <span class="muted">this week · avg ${formatHours(average)}</span></p>
     <div class="stat-grid">
       <div><strong>${thisWeek.sessions}</strong><span class="muted small">sessions</span></div>
@@ -276,7 +277,7 @@ async function drawRace(el, today) {
   const ready = race.checklist.filter((i) => i.done).length;
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/races/${race.id}">🏁 ${escapeHtml(race.name)}</a></h2>
+    <h2><a href="#/races/${race.id}">${icon("flag")} ${escapeHtml(race.name)}</a></h2>
     <p class="dash-big">${days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `${days} <span class="muted">days to go</span>`}</p>
     <p class="muted small">${escapeHtml(formatDayLabel(race.race_date))}
       ${race.distance_km ? ` · ${Number(race.distance_km)} km` : ""}
@@ -297,7 +298,7 @@ async function drawBlock(el, today) {
   const percent = Math.round(((Date.parse(today) - Date.parse(block.start_date)) / total) * 100);
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/blocks/${block.id}">📘 ${escapeHtml(block.name)}</a></h2>
+    <h2><a href="#/blocks/${block.id}">${icon("book-open")} ${escapeHtml(block.name)}</a></h2>
     <p class="dash-big">Week ${week.current} <span class="muted">of ${week.total}</span></p>
     <span class="bar" role="img" aria-label="${percent}% of the block"><span class="bar-fill" style="width: ${percent}%"></span></span>
   `;
@@ -322,7 +323,7 @@ async function drawWeight(el) {
   }
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/body">⚖️ Weight</a></h2>
+    <h2><a href="#/body">${icon("scale")} Weight</a></h2>
     <p class="dash-big">${kg(latest.weight_kg)} kg</p>
     <p class="muted small">${escapeHtml(formatDayLabel(latest.weigh_date))}${goalText ? ` · ${goalText}` : ""}</p>
     ${sparklineHtml(weightTrend(weighIns).slice(-12))}
@@ -353,7 +354,7 @@ async function drawFootball(el, today) {
   const cards = matches.map((m) => m.match_stats).filter(Boolean);
   const sum = (key) => cards.reduce((total, c) => total + Number(c[key] || 0), 0);
   el.innerHTML = `
-    <h2><a href="#/log">⚽ Season ${season.label}</a> ${season.finished ? `<span class="muted small">finished</span>` : ""}</h2>
+    <h2><a href="#/log">${sportIcon("football")} Season ${season.label}</a> ${season.finished ? `<span class="muted small">finished</span>` : ""}</h2>
     <div class="stat-grid">
       <div><strong>${matches.length}</strong><span class="muted small">matches</span></div>
       <div><strong>${sum("minutes_played")}</strong><span class="muted small">minutes</span></div>
@@ -373,7 +374,7 @@ async function drawShoes(el) {
   if (!inUse.length) return;
   el.hidden = false;
   el.innerHTML = `
-    <h2><a href="#/shoes">👟 Shoes</a></h2>
+    <h2><a href="#/shoes">${icon("footprints")} Shoes</a></h2>
     <ul class="dash-list">${inUse.map((shoe) => {
       const km = (distances[shoe.id] || { km: 0 }).km;
       const status = shoeStatus(km);

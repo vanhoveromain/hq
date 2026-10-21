@@ -12,6 +12,7 @@ import { escapeHtml, formatDuration, parseDuration, formatSpeed } from "../utils
 import { autoPersonalBests, distanceKeyOf, weightTrend } from "../utils/body.js?v=202610211550";
 import { drawWeightChart } from "../utils/weightChart.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 const RANGE_KEY = "sporthq3.weightRange";
 const RANGES = [
@@ -98,7 +99,7 @@ async function drawWeight(container) {
     }
     try {
       await saveWeighIn({ weigh_date: form.elements.weigh_date.value || todayISO(), weight_kg: kg });
-      showToast(`⚖️ ${kgText(kg)} saved`);
+      showToast(`${kgText(kg)} saved`);
       drawWeight(container);
     } catch (error) {
       status.textContent = "Could not save: " + error.message;
@@ -114,7 +115,7 @@ async function drawWeight(container) {
     if (!startKg || !targetKg) return showToast("Fill in both weights (e.g. 84 and 79).");
     try {
       await saveWeightGoal({ start_weight_kg: startKg, target_weight_kg: targetKg });
-      showToast("🎯 Goal saved");
+      showToast("Goal saved");
       drawWeight(container);
     } catch (error) {
       showToast("Could not save the goal: " + error.message);
@@ -135,7 +136,7 @@ function goalHtml(start, target, latest) {
   const percent = goal ? Math.max(0, Math.min(100, Math.round((done / goal) * 100))) : 0;
   const sign = (n) => (n > 0 ? "−" : n < 0 ? "+" : "") + Math.abs(n).toLocaleString("en-GB", { maximumFractionDigits: 1 });
   return `
-    <p class="goal-line">🎯 <strong>${sign(done)} kg</strong> of ${sign(goal)} kg · ${percent}%
+    <p class="goal-line">${icon("target")} <strong>${sign(done)} kg</strong> of ${sign(goal)} kg · ${percent}%
       <span class="muted small">(${kgText(start)} → ${kgText(target)})</span></p>
     <span class="bar" role="img" aria-label="${percent}% of the goal"><span class="bar-fill" style="width: ${percent}%"></span></span>`;
 }
@@ -169,7 +170,7 @@ function drawChartCard(card, weighIns, target, refresh) {
         <summary>All weigh-ins (${weighIns.length})</summary>
         <ul class="checklist">${weighIns.slice().reverse().map((w) => `
           <li><span>${escapeHtml(formatDayLabel(w.weigh_date))} · <strong>${kgText(w.weight_kg)}</strong></span>
-            <button type="button" class="button small-button danger" data-delete="${w.id}" aria-label="Delete">✕</button></li>`).join("")}
+            <button type="button" class="button small-button danger" data-delete="${w.id}" aria-label="Delete">${icon("x")}</button></li>`).join("")}
         </ul>
         <p class="hint">To correct a weigh-in, save the right weight on the same date.</p>
       </details>` : ""}
@@ -255,7 +256,7 @@ async function drawPersonalBests(card) {
       ${manual.length ? `<ul class="checklist">${manual.map((pb) => `
         <li><span>${escapeHtml(pb.label)} · <strong>${formatDuration(pb.time_s)}</strong>
           <span class="muted small">${pb.achieved_on ? escapeHtml(formatDayLabel(pb.achieved_on)) : ""}</span></span>
-          <button type="button" class="button small-button danger" data-delete-pb="${pb.id}" aria-label="Delete">✕</button></li>`).join("")}</ul>` : ""}
+          <button type="button" class="button small-button danger" data-delete-pb="${pb.id}" aria-label="Delete">${icon("x")}</button></li>`).join("")}</ul>` : ""}
       <form id="pb-form" class="form" novalidate>
         <div class="field-row">
           <div><label for="pb-distance">Distance</label>
@@ -283,7 +284,7 @@ async function drawPersonalBests(card) {
         label: distance.label, distance_km: distance.km, time_s: time,
         achieved_on: form.elements.achieved_on.value || null,
       });
-      showToast(`🏅 ${distance.label} record added`);
+      showToast(`${distance.label} record added`);
       drawPersonalBests(card);
     } catch (error) {
       showToast("Could not save: " + error.message);

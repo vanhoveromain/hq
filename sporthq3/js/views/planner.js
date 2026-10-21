@@ -24,6 +24,7 @@ import { showToast } from "../utils/toast.js?v=202610211550";
 import { loadWorkout } from "../utils/workout.js?v=202610211550";
 import { blockWeek } from "./blocks.js?v=202610211550";
 import { enableDragToDay } from "../utils/dragDrop.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -61,8 +62,8 @@ function viewSwitchHtml(active, weekHref, monthHref) {
 // Links to the catalogue and week templates (below the calendar on a laptop).
 const PLANNING_MENU = `
   <nav class="card menu planner-menu" aria-label="Planning">
-    <a href="#/catalogue">📚 Session catalogue <span aria-hidden="true">›</span></a>
-    <a href="#/weektemplates">📋 Week templates <span aria-hidden="true">›</span></a>
+    <a href="#/catalogue">${icon("library")} Session catalogue <span aria-hidden="true">›</span></a>
+    <a href="#/weektemplates">${icon("clipboard-list")} Week templates <span aria-hidden="true">›</span></a>
   </nav>`;
 
 
@@ -87,15 +88,15 @@ async function drawWeek(container, monday) {
       <a class="button small-button" href="#/planner/${addDays(monday, 7)}" aria-label="Next week">›</a>
     </div>
     ${workoutBannerHtml()}
-    ${monday !== thisMonday ? `<a class="today-link" href="#/planner">↩ Back to this week</a>` : ""}
+    ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
     <p id="week-summary" class="muted week-summary"></p>
     <a id="week-block" class="week-block" hidden></a>
     <div id="week-load"></div>
-    ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">📝 Week review</a>` : ""}
+    ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
     <div id="days" class="days"><p class="muted">Loading…</p></div>
     <div class="week-actions">
-      <button id="templates" type="button" class="button">📋 Templates</button>
-      <button id="copy-week" type="button" class="button">⧉ Copy last week into this week</button>
+      <button id="templates" type="button" class="button">${icon("clipboard-list")} Templates</button>
+      <button id="copy-week" type="button" class="button">${icon("copy")} Copy last week into this week</button>
     </div>
     </div>
   `;
@@ -174,9 +175,9 @@ async function drawWeek(container, monday) {
     container.querySelector("#week-summary").textContent = (planned
       ? `${planned} planned · ${done} done${cancelled ? ` · ${cancelled} cancelled` : ""}`
       : "Nothing planned yet. Tap + on a day, or copy last week.")
-      + (count ? ` · ⚠️ ${count} warning${count === 1 ? "" : "s"}` : "");
+      + (count ? ` · ${count} warning${count === 1 ? "" : "s"}` : "");
     container.querySelector("#week-load").innerHTML = loadNotes
-      .map((note) => `<p class="plan-banner load-banner" role="note">📈 ${escapeHtml(note)}</p>`).join("");
+      .map((note) => `<p class="plan-banner load-banner" role="note">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("");
   }
 
   // After you add / move / swap something: pop up a warning it just created.
@@ -186,7 +187,7 @@ async function drawWeek(container, monday) {
     const keys = list.map((w) => w.rule + w.days.join());
     if (shownWarnings) {
       const fresh = list.find((w, i) => !shownWarnings.has(keys[i]));
-      if (fresh) showToast("⚠️ " + fresh.message, { seconds: 8 });
+      if (fresh) showToast(fresh.message, { seconds: 8 });
     }
     shownWarnings = new Set(keys);
   }
@@ -215,15 +216,15 @@ async function drawWeek(container, monday) {
           : "If this is how you always train, mute it: it won't be counted, popped up or shown on Home any more (it stays here, greyed). Settings lists what you muted."}</p>
         <div class="sheet-actions">
           ${w.muted
-            ? `<button type="button" class="button primary" data-value="unmute">🔔 Warn me again</button>`
-            : `<button type="button" class="button primary" data-value="mute">🔕 This is my normal pattern</button>`}
+            ? `<button type="button" class="button primary" data-value="unmute">${icon("bell")} Warn me again</button>`
+            : `<button type="button" class="button primary" data-value="mute">${icon("bell-off")} This is my normal pattern</button>`}
         </div>`,
     });
     if (!choice) return;
     const next = choice === "mute" ? [...muted, w.message] : muted.filter((m) => m !== w.message);
     try {
       await saveMutedWarnings(next);
-      showToast(choice === "mute" ? "🔕 Muted" : "🔔 You'll be warned again");
+      showToast(choice === "mute" ? "Muted" : "You'll be warned again");
       await load();
     } catch (error) {
       showToast("Could not save: " + error.message);
@@ -272,7 +273,7 @@ async function drawWeek(container, monday) {
       const link = container.querySelector("#week-block");
       const week = blockWeek(block, day);
       link.href = `#/blocks/${block.id}`;
-      link.textContent = `📘 ${block.name} · week ${week.current} / ${week.total}`;
+      link.innerHTML = `${icon("book-open")} ${escapeHtml(block.name)} · week ${week.current} / ${week.total}`;
       link.hidden = false;
     } catch { /* not important: the planner works without it */ }
   }
@@ -294,7 +295,7 @@ async function drawWeek(container, monday) {
       html: `
         <div class="sheet-actions">
           <button type="button" class="button primary" data-value="save" ${toSave.length ? "" : "disabled"}>
-            💾 Save this week as a template</button>
+            ${icon("save")} Save this week as a template</button>
         </div>
         ${toSave.length ? "" : `<p class="muted small">Plan some sessions first, then save the week.</p>`}
         <h3 class="sheet-subtitle">Apply a template to this week</h3>
@@ -320,7 +321,7 @@ async function drawWeek(container, monday) {
         <datalist id="template-names">${templates.map((t) => `<option value="${escapeHtml(t.name)}">`).join("")}</datalist>
         <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled and race-routine ones are left out).
           Use an existing name to replace that template.</p>
-        ${customCount ? `<p class="status warning">⚠️ ${customCount} custom session${customCount === 1 ? " is" : "s are"} not in your catalogue:
+        ${customCount ? `<p class="status warning">${icon("alert-triangle")} ${customCount} custom session${customCount === 1 ? " is" : "s are"} not in your catalogue:
           the template only keeps ${customCount === 1 ? "its" : "their"} sport, not the exercises.
           Add ${customCount === 1 ? "it" : "them"} to your catalogue first to keep everything.</p>` : ""}
         <p id="template-error" class="status error" hidden></p>
@@ -355,7 +356,7 @@ async function drawWeek(container, monday) {
     }));
     try {
       await saveWeekTemplate(name, items, existing ? existing.id : null);
-      showToast(`📋 Saved as "${name}"`);
+      showToast(`Saved as "${name}"`);
     } catch (error) {
       showToast("Could not save the template: " + error.message);
     }
@@ -446,7 +447,7 @@ async function drawWeek(container, monday) {
       const sportItems = SPORTS.map((sport) => {
         const count = templates.filter((t) => t.sport === sport.key).length;
         const hint = count ? `<span class="muted small"> · ${count} in catalogue</span>` : "";
-        return `<button type="button" class="sheet-item" data-value="${sport.key}">${sport.icon} ${escapeHtml(sport.label)}${hint}</button>`;
+        return `<button type="button" class="sheet-item" data-value="${sport.key}">${sportIcon(sport.key)} ${escapeHtml(sport.label)}${hint}</button>`;
       }).join("");
       const sportKey = await openSheet({
         title: `Add on ${formatDayLabel(day)}`,
@@ -454,7 +455,7 @@ async function drawWeek(container, monday) {
           <div class="sheet-list">${sportItems}</div>
           <h3 class="sheet-subtitle">Something else</h3>
           <div class="sheet-actions">
-            <button type="button" class="button" data-value="custom">✏️ Custom session (not in the catalogue)</button>
+            <button type="button" class="button" data-value="custom">${icon("pencil")} Custom session (not in the catalogue)</button>
           </div>`,
       });
       if (!sportKey || sportKey === "custom") return sportKey;
@@ -465,7 +466,7 @@ async function drawWeek(container, monday) {
 
       const sport = SPORTS.find((x) => x.key === sportKey);
       const choice = await openSheet({
-        title: `${sport.icon} ${sport.label} on ${formatDayLabel(day)}`,
+        title: `${sport.label} on ${formatDayLabel(day)}`,
         html: `
           <div class="sheet-list">
             <button type="button" class="sheet-item" data-value="sport:${sport.key}">Just ${escapeHtml(sport.label.toLowerCase())} (no recipe)</button>
@@ -496,21 +497,21 @@ async function drawWeek(container, monday) {
       html: `
         ${detailsHtml(session, details)}
         <div class="sheet-actions">
-          ${!isDone && !isCancelled ? `<button type="button" class="button primary" data-value="start">▶️ ${inProgress ? "Resume" : "Start"} workout</button>
-          <button type="button" class="button" data-value="done">✅ Done</button>` : ""}
-          ${isDone ? `<button type="button" class="button" data-value="reopen">↩ Not done</button>` : ""}
+          ${!isDone && !isCancelled ? `<button type="button" class="button primary" data-value="start">${icon("play")} ${inProgress ? "Resume" : "Start"} workout</button>
+          <button type="button" class="button" data-value="done">${icon("check", { className: "is-ok" })} Done</button>` : ""}
+          ${isDone ? `<button type="button" class="button" data-value="reopen">${icon("undo-2")} Not done</button>` : ""}
           ${isDone && session.activity_id ? `<button type="button" class="button" data-value="open-activity">Open the logged activity</button>` : ""}
           ${!isDone ? (isCancelled
-            ? `<button type="button" class="button" data-value="uncancel">↩ Un-cancel</button>`
-            : `<button type="button" class="button" data-value="cancel">❌ Cancel (skipped)</button>`) : ""}
-          ${!isDone ? `<button type="button" class="button" data-value="move">📅 Move to another day</button>
-          <button type="button" class="button" data-value="swap">⇄ Swap this day with another day</button>` : ""}
-          ${session.template_id ? `<button type="button" class="button" data-value="recipe">📚 Edit the recipe</button>` : ""}
-          ${isCustomSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">✏️ Edit this session</button>` : ""}
-          ${isPlainSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">✏️ Add details (name, exercises…)</button>` : ""}
-          ${isCustomSession(session) ? `<button type="button" class="button" data-value="to-catalogue">📚 Add to my catalogue</button>` : ""}
-          ${session.race_id ? `<button type="button" class="button" data-value="race">🏁 Open the race</button>` : ""}
-          <button type="button" class="button danger" data-value="delete">🗑 Remove from plan</button>
+            ? `<button type="button" class="button" data-value="uncancel">${icon("undo-2")} Un-cancel</button>`
+            : `<button type="button" class="button" data-value="cancel">${icon("x", { className: "is-error" })} Cancel (skipped)</button>`) : ""}
+          ${!isDone ? `<button type="button" class="button" data-value="move">${icon("calendar")} Move to another day</button>
+          <button type="button" class="button" data-value="swap">${icon("arrow-left-right")} Swap this day with another day</button>` : ""}
+          ${session.template_id ? `<button type="button" class="button" data-value="recipe">${icon("library")} Edit the recipe</button>` : ""}
+          ${isCustomSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">${icon("pencil")} Edit this session</button>` : ""}
+          ${isPlainSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">${icon("pencil")} Add details (name, exercises…)</button>` : ""}
+          ${isCustomSession(session) ? `<button type="button" class="button" data-value="to-catalogue">${icon("library")} Add to my catalogue</button>` : ""}
+          ${session.race_id ? `<button type="button" class="button" data-value="race">${icon("flag")} Open the race</button>` : ""}
+          <button type="button" class="button danger" data-value="delete">${icon("trash-2")} Remove from plan</button>
         </div>`,
     });
 
@@ -544,7 +545,7 @@ async function drawWeek(container, monday) {
         <p class="muted small">${session.status === "planned"
           ? "This session then follows the recipe (edit it in the catalogue)."
           : "This session keeps what you did; the recipe is for next time."}</p>
-        <button type="button" class="button primary" id="recipe-go">📚 Add</button>`,
+        <button type="button" class="button primary" id="recipe-go">${icon("library")} Add</button>`,
       onReady: (dialog, close) => {
         const input = dialog.querySelector("#recipe-name");
         const go = () => { if (input.value.trim()) close(input.value.trim()); };
@@ -554,7 +555,7 @@ async function drawWeek(container, monday) {
     });
     if (!name) return;
     await addToCatalogue(session, name);
-    showToast(`📚 "${name}" added to your catalogue`);
+    showToast(`"${name}" added to your catalogue`);
   }
 
   // Done: link to an activity of that day, log it now, or just tick it.
@@ -575,8 +576,8 @@ async function drawWeek(container, monday) {
               <span class="muted small">${[formatDuration(a.duration_s), a.distance_km != null ? formatKm(a.distance_km) : ""].filter(Boolean).join(" · ")}</span>
             </button>`).join("")}</div>` : ""}
         <div class="sheet-actions">
-          <button type="button" class="button primary" data-value="log">✍️ Log it now</button>
-          <button type="button" class="button" data-value="tick">✅ Just mark done (no log)</button>
+          <button type="button" class="button primary" data-value="log">${icon("square-pen")} Log it now</button>
+          <button type="button" class="button" data-value="tick">${icon("check", { className: "is-ok" })} Just mark done (no log)</button>
         </div>`,
     });
     if (!choice) return;
@@ -635,7 +636,7 @@ function workoutBannerHtml() {
   const workout = loadWorkout();
   if (!workout) return "";
   return `<a class="plan-banner workout-banner" href="#/workout/${escapeHtml(workout.plannedId)}">
-    🏋️ Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>`;
+    ${icon("dumbbell")} Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>`;
 }
 
 function dayHeading(day) {
@@ -645,19 +646,24 @@ function dayHeading(day) {
   return `${weekday} <span class="muted">${dayMonth}</span>`;
 }
 
-const STATUS_ICON = { planned: "", done: "✅", cancelled: "❌" };
+// Done = green tick, cancelled = red cross (the label is read out instead of the picture).
+const STATUS_ICON = {
+  planned: "",
+  done: icon("check", { label: "done", className: "is-ok" }),
+  cancelled: icon("x", { label: "cancelled", className: "is-error" }),
+};
 
 // A race from the Races tab on its day (until its routine is added to the plan).
 function raceMarkerHtml(race) {
-  return `<a class="race-marker" href="#/races/${race.id}">🏁 <strong>${escapeHtml(race.name)}</strong>
+  return `<a class="race-marker" href="#/races/${race.id}">${icon("flag")} <strong>${escapeHtml(race.name)}</strong>
     <span class="muted small">${[race.distance_km ? `${Number(race.distance_km)} km` : "", race.status === "to_register" ? "to register" : "registered"]
       .filter(Boolean).join(" · ")}</span></a>`;
 }
 
 // A warning line. Ones you can mute are buttons (tap = mute / unmute);
-// muted ones are greyed with a 🔕.
+// muted ones are greyed with a crossed-out bell.
 function warningHtml(w, index) {
-  const text = `${w.muted ? "🔕" : "⚠️"} ${escapeHtml(w.message)}`;
+  const text = `${icon(w.muted ? "bell-off" : "alert-triangle")} ${escapeHtml(w.message)}`;
   return w.canMute
     ? `<button type="button" class="day-warning ${w.muted ? "is-muted" : ""}" data-warning="${index}">${text}</button>`
     : `<p class="day-warning" role="note">${text}</p>`;
@@ -686,7 +692,7 @@ function sessionCardHtml(session, today) {
         ${bits.length ? `<span class="muted small">${escapeHtml(bits.join(" · "))}</span>` : ""}
         ${missed ? `<span class="missed-tag small">Missed?</span>` : ""}
       </span>
-      <span class="plan-status" aria-label="${session.status}">${STATUS_ICON[session.status]}</span>
+      <span class="plan-status">${STATUS_ICON[session.status]}</span>
     </button>`;
 }
 
@@ -705,7 +711,7 @@ function extraCardHtml(a) {
 function detailsHtml(session, details) {
   const sport = getSport(session.sport);
   const lines = [];
-  lines.push(`<p class="muted small">${sport ? sport.icon + " " + escapeHtml(sport.label) : ""}${session.session_type ? " · " + escapeHtml(sessionTypeLabel(session.sport, session.session_type)) : ""}${session.status === "done" && session.details ? " · frozen when done" : ""}</p>`);
+  lines.push(`<p class="muted small">${sport ? sportIcon(sport.key) + " " + escapeHtml(sport.label) : ""}${session.session_type ? " · " + escapeHtml(sessionTypeLabel(session.sport, session.session_type)) : ""}${session.status === "done" && session.details ? " · frozen when done" : ""}</p>`);
   if (!details) return lines.join("");
   if (details.description) lines.push(`<p class="pre-line">${escapeHtml(details.description)}</p>`);
   const targets = [details.target_duration_s ? formatDuration(details.target_duration_s) : "",
@@ -714,7 +720,7 @@ function detailsHtml(session, details) {
   if (details.exercises && details.exercises.length) {
     lines.push(`${details.rounds ? `<p><strong>${details.rounds} rounds of:</strong></p>` : ""}
       <ul class="exercise-list">${details.exercises.map((e) => `
-        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">✓ ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`).join("")}</ul>`);
+        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">${icon("check")} ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`).join("")}</ul>`);
   }
   return lines.join("");
 }
@@ -754,7 +760,7 @@ async function drawMonth(container, month) {
       <div class="week-nav-title"><strong>${escapeHtml(title)}</strong></div>
       <a class="button small-button" href="#/planner/month/${nextMonth}" aria-label="Next month">›</a>
     </div>
-    ${month !== today.slice(0, 7) ? `<a class="today-link" href="#/planner/month/${today.slice(0, 7)}">↩ Back to this month</a>` : ""}
+    ${month !== today.slice(0, 7) ? `<a class="today-link" href="#/planner/month/${today.slice(0, 7)}">${icon("undo-2")} Back to this month</a>` : ""}
     <p id="month-summary" class="muted week-summary"></p>
     <div class="month card">
       <div class="month-head">${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<span>${d}</span>`).join("")}</div>
@@ -779,7 +785,7 @@ async function drawMonth(container, month) {
         done ? "is-done" : ""].join(" ");
       return `<a class="${classes}" href="#/planner/${day}" aria-label="${escapeHtml(formatDayLabel(day))}: ${icons.length ? icons.length + " session(s)" : "rest"}">
         <span class="month-date">${Number(day.slice(8))}</span>
-        <span class="month-icons">${unplannedRaces.some((r) => r.race_date === day) ? `<span class="month-race" title="Race">🏁</span>` : ""}${icons.join("")}</span>
+        <span class="month-icons">${unplannedRaces.some((r) => r.race_date === day) ? `<span class="month-race" title="Race">${icon("flag", { label: "Race" })}</span>` : ""}${icons.join("")}</span>
       </a>`;
     }).join("");
 
@@ -789,7 +795,7 @@ async function drawMonth(container, month) {
     const runKm = activities.filter((a) => inMonth(a.activity_date) && a.sport === "running")
       .reduce((sum, a) => sum + Number(a.distance_km || 0), 0);
     container.querySelector("#month-summary").textContent =
-      `${planned.length} planned · ${done} done · 🏃 ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km`;
+      `${planned.length} planned · ${done} done · ${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })} km run`;
   } catch (error) {
     grid.innerHTML = `<p class="status error"></p>`;
     grid.querySelector(".status").textContent = "Could not load the month: " + error.message;
