@@ -113,6 +113,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-21: planner "+" = two short steps (Rom: the one long list was too long): 1) pick the sport
+  (with "· N in catalogue"; ✏️ Custom session below), 2) "Just <sport> (no recipe)" + that sport's
+  catalogue sessions + ← Back. A sport with nothing in the catalogue skips step 2 (adds "just a sport").
+  planner.js pickSessionToAdd; no migration.
 - 2026-10-21: SWITCH DAY (13d) done. From now on the app is the source of truth; Notion "Sport HQ2" is a
   read-only archive (nothing new is logged there). Order: JSON backup -> big clean
   (tools/switch-day/1-preview.sql then 2-clean.sql: deleted 6 app-created activities + 1 match card and 14

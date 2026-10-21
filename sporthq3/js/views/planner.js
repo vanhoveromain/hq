@@ -413,27 +413,7 @@ async function drawWeek(container, monday) {
     } catch (error) {
       return showToast("Could not load the catalogue: " + error.message);
     }
-    const quick = SPORTS.map((s) =>
-      `<button type="button" class="chip-button" data-value="sport:${s.key}">${s.icon} ${escapeHtml(s.label)}</button>`).join("");
-    const fromCatalogue = SPORTS.map((sport) => {
-      const items = templates.filter((t) => t.sport === sport.key);
-      if (!items.length) return "";
-      return `<h3 class="sheet-subtitle">${sport.icon} ${escapeHtml(sport.label)}</h3>
-        <div class="sheet-list">${items.map((t) =>
-          `<button type="button" class="sheet-item" data-value="template:${t.id}">${escapeHtml(t.name)}</button>`).join("")}</div>`;
-    }).join("");
-
-    const choice = await openSheet({
-      title: `Add on ${formatDayLabel(day)}`,
-      html: `
-        <h3 class="sheet-subtitle">Just a sport</h3>
-        <div class="chip-row">${quick}</div>
-        ${fromCatalogue || `<p class="muted">Your catalogue is empty.</p>`}
-        <h3 class="sheet-subtitle">Something else</h3>
-        <div class="sheet-actions">
-          <button type="button" class="button" data-value="custom">✏️ Custom session (not in the catalogue)</button>
-        </div>`,
-    });
+    const choice = await pickSessionToAdd(day, templates);
     if (!choice) return;
     if (choice === "custom") {
       window.location.hash = `#/custom/new/${day}`;
@@ -454,6 +434,50 @@ async function drawWeek(container, monday) {
       await load();
     } catch (error) {
       showToast("Could not add: " + error.message);
+    }
+  }
+
+
+  // Two short steps instead of one long list: first the sport, then a session
+  // of that sport ("just a sport" or a catalogue recipe). Returns "sport:<key>",
+  // "template:<id>", "custom" or null (closed).
+  async function pickSessionToAdd(day, templates) {
+    while (true) {
+      const sportItems = SPORTS.map((sport) => {
+        const count = templates.filter((t) => t.sport === sport.key).length;
+        const hint = count ? `<span class="muted small"> · ${count} in catalogue</span>` : "";
+        return `<button type="button" class="sheet-item" data-value="${sport.key}">${sport.icon} ${escapeHtml(sport.label)}${hint}</button>`;
+      }).join("");
+      const sportKey = await openSheet({
+        title: `Add on ${formatDayLabel(day)}`,
+        html: `
+          <div class="sheet-list">${sportItems}</div>
+          <h3 class="sheet-subtitle">Something else</h3>
+          <div class="sheet-actions">
+            <button type="button" class="button" data-value="custom">✏️ Custom session (not in the catalogue)</button>
+          </div>`,
+      });
+      if (!sportKey || sportKey === "custom") return sportKey;
+
+      // Nothing in the catalogue for this sport: "just a sport" is the only choice.
+      const items = templates.filter((t) => t.sport === sportKey);
+      if (!items.length) return `sport:${sportKey}`;
+
+      const sport = SPORTS.find((x) => x.key === sportKey);
+      const choice = await openSheet({
+        title: `${sport.icon} ${sport.label} on ${formatDayLabel(day)}`,
+        html: `
+          <div class="sheet-list">
+            <button type="button" class="sheet-item" data-value="sport:${sport.key}">Just ${escapeHtml(sport.label.toLowerCase())} (no recipe)</button>
+          </div>
+          <h3 class="sheet-subtitle">From your catalogue</h3>
+          <div class="sheet-list">${items.map((t) =>
+            `<button type="button" class="sheet-item" data-value="template:${t.id}">${escapeHtml(t.name)}</button>`).join("")}</div>
+          <div class="sheet-actions">
+            <button type="button" class="button" data-value="back">← Back</button>
+          </div>`,
+      });
+      if (choice !== "back") return choice;
     }
   }
 
