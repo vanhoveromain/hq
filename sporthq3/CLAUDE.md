@@ -127,6 +127,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   imported rows (title, notes, duration incl. the match durations, shoe / race links) with Notion's values.
   Supabase's "Run and enable RLS?" prompt (shown when a script creates a table, here the import's temp
   table): answer "Run without RLS" for temp tables; real tables already have RLS.
+  Same day: durations filled in by SQL for the 19 activities without one since 2026-08-31 (Rom's values:
+  football team training 1h10; gym 30 min, 15 min on 7 Sep and 21 Sep), so the training load counts them.
+  Older imported gym / football training sessions still have no duration (Notion had none).
 - 2026-10-20: 16c–16g (Claude's calls after the test round; Rom tests them together). MIGRATION
   20261020000001_reviews_and_muted_warnings.sql (additive: planned_weeks.review_notes + reviewed_at,
   settings.muted_warnings jsonb) applied by Rom in the SQL Editor on 2026-10-21 (without it the rest of
