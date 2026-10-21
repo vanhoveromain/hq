@@ -1,5 +1,9 @@
 # Notion import (Sport HQ2 → SportHQ3)
 
+> **Retired on switch day (2026-10-21).** The app is now the source of truth. Do not re-run this
+> import: it would overwrite edits made in the app to imported rows with Notion's old values.
+> Kept for reference only.
+
 Re-runnable import of the Notion "Sport HQ2" history into Supabase.
 
 ## How it works

@@ -43,7 +43,8 @@
 3. Activity log (incl. football match card) — done 2026-10-12
 4. Hosting (put the app online so it works on my phone) — done 2026-10-12 (live, tested on iPhone)
 5. Shoes — done 2026-10-12
-6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes)
+6. Import Sport HQ2 history from Notion (re-runnable until switch day) — done 2026-10-13 (549 activities, 29 races, 8 blocks, 6 shoes);
+   final re-import on switch day 2026-10-21 (563 activities, 29 races, 8 blocks, 6 shoes)
 7. Weekly planner, in 4 parts: 7a session catalogue (done 2026-10-13), 7b planner (done 2026-10-13), 7c week templates
    (save a week as template / apply a template) (done 2026-10-13), 7d workout mode (done 2026-10-14)
 8. Rule warnings — done 2026-10-14
@@ -53,7 +54,7 @@
 12. Dashboard (incl. football season totals, shoe km) — done 2026-10-14
 13. In 4 parts: 13a JSON export (done 2026-10-14), 13b drag and drop of planner cards (laptop + phone:
     press and hold) (done 2026-10-14), 13c design pass + polish (done 2026-10-14: "A + C", violet), 13d switch day
-    (final Notion re-import, big clean, merge to live, phone check)
+    (final Notion re-import, big clean, merge to live, phone check) (done 2026-10-21: the app is now the source of truth)
 14. Phone feedback round 1 (2026-10-16): 14a timer for timed sets, 14b change the session during a
     workout (+ update the recipe), 14c custom sessions (+ add to catalogue)
 15. Phone feedback round 2 (2026-10-19): 15a Home training load (hours per week), 15b sport colours on
@@ -112,6 +113,20 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-21: SWITCH DAY (13d) done. From now on the app is the source of truth; Notion "Sport HQ2" is a
+  read-only archive (nothing new is logged there). Order: JSON backup -> big clean
+  (tools/switch-day/1-preview.sql then 2-clean.sql: deleted 6 app-created activities + 1 match card and 14
+  planned sessions; also covers planned weeks + reviews, week templates, app-created races / shoes / blocks,
+  muted warnings, all 0 that day) -> final Notion import (563 activities, 29 races, 8 blocks, 6 shoes; the
+  race missing since an earlier re-import came back; 2 empty Notion run pages skipped; 3 races without a
+  Notion status came in as "idea") -> match cards for the 7 matches of the 2026-27 season (Notion "Les
+  Patrons" has no dates: Rom gave them in date order; minutes played also set as the activity duration;
+  one-off SQL kept in the gitignored data/ folder) -> phone check OK. KEPT: catalogue (21 sessions),
+  weigh-ins and PBs (both empty that day). Planner NOT imported (as decided 2026-10-12): Rom planned the
+  current week by hand. DO NOT re-run the Notion import any more: it would overwrite the app's edits to
+  imported rows (title, notes, duration incl. the match durations, shoe / race links) with Notion's values.
+  Supabase's "Run and enable RLS?" prompt (shown when a script creates a table, here the import's temp
+  table): answer "Run without RLS" for temp tables; real tables already have RLS.
 - 2026-10-20: 16c–16g (Claude's calls after the test round; Rom tests them together). MIGRATION
   20261020000001_reviews_and_muted_warnings.sql (additive: planned_weeks.review_notes + reviewed_at,
   settings.muted_warnings jsonb) applied by Rom in the SQL Editor on 2026-10-21 (without it the rest of
