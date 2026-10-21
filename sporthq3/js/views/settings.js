@@ -3,6 +3,7 @@
 import { signOut, setPassword, exportAllData, getMutedWarnings, saveMutedWarnings } from "../storage.js?v=202610211550";
 import { escapeHtml } from "../utils/format.js?v=202610211550";
 import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 const MIN_PASSWORD_LENGTH = 12;
 const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
@@ -36,14 +37,14 @@ export function render(container, { user }) {
     </section>
 
     <section class="card" id="muted-card">
-      <h2>🔕 Muted warnings</h2>
+      <h2>${icon("bell-off")} Muted warnings</h2>
       <p class="muted">Warnings you marked "this is my normal pattern" in the plan. They aren't counted,
         popped up or shown on Home (the plan still shows them, greyed).</p>
       <div id="muted-list"><p class="muted small">Loading…</p></div>
     </section>
 
     <section class="card">
-      <h2>💾 Backup</h2>
+      <h2>${icon("save")} Backup</h2>
       <p class="muted">Downloads everything you saved in the app as one file (JSON): activities, match cards,
         plan, catalogue, races, blocks, shoes, weight, PBs. Keep it somewhere safe (e.g. iCloud Drive).</p>
       <p id="last-export" class="small"></p>
@@ -90,7 +91,7 @@ export function render(container, { user }) {
     try {
       await setPassword(password);
       form.reset();
-      showStatus(status, "Password saved ✅ You can now log in with it, also from the home-screen app.", "ok");
+      showStatus(status, "Password saved. You can now log in with it, also from the home-screen app.", "ok");
     } catch (error) {
       showStatus(status, friendlyPasswordError(error), "error");
     }
@@ -180,7 +181,7 @@ async function drawMuted(el) {
   el.innerHTML = muted.length
     ? `<ul class="dash-list">${muted.map((text, i) => `
         <li><span class="small">${escapeHtml(text)}</span>
-          <button type="button" class="button small-button" data-unmute="${i}">🔔 Warn me again</button></li>`).join("")}</ul>`
+          <button type="button" class="button small-button" data-unmute="${i}">${icon("bell")} Warn me again</button></li>`).join("")}</ul>`
     : `<p class="muted small">Nothing muted. In the plan, tap a warning to mute it.</p>`;
   el.onclick = async (event) => {
     const button = event.target.closest("[data-unmute]");

@@ -17,7 +17,7 @@ import {
 import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610211550";
 import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610211550";
 import { startOfWeek } from "../utils/dates.js?v=202610211550";
-import { isCustomSession, isPlainSession, sessionName } from "../utils/plan.js?v=202610211550";
+import { isCustomSession, isPlainSession, sessionName, sportBadge } from "../utils/plan.js?v=202610211550";
 import { icon } from "../utils/icons.js?v=202610211550";
 
 export function render(container, { params = [] } = {}) {
@@ -82,7 +82,7 @@ function templateItemHtml(t) {
   return `
     <li>
       <a class="activity-item" href="#/catalogue/${encodeURIComponent(t.id)}">
-        <span class="activity-icon" aria-hidden="true">${sportIcon(t.sport)}</span>
+        ${sportBadge(t.sport, sportIcon)}
         <span class="activity-main">
           <span class="activity-title">${escapeHtml(t.name)}</span>
           ${summary ? `<span class="muted">${escapeHtml(summary)}</span>` : ""}

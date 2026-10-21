@@ -144,7 +144,7 @@ function raceItems(races, sessions) {
 // One day in a compact view (Home strip, month calendar): which sport icons
 // to show and whether the day is done. Cancelled sessions are left out;
 // activities logged without a plan count too.
-//   -> { icons: ["🏃", "⚽"], done: true|false }
+//   -> { icons: [<what iconOf returns per sport>, …], done: true|false }
 export function daySummary(day, sessions, activities, iconOf) {
   const planned = sessions.filter((s) => s.session_date === day && s.status !== "cancelled");
   const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));

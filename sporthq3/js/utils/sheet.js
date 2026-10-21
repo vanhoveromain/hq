@@ -14,6 +14,7 @@
 // For forms inside a sheet, pass onReady(dialog, close) and call close(value).
 
 import { escapeHtml } from "./format.js?v=202610211550";
+import { icon } from "./icons.js?v=202610211550";
 
 export function openSheet({ title, html, onReady }) {
   return new Promise((resolve) => {
@@ -22,7 +23,7 @@ export function openSheet({ title, html, onReady }) {
     dialog.innerHTML = `
       <div class="sheet-header">
         <h2>${escapeHtml(title)}</h2>
-        <button type="button" class="sheet-close" data-value="" aria-label="Close">✕</button>
+        <button type="button" class="sheet-close" data-value="" aria-label="Close">${icon("x")}</button>
       </div>
       <div class="sheet-body">${html}</div>
     `;

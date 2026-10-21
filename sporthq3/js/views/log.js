@@ -8,6 +8,7 @@ import { listActivities } from "../storage.js?v=202610211550";
 import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610211550";
 import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610211550";
 import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610211550";
+import { sportBadge } from "../utils/plan.js?v=202610211550";
 import * as logForm from "./logForm.js?v=202610211550";
 import * as statsView from "./stats.js?v=202610211550";
 
@@ -51,7 +52,7 @@ async function renderList(container) {
   function drawChips() {
     chips.innerHTML =
       `<button type="button" class="chip-button" data-sport="all" aria-pressed="${sport === "all"}">All sports</button>` +
-      SPORTS.map((s) => `<button type="button" class="chip-button" data-sport="${s.key}" aria-pressed="${s.key === sport}">${s.icon} ${escapeHtml(s.label)}</button>`).join("");
+      SPORTS.map((s) => `<button type="button" class="chip-button" data-sport="${s.key}" aria-pressed="${s.key === sport}">${sportIcon(s.key)} ${escapeHtml(s.label)}</button>`).join("");
   }
 
   async function loadPage() {
@@ -177,7 +178,7 @@ function activityHtml(a) {
   return `
     <li>
       <a class="activity-item" href="#/log/${encodeURIComponent(a.id)}">
-        <span class="activity-icon" aria-hidden="true">${sportIcon(a.sport)}</span>
+        ${sportBadge(a.sport, sportIcon)}
         <span class="col col-date">${formatDayLabel(a.activity_date)}</span>
         <span class="activity-main">
           <span class="activity-title">${escapeHtml(sessionTypeLabel(a.sport, a.session_type))}</span>

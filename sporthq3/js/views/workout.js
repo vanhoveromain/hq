@@ -8,11 +8,12 @@
 // to update the recipe.
 
 import { getPlannedSession } from "../storage.js?v=202610211550";
-import { getSport } from "../rules.js?v=202610211550";
+import { getSport, sportIcon } from "../rules.js?v=202610211550";
 import { escapeHtml, formatDuration } from "../utils/format.js?v=202610211550";
 import { startOfWeek } from "../utils/dates.js?v=202610211550";
 import { sessionName, sessionDetails } from "../utils/plan.js?v=202610211550";
 import { openSheet } from "../utils/sheet.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
   REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
@@ -37,7 +38,7 @@ export async function render(container, { params = [] } = {}) {
   }
   const backToPlan = `#/planner/${startOfWeek(session.session_date)}`;
   if (session.status !== "planned") {
-    container.innerHTML = `<section class="card placeholder"><p>This session is already ${session.status === "done" ? "done ✅" : "cancelled"}.</p>
+    container.innerHTML = `<section class="card placeholder"><p>This session is already ${session.status === "done" ? `done ${icon("check", { className: "is-ok" })}` : "cancelled"}.</p>
       <a class="button" href="${backToPlan}">Back to the plan</a></section>`;
     return;
   }
@@ -70,7 +71,7 @@ function drawWorkout(container, session, workout, backToPlan) {
   container.innerHTML = `
     <a href="${backToPlan}" class="back-link">‹ Plan (the workout keeps running)</a>
     <section class="card workout-head">
-      <p class="muted small">${sport ? sport.icon + " " + escapeHtml(sport.label) : ""}</p>
+      <p class="muted small">${sport ? sportIcon(sport.key) + " " + escapeHtml(sport.label) : ""}</p>
       <h2>${escapeHtml(workout.name)}</h2>
       <p class="workout-timer" id="timer" aria-live="off">0:00</p>
       <p class="muted small" id="progress"></p>
@@ -98,7 +99,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     <button type="button" class="button add-exercise" id="add-exercise">+ Add an exercise</button>
 
     <div class="workout-actions">
-      <button type="button" class="button primary" id="finish">🏁 Finish</button>
+      <button type="button" class="button primary" id="finish">${icon("flag")} Finish</button>
       <button type="button" class="button danger" id="abandon">Stop without saving</button>
     </div>
   `;
@@ -128,14 +129,14 @@ function drawWorkout(container, session, workout, backToPlan) {
               <p class="muted small">${escapeHtml([amountText(e, workout.rounds), e.note].filter(Boolean).join(" · "))}</p>
             </div>
             <button type="button" class="button small-button weight-button" data-edit="${i}"
-              aria-label="Change ${escapeHtml(e.name)}">${e.weight_kg != null ? `${Number(e.weight_kg)} kg ✎` : "✎ Edit"}</button>
+              aria-label="Change ${escapeHtml(e.name)}">${e.weight_kg != null ? `${Number(e.weight_kg)} kg ${icon("pencil")}` : `${icon("pencil")} Edit`}</button>
           </div>
           <div class="tick-row">${e.ticks.map((ticked, t) => `
             <button type="button" class="tick ${ticked ? "is-ticked" : ""}" data-tick="${i}:${t}"
               aria-pressed="${ticked}" aria-label="${workout.rounds ? "Round" : "Set"} ${t + 1}">
-              ${ticked ? "✓" : t + 1}</button>`).join("")}</div>
+              ${ticked ? icon("check") : t + 1}</button>`).join("")}</div>
           ${timed ? `<button type="button" class="button primary set-timer-button" data-timer="${i}" ${next < 0 || running ? "disabled" : ""}>
-            ${running ? "⏱ Running…" : next < 0 ? "✓ All done" : `▶ Start ${formatRest(timed)} · ${setWord} ${next + 1}`}</button>` : ""}
+            ${running ? `${icon("timer")} Running…` : next < 0 ? `${icon("check")} All done` : `${icon("play")} Start ${formatRest(timed)} · ${setWord} ${next + 1}`}</button>` : ""}
         </section>`;
     }).join("");
     const total = ticksTotal(workout);
@@ -143,7 +144,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     roundsLine.hidden = !workout.rounds;
     if (workout.rounds) {
       roundsLine.innerHTML = `<strong>${workout.rounds} rounds</strong> · tick each exercise once per round
-        <button type="button" class="button small-button" id="edit-rounds">✎</button>`;
+        <button type="button" class="button small-button" id="edit-rounds" aria-label="Change the rounds">${icon("pencil")}</button>`;
     }
   }
 
@@ -305,7 +306,7 @@ function drawWorkout(container, session, workout, backToPlan) {
       <button type="button" class="chip-button" data-rest="${s}" aria-pressed="${s === restSeconds}">
         ${s === 0 ? "Off" : formatRest(s)}</button>`).join("") + `
       <button type="button" class="chip-button" data-rest="custom" aria-pressed="${isCustom}">
-        ${isCustom ? formatRest(restSeconds) + " ✎" : "Custom"}</button>`;
+        ${isCustom ? `${formatRest(restSeconds)} ${icon("pencil")}` : "Custom"}</button>`;
   }
 
   restChoicesEl.addEventListener("click", async (event) => {
@@ -413,7 +414,7 @@ async function askExercise(exercise, rounds) {
         <label>Reps / time<input id="ex-reps" type="text" autocomplete="off" placeholder="10 or 45s" value="${escapeHtml(e.reps ?? "")}"></label>
         <label>kg<input id="ex-kg" type="text" inputmode="decimal" autocomplete="off" value="${e.weight_kg ?? ""}"></label>
       </div>
-      <p class="muted small">"10" = reps. "45s" or "1:00" = a timed set: you get a ▶ countdown button.</p>
+      <p class="muted small">"10" = reps. "45s" or "1:00" = a timed set: you get a Start countdown button.</p>
       <p id="ex-error" class="status error" hidden></p>
       <div class="sheet-actions">
         <button type="button" class="button primary" id="ex-go">${exercise ? "Save" : "Add"}</button>

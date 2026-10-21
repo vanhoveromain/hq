@@ -12,6 +12,7 @@ import {
   countByType, adherence, currentStreak, busiestWeek,
 } from "../utils/stats.js?v=202610211550";
 import { drawBarChart } from "../utils/barChart.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 const FILTER_KEY = "sporthq3.statsFilter";
 
@@ -38,7 +39,7 @@ export function render(container) {
       `<button type="button" class="chip-button" data-period="${p.key}" aria-pressed="${p.key === filter.period}">${p.label}</button>`).join("");
     container.querySelector("#sport-chips").innerHTML =
       `<button type="button" class="chip-button" data-sport="all" aria-pressed="${filter.sport === "all"}">All sports</button>` +
-      SPORTS.map((s) => `<button type="button" class="chip-button" data-sport="${s.key}" aria-pressed="${s.key === filter.sport}">${s.icon} ${escapeHtml(s.label)}</button>`).join("");
+      SPORTS.map((s) => `<button type="button" class="chip-button" data-sport="${s.key}" aria-pressed="${s.key === filter.sport}">${sportIcon(s.key)} ${escapeHtml(s.label)}</button>`).join("");
   }
 
   container.querySelector(".stats-filters").addEventListener("click", (event) => {
@@ -187,10 +188,10 @@ function drawVolume(el, activities, from, to, sport) {
 
 function runningCard(runs, weeks) {
   const r = runningStats(runs, weeks);
-  if (!r.runs) return `<section class="card stats-card"><h2>🏃 Running</h2><p class="muted">No runs in this period.</p></section>`;
+  if (!r.runs) return `<section class="card stats-card"><h2>${sportIcon("running")} Running</h2><p class="muted">No runs in this period.</p></section>`;
   return `
     <section class="card stats-card">
-      <h2>🏃 Running</h2>
+      <h2>${sportIcon("running")} Running</h2>
       <div class="stat-grid">
         ${stat(km(r.km), `${r.runs} runs`)}
         ${stat(km(r.kmPerWeek), "per week")}
@@ -203,16 +204,16 @@ function runningCard(runs, weeks) {
         ${r.highest ? `<li><span>Most D+: <a href="#/log/${r.highest.id}">${escapeHtml(formatDayLabel(r.highest.activity_date))}</a></span>
           <span>${r.highest.elevation_m} m · ${km(r.highest.distance_km)}</span></li>` : ""}
       </ul>
-      <p class="small"><a href="#/body">🏅 Personal bests →</a></p>
+      <p class="small"><a href="#/body">${icon("medal")} Personal bests →</a></p>
     </section>`;
 }
 
 function footballCard(activities) {
   const f = footballStats(activities);
-  if (!f.matches && !f.trainings) return `<section class="card stats-card"><h2>⚽ Football</h2><p class="muted">No football in this period.</p></section>`;
+  if (!f.matches && !f.trainings) return `<section class="card stats-card"><h2>${sportIcon("football")} Football</h2><p class="muted">No football in this period.</p></section>`;
   return `
     <section class="card stats-card">
-      <h2>⚽ Football</h2>
+      <h2>${sportIcon("football")} Football</h2>
       <div class="stat-grid">
         ${stat(f.matches, "matches")}
         ${stat(f.minutes, "minutes")}
@@ -230,7 +231,7 @@ function typesCard(activities, sport) {
   const s = getSport(sport);
   return `
     <section class="card stats-card">
-      <h2>${s ? s.icon + " " + escapeHtml(s.label) : ""} by type</h2>
+      <h2>${s ? sportIcon(s.key) + " " + escapeHtml(s.label) : ""} by type</h2>
       <ul class="sport-bars">${types.map(([label, count]) => `
         <li><span>${escapeHtml(label)}</span>
           <span class="bar"><span class="bar-fill accent-fill" style="width: ${Math.round((count / types[0][1]) * 100)}%"></span></span>
@@ -278,7 +279,7 @@ function weightCard(weighIns, from, to) {
   const change = last - first;
   return `
     <section class="card stats-card">
-      <h2><a href="#/body">⚖️ Weight</a></h2>
+      <h2><a href="#/body">${icon("scale")} Weight</a></h2>
       <div class="stat-grid">
         ${stat(`${one(last)} kg`, "latest")}
         ${stat(`${change > 0 ? "+" : change < 0 ? "−" : ""}${one(Math.abs(change))} kg`, "over the period")}

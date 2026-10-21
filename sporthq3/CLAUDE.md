@@ -62,6 +62,8 @@
 16. Test round (2026-10-20, Claude tested as a user on a fake database): 16a data fixes, 16b small fixes,
     16c races on the planner, 16d missed-session nudge, 16e smarter warnings, 16f load / taper check,
     16g Sunday weekly review (all built 2026-10-20; migration 20261020000001 applied 2026-10-21)
+17. Design round 2 (2026-10-21): 17a line icons, 17b number style, 17c Home A (Today first), 17d race mode =
+    Home B in the last 21 days before a REGISTERED race, 17e polish
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -113,6 +115,20 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-21: design round 2 (17), after Claude's sports-designer review and canvas mock-ups. Rom's
+  choices: Home A (Today first) on normal days, Home B (race first) in the last 3 weeks (21 days) before
+  a race, REGISTERED races only (not "to register"); line icons in the sport badges too (no emoji left);
+  training load keeps a "planned hours" ghost bar for this week; the number font is self-hosted in the
+  app (works offline, no Google Fonts / GDPR issue).
+  17a line icons: every emoji / pictograph used as decoration is now a line icon (Lucide family, open
+  source, inline SVG: no library loaded). js/utils/icons.js = ICONS (name -> drawing) + icon(name,
+  { label, className }); icons take the text colour (currentColor), so dark mode and sport colours work
+  by themselves; classes is-ok / is-error / is-muted = green / red / grey. rules.js SPORTS `icon` is now
+  an icon NAME (footprints, football, dumbbell, bike, waves, stairs); sportIcon(key) returns the SVG.
+  The tab bar (index.html) has the same drawings written out (inactive 1.75 stroke, active 2.25).
+  Log and catalogue rows use the sport badge (sport-coloured circle) like the planner. Places that are
+  plain text, not HTML (dropdown options, toasts, status messages, sheet titles) simply drop the emoji.
+  Typographic arrows (→ ← ↑ ↓ › ‹) stay as text.
 - 2026-10-21: planner "+" = two short steps (Rom: the one long list was too long): 1) pick the sport
   (with "· N in catalogue"; ✏️ Custom session below), 2) "Just <sport> (no recipe)" + that sport's
   catalogue sessions + ← Back. A sport with nothing in the catalogue skips step 2 (adds "just a sport").

@@ -10,6 +10,7 @@ import { sportIcon, sessionTypeLabel } from "../rules.js?v=202610211550";
 import { escapeHtml } from "../utils/format.js?v=202610211550";
 import { openSheet } from "../utils/sheet.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -34,7 +35,7 @@ export function render(container) {
   function draw() {
     if (!templates.length) {
       listEl.innerHTML = `<section class="card placeholder"><p>No week templates yet.</p>
-        <p class="muted">Plan a week you like, then in the planner tap <strong>📋 Templates</strong>
+        <p class="muted">Plan a week you like, then in the planner tap <strong>${icon("clipboard-list")} Templates</strong>
         → <strong>Save this week as a template</strong>.</p></section>`;
       return;
     }

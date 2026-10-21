@@ -78,6 +78,13 @@ body {
 }
 
 h1, h2 { line-height: 1.2; margin: 0 0 8px; }
+
+/* Line icons (utils/icons.js, step 17a): inline SVG drawn in the text colour,
+   sized with the text around them. */
+.icon { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.2em; flex-shrink: 0; }
+.icon.is-ok { color: var(--ok); }
+.icon.is-error { color: var(--error); }
+.icon.is-muted { color: var(--muted); }
 h2 { font-size: 1.15rem; }
 p { margin: 0 0 12px; }
 .muted { color: var(--muted); }
@@ -198,8 +205,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   color: var(--muted);
   text-decoration: none;
 }
-.tabbar a span { font-size: 1.3rem; line-height: 1; }
+.tabbar a .icon { width: 24px; height: 24px; stroke-width: 1.75; }
 .tabbar a.active { color: var(--accent); font-weight: 700; }
+.tabbar a.active .icon { stroke-width: 2.25; }
 
 /* ---------- Bigger screens ---------- */
 @media (min-width: 720px) {
@@ -248,7 +256,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   min-height: 56px;
 }
 .activity-item:active { background: var(--bg); }
-.activity-icon { font-size: 1.5rem; }
 .activity-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .activity-main .muted { font-size: 0.85rem; }
 .activity-title { font-weight: 600; }
@@ -348,8 +355,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .menu { padding: 0; overflow: hidden; }
 .menu a {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 16px;
   min-height: 52px;
   color: inherit;
@@ -357,6 +364,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   font-weight: 600;
 }
 .menu a + a { border-top: 1px solid var(--border); }
+.menu a > .icon { color: var(--accent); width: 1.3em; height: 1.3em; }
+.menu a > span:last-child { margin-left: auto; }  /* the › on the right */
 .menu a span { color: var(--muted); font-size: 1.3rem; }
 
 .back-link {
@@ -465,11 +474,13 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sport-badge {
   --sport: var(--muted);
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 2.2rem; height: 2.2rem; border-radius: 50%; font-size: 1.2rem; line-height: 1;
+  width: 2.2rem; height: 2.2rem; border-radius: 50%; line-height: 1;
+  color: var(--sport);   /* the line icon is drawn in the sport colour */
   background: color-mix(in srgb, var(--sport) 20%, transparent);
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sport) 45%, transparent);
 }
-.sport-badge.small { width: 1.6rem; height: 1.6rem; font-size: 0.85rem; }
+.sport-badge .icon { width: 56%; height: 56%; }
+.sport-badge.small { width: 1.6rem; height: 1.6rem; }
 .sport-running  { --sport: var(--sport-running); }
 .sport-football { --sport: var(--sport-football); }
 .sport-muscle   { --sport: var(--sport-muscle); }
@@ -492,7 +503,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .day-title { align-items: flex-start; gap: 4px; font-size: 0.85rem; }
   .day-add { width: 28px; height: 28px; font-size: 1.05rem; flex-shrink: 0; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
-  .plan-card .sport-badge { width: 1.8rem; height: 1.8rem; font-size: 1rem; }
+  .plan-card .sport-badge { width: 1.8rem; height: 1.8rem; }
 }
 
 /* ---------- Bottom sheet (pop-up panel) ---------- */
@@ -508,16 +519,17 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   padding: 16px 16px 8px; position: sticky; top: 0; background: var(--surface);
 }
 .sheet-header h2 { margin: 0; font-size: 1.1rem; }
-.sheet-close { border: 0; background: none; font-size: 1.2rem; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; }
+.sheet-close { border: 0; background: none; font-size: 1.3rem; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; }
 .sheet-body { padding: 0 16px calc(20px + env(safe-area-inset-bottom)); }
 .sheet-subtitle { font-size: 0.85rem; color: var(--muted); margin: 12px 0 6px; font-weight: 600; display: block; }
 .sheet-list { display: flex; flex-direction: column; gap: 6px; }
 .sheet-item {
-  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  display: flex; justify-content: flex-start; align-items: center; gap: 8px;
   text-align: left; font: inherit; color: inherit; cursor: pointer;
   padding: 12px; min-height: 44px;
   border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
 }
+.sheet-item > .muted { margin-left: auto; }  /* a hint (e.g. "· 7 in catalogue") sits on the right */
 .sheet-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .sheet-actions .button { width: 100%; }
 .sheet-body input[type="date"] { margin-top: 4px; }
@@ -608,7 +620,7 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
   margin: 0 0 8px; padding: 8px 10px; border-radius: 10px;
   border: 1px dashed var(--accent-strong); color: inherit; text-decoration: none;
 }
-.month-race { font-size: 0.95rem; line-height: 1.6rem; }
+.month-race { display: inline-flex; align-items: center; height: 1.6rem; color: var(--accent); }
 /* A session left "planned" on a past day: dashed amber line + a small tag. */
 .plan-card.is-missed { border-left: 4px dashed #d97706; }
 .missed-tag { display: block; color: #b45309; }
@@ -770,7 +782,7 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
   .month-grid { grid-auto-rows: 1fr; } /* all weeks of the month the same height */
   .month-day { min-height: 92px; align-items: flex-start; padding: 6px 8px; }
   .month-icons { justify-content: flex-start; }
-  .month-icons .sport-badge.small { width: 1.9rem; height: 1.9rem; font-size: 1.05rem; }
+  .month-icons .sport-badge.small { width: 1.9rem; height: 1.9rem; }
 }
 
 /* ---------- Laptop: wider list screens ---------- */
@@ -792,7 +804,7 @@ button.day-warning { display: block; width: 100%; text-align: left; font: inheri
   .log-page .activity-item .col { display: block; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
   .log-page .col-date { color: var(--muted); }
   .log-page .activity-meta { display: none; }
-  .log-page .activity-icon { font-size: 1.2rem; }
+  .log-page .sport-badge { width: 2rem; height: 2rem; }
   .log-toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
   .log-toolbar .log-filters { order: -1; flex: 1; min-width: 0; margin-bottom: 0; padding-bottom: 0; }
   .log-toolbar .add-button { flex: none; width: auto; margin: 0; padding-left: 24px; padding-right: 24px; }

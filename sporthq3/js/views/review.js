@@ -13,6 +13,7 @@ import { escapeHtml, formatHours } from "../utils/format.js?v=202610211550";
 import { overview } from "../utils/stats.js?v=202610211550";
 import { sessionName } from "../utils/plan.js?v=202610211550";
 import { showToast } from "../utils/toast.js?v=202610211550";
+import { icon } from "../utils/icons.js?v=202610211550";
 
 export async function render(container, { params = [] } = {}) {
   const thisMonday = startOfWeek(todayISO());
@@ -29,7 +30,7 @@ export async function render(container, { params = [] } = {}) {
       </div>
       ${monday < thisMonday ? `<a class="button small-button" href="#/review/${addDays(monday, 7)}" aria-label="Next week">›</a>` : `<span></span>`}
     </div>
-    <a class="today-link" href="#/planner/${monday}">📅 Open this week in the plan</a>
+    <a class="today-link" href="#/planner/${monday}">${icon("calendar")} Open this week in the plan</a>
     <div id="review-body"><p class="muted">Loading…</p></div>
   `;
   const body = container.querySelector("#review-body");
@@ -72,7 +73,7 @@ export async function render(container, { params = [] } = {}) {
     button.disabled = true;
     try {
       await saveWeekReview(monday, form.querySelector("#review-notes").value.trim());
-      showToast("📝 Review saved");
+      showToast("Review saved");
       const status = form.querySelector("#review-status");
       status.className = "status ok";
       status.textContent = `Reviewed on ${formatDayLabel(todayISO())}`;
@@ -119,7 +120,7 @@ function numbersCardHtml(activities, matches) {
         <div><strong>${runKm.toLocaleString("en-GB", { maximumFractionDigits: 1 })}</strong><span class="muted small">km run</span></div>
         <div><strong>${Math.round(o.elevation)}</strong><span class="muted small">m D+</span></div>
         <div><strong>${o.avgRpe ? o.avgRpe.toFixed(1) : "–"}</strong><span class="muted small">avg RPE</span></div>
-        ${matches.length ? `<div><strong>${matches.length} ⚽</strong><span class="muted small">${goals} G · ${assists} A</span></div>` : ""}
+        ${matches.length ? `<div><strong>${matches.length}</strong><span class="muted small">match${matches.length === 1 ? "" : "es"} · ${goals} G · ${assists} A</span></div>` : ""}
       </div>
     </section>`;
 }

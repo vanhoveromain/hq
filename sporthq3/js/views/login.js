@@ -77,7 +77,7 @@ export function render(container, { message = "" } = {}) {
       await sendMagicLink(email);
       saveEmail(email);
       showStatus(status,
-        "Check your inbox ✉️ The link opens in your browser (Safari on iPhone), not in the home-screen app.", "ok");
+        "Check your inbox. The link opens in your browser (Safari on iPhone), not in the home-screen app.", "ok");
       startCooldown(linkButton);
     } catch (error) {
       showStatus(status, friendlyError(error), "error");
