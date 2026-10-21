@@ -271,6 +271,30 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   .tabbar { justify-content: center; }
   .tabbar a { flex: 0 0 120px; }
 }
+/* Laptop (17e): no floating bar at the bottom of a wide screen; the tabs
+   sit on the right of the top bar instead (same links, same order). */
+@media (min-width: 1000px) {
+  .tabbar {
+    top: 0; bottom: auto; left: auto; right: 16px; height: auto;
+    padding: 0; gap: 4px; align-items: center;
+    /* same height as the top bar: its padding + the 30px logo */
+    min-height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top);
+    background: transparent; border: 0; box-shadow: none; z-index: 11;
+  }
+  .tabbar a {
+    flex: none; flex-direction: row; gap: 6px; padding: 8px 12px; border-radius: 999px;
+    font-size: 0.9rem; color: rgba(255, 255, 255, 0.78);
+  }
+  .tabbar a .icon { width: 20px; height: 20px; }
+  .tabbar a:hover { background: rgba(255, 255, 255, 0.1); }
+  .tabbar a.active { color: var(--topbar-text); background: rgba(255, 255, 255, 0.14); }
+  .view { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+}
+/* Small laptops: icons only (the label is still read out), so the tabs
+   never bump into the page title in the middle of the bar. */
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .tabbar a { font-size: 0; gap: 0; padding: 10px; }
+}
 
 /* ---------- Activity log: list ---------- */
 .add-button { display: block; text-align: center; text-decoration: none; margin-bottom: 16px; line-height: 24px; }
@@ -629,6 +653,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 }
 .toast button { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
 @media (prefers-color-scheme: dark) { .toast button { color: #6d28d9; } }
+@media (min-width: 1000px) { .toast { bottom: calc(24px + env(safe-area-inset-bottom)); } }  /* no bottom bar on a laptop */
 
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
 
@@ -921,7 +946,7 @@ p.dash-note { margin-bottom: 16px; }
   background: var(--surface); border: 1px solid var(--card-border); box-shadow: var(--shadow); border-radius: var(--radius);
   color: inherit; text-decoration: none;
 }
-.tile-label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; color: var(--muted); overflow: hidden; white-space: nowrap; }
+.tile-label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .tile-value .num { font-size: 1.8rem; }
 .tile-note { font-size: 0.8rem; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
 .tile-note.is-warning { color: var(--warn-text); font-weight: 600; }

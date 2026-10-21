@@ -63,7 +63,8 @@
     16c races on the planner, 16d missed-session nudge, 16e smarter warnings, 16f load / taper check,
     16g Sunday weekly review (all built 2026-10-20; migration 20261020000001 applied 2026-10-21)
 17. Design round 2 (2026-10-21): 17a line icons, 17b number style, 17c Home A (Today first), 17d race mode =
-    Home B in the last 21 days before a REGISTERED race, 17e polish
+    Home B in the last 21 days before a REGISTERED race, 17e polish (all built 2026-10-21 in one batch on the
+    draft; Rom tests everything locally, then merge to main)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -108,6 +109,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Database migrations are NOT drafts: one database serves local and live. Always flag them, and make
   them backward-compatible (add first, remove only after the new code is live).
 - Plan first, then wait for approval. One milestone at a time.
+  Exception asked by Rom on 2026-10-21 for step 17 (design round 2): all of 17a–17e built in one batch on
+  the draft (each part still its own commit), Rom tests everything together locally, then merge to main.
 - After each milestone: stop, explain how to test it, wait for confirmation, then commit with a clear message.
 - Briefly explain key code decisions (and any JS/SQL concept that may be new).
 - Explain simply, "like I'm 10": plain words, everyday analogies, no unexplained jargon.
@@ -129,6 +132,34 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   Log and catalogue rows use the sport badge (sport-coloured circle) like the planner. Places that are
   plain text, not HTML (dropdown options, toasts, status messages, sheet titles) simply drop the emoji.
   Typographic arrows (→ ← ↑ ↓ › ‹) stay as text.
+  17b number style: Barlow Condensed 600 / 700 (latin woff2, SIL OFL, fonts/OFL.txt) stored in fonts/,
+  @font-face in style.css, token --font-num. `.num` = stat font, tabular digits; `.unit` = small grey unit
+  in the normal font. format.js numHtml(value, unit) builds both ("19.5 km" splits by itself) and
+  rpeLevel(rpe) gives the RPE band (low 1–3 / mid 4–6 / high 7–8 / max 9–10, --rpe-* tokens, cool to warm,
+  never green / amber / red). Log list (phone): title, date, then a row of numbers (distance, time, pace,
+  D+; a match: minutes played, goals, assists; "vs opponent" line kept); laptop table cells use .num.
+  Stat font also on stats / block stat grids (.stat-grid strong), race countdown and result, weight, PBs,
+  workout timer and weights. Planner meta lines only get tabular digits (small grey text, kept quiet).
+  17c Home A (dashboard.js): order = Today hero (violet, --hero-* tokens; big "Start workout" when the
+  session has a recipe, "Log it" when it's "just a sport", the other one as a small icon button; rest-day
+  state; workout-in-progress resume row) with "Did you do it?" rows inside it -> review nudge + load notes
+  -> next race (big countdown, km / D+ / goal, block as one segment per week, checklist bar) -> this week
+  (N / M done, day strip, ALL warnings as one amber line -> planner) -> training load (done hours, planned
+  hours = target time of every session not cancelled, a done one without target counts with its logged
+  time, shown as a dashed ghost column behind this week's column; hint for sessions without a duration)
+  -> 2-column tiles (block only if the race card doesn't show it, weight, season, most worn shoe, 10k best
+  from the manual PBs). No more violet top line on cards. Phone: the two columns are display: contents and
+  CSS `order` sets the sequence; laptop (>= 900px): left hero / notes / week / load, right race / tiles.
+  17d race mode: rules.js HOME_RULES.raceModeDays = 21 + isRaceMode(race, today) (registered races only,
+  race day included). drawRace puts class "race-mode" on .dashboard: the race becomes a dark block glued
+  to the top bar (--race-mode-* tokens; huge countdown, km / D+ / goal, block weeks, checklist N/M, a
+  "Race mode" tag), the Today hero turns into a white card with a violet button (the --hero-* tokens are
+  overridden), and a status strip (week N/M, load done / planned, warnings count -> planner) comes next;
+  then notes, tiles, week, load. A "to register" race still shows the normal race card.
+  17e polish: dark mode checked (hero #4c1d95, race block #241d38 so it stands out from the dark page,
+  load chart past weeks --load-past instead of a see-through violet); laptop (>= 1000px): the tab bar sits
+  on the right of the top bar instead of floating at the bottom (1000–1199px: icons only, labels still
+  read out); toast moves down accordingly. Checked at 320px wide (Home A / B, log, planner).
 - 2026-10-21: planner "+" = two short steps (Rom: the one long list was too long): 1) pick the sport
   (with "· N in catalogue"; ✏️ Custom session below), 2) "Just <sport> (no recipe)" + that sport's
   catalogue sessions + ← Back. A sport with nothing in the catalogue skips step 2 (adds "just a sport").
