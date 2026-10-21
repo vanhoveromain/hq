@@ -132,6 +132,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   Then the same for ALL older activities without one (114, Rom's values): team training 1h10, match 70 min
   (2025-26 matches have no match card), futsal 50 min, morning routine 5 min, other gym 30 min, stair
   stepper 30 min. Since then every activity has a duration.
+  The log form now requires a duration for every activity, edits included (the exception for imported
+  activities without one is gone). Only a match with 0 minutes played (bench) still saves no duration.
 - 2026-10-20: 16c–16g (Claude's calls after the test round; Rom tests them together). MIGRATION
   20261020000001_reviews_and_muted_warnings.sql (additive: planned_weeks.review_notes + reviewed_at,
   settings.muted_warnings jsonb) applied by Rom in the SQL Editor on 2026-10-21 (without it the rest of
