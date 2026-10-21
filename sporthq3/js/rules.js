@@ -10,7 +10,7 @@
 //
 // Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610201000";
+import { addDays } from "./utils/dates.js?v=202610201505";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -98,7 +98,14 @@ export const RPE_LABELS = {
 export const SHOE_RULES = {
   warnKm: 700,
   replaceKm: 800,
+  // Which surface of shoe a new run suggests: these session types -> trail pair, any other -> road pair.
+  trailSessionTypes: ["trail"],
 };
+
+// "trail" or "road": the kind of shoe a run of this session type needs.
+export function shoeSurfaceFor(sessionType) {
+  return SHOE_RULES.trailSessionTypes.includes(sessionType) ? "trail" : "road";
+}
 
 // "ok" | "warn" | "replace" for a pair that has done `km` kilometres.
 export function shoeStatus(km) {
@@ -152,10 +159,14 @@ export function sessionTypeLabel(sportKey, typeKey) {
 //
 // An "item" = one session that counts: { date: "2026-10-14", sport, session_type }
 // (planned sessions that aren't cancelled, and logged activities).
-// A warning = { rule, days: ["2026-10-13", "2026-10-14"], message }
+// A warning = { rule, days: ["2026-10-13", "2026-10-14"], message, canMute }
+// canMute: the rule is about your weekly habits, so you may say "this is my
+// normal pattern, don't warn me" (Plan -> tap the warning). Race warnings are
+// one-off, so they can't be muted.
 
+// A race from the Races tab (not yet in the planner) carries its own name.
 function itemLabel(item) {
-  return sessionTypeLabel(item.sport, item.session_type);
+  return item.title || sessionTypeLabel(item.sport, item.session_type);
 }
 
 function shortDay(iso) {
@@ -172,6 +183,7 @@ export const TRAINING_RULES = [
   {
     key: "heavy_legs_back_to_back",
     label: "No heavy-leg sessions two days in a row",
+    canMute: true,
     check(items) {
       const heavyByDay = groupByDay(items.filter(isHeavyLegs));
       const warnings = [];
@@ -191,6 +203,7 @@ export const TRAINING_RULES = [
   {
     key: "explosivity_and_intervals",
     label: "Leg explosivity or intervals, never both on the same day",
+    canMute: true,
     check(items) {
       const byDay = groupByDay(items);
       return Object.keys(byDay).sort()
@@ -220,6 +233,22 @@ export const TRAINING_RULES = [
         });
     },
   },
+  {
+    key: "race_day_clash",
+    label: "Nothing else on race day",
+    check(items) {
+      const byDay = groupByDay(items);
+      return Object.keys(byDay).sort().flatMap((day) => {
+        const races = byDay[day].filter(isRace);
+        const others = byDay[day].filter((item) => !isRace(item));
+        return races.length && others.length ? [{
+          rule: this.key,
+          days: [day],
+          message: `${races.map(itemLabel).join(" + ")} on ${shortDay(day)}: ${others.map(itemLabel).join(" + ")} planned the same day`,
+        }] : [];
+      });
+    },
+  },
 ];
 
 function groupByDay(items) {
@@ -229,10 +258,54 @@ function groupByDay(items) {
 }
 
 // All warnings for a list of items, in date order.
-export function checkTrainingRules(items) {
+// `muted` = warning texts you marked "my normal pattern": they come back
+// with muted: true (shown greyed in the planner, never counted or popped up).
+export function checkTrainingRules(items, muted = []) {
   return TRAINING_RULES
-    .flatMap((rule) => rule.check(items))
+    .flatMap((rule) => rule.check(items).map((w) => ({
+      ...w,
+      canMute: Boolean(rule.canMute),
+      muted: Boolean(rule.canMute) && muted.includes(w.message),
+    })))
     .sort((a, b) => a.days[0].localeCompare(b.days[0]));
+}
+
+
+// ---------- Training load (hours and sessions per week) ----------
+// "Usual" = the average of the LOAD_RULES.averageWeeks full weeks before the week shown.
+// Warn only, never block (same as the training rules).
+export const LOAD_RULES = {
+  averageWeeks: 4,
+  minUsualSessions: 2,  // below this there's too little history to compare
+  spikeRatio: 1.3,      // a week 30% above your usual = a big jump (risk of fatigue / injury)
+  taperRatio: 0.7,      // race week: plan at most ~70% of your usual sessions before race day
+};
+
+// The load notes for one week (a list of texts, maybe empty).
+//   sessions   = sessions in the week (planned not cancelled + logged extras), races not counted
+//   seconds    = hours already logged this week (in seconds)
+//   usual      = { sessions, seconds } per week on average (null when no history)
+//   race       = { name, sessionsBefore } when a race is in this week, else null
+//                (sessionsBefore = sessions in the week before race day)
+export function checkLoad({ sessions, seconds, usual, race }) {
+  if (!usual || usual.sessions < LOAD_RULES.minUsualSessions) return [];
+  const notes = [];
+  const usualCount = Math.round(usual.sessions);
+  if (race) {
+    const max = Math.max(1, Math.floor(usual.sessions * LOAD_RULES.taperRatio));
+    if (race.sessionsBefore > max) {
+      notes.push(`Race week: ${race.sessionsBefore} sessions before ${race.name} (usually ${usualCount} a week). `
+        + `About ${max} or fewer help you arrive fresh.`);
+    }
+    return notes; // in race week, a "big jump" note would only repeat this
+  }
+  if (sessions > usual.sessions * LOAD_RULES.spikeRatio) {
+    notes.push(`Big jump: ${sessions} sessions this week vs ${usualCount} usually. Watch out for fatigue.`);
+  } else if (usual.seconds && seconds > usual.seconds * LOAD_RULES.spikeRatio) {
+    const pct = Math.round((seconds / usual.seconds - 1) * 100);
+    notes.push(`Big jump: already ${pct}% more hours than a usual week. Watch out for fatigue.`);
+  }
+  return notes;
 }
 
 

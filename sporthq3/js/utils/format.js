@@ -9,7 +9,8 @@
 // "." "," or a space work instead of ":" because the iPhone number
 // keyboard has no colon key ("1.02.30" = "1:02:30").
 export function parseDuration(text) {
-  const parts = String(text).trim().split(/[:.,\s]+/).filter(Boolean);
+  // Between the numbers: ":", ".", ",", a space, or ' and " (44'30, 44'30")
+  const parts = String(text).trim().split(/[:.,'’"″\s]+/).filter(Boolean);
   if (parts.length === 0 || parts.length > 3) return null;
   if (!parts.every((part) => /^\d+$/.test(part))) return null;
 
@@ -37,6 +38,23 @@ export function formatDuration(totalSeconds) {
   return hours > 0
     ? `${hours}:${pad(minutes)}:${pad(seconds)}`
     : `${minutes}:${pad(seconds)}`;
+}
+
+// A total of time, in hours: 16200 -> "4h30", 2700 -> "45 min", 0 -> "0h".
+// For sums (a week, a block, stats); one session's time uses formatDuration.
+export function formatHours(seconds) {
+  const minutes = Math.round(seconds / 60);
+  if (minutes === 0) return "0h";
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}`;
+}
+
+// A decimal number typed by hand: "11,2" and "11.2" both give 11.2.
+// Empty -> null; anything else that isn't a number -> NaN (so the form can say so).
+export function parseDecimal(text) {
+  const clean = String(text ?? "").trim().replace(",", ".");
+  if (clean === "") return null;
+  return /^\d*\.?\d+$|^\d+\.$/.test(clean) ? Number(clean) : NaN;
 }
 
 // 10.5 -> "10.5 km", 10 -> "10 km"

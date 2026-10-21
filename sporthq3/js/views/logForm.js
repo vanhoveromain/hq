@@ -4,30 +4,32 @@
 
 import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
-  getSessionTemplate, saveSessionTemplate,
-} from "../storage.js?v=202610201000";
-import { SPORTS, RPE_LABELS, getSport, getSessionType } from "../rules.js?v=202610201000";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201000";
-import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610201000";
-import { openSheet } from "../utils/sheet.js?v=202610201000";
-import { showToast } from "../utils/toast.js?v=202610201000";
-import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610201000";
-import { parseDuration, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
+  getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
+  updatePlannedSession,
+} from "../storage.js?v=202610201505";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor } from "../rules.js?v=202610201505";
+import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610201505";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610201505";
+import { openSheet } from "../utils/sheet.js?v=202610201505";
+import { showToast } from "../utils/toast.js?v=202610201505";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610201505";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201505";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
-const LAST_SHOE_KEY = "sporthq3.lastShoe";   // pre-select the shoe you used last
 
 export async function render(container, { activityId, plannedId = null }) {
   let activity = null;
   let shoes = [];
   let planned = null; // the planned session this activity is logged for (from the planner)
+  let recentShoeIds = []; // shoes of your last runs, to pre-select one for a new run
   container.innerHTML = `<p class="muted">Loading…</p>`;
   try {
     // Load the activity (when editing) and the shoe list at the same time.
-    [activity, shoes, planned] = await Promise.all([
+    [activity, shoes, planned, recentShoeIds] = await Promise.all([
       activityId ? getActivity(activityId) : null,
       listShoes(),
       plannedId ? getPlannedSession(plannedId) : null,
+      activityId ? [] : listRecentShoeIds(),
     ]);
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
@@ -39,7 +41,7 @@ export async function render(container, { activityId, plannedId = null }) {
       <a class="button" href="#/log">Back to the log</a></section>`;
     return;
   }
-  drawForm(container, activity, shoes, planned);
+  drawForm(container, activity, shoes, planned, recentShoeIds);
 }
 
 // The shoe list for the picker: pairs in use, plus the pair already linked
@@ -51,7 +53,7 @@ function shoeOptionsHtml(shoes, selectedId) {
     .join("");
 }
 
-function drawForm(container, activity, shoes, planned) {
+function drawForm(container, activity, shoes, planned, recentShoeIds) {
   const isEdit = Boolean(activity);
   // A new activity from the planner starts with the planned day, sport, type and name.
   const fromPlan = !isEdit && planned ? {
@@ -105,7 +107,7 @@ function drawForm(container, activity, shoes, planned) {
 
       <div data-field="distance">
         <label for="f-distance">Distance (km)</label>
-        <input id="f-distance" name="distance_km" type="number" inputmode="decimal" min="0" step="0.01"
+        <input id="f-distance" name="distance_km" type="text" inputmode="decimal" autocomplete="off"
                value="${a.distance_km ?? ""}">
       </div>
 
@@ -117,7 +119,7 @@ function drawForm(container, activity, shoes, planned) {
 
       <div data-field="shoe">
         <label for="f-shoe">Shoes</label>
-        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : readLastShoe(shoes))}</select>
+        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : null)}</select>
       </div>
 
       <div data-field="stairs">
@@ -186,14 +188,29 @@ function drawForm(container, activity, shoes, planned) {
   updateSpeed(form);
   updateRpeLabel(form);
 
+  // A new run: pre-select the pair for its surface (trail session -> trail pair).
+  // It follows the session type until you pick a shoe yourself.
+  const shoeSelect = form.querySelector("#f-shoe");
+  let shoePickedByHand = false;
+  const suggestShoe = () => {
+    if (isEdit || shoePickedByHand) return;
+    shoeSelect.value = suggestedShoe(shoes, recentShoeIds, shoeSurfaceFor(typeSelect.value)) || "";
+  };
+  suggestShoe();
+  shoeSelect.addEventListener("change", () => { shoePickedByHand = true; });
+
   // When the sport changes: new list of session types, new boxes.
   sportSelect.addEventListener("change", () => {
     form.dataset.editing = "no"; // a new sport starts on its first type
     fillSessionTypes(form, undefined);
     updateVisibleFields(form);
     updateSpeed(form);
+    suggestShoe();
   });
-  typeSelect.addEventListener("change", () => updateVisibleFields(form));
+  typeSelect.addEventListener("change", () => {
+    updateVisibleFields(form);
+    suggestShoe();
+  });
 
   // Recalculate the pace while you type.
   for (const name of ["duration", "distance_km"]) {
@@ -225,7 +242,6 @@ function drawForm(container, activity, shoes, planned) {
       if (isEdit) result.activity.id = activity.id;
       const saved = await saveActivity(result.activity, result.matchStats);
       saveLastSport(result.activity.sport);
-      if (result.activity.shoe_id) saveLastShoe(result.activity.shoe_id);
 
       if (fromPlan) {
         // Logged from the planner: tick that exact session, then go back to the plan.
@@ -243,6 +259,7 @@ function drawForm(container, activity, shoes, planned) {
         return;
       }
       if (!isEdit) await linkToPlan(saved);
+      if (isEdit && saved.activity_date !== activity.activity_date) await moveLinkedSessions(saved);
       window.location.hash = "#/log"; // back to the list
     } catch (error) {
       showStatus(status, "Could not save: " + error.message, "error");
@@ -256,7 +273,12 @@ function drawForm(container, activity, shoes, planned) {
       // confirm() shows the browser's built-in "OK / Cancel" box.
       if (!window.confirm("Delete this activity? This can't be undone.")) return;
       try {
+        // Look up its planned session BEFORE deleting (afterwards the link is gone).
+        const linked = await findSessionsLinkedTo(activity.id);
         await deleteActivity(activity.id);
+        // Nothing was logged any more, so the planned session isn't done any more.
+        await Promise.all(linked.map((session) => reopenSession(session)));
+        if (linked.length) showToast(`Deleted · ${sessionName(linked[0])} is open again in your plan`);
         window.location.hash = "#/log";
       } catch (error) {
         showStatus(status, "Could not delete: " + error.message, "error");
@@ -301,7 +323,7 @@ function updateVisibleFields(form) {
 function updateSpeed(form) {
   const sport = getSport(form.elements.sport.value);
   const seconds = parseDuration(form.elements.duration.value);
-  const km = Number(form.elements.distance_km.value);
+  const km = parseDecimal(form.elements.distance_km.value);
   const text = sport.fields.includes("distance") ? formatSpeed(sport.speed, seconds, km) : "";
   form.querySelector("#f-speed").textContent = text ? "⏱ " + text : "";
 }
@@ -341,7 +363,8 @@ function readForm(form, { allowEmptyDuration = false } = {}) {
     }
   }
 
-  const distance = shows("distance") ? number(f.distance_km) : null;
+  // Typed as text so "11,2" (iPhone comma keypad) works like "11.2".
+  const distance = shows("distance") ? parseDecimal(f.distance_km.value) : null;
   const elevation = shows("elevation") ? number(f.elevation_m) : null;
   const stairs = shows("stairs") ? number(f.stairs_climbed) : null;
   if ([distance, elevation, stairs].some((n) => n !== null && (Number.isNaN(n) || n < 0))) {
@@ -394,14 +417,30 @@ function saveLastSport(key) {
   try { localStorage.setItem(LAST_SPORT_KEY, key); } catch { /* not important */ }
 }
 
-// Only suggest the last shoe if it still exists and isn't retired.
-function readLastShoe(shoes) {
-  let id = null;
-  try { id = localStorage.getItem(LAST_SHOE_KEY); } catch { /* ignore */ }
-  return shoes.some((shoe) => shoe.id === id && !shoe.retired) ? id : null;
+// The pair to suggest: the last one you ran in with the right surface
+// ("road" / "trail"); if you never did, the last pair you used at all.
+// Retired pairs are never suggested.
+function suggestedShoe(shoes, recentShoeIds, surface) {
+  const inUse = (id) => shoes.find((shoe) => shoe.id === id && !shoe.retired);
+  const sameSurface = recentShoeIds.find((id) => inUse(id) && inUse(id).surface === surface);
+  return sameSurface || recentShoeIds.find((id) => inUse(id)) || null;
 }
-function saveLastShoe(id) {
-  try { localStorage.setItem(LAST_SHOE_KEY, id); } catch { /* not important */ }
+
+// An activity got a new date: its planned session ("done" with it) moves
+// along, so the plan shows it on the day you really did it.
+// Never blocks: the activity itself is already saved.
+async function moveLinkedSessions(activity) {
+  try {
+    const linked = await findSessionsLinkedTo(activity.id);
+    const toMove = linked.filter((session) => session.session_date !== activity.activity_date);
+    if (!toMove.length) return;
+    const sameDay = await listPlannedSessions(activity.activity_date, activity.activity_date);
+    await Promise.all(toMove.map((session, i) =>
+      updatePlannedSession(session.id, { session_date: activity.activity_date, position: sameDay.length + i })));
+    showToast(`Saved · ${sessionName(toMove[0])} moved to ${formatDayLabel(activity.activity_date)} in your plan`);
+  } catch (error) {
+    showToast("Saved, but could not move its planned session: " + error.message);
+  }
 }
 
 // After logging a NEW activity: if that day has an open planned session of

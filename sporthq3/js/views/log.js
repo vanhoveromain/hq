@@ -4,12 +4,12 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610201000";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610201000";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
-import { formatDuration, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201000";
-import * as logForm from "./logForm.js?v=202610201000";
-import * as statsView from "./stats.js?v=202610201000";
+import { listActivities } from "../storage.js?v=202610201505";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610201505";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201505";
+import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml } from "../utils/format.js?v=202610201505";
+import * as logForm from "./logForm.js?v=202610201505";
+import * as statsView from "./stats.js?v=202610201505";
 
 const PAGE_SIZE = 30;
 const SPORT_FILTER_KEY = "sporthq3.logSport"; // the sport picked on this device ("all" or a sport key)
@@ -134,7 +134,7 @@ function weekHtml(week) {
     <section class="week">
       <h2 class="week-title">
         <span>${formatWeekLabel(week.monday)}</span>
-        <span class="muted">${count} session${count === 1 ? "" : "s"}${totalSeconds ? " · " + formatDuration(totalSeconds) : ""}</span>
+        <span class="muted">${count} session${count === 1 ? "" : "s"}${totalSeconds ? " · " + formatHours(totalSeconds) : ""}</span>
       </h2>
       <ul class="activity-list">
         <!-- Column titles: only shown on a laptop, where each line becomes a table row -->
@@ -166,6 +166,10 @@ function activityHtml(a) {
     ? `<span class="match-line">vs ${escapeHtml(stats.opponent || "?")} · ${stats.goals} G · ${stats.assists} A${stats.minutes_played != null ? ` · ${stats.minutes_played}'` : ""}</span>`
     : "";
 
+  // A match title like "vs RC Mons" says the same as the match line: show it once.
+  const opponent = hasMatchCard && stats.opponent ? stats.opponent.toLowerCase() : "";
+  const showTitle = a.title && !(opponent && a.title.toLowerCase().includes(opponent));
+
   // On a laptop the "col-…" boxes become table columns and the combined
   // line (activity-meta) is hidden; on a phone it's the other way round.
   const distance = [a.distance_km != null ? formatKm(a.distance_km) : "", a.elevation_m ? `${a.elevation_m} m D+` : "",
@@ -177,7 +181,7 @@ function activityHtml(a) {
         <span class="col col-date">${formatDayLabel(a.activity_date)}</span>
         <span class="activity-main">
           <span class="activity-title">${escapeHtml(sessionTypeLabel(a.sport, a.session_type))}</span>
-          ${a.title ? `<span class="activity-subtitle">${escapeHtml(a.title)}</span>` : ""}
+          ${showTitle ? `<span class="activity-subtitle">${escapeHtml(a.title)}</span>` : ""}
           <span class="muted activity-meta">${formatDayLabel(a.activity_date)}${details ? " · " + details : ""}</span>
           ${matchLine}
         </span>

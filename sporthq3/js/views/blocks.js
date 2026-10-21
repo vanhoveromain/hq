@@ -5,11 +5,12 @@
 
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
-} from "../storage.js?v=202610201000";
-import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610201000";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610201000";
-import { escapeHtml, formatDuration } from "../utils/format.js?v=202610201000";
-import { showToast } from "../utils/toast.js?v=202610201000";
+  listWeekReviews,
+} from "../storage.js?v=202610201505";
+import { SPORTS, RACE_STATUSES } from "../rules.js?v=202610201505";
+import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610201505";
+import { escapeHtml, formatDuration, formatHours } from "../utils/format.js?v=202610201505";
+import { showToast } from "../utils/toast.js?v=202610201505";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -236,8 +237,13 @@ async function drawStats(el, block, today) {
   // A current block is counted up to today.
   const until = block.end_date < today ? block.end_date : today;
   let activities = [];
+  let reviews = [];
   try {
-    activities = await listActivitiesBetween(block.start_date, until);
+    [activities, reviews] = await Promise.all([
+      listActivitiesBetween(block.start_date, until),
+      // Your weekly review notes help write the recap (none before the 16g migration).
+      listWeekReviews(startOfWeek(block.start_date), startOfWeek(block.end_date)).catch(() => []),
+    ]);
   } catch (error) {
     el.innerHTML = `<p class="status error"></p>`;
     el.querySelector(".status").textContent = "Could not count: " + error.message;
@@ -261,10 +267,24 @@ async function drawStats(el, block, today) {
         <div><strong>${activities.length}</strong><span class="muted small">sessions · ${round1(activities.length / weeks)}/week</span></div>
         <div><strong>${round1(runKm)} km</strong><span class="muted small">running · ${round1(runKm / weeks)}/week</span></div>
         <div><strong>${elevation.toLocaleString("en-GB")} m</strong><span class="muted small">D+</span></div>
-        <div><strong>${formatDuration(seconds) || "0:00"}</strong><span class="muted small">total time</span></div>
+        <div><strong>${formatHours(seconds)}</strong><span class="muted small">total time</span></div>
       </div>
       <p class="small">${perSport.map((x) => `${x.sport.icon} ${escapeHtml(x.sport.label)} ${x.count}`).join(" · ")}</p>
       ${activities.some((a) => a.duration_s == null) ? `<p class="hint">Some sessions have no duration (e.g. imported football), so total time is a minimum.</p>` : ""}`
     : `<p class="muted">Nothing logged in this period.</p>`}
+    ${reviewsHtml(reviews)}
   `;
+}
+
+// The weekly review notes of the block (helps to write the recap).
+function reviewsHtml(reviews) {
+  const withNotes = reviews.filter((r) => r.review_notes);
+  if (!withNotes.length) return "";
+  return `
+    <h3 class="sheet-subtitle">📝 Your week notes</h3>
+    ${withNotes.map((r) => `
+      <div class="block-review">
+        <a href="#/review/${r.week_start}" class="small">${escapeHtml(formatWeekLabel(r.week_start))}</a>
+        <p>${escapeHtml(r.review_notes)}</p>
+      </div>`).join("")}`;
 }

@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610201000";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610201505";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -201,6 +201,22 @@ export async function listShoes() {
   return data;
 }
 
+// The shoes of your most recent runs, newest first (one id per run, so the
+// same pair can appear many times). Read from the database, so every phone /
+// browser suggests the same pair. 50 runs is plenty to find your last road
+// pair AND your last trail pair.
+export async function listRecentShoeIds() {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("shoe_id")
+    .not("shoe_id", "is", null)
+    .order("activity_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return data.map((row) => row.shoe_id);
+}
+
 export async function getShoe(id) {
   const { data, error } = await supabase.from("shoes").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
@@ -378,6 +394,17 @@ export async function findOpenPlannedSessions(date, sport) {
   return data;
 }
 
+// The planned sessions ticked "done" with this activity (usually 0 or 1).
+// Used to keep the plan right when the activity is moved to another day or deleted.
+export async function findSessionsLinkedTo(activityId) {
+  const { data, error } = await supabase
+    .from("planned_sessions")
+    .select(PLANNED_SELECT)
+    .eq("activity_id", activityId);
+  if (error) throw error;
+  return data;
+}
+
 // Copies every session of one week into another, as fresh "planned" sessions
 // (no link to activities, no frozen details; a custom session keeps its own
 // content, without the ticked counts). Returns how many were copied.
@@ -386,7 +413,8 @@ function customCopy(details) {
 }
 
 export async function copyWeek(fromMonday, toMonday, addDays) {
-  const sessions = await listPlannedSessions(fromMonday, addDays(fromMonday, 6));
+  // Race-routine sessions belong to their race (date), so they're not copied.
+  const sessions = (await listPlannedSessions(fromMonday, addDays(fromMonday, 6))).filter((s) => !s.race_id);
   if (!sessions.length) return 0;
   const shift = (date) => {
     // same weekday, other week: count the days from Monday and add them to the target Monday
@@ -545,6 +573,20 @@ export async function deleteRace(id) {
 const BLOCK_COLUMNS = ["name", "start_date", "end_date", "goal", "recap"];
 const BLOCK_SELECT = "*, races(id, name, race_date, status, result_time_s, goal_time_s, distance_km)";
 
+// Races you're going to (registered or to register) between two days,
+// for the planner and the rules. Ideas and potential races aren't shown.
+export async function listRacesBetween(fromDate, toDate) {
+  const { data, error } = await supabase
+    .from("races")
+    .select("id, name, race_date, status, distance_km")
+    .gte("race_date", fromDate)
+    .lte("race_date", toDate)
+    .in("status", ["to_register", "registered"])
+    .order("race_date", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
 // All blocks, newest first (also used by the block picker on a race).
 export async function listTrainingBlocks() {
   const { data, error } = await supabase
@@ -676,6 +718,21 @@ export async function getSettings() {
   return data || {};
 }
 
+// Warnings you marked "this is my normal pattern" (a list of warning texts).
+// [] when there are none, or before the 2026-10-20 migration added the column.
+export async function getMutedWarnings() {
+  const settings = await getSettings();
+  return Array.isArray(settings.muted_warnings) ? settings.muted_warnings : [];
+}
+
+export async function saveMutedWarnings(list) {
+  const user = await getCurrentUser();
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ user_id: user.id, muted_warnings: list }, { onConflict: "user_id" });
+  if (error) throw error;
+}
+
 export async function saveWeightGoal({ start_weight_kg, target_weight_kg }) {
   const user = await getCurrentUser();
   const { error } = await supabase
@@ -742,6 +799,42 @@ export async function listMatchesBetween(fromDate, toDate) {
     .lte("activity_date", toDate);
   if (error) throw error;
   return data.map(withMatchStats);
+}
+
+
+// ---------------------------------------------------------------------
+// Weekly review: a note per week, stored on planned_weeks (one row per Monday).
+// A review: { week_start, review_notes, reviewed_at }
+// ---------------------------------------------------------------------
+
+export async function getWeekReview(monday) {
+  const { data, error } = await supabase
+    .from("planned_weeks").select("week_start, review_notes, reviewed_at").eq("week_start", monday).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Reviews of the weeks starting between two Mondays (inclusive), oldest first.
+export async function listWeekReviews(fromMonday, toMonday) {
+  const { data, error } = await supabase
+    .from("planned_weeks")
+    .select("week_start, review_notes, reviewed_at")
+    .gte("week_start", fromMonday)
+    .lte("week_start", toMonday)
+    .not("reviewed_at", "is", null)
+    .order("week_start", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// upsert: the week's row may not exist yet.
+export async function saveWeekReview(monday, notes) {
+  const user = await getCurrentUser();
+  const { error } = await supabase
+    .from("planned_weeks")
+    .upsert({ user_id: user.id, week_start: monday, review_notes: notes || null, reviewed_at: new Date().toISOString() },
+      { onConflict: "user_id,week_start" });
+  if (error) throw error;
 }
 
 

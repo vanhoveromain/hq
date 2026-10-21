@@ -1,7 +1,8 @@
-// Settings (opened from the Me tab): account, password, JSON backup.
+// Settings (opened from the Me tab): account, password, muted warnings, JSON backup.
 
-import { signOut, setPassword, exportAllData } from "../storage.js?v=202610201000";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610201000";
+import { signOut, setPassword, exportAllData, getMutedWarnings, saveMutedWarnings } from "../storage.js?v=202610201505";
+import { escapeHtml } from "../utils/format.js?v=202610201505";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610201505";
 
 const MIN_PASSWORD_LENGTH = 12;
 const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
@@ -34,6 +35,13 @@ export function render(container, { user }) {
       <p id="password-status" class="status" role="status"></p>
     </section>
 
+    <section class="card" id="muted-card">
+      <h2>🔕 Muted warnings</h2>
+      <p class="muted">Warnings you marked "this is my normal pattern" in the plan. They aren't counted,
+        popped up or shown on Home (the plan still shows them, greyed).</p>
+      <div id="muted-list"><p class="muted small">Loading…</p></div>
+    </section>
+
     <section class="card">
       <h2>💾 Backup</h2>
       <p class="muted">Downloads everything you saved in the app as one file (JSON): activities, match cards,
@@ -49,6 +57,7 @@ export function render(container, { user }) {
   container.querySelector('input[name="username"]').value = user.email;
 
   showLastExport(container.querySelector("#last-export"));
+  drawMuted(container.querySelector("#muted-list"));
   container.querySelector("#export").addEventListener("click", () => runExport(container));
 
   container.querySelector("#sign-out").addEventListener("click", async () => {
@@ -156,4 +165,33 @@ async function runExport(container) {
   } finally {
     button.disabled = false;
   }
+}
+
+// The muted warnings, each with "Warn me again".
+async function drawMuted(el) {
+  let muted;
+  try {
+    muted = await getMutedWarnings();
+  } catch (error) {
+    el.innerHTML = `<p class="status error"></p>`;
+    el.querySelector(".status").textContent = "Could not load: " + error.message;
+    return;
+  }
+  el.innerHTML = muted.length
+    ? `<ul class="dash-list">${muted.map((text, i) => `
+        <li><span class="small">${escapeHtml(text)}</span>
+          <button type="button" class="button small-button" data-unmute="${i}">🔔 Warn me again</button></li>`).join("")}</ul>`
+    : `<p class="muted small">Nothing muted. In the plan, tap a warning to mute it.</p>`;
+  el.onclick = async (event) => {
+    const button = event.target.closest("[data-unmute]");
+    if (!button) return;
+    button.disabled = true;
+    try {
+      await saveMutedWarnings(muted.filter((_, i) => i !== Number(button.dataset.unmute)));
+      await drawMuted(el);
+    } catch (error) {
+      button.disabled = false;
+      el.insertAdjacentHTML("beforeend", `<p class="status error">Could not save: ${escapeHtml(error.message)}</p>`);
+    }
+  };
 }

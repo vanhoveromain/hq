@@ -9,19 +9,21 @@ import {
   listPlannedSessions, listActivitiesBetween, listSessionTemplates,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
-} from "../storage.js?v=202610201000";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules } from "../rules.js?v=202610201000";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201000";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610201000";
+  listRacesBetween, getMutedWarnings, saveMutedWarnings,
+} from "../storage.js?v=202610201505";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES } from "../rules.js?v=202610201505";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610201505";
+import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610201505";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
-  isCustomSession, isPlainSession, addToCatalogue, sportBadge,
-} from "../utils/plan.js?v=202610201000";
-import { openSheet } from "../utils/sheet.js?v=202610201000";
-import { showToast } from "../utils/toast.js?v=202610201000";
-import { loadWorkout } from "../utils/workout.js?v=202610201000";
-import { blockWeek } from "./blocks.js?v=202610201000";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610201000";
+  isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned,
+} from "../utils/plan.js?v=202610201505";
+import { weekLoadNotes } from "../utils/load.js?v=202610201505";
+import { openSheet } from "../utils/sheet.js?v=202610201505";
+import { showToast } from "../utils/toast.js?v=202610201505";
+import { loadWorkout } from "../utils/workout.js?v=202610201505";
+import { blockWeek } from "./blocks.js?v=202610201505";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610201505";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -88,6 +90,8 @@ async function drawWeek(container, monday) {
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">↩ Back to this week</a>` : ""}
     <p id="week-summary" class="muted week-summary"></p>
     <a id="week-block" class="week-block" hidden></a>
+    <div id="week-load"></div>
+    ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">📝 Week review</a>` : ""}
     <div id="days" class="days"><p class="muted">Loading…</p></div>
     <div class="week-actions">
       <button id="templates" type="button" class="button">📋 Templates</button>
@@ -99,21 +103,34 @@ async function drawWeek(container, monday) {
   const daysEl = container.querySelector("#days");
   let sessions = [];    // this week's planned sessions
   let activities = [];  // this week's logged activities
-  let warnings = [];    // training-rule warnings touching this week
+  let races = [];       // this week's races from the Races tab (registered / to register)
+  let warnings = [];    // training-rule warnings touching this week (muted ones included)
+  let muted = [];       // warning texts marked "my normal pattern"
+  let loadNotes = [];   // "big jump" / "race week" notes (16f)
   let shownWarnings = null; // warnings already seen (to pop up only new ones)
+  const active = () => warnings.filter((w) => !w.muted);
 
   async function load() {
     try {
       // One extra day on each side, so "Sunday + next Monday" is checked too.
-      const [allSessions, allActivities] = await Promise.all([
+      // + the weeks before, for "your usual week" (load check). For a future
+      // week that's the weeks before THIS week: the ones in between aren't logged yet.
+      const usualEnd = monday > thisMonday ? thisMonday : monday;
+      const [allSessions, allActivities, allRaces, mutedList, previousActivities] = await Promise.all([
         listPlannedSessions(addDays(monday, -1), addDays(sunday, 1)),
         listActivitiesBetween(addDays(monday, -1), addDays(sunday, 1)),
+        listRacesBetween(addDays(monday, -1), addDays(sunday, 1)),
+        getMutedWarnings().catch(() => []), // never block the week for this
+        listActivitiesBetween(addDays(usualEnd, -7 * LOAD_RULES.averageWeeks), addDays(usualEnd, -1)),
       ]);
       const inWeek = (date) => date >= monday && date <= sunday;
       sessions = allSessions.filter((s) => inWeek(s.session_date));
       activities = allActivities.filter((a) => inWeek(a.activity_date));
-      warnings = checkTrainingRules(calendarItems(allSessions, allActivities))
+      races = allRaces.filter((r) => inWeek(r.race_date));
+      muted = mutedList;
+      warnings = checkTrainingRules(calendarItems(allSessions, allActivities, allRaces), muted)
         .filter((w) => w.days.some(inWeek));
+      loadNotes = weekLoadNotes({ sessions, activities, previousActivities, races });
       drawDays();
       announceNewWarnings();
     } catch (error) {
@@ -125,39 +142,50 @@ async function drawWeek(container, monday) {
   function drawDays() {
     const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
     const today = todayISO();
+    // A warning about two days ("Mon X → Tue Y") shows once, on the later day
+    // of this week (the day you'd change), not on both.
+    function warningDay(w) {
+      const inWeek = w.days.filter((d) => d >= monday && d <= sunday).sort();
+      return inWeek[inWeek.length - 1];
+    }
 
     daysEl.innerHTML = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => {
       const daySessions = sessions.filter((s) => s.session_date === day);
       const extras = activities.filter((a) => a.activity_date === day && !linkedIds.has(a.id));
+      const dayRaces = racesNotPlanned(races, sessions).filter((r) => r.race_date === day);
       return `
         <section class="day ${day === today ? "is-today" : ""} ${day < today ? "is-past" : ""}" data-day="${day}">
           <h2 class="day-title">
             <span>${dayHeading(day)}</span>
             <button type="button" class="day-add" data-add="${day}" aria-label="Add a session on ${formatDayLabel(day)}">+</button>
           </h2>
-          ${daySessions.map(sessionCardHtml).join("")}
+          ${dayRaces.map(raceMarkerHtml).join("")}
+          ${daySessions.map((session) => sessionCardHtml(session, today)).join("")}
           ${extras.map(extraCardHtml).join("")}
-          ${!daySessions.length && !extras.length ? `<p class="day-empty muted">Rest</p>` : ""}
-          ${warnings.filter((w) => w.days.includes(day)).map((w) =>
-            `<p class="day-warning" role="note">⚠️ ${escapeHtml(w.message)}</p>`).join("")}
+          ${!daySessions.length && !extras.length && !dayRaces.length ? `<p class="day-empty muted">Rest</p>` : ""}
+          ${warnings.filter((w) => warningDay(w) === day).map((w) => warningHtml(w, warnings.indexOf(w))).join("")}
         </section>`;
     }).join("");
 
     const planned = sessions.length;
     const done = sessions.filter((s) => s.status === "done").length;
     const cancelled = sessions.filter((s) => s.status === "cancelled").length;
+    const count = active().length;
     container.querySelector("#week-summary").textContent = (planned
       ? `${planned} planned · ${done} done${cancelled ? ` · ${cancelled} cancelled` : ""}`
       : "Nothing planned yet. Tap + on a day, or copy last week.")
-      + (warnings.length ? ` · ⚠️ ${warnings.length} warning${warnings.length === 1 ? "" : "s"}` : "");
+      + (count ? ` · ⚠️ ${count} warning${count === 1 ? "" : "s"}` : "");
+    container.querySelector("#week-load").innerHTML = loadNotes
+      .map((note) => `<p class="plan-banner load-banner" role="note">📈 ${escapeHtml(note)}</p>`).join("");
   }
 
   // After you add / move / swap something: pop up a warning it just created.
   // (Not on the first load: the warnings are already visible on the days.)
   function announceNewWarnings() {
-    const keys = warnings.map((w) => w.rule + w.days.join());
+    const list = active();
+    const keys = list.map((w) => w.rule + w.days.join());
     if (shownWarnings) {
-      const fresh = warnings.find((w, i) => !shownWarnings.has(keys[i]));
+      const fresh = list.find((w, i) => !shownWarnings.has(keys[i]));
       if (fresh) showToast("⚠️ " + fresh.message, { seconds: 8 });
     }
     shownWarnings = new Set(keys);
@@ -171,12 +199,43 @@ async function drawWeek(container, monday) {
     if (card) return sessionMenu(sessions.find((s) => s.id === card.dataset.session));
     const extra = event.target.closest("[data-activity]");
     if (extra) window.location.hash = `#/log/${extra.dataset.activity}`;
+    const warning = event.target.closest("[data-warning]");
+    if (warning) return warningMenu(warnings[Number(warning.dataset.warning)]);
   });
+
+  // Tap a warning: "this is my normal pattern" (mute) or "warn me again".
+  async function warningMenu(w) {
+    if (!w || !w.canMute) return; // race warnings are one-off: nothing to choose
+    const choice = await openSheet({
+      title: w.muted ? "Muted warning" : "Warning",
+      html: `
+        <p>${escapeHtml(w.message)}</p>
+        <p class="muted small">${w.muted
+          ? "You said this is your normal pattern, so it isn't counted or shown on Home."
+          : "If this is how you always train, mute it: it won't be counted, popped up or shown on Home any more (it stays here, greyed). Settings lists what you muted."}</p>
+        <div class="sheet-actions">
+          ${w.muted
+            ? `<button type="button" class="button primary" data-value="unmute">🔔 Warn me again</button>`
+            : `<button type="button" class="button primary" data-value="mute">🔕 This is my normal pattern</button>`}
+        </div>`,
+    });
+    if (!choice) return;
+    const next = choice === "mute" ? [...muted, w.message] : muted.filter((m) => m !== w.message);
+    try {
+      await saveMutedWarnings(next);
+      showToast(choice === "mute" ? "🔕 Muted" : "🔔 You'll be warned again");
+      await load();
+    } catch (error) {
+      showToast("Could not save: " + error.message);
+    }
+  }
 
   container.querySelector("#copy-week").addEventListener("click", async () => {
     const lastMonday = addDays(monday, -7);
-    if (sessions.length && !window.confirm("This week already has sessions. Add last week's sessions on top?")) return;
+    const mode = await askAddOrReplace("last week's sessions");
+    if (!mode) return;
     try {
+      if (mode === "replace") await clearWeekForReplace();
       const count = await copyWeek(lastMonday, monday, addDays);
       showToast(count ? `Copied ${count} session${count === 1 ? "" : "s"} from last week` : "Last week was empty");
       await load();
@@ -228,7 +287,8 @@ async function drawWeek(container, monday) {
     } catch (error) {
       return showToast("Could not load the templates: " + error.message);
     }
-    const toSave = sessions.filter((s) => s.status !== "cancelled");
+    // Cancelled and race-routine sessions aren't part of a "normal" week.
+    const toSave = sessions.filter((s) => s.status !== "cancelled" && !s.race_id);
     const choice = await openSheet({
       title: "Week templates",
       html: `
@@ -258,7 +318,7 @@ async function drawWeek(container, monday) {
         <label for="template-name" class="sheet-subtitle">Name</label>
         <input id="template-name" type="text" maxlength="60" placeholder="e.g. Normal week" list="template-names">
         <datalist id="template-names">${templates.map((t) => `<option value="${escapeHtml(t.name)}">`).join("")}</datalist>
-        <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled ones are left out).
+        <p class="muted small">${toSave.length} session${toSave.length === 1 ? "" : "s"} (cancelled and race-routine ones are left out).
           Use an existing name to replace that template.</p>
         ${customCount ? `<p class="status warning">⚠️ ${customCount} custom session${customCount === 1 ? " is" : "s are"} not in your catalogue:
           the template only keeps ${customCount === 1 ? "its" : "their"} sport, not the exercises.
@@ -301,10 +361,41 @@ async function drawWeek(container, monday) {
     }
   }
 
+  // The week isn't empty: add on top, or replace what's planned?
+  // Returns "add", "replace" or null (closed). An empty week just adds.
+  async function askAddOrReplace(what) {
+    const replaceable = sessions.filter(isReplaceable);
+    if (!sessions.length) return "add";
+    const kept = sessions.length - replaceable.length;
+    return openSheet({
+      title: "This week already has sessions",
+      html: `
+        <p>Add ${escapeHtml(what)} on top of them, or replace them?</p>
+        ${kept ? `<p class="muted small">Replace keeps the ${kept} session${kept === 1 ? "" : "s"} already done
+          or from a race routine.</p>` : ""}
+        <div class="sheet-actions">
+          <button type="button" class="button primary" data-value="replace" ${replaceable.length ? "" : "disabled"}>
+            Replace this week</button>
+          <button type="button" class="button" data-value="add">Add on top</button>
+        </div>`,
+    });
+  }
+
+  // "Replace" removes the sessions not done yet. Done ones (they match a
+  // log) and race-routine ones (they belong to a race) stay.
+  function isReplaceable(s) {
+    return s.status !== "done" && !s.race_id;
+  }
+  async function clearWeekForReplace() {
+    await Promise.all(sessions.filter(isReplaceable).map((s) => deletePlannedSession(s.id)));
+  }
+
   async function applyTemplate(template) {
     if (!template.items.length) return showToast("This template is empty");
-    if (sessions.length && !window.confirm(`This week already has sessions. Add "${template.name}" on top?`)) return;
+    const mode = await askAddOrReplace(`"${template.name}"`);
+    if (!mode) return;
     try {
+      if (mode === "replace") await clearWeekForReplace();
       const count = await applyWeekTemplate(template, monday, addDays, sessions);
       showToast(`Added ${count} session${count === 1 ? "" : "s"} from "${template.name}"`);
       await load();
@@ -490,14 +581,17 @@ async function drawWeek(container, monday) {
   }
 
   // Swap: every session of day A goes to day B and the other way round.
+  // Done sessions stay put: they happened on their day (and match a logged activity).
   async function swapDay(day) {
     const other = await openSheet({
       title: `Swap ${formatDayLabel(day)} with…`,
-      html: weekdayButtons(monday, day),
+      html: `${weekdayButtons(monday, day)}
+        <p class="muted small">Sessions already done stay on their day.</p>`,
     });
     if (!other || other === day) return;
-    const a = sessions.filter((s) => s.session_date === day);
-    const b = sessions.filter((s) => s.session_date === other);
+    const notDone = (s) => s.status !== "done";
+    const a = sessions.filter((s) => s.session_date === day && notDone(s));
+    const b = sessions.filter((s) => s.session_date === other && notDone(s));
     await Promise.all([
       ...a.map((s) => updatePlannedSession(s.id, { session_date: other })),
       ...b.map((s) => updatePlannedSession(s.id, { session_date: day })),
@@ -529,7 +623,25 @@ function dayHeading(day) {
 
 const STATUS_ICON = { planned: "", done: "✅", cancelled: "❌" };
 
-function sessionCardHtml(session) {
+// A race from the Races tab on its day (until its routine is added to the plan).
+function raceMarkerHtml(race) {
+  return `<a class="race-marker" href="#/races/${race.id}">🏁 <strong>${escapeHtml(race.name)}</strong>
+    <span class="muted small">${[race.distance_km ? `${Number(race.distance_km)} km` : "", race.status === "to_register" ? "to register" : "registered"]
+      .filter(Boolean).join(" · ")}</span></a>`;
+}
+
+// A warning line. Ones you can mute are buttons (tap = mute / unmute);
+// muted ones are greyed with a 🔕.
+function warningHtml(w, index) {
+  const text = `${w.muted ? "🔕" : "⚠️"} ${escapeHtml(w.message)}`;
+  return w.canMute
+    ? `<button type="button" class="day-warning ${w.muted ? "is-muted" : ""}" data-warning="${index}">${text}</button>`
+    : `<p class="day-warning" role="note">${text}</p>`;
+}
+
+// `today` = to spot a session left open on a past day ("missed?").
+function sessionCardHtml(session, today) {
+  const missed = session.status === "planned" && session.session_date < today;
   const details = sessionDetails(session);
   const bits = [];
   if (details && details.exercises && details.exercises.length) {
@@ -543,11 +655,12 @@ function sessionCardHtml(session) {
     bits.push("Logged: " + [formatDuration(a.duration_s), a.distance_km != null ? formatKm(a.distance_km) : ""].filter(Boolean).join(" · "));
   }
   return `
-    <button type="button" class="plan-card status-${session.status}" data-session="${session.id}">
+    <button type="button" class="plan-card status-${session.status} ${missed ? "is-missed" : ""}" data-session="${session.id}">
       ${sportBadge(session.sport, sportIcon)}
       <span class="activity-main">
         <span class="activity-title">${escapeHtml(sessionName(session))}</span>
         ${bits.length ? `<span class="muted small">${escapeHtml(bits.join(" · "))}</span>` : ""}
+        ${missed ? `<span class="missed-tag small">Missed?</span>` : ""}
       </span>
       <span class="plan-status" aria-label="${session.status}">${STATUS_ICON[session.status]}</span>
     </button>`;
@@ -628,10 +741,12 @@ async function drawMonth(container, month) {
 
   const grid = container.querySelector("#month-grid");
   try {
-    const [sessions, activities] = await Promise.all([
+    const [sessions, activities, races] = await Promise.all([
       listPlannedSessions(gridStart, gridEnd),
       listActivitiesBetween(gridStart, gridEnd),
+      listRacesBetween(gridStart, gridEnd),
     ]);
+    const unplannedRaces = racesNotPlanned(races, sessions);
     const days = [];
     for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) days.push(day);
     grid.innerHTML = days.map((day) => {
@@ -640,7 +755,7 @@ async function drawMonth(container, month) {
         done ? "is-done" : ""].join(" ");
       return `<a class="${classes}" href="#/planner/${day}" aria-label="${escapeHtml(formatDayLabel(day))}: ${icons.length ? icons.length + " session(s)" : "rest"}">
         <span class="month-date">${Number(day.slice(8))}</span>
-        <span class="month-icons">${icons.join("")}</span>
+        <span class="month-icons">${unplannedRaces.some((r) => r.race_date === day) ? `<span class="month-race" title="Race">🏁</span>` : ""}${icons.join("")}</span>
       </a>`;
     }).join("");
 
