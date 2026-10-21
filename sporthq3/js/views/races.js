@@ -4,7 +4,8 @@
 //   #/races/<id>   -> a race: summary (Edit = details form), checklist, race routine
 
 import {
-  listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions,
+  listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions, listRunsOn, linkActivityToRace,
+  listPersonalBests, savePersonalBest,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
 } from "../storage.js?v=202610211800";
 import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610211800";
@@ -158,9 +159,14 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
   let race = null;
   let blocks = [];
   let runs = [];
+  let dayRuns = [];
+  let bests = [];
   try {
     [race, blocks] = await Promise.all([raceId ? getRace(raceId) : null, listTrainingBlocks()]);
     if (race) runs = await listRaceActivities(race.id);
+    if (race && needsResult(race, todayISO())) {
+      [dayRuns, bests] = await Promise.all([listRunsOn(race.race_date), listPersonalBests()]);
+    }
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
     container.querySelector(".status").textContent = "Could not load: " + error.message;
@@ -179,6 +185,8 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
   // Routine + checklist sit next to the summary (laptop) or under it (phone).
   // A past race folds them into one-line rows inside the summary instead.
   const hasSide = race && state !== "past";
+  // A past race without a result: the run from the log that looks like it.
+  const found = race && needsResult(race, today) ? findRaceRun(race, runs, dayRuns) : null;
 
   container.innerHTML = `
     <div class="race-page">
@@ -188,7 +196,7 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
     </div>
     <div class="race-layout">
       <div class="race-main">
-        ${showForm ? raceFormHtml(race, blocks) : summaryHtml(race, state, block, runs, today)}
+        ${showForm ? raceFormHtml(race, blocks) : summaryHtml(race, state, block, runs, today, found)}
       </div>
       ${hasSide ? `
         <aside class="race-side">
@@ -202,6 +210,7 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
   const refresh = (options) => renderRace(container, race.id, options);
   if (showForm) setUpForm(container, race, refresh, focus);
   else setUpSummary(container, race, refresh);
+  if (!showForm && container.querySelector("#result-card")) setUpResultCard(container, race, found, bests, refresh);
 
   if (race) {
     const routineEl = container.querySelector("#routine");
@@ -223,13 +232,13 @@ function setUpSummary(container, race, refresh) {
 
 // ---------- The summary ----------
 
-function summaryHtml(race, state, block, runs, today) {
+function summaryHtml(race, state, block, runs, today, found) {
   const hero = state === "upcoming" ? upcomingHeroHtml(race, block, today)
     : state === "past" ? pastHeroHtml(race)
     : plainHeroHtml(race, state);
   return `
     ${hero}
-    ${state === "past" && !race.result_time_s ? noResultHtml() : ""}
+    ${needsResult(race, today) ? noResultHtml(found) : ""}
     ${runs.length ? `
       <h3 class="section-label">Your run</h3>
       <div class="card race-runs">${runs.map(runRowHtml).join("")}</div>` : ""}
@@ -353,9 +362,135 @@ function plainHeroHtml(race, state) {
     </section>`;
 }
 
-// Filled in by step 19d (look for the run in the log).
-function noResultHtml() {
-  return `<section class="card"><p class="muted">No result yet: tap Edit to add your time.</p></section>`;
+// ---------- "Add your result" (a past race without a time, step 19d) ----------
+
+// The race day has passed (or it's marked finished) and there's no time yet.
+function needsResult(race, today) {
+  if (race.result_time_s || race.status === "cancelled" || !race.race_date) return false;
+  return race.status === "finished" || race.race_date < today;
+}
+
+// The run that is most likely the race: one already linked to it, else a
+// run logged on race day (a "race" session first, then the closest distance).
+function findRaceRun(race, linked, dayRuns) {
+  const withTime = (list) => list.filter((a) => a.sport === "running" && a.duration_s);
+  const fromLink = withTime(linked);
+  if (fromLink.length) return fromLink[0];
+  const km = Number(race.distance_km) || 0;
+  const gap = (a) => Math.abs((Number(a.distance_km) || 0) - km);
+  return withTime(dayRuns).sort((a, b) =>
+    (b.session_type === "race") - (a.session_type === "race") || gap(a) - gap(b))[0] || null;
+}
+
+// The personal best (typed in Body & goals) this time would beat: same
+// distance within 2 %, and faster. null when there's none to beat.
+function beatenBest(seconds, km, bests) {
+  if (!seconds || !km) return null;
+  return bests.find((pb) => Math.abs(Number(pb.distance_km) - km) / km <= 0.02 && seconds < pb.time_s) || null;
+}
+
+function noResultHtml(found) {
+  return `
+    <section class="card race-result-card" id="result-card">
+      <div>
+        <p class="section-label is-accent">How did it go?</p>
+        <h3>Add your result</h3>
+      </div>
+      ${found ? `
+        <div class="found-run">
+          ${sportBadge(found.sport, sportIcon)}
+          <span class="found-run-text"><span class="muted small">Found in your log, ${escapeHtml(formatDayLabel(found.activity_date))}</span>
+            <span>${numHtml(formatDuration(found.duration_s))}${found.distance_km ? ` <span class="muted small">· ${escapeHtml(formatKm(found.distance_km))}</span>` : ""}</span></span>
+          <button type="button" class="button primary" id="use-found">Use this</button>
+        </div>
+        <p class="or-line"><span>or type it</span></p>` : ""}
+      <form id="result-form" class="result-form" novalidate>
+        <div class="field">
+          <label for="result-time">Result time</label>
+          <input id="result-time" type="text" inputmode="decimal" autocomplete="off" placeholder="45:00 or 1:02:30">
+        </div>
+        <button type="submit" class="button">Save</button>
+      </form>
+      <p id="result-status" class="status" role="status"></p>
+      <label class="check-row pb-offer" id="pb-offer" hidden>
+        <input type="checkbox" id="pb-save" checked>
+        <span id="pb-text"></span>
+      </label>
+      <button type="button" class="link-button is-quiet" id="not-run">I didn't run it</button>
+    </section>`;
+}
+
+function setUpResultCard(container, race, found, bests, refresh) {
+  const card = container.querySelector("#result-card");
+  const input = card.querySelector("#result-time");
+  const status = card.querySelector("#result-status");
+  const offer = card.querySelector("#pb-offer");
+
+  // The PB line follows the time on show: the typed one, else the found run's.
+  function km() {
+    return Number(race.distance_km) || (found ? Number(found.distance_km) : 0);
+  }
+  function shownTime() {
+    return parseDuration(input.value) || (found ? found.duration_s : null);
+  }
+  function updateOffer() {
+    const seconds = shownTime();
+    const pb = beatenBest(seconds, km(), bests);
+    offer.hidden = !pb;
+    if (pb) {
+      card.querySelector("#pb-text").textContent =
+        `${formatDuration(seconds)} beats your ${pb.label || "PB"} best (${formatDuration(pb.time_s)}). Save it as your new PB too.`;
+    }
+  }
+  input.addEventListener("input", () => {
+    updateOffer();
+    if (status.classList.contains("error")) showStatus(status, "", "");
+  });
+  updateOffer();
+
+  async function saveResult(seconds, activity) {
+    showStatus(status, "Saving…", "");
+    try {
+      await saveRace({ ...race, result_time_s: seconds, status: "finished" });
+      if (activity && !activity.race_id) await linkActivityToRace(activity.id, race.id);
+      const pb = beatenBest(seconds, km(), bests);
+      const newBest = pb && card.querySelector("#pb-save").checked;
+      if (newBest) {
+        await savePersonalBest({ id: pb.id, label: pb.label, distance_km: pb.distance_km, time_s: seconds,
+          achieved_on: race.race_date, notes: race.name });
+      }
+      showToast(newBest ? `Result saved · new ${pb.label ? pb.label + " " : ""}PB!` : "Result saved, race marked finished");
+      refresh();
+    } catch (error) {
+      showStatus(status, "Could not save: " + error.message, "error");
+    }
+  }
+
+  const useFound = card.querySelector("#use-found");
+  if (useFound) useFound.addEventListener("click", () => {
+    useFound.disabled = true;
+    saveResult(found.duration_s, found);
+  });
+
+  card.querySelector("#result-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    const seconds = parseDuration(text);
+    if (!seconds) return showStatus(status, "Time not understood. Use 45:00 or 1:45:00.", "error");
+    // A typed time doesn't link the found run: it may not be this race.
+    saveResult(seconds, null);
+  });
+
+  card.querySelector("#not-run").addEventListener("click", async () => {
+    if (!window.confirm("Mark this race as not run? It moves to the cancelled races (you can change it back with Edit).")) return;
+    try {
+      await saveRace({ ...race, status: "cancelled" });
+      showToast("Marked as not run");
+      refresh();
+    } catch (error) {
+      showStatus(status, "Could not save: " + error.message, "error");
+    }
+  });
 }
 
 // One activity linked to the race: tap = open it in the log.
