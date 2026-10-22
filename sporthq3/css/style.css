@@ -1182,6 +1182,13 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .hero-button.is-quiet { flex: none; align-self: flex-start; min-height: 44px; background: var(--hero-soft); color: var(--hero-text) !important; font-size: 0.95rem; }
 .hero-icon-button { flex: none; width: 52px; min-height: 52px; border-radius: 14px; border: 1px solid var(--hero-line); display: grid; place-items: center; }
 .hero-button .icon, .hero-icon-button .icon { width: 20px; height: 20px; }
+/* "Choose session" under a "just a sport" session (21): small, quiet, still 44px tall */
+.hero-choose {
+  margin-top: 8px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px;
+  display: inline-flex; align-items: center; gap: 6px; background: var(--hero-soft); color: var(--hero-text);
+  font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.hero-choose .icon { width: 18px; height: 18px; }
 .hero-rest { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 600; }
 .hero-resume { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--hero-soft); text-decoration: none; }
 .hero-resume span { flex: 1; min-width: 0; }

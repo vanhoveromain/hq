@@ -19,6 +19,7 @@ import { currentSeason } from "../utils/season.js?v=202610221143";
 import { blockWeek } from "./blocks.js?v=202610221143";
 import { icon } from "../utils/icons.js?v=202610221143";
 import { doneInOneTap } from "../utils/quickLog.js?v=202610221143";
+import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610221143";
 
 // Home layout (step 17c, "Today first"):
 //   1. Today hero (violet): today's sessions with one big button, and the
@@ -113,14 +114,33 @@ async function drawWeek(todayEl, weekEl, today, container) {
   // Today
   const todays = sessions.filter((s) => s.session_date === today);
   const workout = loadWorkout();
+  // "Just a sport" today + sessions of that sport in the catalogue: a small
+  // "Choose session" button (21), for the morning you know what you'll do.
+  const templates = todays.some(canChooseFromCatalogue) ? await activeTemplates().catch(() => []) : [];
+  const canChoose = (s) => canChooseFromCatalogue(s) && templates.some((t) => t.sport === s.sport);
   todayEl.innerHTML = `
     <h2 class="hero-label"><a href="#/planner">Today · ${escapeHtml(formatDayLabel(today))}</a></h2>
     ${workout ? `<a class="hero-resume" href="#/workout/${escapeHtml(workout.plannedId)}">
       ${icon("dumbbell")} <span>Workout in progress: <strong>${escapeHtml(workout.name)}</strong></span> ${icon("chevron-right")}</a>` : ""}
-    ${todays.length ? todays.map(heroSessionHtml).join("")
+    ${todays.length ? todays.map((s) => heroSessionHtml(s, canChoose(s))).join("")
       : `<p class="hero-rest">${icon("moon")} Nothing planned: rest day</p>
          <a class="hero-button is-quiet" href="#/planner">${icon("plus")} Plan something</a>`}
   `;
+
+  // One handler for the hero (onclick, not addEventListener: Home can redraw
+  // this card, and listeners would pile up). After a change (or its Undo)
+  // the whole Home redraws, unless you went to another screen meanwhile.
+  todayEl.onclick = async (event) => {
+    const button = event.target.closest("[data-choose]");
+    if (!button) return;
+    const session = todays.find((s) => s.id === button.dataset.choose);
+    const redraw = () => { if (container.querySelector(".dashboard")) render(container); };
+    try {
+      await chooseFromCatalogue(session, { onChange: redraw, templates });
+    } catch (error) {
+      showToast("Could not change the session: " + error.message);
+    }
+  };
 
   // This week: done / planned, the 7-day strip
   const counted = sessions.filter((s) => s.status !== "cancelled");
@@ -167,7 +187,8 @@ async function drawWeek(todayEl, weekEl, today, container) {
 // One of today's sessions inside the hero: icon, name, a few numbers and
 // one big button. With a recipe the big button starts the workout; without
 // one ("just a run") it logs it. The small button next to it does the other.
-function heroSessionHtml(s) {
+// `canChoose` = a "just a sport" session that can pick a catalogue session (21).
+function heroSessionHtml(s, canChoose = false) {
   const details = sessionDetails(s);
   const facts = [];
   if (details && details.exercises && details.exercises.length) facts.push(numHtml(details.exercises.length, "exercises"));
@@ -195,6 +216,7 @@ function heroSessionHtml(s) {
           : s.status === "cancelled" ? `<span class="hero-state">Skipped</span>` : ""}
       </div>
       ${actions ? `<div class="hero-actions">${actions}</div>` : ""}
+      ${canChoose ? `<button type="button" class="hero-choose" data-choose="${s.id}">${icon("library")} Choose session</button>` : ""}
     </div>`;
 }
 
