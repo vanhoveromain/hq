@@ -8,6 +8,7 @@ import {
   listPersonalBests, savePersonalBest,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
 } from "../storage.js?v=202610221205";
+import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610221205";
 import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610221205";
 import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610221205";
 import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610221205";
@@ -668,6 +669,8 @@ function setUpForm(container, race, refresh, focus) {
     deleteButton.addEventListener("click", async () => {
       if (!window.confirm("Delete this race? Its checklist and its race-routine sessions in the planner go too.")) return;
       try {
+        // Its routine sessions go with it (cascade): free a workout saved for one (step 22).
+        releaseWorkoutOf((await listRaceSessions(race.id)).map((s) => s.id));
         await deleteRace(race.id);
         window.location.hash = "#/races";
       } catch (error) {

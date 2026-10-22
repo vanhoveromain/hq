@@ -10,6 +10,7 @@ import {
 } from "../storage.js?v=202610221205";
 import { RACE_ROUTINE } from "../rules.js?v=202610221205";
 import { addDays, formatDayLabel } from "./dates.js?v=202610221205";
+import { releaseWorkoutOf } from "./savedWorkout.js?v=202610221205";
 
 // Which routine sessions already exist for this race, by routine key.
 function routineKeyOf(session) {
@@ -59,6 +60,7 @@ export async function moveRaceRoutine(raceId, oldDate, newDate) {
 // Removes the routine sessions not done yet (done ones stay: they're history).
 export async function removeRaceRoutine(raceId) {
   const open = (await listRaceSessions(raceId)).filter((s) => s.status !== "done");
+  releaseWorkoutOf(open.map((s) => s.id)); // a workout saved for one of them (step 22)
   await Promise.all(open.map((s) => deletePlannedSession(s.id)));
   return open.length;
 }

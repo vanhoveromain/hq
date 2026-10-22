@@ -8,7 +8,7 @@ import {
   updatePlannedSession,
 } from "../storage.js?v=202610221205";
 import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610221205";
-import { todayISO, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610221205";
+import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610221205";
 import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610221205";
 import { openSheet } from "../utils/sheet.js?v=202610221205";
 import { showToast } from "../utils/toast.js?v=202610221205";
@@ -21,6 +21,18 @@ import { suggestedShoe } from "../utils/quickLog.js?v=202610221205";
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
 export async function render(container, { activityId, plannedId = null }) {
+  // #/log/new/workout = "Log it anyway": the workout saved on this phone lost
+  // its planned session (removed, done or skipped). Log it on its own (22).
+  let orphan = null;
+  if (plannedId === "workout") {
+    orphan = loadWorkout();
+    plannedId = null;
+    if (!orphan) {
+      container.innerHTML = `<section class="card placeholder"><p>There's no unfinished workout on this phone any more.</p>
+        <a class="button" href="#/log">Back to the log</a></section>`;
+      return;
+    }
+  }
   let activity = null;
   let shoes = [];
   let planned = null; // the planned session this activity is logged for (from the planner)
@@ -44,7 +56,23 @@ export async function render(container, { activityId, plannedId = null }) {
       <a class="button" href="#/log">Back to the log</a></section>`;
     return;
   }
-  drawForm(container, activity, shoes, planned, recentShoeIds);
+  drawForm(container, activity, shoes, planned, recentShoeIds, orphan);
+}
+
+// The form's starting values for an unfinished workout without its session:
+// the day it was started, its sport and type (kept since step 22; older
+// workouts don't have them, then you pick), its name, and its duration
+// (from "Finish", else the time since it started if that's under 6 hours).
+function valuesFromOrphan(workout) {
+  const elapsed = Math.round((Date.now() - workout.startedAt) / 1000);
+  const duration = workout.finishedAt ? workout.durationS : (elapsed <= 6 * 3600 ? elapsed : null);
+  return {
+    activity_date: toISODate(new Date(workout.startedAt)),
+    sport: workout.sport || readLastSport() || SPORTS[0].key,
+    session_type: workout.sessionType ?? null,
+    title: workout.name || null,
+    duration_s: duration,
+  };
 }
 
 // The shoe list for the picker: pairs in use, plus the pair already linked
@@ -56,7 +84,7 @@ function shoeOptionsHtml(shoes, selectedId) {
     .join("");
 }
 
-function drawForm(container, activity, shoes, planned, recentShoeIds) {
+function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = null) {
   const isEdit = Boolean(activity);
   // A new activity from the planner starts with the planned day, sport, type and name.
   const fromPlan = !isEdit && planned ? {
@@ -70,7 +98,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
   const workout = fromPlan && savedWorkout && savedWorkout.plannedId === planned.id && savedWorkout.finishedAt
     ? savedWorkout : null;
   if (workout) fromPlan.duration_s = workout.durationS;
-  const a = activity || fromPlan || {
+  const a = activity || fromPlan || (orphan && valuesFromOrphan(orphan)) || {
     activity_date: todayISO(),
     sport: readLastSport() || SPORTS[0].key,
   };
@@ -89,6 +117,8 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
       ${workout ? `<p class="plan-banner">${icon("dumbbell")} Workout finished${ticksTotal(workout) ? ` · ${ticksDone(workout)} / ${ticksTotal(workout)} sets ticked` : ""}.
         Check the duration, add how it felt, then save.
         <a href="#/workout/${escapeHtml(planned.id)}">‹ Back to the workout</a></p>` : ""}
+      ${orphan ? `<p class="plan-banner">${icon("dumbbell")} Unfinished workout <strong>${escapeHtml(orphan.name)}</strong>${ticksTotal(orphan) ? ` · ${ticksDone(orphan)} / ${ticksTotal(orphan)} sets ticked` : ""}.
+        Its planned session is gone, so this is logged on its own. Check the sport, the duration and the date, then save.</p>` : ""}
 
       <fieldset class="form-section">
         <legend class="section-label">When</legend>
@@ -296,6 +326,11 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
         showToast(`${sessionName(planned)} marked done${recipeNote ? " · " + recipeNote : ""}`);
         window.location.hash = `#/planner/${startOfWeek(saved.activity_date)}`;
         return;
+      }
+      if (orphan) {
+        // Logged on its own: nothing to tick in the plan, the saved workout is done with.
+        clearWorkout();
+        showToast(`Logged: ${orphan.name}`);
       }
       if (!isEdit) await linkToPlan(saved);
       if (isEdit && saved.activity_date !== activity.activity_date) await moveLinkedSessions(saved);

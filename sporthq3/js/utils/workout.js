@@ -94,7 +94,9 @@ export function boxCount(exercise, rounds) {
 }
 
 // A fresh workout from a session's details (recipe or "just a sport").
-export function newWorkout(plannedId, name, details) {
+// `sport` / `sessionType` are kept so the workout can still be logged if its
+// planned session disappears (step 22, utils/savedWorkout.js).
+export function newWorkout(plannedId, name, details, { sport = null, sessionType = null } = {}) {
   const rounds = (details && details.rounds) || null;
   const lines = ((details && details.exercises) || []).map((e) => ({
     name: e.name, sets: e.sets ?? null, reps: e.reps ?? null, note: e.note ?? null,
@@ -102,7 +104,7 @@ export function newWorkout(plannedId, name, details) {
   }));
   const exercises = lines.map((e, i) => ({ ...e, origIndex: i, ticks: Array(boxCount(e, rounds)).fill(false) }));
   return {
-    plannedId, name, startedAt: Date.now(), finishedAt: null, durationS: null, rounds, exercises,
+    plannedId, name, sport, sessionType, startedAt: Date.now(), finishedAt: null, durationS: null, rounds, exercises,
     original: { rounds, exercises: lines }, setTimer: null,
   };
 }

@@ -78,6 +78,9 @@
 21. Change what a planned session is (2026-10-22, Rom's request): 21a "Choose from the catalogue" on a "just a
     sport" session, 21b keeps day / place / status / notes + Undo, 21c "Choose session" on Home's Today, 21e the
     opposite "Clear the session (just <sport>)", 21d docs
+22. Unfinished workout fix (2026-10-22, Rom's bug report): 22a workout page "session removed" + Log it anyway /
+    Discard, 22b Home / planner banner only when the session is still planned, 22c removing or skipping a
+    session frees its saved workout, 22d no underline on links styled as buttons
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -132,6 +135,25 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-22: unfinished workout fix (22; no migration). Bug (Rom): Home showed "Workout in progress: Spa30 -
+  Explo" and the link said "This session doesn't exist (any more)". Cause: the workout in progress lives in
+  localStorage on that device (utils/workout.js) and points to a planned session; removing the session (Remove
+  from plan, Replace this week, removing a race routine or a race) or skipping it left the saved workout behind,
+  and Home only checked "is there a saved workout?". Fix, utils/savedWorkout.js: workoutState() = none / active
+  (session exists and is planned) / orphan (gone, done or skipped; one getPlannedSession; database error =
+  active, as before). 22a workout page: an orphan = "This workout's session was removed" (or "already done" /
+  "skipped") with "Log it anyway" and "Discard" (asks if sets were ticked); no saved workout for that id = the
+  old message. "Log it anyway" = #/log/new/workout: the log form filled in from the workout (day it started,
+  sport + type, stored in the workout since 22: older workouts fall back to the last sport used, so check it;
+  its name as title; duration from Finish, else the time since it started when under 6 hours, else empty),
+  saved as a normal activity (no planned session to tick; the usual auto-link to an open session of that sport
+  that day still runs), then the workout is cleared. 22b Home's Today hero and the planner (redrawn with the
+  week) show "Workout in progress" only for an active one; an orphan = "Unfinished workout: <name>" row with
+  the reason, sets ticked, Log it anyway / Discard. 22c releaseWorkoutOf(ids) before Remove from plan, Replace
+  this week, removeRaceRoutine, deleting a race, Mark as skipped (planner) and Skip (Home): nothing ticked ->
+  cleared silently; sets ticked -> asks "Discard it too?" (Cancel keeps it for Log it anyway). 22d `a.button`
+  (and hero link buttons) never underlined. One-tap Done on a session with a workout in progress is not
+  covered (the orphan row then says "already done").
 - 2026-10-22: change what a planned session is (21; no migration). Rom: he often plans "just running"
   before knowing the session and didn't want to add a new one and remove the old one. utils/changeSession.js:
   chooseFromCatalogue(session) = sheet of that sport's catalogue sessions (not archived) + "Another sport…"

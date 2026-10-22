@@ -29,6 +29,7 @@ import {
 import { setTopbarAction } from "../utils/topbar.js?v=202610221205";
 import { showToast } from "../utils/toast.js?v=202610221205";
 import { loadWorkout } from "../utils/workout.js?v=202610221205";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610221205";
 import { blockWeek } from "./blocks.js?v=202610221205";
 import { enableDragToDay } from "../utils/dragDrop.js?v=202610221205";
 import { icon } from "../utils/icons.js?v=202610221205";
@@ -123,7 +124,7 @@ async function drawWeek(container, monday) {
       title: formatWeekLabel(monday), subtitle: rangeLabel(monday, sunday),
       switchHtml: viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`),
     })}
-    ${workoutBannerHtml()}
+    <div id="workout-banner"></div>
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
     <div class="card dash-strip plan-strip">
       <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
@@ -152,6 +153,8 @@ async function drawWeek(container, monday) {
   const active = () => warnings.filter((w) => !w.muted);
 
   async function load() {
+    // The saved workout can change with the plan (a session removed, skipped): redraw its banner too.
+    drawWorkoutBanner(container.querySelector("#workout-banner"));
     try {
       // One extra day on each side, so "Sunday + next Monday" is checked too.
       // + the weeks before, for "your usual week" (load check). For a future
@@ -476,7 +479,9 @@ async function drawWeek(container, monday) {
     return s.status !== "done" && !s.race_id;
   }
   async function clearWeekForReplace() {
-    await Promise.all(sessions.filter(isReplaceable).map((s) => deletePlannedSession(s.id)));
+    const removed = sessions.filter(isReplaceable);
+    releaseWorkoutOf(removed.map((s) => s.id));
+    await Promise.all(removed.map((s) => deletePlannedSession(s.id)));
   }
 
   async function applyTemplate(template) {
@@ -624,7 +629,10 @@ async function drawWeek(container, monday) {
       if (choice === "done") await doneInOneTap(session, { onChange: load });
       if (choice === "reopen") await reopenSession(session);
       if (choice === "open-activity") window.location.hash = `#/log/${session.activity_id}`;
-      if (choice === "cancel") await updatePlannedSession(session.id, { status: "cancelled" });
+      if (choice === "cancel") {
+        releaseWorkoutOf([session.id]);
+        await updatePlannedSession(session.id, { status: "cancelled" });
+      }
       if (choice === "uncancel") await updatePlannedSession(session.id, { status: "planned" });
       if (choice === "move") await moveOrSwap(session);
       if (choice === "recipe") window.location.hash = `#/catalogue/${session.template_id}`;
@@ -633,7 +641,10 @@ async function drawWeek(container, monday) {
       if (choice === "choose") await chooseFromCatalogue(session, { onChange: load, templates });
       if (choice === "clear") await clearSession(session, { onChange: load });
       if (choice === "race") window.location.hash = `#/races/${session.race_id}`;
-      if (choice === "delete" && window.confirm("Remove this session from the plan?")) await deletePlannedSession(session.id);
+      if (choice === "delete" && window.confirm("Remove this session from the plan?")) {
+        releaseWorkoutOf([session.id]);
+        await deletePlannedSession(session.id);
+      }
     } catch (error) {
       showToast("Something went wrong: " + error.message);
     }
@@ -720,12 +731,20 @@ async function drawWeek(container, monday) {
 // HTML pieces
 // ---------------------------------------------------------------------
 
-// "Workout in progress" reminder at the top of the planner.
-function workoutBannerHtml() {
-  const workout = loadWorkout();
-  if (!workout) return "";
-  return `<a class="plan-banner workout-banner" href="#/workout/${escapeHtml(workout.plannedId)}">
-    ${icon("dumbbell")} Workout in progress: <strong>${escapeHtml(workout.name)}</strong> · Resume ›</a>`;
+// "Workout in progress" reminder at the top of the planner. Its session gone,
+// done or skipped (step 22): "Unfinished workout" with Log it anyway / Discard.
+async function drawWorkoutBanner(el) {
+  const saved = await workoutState();
+  if (!el.isConnected) return; // the week was redrawn meanwhile
+  if (saved.state === "active") {
+    el.innerHTML = `<a class="plan-banner workout-banner" href="#/workout/${escapeHtml(saved.workout.plannedId)}">
+      ${icon("dumbbell")} Workout in progress: <strong>${escapeHtml(saved.workout.name)}</strong> · Resume ›</a>`;
+  } else if (saved.state === "orphan") {
+    el.innerHTML = unfinishedRowHtml(saved.workout, saved.reason, "in-plan");
+    el.onclick = (event) => handleUnfinishedClick(event, () => { el.innerHTML = ""; });
+  } else {
+    el.innerHTML = "";
+  }
 }
 
 function dayHeading(day) {

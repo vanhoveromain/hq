@@ -18,6 +18,7 @@ import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
   REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
 } from "../utils/workout.js?v=202610221205";
+import { LOG_ANYWAY_HREF } from "../utils/savedWorkout.js?v=202610221205";
 
 export async function render(container, { params = [] } = {}) {
   const plannedId = params[0];
@@ -29,6 +30,13 @@ export async function render(container, { params = [] } = {}) {
   } catch (error) {
     container.innerHTML = `<p class="status error"></p>`;
     container.querySelector(".status").textContent = "Could not load the session: " + error.message;
+    return;
+  }
+  // The workout saved on this phone belongs to this session, but the session
+  // is gone, done or skipped (step 22): log it anyway or discard it.
+  const saved = loadWorkout();
+  if ((!session || session.status !== "planned") && saved && saved.plannedId === plannedId) {
+    drawOrphan(container, saved, session ? session.status : "removed");
     return;
   }
   if (!session) {
@@ -53,12 +61,37 @@ export async function render(container, { params = [] } = {}) {
     workout = null;
   }
   if (!workout) {
-    workout = newWorkout(session.id, sessionName(session), sessionDetails(session));
+    workout = newWorkout(session.id, sessionName(session), sessionDetails(session),
+      { sport: session.sport, sessionType: session.session_type });
   }
   workout.finishedAt = null; // back from the log form = still training
   saveWorkout(workout);
 
   drawWorkout(container, session, workout, backToPlan);
+}
+
+
+// A saved workout whose planned session is gone (or done / skipped): say so,
+// then "Log it anyway" (log form filled in from the workout) or "Discard".
+function drawOrphan(container, workout, reason) {
+  const done = ticksDone(workout);
+  const total = ticksTotal(workout);
+  const title = reason === "done" ? "This workout's session is already done"
+    : reason === "cancelled" ? "This workout's session was skipped"
+    : "This workout's session was removed";
+  container.innerHTML = `<section class="card placeholder orphan-workout">
+    <h2>${escapeHtml(title)}</h2>
+    <p><strong>${escapeHtml(workout.name)}</strong>${total ? ` · ${done} / ${total} sets ticked` : ""}.
+      You can still log what you did, or throw it away.</p>
+    <div class="button-row">
+      <a class="button primary" href="${LOG_ANYWAY_HREF}">${icon("square-pen")} Log it anyway</a>
+      <button type="button" class="button" id="discard">Discard</button>
+    </div></section>`;
+  container.querySelector("#discard").addEventListener("click", () => {
+    if (done && !window.confirm(`Discard "${workout.name}"? ${done === 1 ? "Its 1 ticked set is" : `Its ${done} ticked sets are`} thrown away and nothing is logged.`)) return;
+    clearWorkout();
+    window.location.hash = "#/planner";
+  });
 }
 
 

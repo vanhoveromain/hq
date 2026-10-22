@@ -14,7 +14,7 @@ import { overview } from "../utils/stats.js?v=202610221205";
 import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610221205";
 import { weekLoadNotes } from "../utils/load.js?v=202610221205";
 import { showToast } from "../utils/toast.js?v=202610221205";
-import { loadWorkout } from "../utils/workout.js?v=202610221205";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610221205";
 import { currentSeason } from "../utils/season.js?v=202610221205";
 import { blockWeek } from "./blocks.js?v=202610221205";
 import { icon } from "../utils/icons.js?v=202610221205";
@@ -113,15 +113,18 @@ async function drawWeek(todayEl, weekEl, today, container) {
 
   // Today
   const todays = sessions.filter((s) => s.session_date === today);
-  const workout = loadWorkout();
+  // A workout saved on this phone: resume it, or (its session is gone, done
+  // or skipped) log it anyway / discard it (step 22).
+  const saved = await workoutState();
   // "Just a sport" today + sessions of that sport in the catalogue: a small
   // "Choose session" button (21), for the morning you know what you'll do.
   const templates = todays.some(canChooseFromCatalogue) ? await activeTemplates().catch(() => []) : [];
   const canChoose = (s) => canChooseFromCatalogue(s) && templates.some((t) => t.sport === s.sport);
   todayEl.innerHTML = `
     <h2 class="hero-label"><a href="#/planner">Today · ${escapeHtml(formatDayLabel(today))}</a></h2>
-    ${workout ? `<a class="hero-resume" href="#/workout/${escapeHtml(workout.plannedId)}">
-      ${icon("dumbbell")} <span>Workout in progress: <strong>${escapeHtml(workout.name)}</strong></span> ${icon("chevron-right")}</a>` : ""}
+    ${saved.state === "active" ? `<a class="hero-resume" href="#/workout/${escapeHtml(saved.workout.plannedId)}">
+      ${icon("dumbbell")} <span>Workout in progress: <strong>${escapeHtml(saved.workout.name)}</strong></span> ${icon("chevron-right")}</a>` : ""}
+    ${saved.state === "orphan" ? unfinishedRowHtml(saved.workout, saved.reason, "in-hero") : ""}
     ${todays.length ? todays.map((s) => heroSessionHtml(s, canChoose(s))).join("")
       : `<p class="hero-rest">${icon("moon")} Nothing planned: rest day</p>
          <a class="hero-button is-quiet" href="#/planner">${icon("plus")} Plan something</a>`}
@@ -131,6 +134,7 @@ async function drawWeek(todayEl, weekEl, today, container) {
   // this card, and listeners would pile up). After a change (or its Undo)
   // the whole Home redraws, unless you went to another screen meanwhile.
   todayEl.onclick = async (event) => {
+    if (handleUnfinishedClick(event, () => { if (container.querySelector(".dashboard")) render(container); })) return;
     const button = event.target.closest("[data-choose]");
     if (!button) return;
     const session = todays.find((s) => s.id === button.dataset.choose);
@@ -258,6 +262,7 @@ async function drawMissed(el, today) {
         if (result === "form") return;
         if (!result) { button.disabled = false; return; }
       } else {
+        releaseWorkoutOf([session.id]);
         await updatePlannedSession(session.id, { status: "cancelled" });
         showToast(`${sessionName(session)} marked skipped`);
       }

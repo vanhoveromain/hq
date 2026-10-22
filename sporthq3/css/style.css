@@ -254,6 +254,26 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   color: var(--accent-text);
 }
 .button:disabled { opacity: 0.6; cursor: default; }
+/* A link that looks like a button never gets the link underline (22d) */
+a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align: center; }
+
+/* Step 22: a saved workout whose planned session is gone, done or skipped */
+.orphan-workout h2 { margin-bottom: 4px; }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.button-row .button.primary { flex: 1 1 180px; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.unfinished-workout { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 12px; }
+.unfinished-workout p { display: flex; align-items: flex-start; gap: 8px; margin: 0; }
+.unfinished-workout p > span { flex: 1; min-width: 0; }
+.unfinished-workout .small { display: block; opacity: 0.85; }
+.unfinished-actions { display: flex; gap: 8px; }
+.unfinished-actions .button { flex: 1; text-align: center; }
+.unfinished-actions .button.is-quiet { flex: none; background: transparent; border-color: transparent; }
+/* On Home it sits in the violet hero */
+.unfinished-workout.in-hero { background: var(--hero-soft); color: var(--hero-text); }
+.unfinished-workout.in-hero .button { background: var(--hero-button-bg); color: var(--hero-button-text); border-color: transparent; }
+.unfinished-workout.in-hero .button.is-quiet { background: transparent; color: var(--hero-text); }
+/* In the planner it looks like the other banners */
+.unfinished-workout.in-plan { background: var(--surface); border: 1px solid var(--border); margin-bottom: 12px; }
 
 .status { margin: 12px 0 0; }
 .status:empty { display: none; }
