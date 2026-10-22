@@ -75,6 +75,9 @@
     day load tags, warning chips, play button), 20b session menu + one-tap Done that logs it, 20c log form as a
     pop-up page, 20d consistency (back in the top bar, violet links, block page summary first), 20e Me = athlete
     profile + polish (built 2026-10-22 on the draft, same way as 17: Rom tests locally, then main)
+21. Change what a planned session is (2026-10-22, Rom's request): 21a "Choose from the catalogue" on a "just a
+    sport" session, 21b keeps day / place / status / notes + Undo, 21c "Choose session" on Home's Today, 21e the
+    opposite "Clear the session (just <sport>)", 21d docs
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -129,6 +132,20 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-22: change what a planned session is (21; no migration). Rom: he often plans "just running"
+  before knowing the session and didn't want to add a new one and remove the old one. utils/changeSession.js:
+  chooseFromCatalogue(session) = sheet of that sport's catalogue sessions (not archived) + "Another sport…"
+  (sport step, then that sport's sessions, ← Back) -> updatePlannedSession(template_id, sport, session_type,
+  title null, details null); clearSession(session) = back to "just <sport>" (template_id, session_type, title,
+  details null; a custom session is asked first, its content would be lost). Both keep the day, position,
+  status and notes, redraw (warnings + planned hours update, a new warning pops like after a move) and show
+  a toast with Undo that puts the previous values back exactly. Only planned sessions, never race-routine
+  ones (source race_routine / race_id: the routine relies on them). Planner session menu: "Choose from the
+  catalogue · N <sport> sessions" (first row; only when that sport has catalogue sessions) and "Clear the
+  session (just <sport>)" (catalogue and custom sessions). Home's Today hero: a "just a sport" session gets a
+  small "Choose session" button (same picker; Home redraws, also after Undo, only if Home is still shown).
+  The sport / session sheets of the planner's "+" moved to changeSession.js (pickSport, pickFromSport) so
+  both pickers look the same.
 - 2026-10-22: design round 3 (20; no migration). Rom approved the canvas mock-ups (planner week, session
   menu, log form, block page, Me) and asked for everything at once on the draft.
   20a planner (views/planner.js): the top bar has an optional action slot and back link (utils/topbar.js,
