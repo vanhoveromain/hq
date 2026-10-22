@@ -5,14 +5,14 @@
 import {
   listWeighIns, saveWeighIn, deleteWeighIn, getSettings, saveWeightGoal,
   listRunsWithTimes, listPersonalBests, savePersonalBest, deletePersonalBest,
-} from "../storage.js?v=202610221205";
-import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610221205";
-import { todayISO, addDays, formatDayLabel } from "../utils/dates.js?v=202610221205";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed, numHtml } from "../utils/format.js?v=202610221205";
-import { autoPersonalBests, distanceKeyOf, weightTrend } from "../utils/body.js?v=202610221205";
-import { drawWeightChart } from "../utils/weightChart.js?v=202610221205";
-import { showToast } from "../utils/toast.js?v=202610221205";
-import { icon } from "../utils/icons.js?v=202610221205";
+} from "../storage.js?v=202610221248";
+import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610221248";
+import { todayISO, addDays, formatDayLabel } from "../utils/dates.js?v=202610221248";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, numHtml } from "../utils/format.js?v=202610221248";
+import { autoPersonalBests, distanceKeyOf, weightTrend } from "../utils/body.js?v=202610221248";
+import { drawWeightChart } from "../utils/weightChart.js?v=202610221248";
+import { showToast } from "../utils/toast.js?v=202610221248";
+import { icon } from "../utils/icons.js?v=202610221248";
 
 const RANGE_KEY = "sporthq3.weightRange";
 const RANGES = [
