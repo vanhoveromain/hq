@@ -11,7 +11,7 @@ import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } fro
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610212125";
 import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610212125";
 import { overview } from "../utils/stats.js?v=202610212125";
-import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, completeSession } from "../utils/plan.js?v=202610212125";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds, completeSession } from "../utils/plan.js?v=202610212125";
 import { weekLoadNotes } from "../utils/load.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { loadWorkout } from "../utils/workout.js?v=202610212125";
@@ -314,21 +314,6 @@ async function drawLoad(el, notesEl, today, container) {
     ${noTime ? `<p class="hint">${noTime} session${noTime === 1 ? "" : "s"} this week without a duration (not in the hours).</p>` : ""}
     ${planned.missing ? `<p class="hint">${planned.missing} planned session${planned.missing === 1 ? "" : "s"} without a duration (not in the planned hours).</p>` : ""}
   `;
-}
-
-// This week's planned hours (17c): the recipe's target time of every session
-// not cancelled; a done session without a target counts with its logged time.
-//   -> { seconds, missing: how many sessions had neither }
-function plannedSeconds(sessions) {
-  let seconds = 0;
-  let missing = 0;
-  for (const s of sessions.filter((x) => x.status !== "cancelled")) {
-    const details = sessionDetails(s);
-    const time = (details && details.target_duration_s) || (s.activity && s.activity.duration_s) || 0;
-    if (time) seconds += time;
-    else missing += 1;
-  }
-  return { seconds, missing };
 }
 
 // Hours per week as simple columns (plain HTML boxes, no chart library).

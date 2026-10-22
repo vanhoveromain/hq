@@ -12,17 +12,23 @@
 //   // choice = the data-value of the button you tapped, or null if closed.
 // Any element with a data-value closes the sheet and returns that value.
 // For forms inside a sheet, pass onReady(dialog, close) and call close(value).
+// Optional (step 20b): `badge` = HTML shown before the title (a sport badge),
+// `subtitle` = a grey line under the title ("Wed 21 Oct · Upper body").
 
 import { escapeHtml } from "./format.js?v=202610212125";
 import { icon } from "./icons.js?v=202610212125";
 
-export function openSheet({ title, html, onReady }) {
+export function openSheet({ title, html, onReady, badge = "", subtitle = "" }) {
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
     dialog.className = "sheet";
     dialog.innerHTML = `
-      <div class="sheet-header">
-        <h2>${escapeHtml(title)}</h2>
+      <div class="sheet-header ${badge ? "has-badge" : ""}">
+        ${badge}
+        <div class="sheet-heading">
+          <h2>${escapeHtml(title)}</h2>
+          ${subtitle ? `<p class="muted small">${escapeHtml(subtitle)}</p>` : ""}
+        </div>
         <button type="button" class="sheet-close" data-value="" aria-label="Close">${icon("x")}</button>
       </div>
       <div class="sheet-body">${html}</div>
@@ -55,4 +61,13 @@ export function openSheet({ title, html, onReady }) {
     dialog.showModal();
     if (onReady) onReady(dialog, close);
   });
+}
+
+// One quiet row of a list inside a sheet (step 20): icon, label and a ›.
+// `danger` = a red row without the › (e.g. "Remove from plan").
+export function sheetRowHtml(value, iconName, label, { danger = false, hint = "" } = {}) {
+  return `<button type="button" class="sheet-row ${danger ? "is-danger" : ""}" data-value="${escapeHtml(value)}">
+    ${icon(iconName)}<span class="sheet-row-label">${escapeHtml(label)}</span>
+    ${hint ? `<span class="muted small">${escapeHtml(hint)}</span>` : ""}
+    ${danger ? "" : icon("chevron-right", { className: "sheet-row-chevron" })}</button>`;
 }

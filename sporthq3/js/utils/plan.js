@@ -153,3 +153,19 @@ export function daySummary(day, sessions, activities, iconOf) {
   const done = icons.length > 0 && planned.every((s) => s.status === "done");
   return { icons, done };
 }
+
+// A week's planned hours (17c, also the planner's stat strip in 20a): the
+// recipe's target time of every session not cancelled; a done session
+// without a target counts with its logged time.
+//   -> { seconds, missing: how many sessions had neither }
+export function plannedSeconds(sessions) {
+  let seconds = 0;
+  let missing = 0;
+  for (const s of sessions.filter((x) => x.status !== "cancelled")) {
+    const details = sessionDetails(s);
+    const time = (details && details.target_duration_s) || (s.activity && s.activity.duration_s) || 0;
+    if (time) seconds += time;
+    else missing += 1;
+  }
+  return { seconds, missing };
+}

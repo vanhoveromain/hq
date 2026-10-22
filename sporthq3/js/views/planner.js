@@ -11,15 +11,17 @@ import {
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
 } from "../storage.js?v=202610212125";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES } from "../rules.js?v=202610212125";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610212125";
 import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610212125";
-import { escapeHtml, formatDuration, formatKm, formatExercise } from "../utils/format.js?v=202610212125";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610212125";
 import {
   sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
-  isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned,
+  isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
 } from "../utils/plan.js?v=202610212125";
+import { overview } from "../utils/stats.js?v=202610212125";
 import { weekLoadNotes } from "../utils/load.js?v=202610212125";
-import { openSheet } from "../utils/sheet.js?v=202610212125";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610212125";
+import { setTopbarAction } from "../utils/topbar.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { loadWorkout } from "../utils/workout.js?v=202610212125";
 import { blockWeek } from "./blocks.js?v=202610212125";
@@ -59,12 +61,42 @@ function viewSwitchHtml(active, weekHref, monthHref) {
   </div>`;
 }
 
-// Links to the catalogue and week templates (below the calendar on a laptop).
-const PLANNING_MENU = `
-  <nav class="card menu planner-menu" aria-label="Planning">
-    <a href="#/catalogue">${icon("library")} Session catalogue <span aria-hidden="true">›</span></a>
-    <a href="#/weektemplates">${icon("clipboard-list")} Week templates <span aria-hidden="true">›</span></a>
-  </nav>`;
+// "‹ This week ›" (or the month) + the Week | Month switch, on one row (20a).
+function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml }) {
+  return `
+    <div class="week-head">
+      <a class="nav-button" href="${prevHref}" aria-label="${prevLabel}">${icon("chevron-left")}</a>
+      <div class="week-nav-title">
+        <strong>${escapeHtml(title)}</strong>
+        ${subtitle ? `<span class="muted small">${escapeHtml(subtitle)}</span>` : ""}
+      </div>
+      <a class="nav-button" href="${nextHref}" aria-label="${nextLabel}">${icon("chevron-right")}</a>
+      ${switchHtml}
+    </div>`;
+}
+
+// "19 – 25 Oct", or "28 Sept – 4 Oct" when the week runs over two months.
+function rangeLabel(monday, sunday) {
+  const start = parseISODate(monday);
+  const end = parseISODate(sunday);
+  const month = (date) => date.toLocaleDateString("en-GB", { month: "short" });
+  return start.getMonth() === end.getMonth()
+    ? `${start.getDate()} – ${end.getDate()} ${month(end)}`
+    : `${start.getDate()} ${month(start)} – ${end.getDate()} ${month(end)}`;
+}
+
+// The "⋯" menu of the month view: the planning screens (20a).
+async function monthMenu() {
+  const choice = await openSheet({
+    title: "Planning",
+    html: `<div class="sheet-rows">
+      ${sheetRowHtml("catalogue", "library", "Session catalogue")}
+      ${sheetRowHtml("manage", "clipboard-list", "Week templates")}
+    </div>`,
+  });
+  if (choice === "catalogue") window.location.hash = "#/catalogue";
+  if (choice === "manage") window.location.hash = "#/weektemplates";
+}
 
 
 // ---------------------------------------------------------------------
@@ -75,29 +107,32 @@ async function drawWeek(container, monday) {
   const sunday = addDays(monday, 6);
   const thisMonday = startOfWeek(todayISO());
 
+  // The planning tools (catalogue, templates, copy last week) live in the
+  // "⋯" of the top bar (20a), so the week starts right at the top.
+  setTopbarAction({ iconName: "more", label: "Planning: catalogue, templates, copy last week", onClick: () => planningMenu() });
   container.innerHTML = `
     <div class="planner">
-    ${PLANNING_MENU}
-    ${viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`)}
-    <div class="week-nav">
-      <a class="button small-button" href="#/planner/${addDays(monday, -7)}" aria-label="Previous week">‹</a>
-      <div class="week-nav-title">
-        <strong>${formatWeekLabel(monday)}</strong>
-        <span class="muted small">${formatDayLabel(monday)} – ${formatDayLabel(sunday)}</span>
-      </div>
-      <a class="button small-button" href="#/planner/${addDays(monday, 7)}" aria-label="Next week">›</a>
-    </div>
+    ${headHtml({
+      prevHref: `#/planner/${addDays(monday, -7)}`, prevLabel: "Previous week",
+      nextHref: `#/planner/${addDays(monday, 7)}`, nextLabel: "Next week",
+      title: formatWeekLabel(monday), subtitle: rangeLabel(monday, sunday),
+      switchHtml: viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`),
+    })}
     ${workoutBannerHtml()}
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
-    <p id="week-summary" class="muted week-summary"></p>
-    <a id="week-block" class="week-block" hidden></a>
-    <div id="week-load"></div>
-    ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
-    <div id="days" class="days"><p class="muted">Loading…</p></div>
-    <div class="week-actions">
-      <button id="templates" type="button" class="button">${icon("clipboard-list")} Templates</button>
-      <button id="copy-week" type="button" class="button">${icon("copy")} Copy last week into this week</button>
+    <div class="card dash-strip plan-strip">
+      <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
+      <span><span class="strip-label">Load</span><span id="strip-load">–</span></span>
+      <button type="button" class="strip-cell" id="strip-warnings" disabled>
+        <span class="strip-label">Warnings</span><span id="strip-warnings-count">–</span></button>
     </div>
+    <div class="week-links">
+      <a id="week-block" class="week-block" hidden></a>
+      ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
+    </div>
+    <p id="week-empty" class="muted week-summary" hidden>Nothing planned yet. Tap + on a day, or ⋯ (top right) to copy last week or apply a template.</p>
+    <div id="week-load"></div>
+    <div id="days" class="days"><p class="muted">Loading…</p></div>
     </div>
   `;
 
@@ -143,42 +178,69 @@ async function drawWeek(container, monday) {
   function drawDays() {
     const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
     const today = todayISO();
-    // A warning about two days ("Mon X → Tue Y") shows once, on the later day
-    // of this week (the day you'd change), not on both.
-    function warningDay(w) {
-      const inWeek = w.days.filter((d) => d >= monday && d <= sunday).sort();
-      return inWeek[inWeek.length - 1];
-    }
+    const inWeek = (d) => d >= monday && d <= sunday;
+    const items = calendarItems(sessions, activities, races);
+    // Where each warning shows (20a):
+    //  - about two days of this week in a row: one small chip BETWEEN the two
+    //    day cards (phone), and inside the later day on a laptop (7 columns)
+    //  - otherwise: a chip inside its (latest) day of this week
+    const between = {}; // first day -> chips shown after that day's card
+    const inside = {};  // day -> chips inside that day
+    const push = (map, day, html) => { (map[day] = map[day] || []).push(html); };
+    warnings.forEach((w, index) => {
+      const days = w.days.filter(inWeek).sort();
+      if (w.days.length === 2 && days.length === 2) {
+        push(between, days[0], warningChipHtml(w, index, "warning-between"));
+        push(inside, days[1], warningChipHtml(w, index, "warning-dup"));
+      } else {
+        push(inside, days[days.length - 1], warningChipHtml(w, index));
+      }
+    });
 
     daysEl.innerHTML = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => {
       const daySessions = sessions.filter((s) => s.session_date === day);
       const extras = activities.filter((a) => a.activity_date === day && !linkedIds.has(a.id));
       const dayRaces = racesNotPlanned(races, sessions).filter((r) => r.race_date === day);
+      const tag = dayLoadTag(items.filter((item) => item.date === day));
       return `
         <section class="day ${day === today ? "is-today" : ""} ${day < today ? "is-past" : ""}" data-day="${day}">
           <h2 class="day-title">
-            <span>${dayHeading(day)}</span>
-            <button type="button" class="day-add" data-add="${day}" aria-label="Add a session on ${formatDayLabel(day)}">+</button>
+            <span class="day-name">${dayHeading(day)}</span>
+            ${day === today ? `<span class="day-tag is-today">Today</span>` : ""}
+            ${tag ? `<span class="day-tag tag-${tag.key}">${escapeHtml(tag.label)}</span>` : ""}
+            <button type="button" class="day-add" data-add="${day}" aria-label="Add a session on ${formatDayLabel(day)}">${icon("plus")}</button>
           </h2>
           ${dayRaces.map(raceMarkerHtml).join("")}
           ${daySessions.map((session) => sessionCardHtml(session, today)).join("")}
           ${extras.map(extraCardHtml).join("")}
-          ${!daySessions.length && !extras.length && !dayRaces.length ? `<p class="day-empty muted">Rest</p>` : ""}
-          ${warnings.filter((w) => warningDay(w) === day).map((w) => warningHtml(w, warnings.indexOf(w))).join("")}
-        </section>`;
+          ${(inside[day] || []).join("")}
+        </section>
+        ${(between[day] || []).join("")}`;
     }).join("");
 
-    const planned = sessions.length;
-    const done = sessions.filter((s) => s.status === "done").length;
-    const cancelled = sessions.filter((s) => s.status === "cancelled").length;
+    // The stat strip: done / planned, hours done / planned, warnings.
+    const counted = sessions.filter((s) => s.status !== "cancelled");
+    const done = counted.filter((s) => s.status === "done").length;
+    const planned = plannedSeconds(sessions).seconds;
     const count = active().length;
-    container.querySelector("#week-summary").textContent = (planned
-      ? `${planned} planned · ${done} done${cancelled ? ` · ${cancelled} cancelled` : ""}`
-      : "Nothing planned yet. Tap + on a day, or copy last week.")
-      + (count ? ` · ${count} warning${count === 1 ? "" : "s"}` : "");
+    container.querySelector("#strip-done").innerHTML = counted.length
+      ? `${numHtml(done)}<span class="num of"> / ${counted.length}</span>` : numHtml("–");
+    container.querySelector("#strip-load").innerHTML = `${numHtml(formatHours(overview(activities).seconds))}${planned
+      ? ` <span class="unit">/ ${escapeHtml(formatHours(planned))}</span>` : ""}`;
+    const warningsButton = container.querySelector("#strip-warnings");
+    container.querySelector("#strip-warnings-count").innerHTML = numHtml(count);
+    warningsButton.classList.toggle("is-warning", count > 0);
+    warningsButton.disabled = count === 0;
+    container.querySelector("#week-empty").hidden = sessions.length > 0;
     container.querySelector("#week-load").innerHTML = loadNotes
       .map((note) => `<p class="plan-banner load-banner" role="note">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("");
   }
+
+  // Warnings in the stat strip: tap = scroll to the first warning chip you can see.
+  container.querySelector("#strip-warnings").addEventListener("click", () => {
+    const chip = [...daysEl.querySelectorAll(".warning-chip:not(.is-muted)")].find((el) => el.offsetParent !== null);
+    if (chip) chip.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
 
   // After you add / move / swap something: pop up a warning it just created.
   // (Not on the first load: the warnings are already visible on the days.)
@@ -205,8 +267,14 @@ async function drawWeek(container, monday) {
   });
 
   // Tap a warning: "this is my normal pattern" (mute) or "warn me again".
+  // Race warnings are one-off: the sheet only shows the full message.
   async function warningMenu(w) {
-    if (!w || !w.canMute) return; // race warnings are one-off: nothing to choose
+    if (!w) return;
+    if (!w.canMute) {
+      await openSheet({ title: "Warning", html: `<p>${escapeHtml(w.message)}</p>
+        <p class="muted small">This one is about this race only, so it can't be muted.</p>` });
+      return;
+    }
     const choice = await openSheet({
       title: w.muted ? "Muted warning" : "Warning",
       html: `
@@ -231,7 +299,24 @@ async function drawWeek(container, monday) {
     }
   }
 
-  container.querySelector("#copy-week").addEventListener("click", async () => {
+  // The "⋯" menu (top bar): the planning tools of this week.
+  async function planningMenu() {
+    const choice = await openSheet({
+      title: "Planning",
+      html: `<div class="sheet-rows">
+        ${sheetRowHtml("copy", "copy", "Copy last week into this week")}
+        ${sheetRowHtml("templates", "clipboard-list", "Save or apply a week template")}
+        ${sheetRowHtml("catalogue", "library", "Session catalogue")}
+        ${sheetRowHtml("manage", "list", "Manage week templates")}
+      </div>`,
+    });
+    if (choice === "copy") await copyLastWeek();
+    if (choice === "templates") await templatesMenu();
+    if (choice === "catalogue") window.location.hash = "#/catalogue";
+    if (choice === "manage") window.location.hash = "#/weektemplates";
+  }
+
+  async function copyLastWeek() {
     const lastMonday = addDays(monday, -7);
     const mode = await askAddOrReplace("last week's sessions");
     if (!mode) return;
@@ -243,9 +328,7 @@ async function drawWeek(container, monday) {
     } catch (error) {
       showToast("Could not copy: " + error.message);
     }
-  });
-
-  container.querySelector("#templates").addEventListener("click", () => templatesMenu());
+  }
 
   // Drag a card onto another day (done sessions stay put: they're tied to a log).
   enableDragToDay(daysEl, {
@@ -641,16 +724,16 @@ function workoutBannerHtml() {
 
 function dayHeading(day) {
   const date = parseISODate(day);
-  const weekday = date.toLocaleDateString("en-GB", { weekday: "long" });
+  const weekday = date.toLocaleDateString("en-GB", { weekday: "short" });
   const dayMonth = date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   return `${weekday} <span class="muted">${dayMonth}</span>`;
 }
 
-// Done = green tick, cancelled = red cross (the label is read out instead of the picture).
+// Done = green tick; skipped (cancelled) = a quiet word, no red (20a).
 const STATUS_ICON = {
   planned: "",
   done: icon("check", { label: "done", className: "is-ok" }),
-  cancelled: icon("x", { label: "cancelled", className: "is-error" }),
+  cancelled: `<span class="skipped-tag">Skipped</span>`,
 };
 
 // A race from the Races tab on its day (until its routine is added to the plan).
@@ -660,13 +743,14 @@ function raceMarkerHtml(race) {
       .filter(Boolean).join(" · ")}</span></a>`;
 }
 
-// A warning line. Ones you can mute are buttons (tap = mute / unmute);
-// muted ones are greyed with a crossed-out bell.
-function warningHtml(w, index) {
-  const text = `${icon(w.muted ? "bell-off" : "alert-triangle")} ${escapeHtml(w.message)}`;
-  return w.canMute
-    ? `<button type="button" class="day-warning ${w.muted ? "is-muted" : ""}" data-warning="${index}">${text}</button>`
-    : `<p class="day-warning" role="note">${text}</p>`;
+// A warning as a small amber chip (20a): a few words ("Heavy legs Thu → Fri"),
+// the full message on tap (and to screen readers). Muted ones are grey with a
+// crossed-out bell. `where` = "warning-between" (between two day cards) or
+// "warning-dup" (the same chip inside the later day, for the laptop's columns).
+function warningChipHtml(w, index, where = "") {
+  return `<button type="button" class="warning-chip ${where} ${w.muted ? "is-muted" : ""}" data-warning="${index}"
+    aria-label="${escapeHtml((w.muted ? "Muted: " : "Warning: ") + w.message)}">
+    ${icon(w.muted ? "bell-off" : "alert-triangle")}<span>${escapeHtml(w.short || w.message)}</span></button>`;
 }
 
 // `today` = to spot a session left open on a past day ("missed?").
@@ -684,7 +768,7 @@ function sessionCardHtml(session, today) {
     const a = session.activity;
     bits.push("Logged: " + [formatDuration(a.duration_s), a.distance_km != null ? formatKm(a.distance_km) : ""].filter(Boolean).join(" · "));
   }
-  return `
+  const card = `
     <button type="button" class="plan-card status-${session.status} ${missed ? "is-missed" : ""}" data-session="${session.id}">
       ${sportBadge(session.sport, sportIcon)}
       <span class="activity-main">
@@ -694,6 +778,11 @@ function sessionCardHtml(session, today) {
       </span>
       <span class="plan-status">${STATUS_ICON[session.status]}</span>
     </button>`;
+  // Today's session with a recipe: a round play button starts the workout in
+  // one tap (20a). It sits next to the card (a button can't hold a button).
+  const canStart = session.status === "planned" && session.session_date === today && !isPlainSession(session);
+  return canStart ? `<div class="plan-row has-play">${card}
+    <a class="plan-play" href="#/workout/${session.id}" aria-label="Start workout: ${escapeHtml(sessionName(session))}">${icon("play")}</a></div>` : card;
 }
 
 function extraCardHtml(a) {
@@ -751,15 +840,15 @@ async function drawMonth(container, month) {
   const today = todayISO();
   const title = parseISODate(first).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
+  setTopbarAction({ iconName: "more", label: "Planning: catalogue, templates", onClick: () => monthMenu() });
   container.innerHTML = `
     <div class="planner">
-    ${PLANNING_MENU}
-    ${viewSwitchHtml("month", `#/planner/${month === today.slice(0, 7) ? today : first}`, `#/planner/month/${month}`)}
-    <div class="week-nav">
-      <a class="button small-button" href="#/planner/month/${previousMonth}" aria-label="Previous month">‹</a>
-      <div class="week-nav-title"><strong>${escapeHtml(title)}</strong></div>
-      <a class="button small-button" href="#/planner/month/${nextMonth}" aria-label="Next month">›</a>
-    </div>
+    ${headHtml({
+      prevHref: `#/planner/month/${previousMonth}`, prevLabel: "Previous month",
+      nextHref: `#/planner/month/${nextMonth}`, nextLabel: "Next month",
+      title, subtitle: "",
+      switchHtml: viewSwitchHtml("month", `#/planner/${month === today.slice(0, 7) ? today : first}`, `#/planner/month/${month}`),
+    })}
     ${month !== today.slice(0, 7) ? `<a class="today-link" href="#/planner/month/${today.slice(0, 7)}">${icon("undo-2")} Back to this month</a>` : ""}
     <p id="month-summary" class="muted week-summary"></p>
     <div class="month card">

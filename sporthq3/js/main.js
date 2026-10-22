@@ -20,6 +20,7 @@ import * as weekTemplatesView from "./views/weekTemplates.js?v=202610212125";
 import * as workoutView from "./views/workout.js?v=202610212125";
 import * as customSessionView from "./views/customSession.js?v=202610212125";
 import * as reviewView from "./views/review.js?v=202610212125";
+import { clearTopbar } from "./utils/topbar.js?v=202610212125";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
@@ -70,6 +71,7 @@ function render() {
   if (!currentUser) {
     tabbarEl.hidden = true;
     titleEl.textContent = "Log in";
+    clearTopbar();
     loginView.render(viewEl, { message: loginMessage });
     return;
   }
@@ -91,6 +93,7 @@ function render() {
     link.classList.toggle("active", link.dataset.route === (routes[name].tab || name));
   }
   window.scrollTo(0, 0); // a new screen starts at the top
+  clearTopbar(); // the new screen sets its own top-bar action / back link
   routes[name].view.render(viewEl, { user: currentUser, params });
 }
 

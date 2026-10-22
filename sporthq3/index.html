@@ -18,9 +18,15 @@
   <link rel="stylesheet" href="css/style.css?v=202610212125">
 </head>
 <body>
+  <!-- Left: the logo, or "‹ Back" on a screen inside another one. Right: one
+       action of the screen (e.g. the planner's "⋯"). See js/utils/topbar.js. -->
   <header class="topbar">
-    <a class="brand" href="#/dashboard" aria-label="SportHQ3, back to Home"><img src="icons/logo.svg" alt="" width="54" height="30"></a>
+    <div class="topbar-left">
+      <a class="brand" href="#/dashboard" aria-label="SportHQ3, back to Home"><img src="icons/logo.svg" alt="" width="54" height="30"></a>
+      <a class="topbar-back" id="topbar-back" href="#/dashboard" hidden></a>
+    </div>
     <h1 id="page-title" class="page-title"></h1>
+    <div class="topbar-right" id="topbar-action"></div>
   </header>
 
   <!-- Each screen ("view") is drawn inside <main> by its own JS module. -->

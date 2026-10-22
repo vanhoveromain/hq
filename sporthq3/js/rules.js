@@ -164,7 +164,8 @@ export function sessionTypeLabel(sportKey, typeKey) {
 //
 // An "item" = one session that counts: { date: "2026-10-14", sport, session_type }
 // (planned sessions that aren't cancelled, and logged activities).
-// A warning = { rule, days: ["2026-10-13", "2026-10-14"], message, canMute }
+// A warning = { rule, days: ["2026-10-13", "2026-10-14"], message, short, canMute }
+// `short` = a few words for the planner's small warning chips (step 20a).
 // canMute: the rule is about your weekly habits, so you may say "this is my
 // normal pattern, don't warn me" (Plan -> tap the warning). Race warnings are
 // one-off, so they can't be muted.
@@ -200,6 +201,7 @@ export const TRAINING_RULES = [
           days: [day, next],
           message: `Heavy legs two days in a row: ${shortDay(day)} ${heavyByDay[day].map(itemLabel).join(" + ")}`
             + ` → ${shortDay(next)} ${heavyByDay[next].map(itemLabel).join(" + ")}`,
+          short: `Heavy legs ${shortDay(day)} → ${shortDay(next)}`,
         });
       }
       return warnings;
@@ -217,6 +219,7 @@ export const TRAINING_RULES = [
           rule: this.key,
           days: [day],
           message: `Leg explosivity AND intervals on ${shortDay(day)}: pick one`,
+          short: "Explosivity + intervals",
         }));
     },
   },
@@ -234,6 +237,7 @@ export const TRAINING_RULES = [
             rule: this.key,
             days: [before, day],
             message: `Rest the day before your race: ${planned.map(itemLabel).join(" + ")} on ${shortDay(before)}`,
+            short: `Rest before the race: ${shortDay(before)}`,
           }] : [];
         });
     },
@@ -250,11 +254,28 @@ export const TRAINING_RULES = [
           rule: this.key,
           days: [day],
           message: `${races.map(itemLabel).join(" + ")} on ${shortDay(day)}: ${others.map(itemLabel).join(" + ")} planned the same day`,
+          short: "Something else on race day",
         }] : [];
       });
     },
   },
 ];
+
+// The small tag on each planner day (step 20a): the heaviest kind of
+// session that day, from the categories above. A day with only "other"
+// sessions (long run, futsal, a ride…) gets no tag; nothing at all = Rest.
+export const DAY_LOAD_TAGS = [
+  { key: "heavy_legs", label: "Heavy legs" },
+  { key: "easy_run",   label: "Easy" },
+  { key: "upper_body", label: "Upper body" },
+];
+
+// items = that day's calendar items ({ sport, session_type }) -> { key, label } | null
+export function dayLoadTag(items) {
+  if (!items.length) return { key: "rest", label: "Rest" };
+  const categories = items.map((item) => categoryOf(item.sport, item.session_type));
+  return DAY_LOAD_TAGS.find((tag) => categories.includes(tag.key)) || null;
+}
 
 function groupByDay(items) {
   const byDay = {};
