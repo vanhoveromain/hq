@@ -649,6 +649,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 }
 /* The stat strip (same look as Home's race-mode strip) + block / review links */
 .plan-strip { margin-bottom: 8px; }
+/* "2h42 / 4h06" stays on one line; on the narrowest phones the numbers shrink a little to fit */
+.plan-strip #strip-load { white-space: nowrap; }
+@media (max-width: 359px) { .plan-strip .num { font-size: 1.35rem; } }
 .strip-cell { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 0; border: 0;
   background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .strip-cell:disabled { cursor: default; }

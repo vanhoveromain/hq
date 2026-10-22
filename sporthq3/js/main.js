@@ -35,7 +35,7 @@ const routes = {
   races:     { title: "Races", view: racesView, back: (p) => (p[0] ? { href: "#/races", label: "Races" } : null) },
   me:        { title: "Me", view: meView },
   shoes:     { title: "Shoes", view: shoesView, tab: "me", back: (p) => (p[0] ? { href: "#/shoes", label: "Shoes" } : toMe()) },
-  blocks:    { title: "Training blocks", view: blocksView, tab: "me", back: (p) => (p[0] ? { href: "#/blocks", label: "Blocks" } : toMe()) },
+  blocks:    { title: (p) => (p[0] ? "Training block" : "Training blocks"), view: blocksView, tab: "me", back: (p) => (p[0] ? { href: "#/blocks", label: "Blocks" } : toMe()) },
   body:      { title: "Body & goals", view: bodyView, tab: "me", back: toMe },
   settings:  { title: "Settings", view: settingsView, tab: "me", back: toMe },
   catalogue: { title: "Session catalogue", view: catalogueView, tab: "planner",
@@ -98,7 +98,9 @@ function render() {
   // The log form (new / edit) is like a pop-up page (20c): "Cancel" in the
   // top bar, a Save bar pinned at the bottom, no tab bar on a phone (CSS).
   document.body.classList.toggle("is-form", name === "log" && Boolean(params[0]) && params[0] !== "stats");
-  titleEl.textContent = routes[name].title;
+  // A title can depend on the address ("Training blocks" list vs one "Training block").
+  const title = routes[name].title;
+  titleEl.textContent = typeof title === "function" ? title(params) : title;
   for (const link of tabbarEl.querySelectorAll("a")) {
     link.classList.toggle("active", link.dataset.route === (routes[name].tab || name));
   }
