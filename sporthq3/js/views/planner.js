@@ -10,24 +10,24 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610212125";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610212125";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610212125";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610212125";
+} from "../storage.js?v=202610221143";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610221143";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610221143";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610221143";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202610212125";
-import { overview } from "../utils/stats.js?v=202610212125";
-import { weekLoadNotes } from "../utils/load.js?v=202610212125";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610212125";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610212125";
-import { setTopbarAction } from "../utils/topbar.js?v=202610212125";
-import { showToast } from "../utils/toast.js?v=202610212125";
-import { loadWorkout } from "../utils/workout.js?v=202610212125";
-import { blockWeek } from "./blocks.js?v=202610212125";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610212125";
-import { icon } from "../utils/icons.js?v=202610212125";
+} from "../utils/plan.js?v=202610221143";
+import { overview } from "../utils/stats.js?v=202610221143";
+import { weekLoadNotes } from "../utils/load.js?v=202610221143";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610221143";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610221143";
+import { setTopbarAction } from "../utils/topbar.js?v=202610221143";
+import { showToast } from "../utils/toast.js?v=202610221143";
+import { loadWorkout } from "../utils/workout.js?v=202610221143";
+import { blockWeek } from "./blocks.js?v=202610221143";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610221143";
+import { icon } from "../utils/icons.js?v=202610221143";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)

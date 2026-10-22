@@ -7,16 +7,16 @@ import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions, listRunsOn, linkActivityToRace,
   listPersonalBests, savePersonalBest,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610212125";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610212125";
-import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610212125";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610212125";
-import { sportBadge } from "../utils/plan.js?v=202610212125";
-import { blockWeek } from "./blocks.js?v=202610212125";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610212125";
-import { showToast } from "../utils/toast.js?v=202610212125";
-import { icon } from "../utils/icons.js?v=202610212125";
-import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610212125";
+} from "../storage.js?v=202610221143";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610221143";
+import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610221143";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610221143";
+import { sportBadge } from "../utils/plan.js?v=202610221143";
+import { blockWeek } from "./blocks.js?v=202610221143";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610221143";
+import { showToast } from "../utils/toast.js?v=202610221143";
+import { icon } from "../utils/icons.js?v=202610221143";
+import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610221143";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
