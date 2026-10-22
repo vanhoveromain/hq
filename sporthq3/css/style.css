@@ -1591,3 +1591,37 @@ p.dash-note { margin-bottom: 16px; }
 @media (min-width: 1000px) {
   .view:has(.block-page) { max-width: 760px; }
 }
+
+/* ---------- Step 20e: Me = your athlete profile ----------
+   A dark header glued to the top bar (like race mode), PBs, tiles, Settings. */
+.me-page { display: flex; flex-direction: column; }
+.me-page .dash-tiles { order: 0; }   /* (Home gives its tiles an order) */
+.me-hero {
+  margin: -16px -16px 16px; padding: 18px 16px 22px; border-radius: 0 0 28px 28px;
+  background: var(--race-mode-bg); color: var(--race-mode-text);
+  display: flex; flex-direction: column; gap: 18px;
+}
+.me-who { display: flex; align-items: center; gap: 14px; }
+.me-avatar { flex: none; display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%;
+  background: var(--race-mode-button); color: #ffffff; font-size: 1.6rem; font-weight: 700; }
+.me-name { margin: 0; font-size: 1.45rem; line-height: 1.15; overflow-wrap: anywhere; }
+.me-tagline { margin: 2px 0 0; font-size: 0.85rem; color: var(--race-mode-muted); }
+.me-year { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.me-year > span { display: flex; flex-direction: column; min-width: 0; }
+.me-year .num { font-size: 1.9rem; }
+.me-year-label { font-size: 0.75rem; color: var(--race-mode-muted); }
+.me-pbs { display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none; }
+.me-pbs .dash-head { margin: 0; align-items: center; }
+.me-pbs .section-label { margin: 0; }
+.me-pb-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.me-pb { display: flex; flex-direction: column; min-width: 0; }
+.me-pb-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+.me-pb .num { font-size: 1.35rem; white-space: nowrap; }
+.me-pb .num.is-empty { color: var(--muted); }
+.tile-name { font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.tile-bar { display: block; height: 5px; margin: 4px 0 2px; border-radius: 3px; background: var(--segment-empty); overflow: hidden; }
+.tile-bar span { display: block; height: 100%; border-radius: 3px; background: var(--done-line); }
+@media (max-width: 359px) { .me-pb-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 720px) {
+  .me-hero { margin: 0 0 16px; border-radius: 20px; }
+}

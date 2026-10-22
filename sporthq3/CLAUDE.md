@@ -71,6 +71,10 @@
 19. Race page redesign (2026-10-21, after canvas mock-ups): 19a summary first (hero per state), 19b details form
     behind "Edit", 19c routine as day rows + tappable checklist, 19d "Add your result" on a past race (found in
     your log + PB offer), 19e polish (built 2026-10-21 on the draft, same way as 17: Rom tests locally, then main)
+20. Design round 3 (2026-10-22, after canvas mock-ups): 20a planner week (⋯ menu, one-row header, stat strip,
+    day load tags, warning chips, play button), 20b session menu + one-tap Done that logs it, 20c log form as a
+    pop-up page, 20d consistency (back in the top bar, violet links, block page summary first), 20e Me = athlete
+    profile + polish (built 2026-10-22 on the draft, same way as 17: Rom tests locally, then main)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -117,6 +121,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Plan first, then wait for approval. One milestone at a time.
   Exception asked by Rom on 2026-10-21 for step 17 (design round 2): all of 17a–17e built in one batch on
   the draft (each part still its own commit), Rom tests everything together locally, then merge to main.
+  Same way for 18, 19 and 20 (design rounds after canvas mock-ups).
 - After each milestone: stop, explain how to test it, wait for confirmation, then commit with a clear message.
 - Briefly explain key code decisions (and any JS/SQL concept that may be new).
 - Explain simply, "like I'm 10": plain words, everyday analogies, no unexplained jargon.
@@ -124,6 +129,60 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-22: design round 3 (20; no migration). Rom approved the canvas mock-ups (planner week, session
+  menu, log form, block page, Me) and asked for everything at once on the draft.
+  20a planner (views/planner.js): the top bar has an optional action slot and back link (utils/topbar.js,
+  index.html topbar-left / topbar-right; main.js clears both before every screen; on a laptop the action
+  sits next to the logo because the tabs use the right). Planner "⋯" = Copy last week, Save / apply a week
+  template, Session catalogue, Manage week templates (month view: catalogue + templates); the old top menu
+  and bottom buttons are gone. One-row header (‹ This week + "19 – 25 Oct" › + Week | Month; the switch
+  drops below on < 360px), stat strip (done / planned, hours done / planned = plan.js plannedSeconds, moved
+  there from dashboard.js; warnings count, tap = scroll to the first chip), block + Week review links. Day
+  header = short day + date, "Today" pill, a load tag from rules.js dayLoadTag (heaviest category of the
+  day: Heavy legs / Easy / Upper body; only "other" sessions = no tag; nothing = Rest; cool colours, never
+  green / amber / red). Warnings: rules.js adds `short` to each warning ("Heavy legs Thu → Fri"); a warning
+  about two days of the shown week in a row = one amber chip BETWEEN the two day cards (laptop: inside the
+  later day, the 7 columns leave no gap), others = a chip inside their day; tap = full message (+ mute for
+  habit rules; race rules show the message only). Today's planned session with a recipe gets a round play
+  button (Start workout) next to the card. Skipped = greyed, dashed, "Skipped" (no strikethrough, no red ✕).
+  20b session sheet: openSheet takes `badge` + `subtitle` (sheet.js) and sheetRowHtml (quiet rows). Header =
+  sport badge, name, day · type; a numbers row; ONE main action (planned with a recipe: Start / Resume
+  workout + Done and Log it side by side; "just a sport": Log it; done: Open the logged activity; skipped:
+  Not skipped after all), then rows: Link to what you logged that day ("just a sport", only when there is
+  one), Start with the timer, Move or swap day (asks which), Edit the recipe / Edit this session / Add
+  details, Add to my catalogue, Open the race, Mark as skipped / Not done, Remove from plan (red). Exercises
+  folded under "N exercises". ONE-TAP DONE (Rom's decision, 2026-10-22): "Done, no log" is removed
+  everywhere because a session ticked without a log was missing from the load, stats and block totals.
+  utils/quickLog.js doneInOneTap: something of that sport already logged that day and not linked -> link it
+  (asks if several); else a planned duration (recipe target) -> creates the activity (date, sport, type,
+  recipe name as title, duration, target km for distance sports, the usual shoe by surface, no RPE), links
+  it, toast "Logged: <name> · 50:00" with Undo (deletes the activity, session back to planned); no planned
+  duration or a match -> the log form, pre-filled. Same on Home's "Did you do it?" tick. suggestedShoe moved
+  to quickLog.js (the log form imports it).
+  20c log form (views/logForm.js): body.is-form on log/new and log/<id> hides the tab bar on a phone
+  (laptop keeps the tabs in the top bar); top bar "Cancel" = the screen you came from (topbar.js
+  previousScreen) and the title "New activity" / "Edit activity". When = Today / Yesterday / Other day
+  chips (the date box only shows for another day). Sport = 3 × 2 tiles (radio inputs, icon in the sport
+  colour); Type = chips (radio), first 5 + "More…" for long lists (running), "Just a run (no type)" kept.
+  Numbers card: big duration (one-line hint), distance + D+ side by side, stairs, live pace / speed; the
+  card hides for a football match (the match card has the minutes). RPE = 10 colour buttons cool to warm
+  with "5 · Moderate" on the right (5 per row under 360px). Shoes / Title / Notes folded into rows that show
+  their value. Save pinned at the bottom (safe area); Delete as a red text button above it.
+  20d consistency: routes' back(params) in main.js = "‹ Me / Plan / Races / Blocks / Shoes / Catalogue" in
+  the top bar instead of the logo on every screen inside another one (in-page back links removed). Edit in
+  the top bar on the block and race pages (the race page's Edit pill is gone). Global `a { color: accent }`
+  (no browser-default blue). Block page (views/blocks.js): summary first (Current / Upcoming / Past pill,
+  dates, name, one segment per week, goal, recap, "Write the recap" when it just ended), stats in the
+  number font, sessions per sport as one bar in the sport colours + legend, races and week notes as rows;
+  the form opens with Edit (Cancel = back to the summary); a new block opens on the form. Number style on
+  shoe km and the blocks list. Settings has no numbers worth styling (left as is).
+  20e Me (views/me.js): dark header glued to the top bar (initial avatar, name = the account's display name
+  if it has one, else the email before the @ with a capital; no new column; "Hybrid athlete"), this year's
+  km run / sessions / hours; Personal bests 5k / 10k / Half / Marathon (best of typed records and runs,
+  same rule as Body; "≈" for a scaled run; "—" when none); tiles: Body & goals (weight + progress bar to
+  the goal), Shoes (Home's tile: most worn pair, amber when worn), Training blocks (current block week x of
+  y, else the next one), Season (Home's tile; dashboard.js exports drawFootball / drawShoes); Settings row +
+  gear in the top bar. Checked light / dark, 320px and laptop.
 - 2026-10-21: race page redesign (19, views/races.js; no migration). Rom approved three canvas mock-ups
   (upcoming / past with result / past without result). 19a raceState(): upcoming (date from today, registered /
   to register / potential) = dark block like Home's race mode (status pill, date · place, name, countdown

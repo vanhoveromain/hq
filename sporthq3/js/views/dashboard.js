@@ -483,7 +483,7 @@ async function drawWeight(el) {
     <span class="tile-note">${note}</span>`;
 }
 
-async function drawFootball(el, today) {
+export async function drawFootball(el, today) {
   const season = currentSeason(today);
   const matches = await listMatchesBetween(season.from, season.to);
   if (!matches.length) return;
@@ -498,7 +498,7 @@ async function drawFootball(el, today) {
 }
 
 // The most worn pair still in use (amber note when it's getting worn).
-async function drawShoes(el) {
+export async function drawShoes(el) {
   const [shoes, distances] = await Promise.all([listShoes(), getShoeDistances()]);
   const inUse = shoes.filter((s) => !s.retired)
     .map((shoe) => ({ shoe, km: (distances[shoe.id] || { km: 0 }).km }))
