@@ -152,8 +152,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   the reason, sets ticked, Log it anyway / Discard. 22c releaseWorkoutOf(ids) before Remove from plan, Replace
   this week, removeRaceRoutine, deleting a race, Mark as skipped (planner) and Skip (Home): nothing ticked ->
   cleared silently; sets ticked -> asks "Discard it too?" (Cancel keeps it for Log it anyway). 22d `a.button`
-  (and hero link buttons) never underlined. One-tap Done on a session with a workout in progress is not
-  covered (the orphan row then says "already done").
+  (and hero link buttons) never underlined. One-tap Done (utils/quickLog.js) also calls releaseWorkoutOf
+  before it marks the session done (same question when sets are ticked; kept -> the row says "already done").
 - 2026-10-22: change what a planned session is (21; no migration). Rom: he often plans "just running"
   before knowing the session and didn't want to add a new one and remove the old one. utils/changeSession.js:
   chooseFromCatalogue(session) = sheet of that sport's catalogue sessions (not archived) + "Another sport…"

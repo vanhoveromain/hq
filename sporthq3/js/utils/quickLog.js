@@ -17,6 +17,7 @@ import { getSport, getSessionType, sessionTypeLabel, shoeSurfaceFor } from "../r
 import { sessionName, sessionDetails, completeSession, reopenSession } from "./plan.js?v=202610221205";
 import { openSheet } from "./sheet.js?v=202610221205";
 import { showToast } from "./toast.js?v=202610221205";
+import { releaseWorkoutOf } from "./savedWorkout.js?v=202610221205";
 import { escapeHtml, formatDuration, formatKm } from "./format.js?v=202610221205";
 
 // The pair of shoes to suggest for a run: the last one you ran in with the
@@ -43,6 +44,7 @@ export async function doneInOneTap(session, { onChange = () => {} } = {}) {
   if (candidates.length) {
     const activity = candidates.length === 1 ? candidates[0] : await pickActivity(candidates);
     if (!activity) return null;
+    releaseWorkoutOf([session.id]); // a workout started on this session is no longer needed (asks if sets are ticked)
     await completeSession(session, activity.id);
     showToast(`${sessionName(session)} linked to what you logged`, {
       actionLabel: "Undo",
@@ -77,6 +79,7 @@ export async function doneInOneTap(session, { onChange = () => {} } = {}) {
     shoe_id: fields.includes("shoe") ? await shoeFor(session.session_type) : null,
   };
   const saved = await saveActivity(activity, null);
+  releaseWorkoutOf([session.id]);
   await completeSession(session, saved.id);
   showToast(`Logged: ${sessionName(session)} · ${formatDuration(duration)}`, {
     actionLabel: "Undo",
