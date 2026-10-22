@@ -88,6 +88,9 @@ function render() {
   const isWorkout = name === "workout";
   tabbarEl.hidden = isWorkout;
   document.body.classList.toggle("is-workout", isWorkout);
+  // The log form (new / edit) is like a pop-up page (20c): "Cancel" in the
+  // top bar, a Save bar pinned at the bottom, no tab bar on a phone (CSS).
+  document.body.classList.toggle("is-form", name === "log" && Boolean(params[0]) && params[0] !== "stats");
   titleEl.textContent = routes[name].title;
   for (const link of tabbarEl.querySelectorAll("a")) {
     link.classList.toggle("active", link.dataset.route === (routes[name].tab || name));

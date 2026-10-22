@@ -436,24 +436,95 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .row-3 input { margin-bottom: 0; }
 
-/* RPE: ten big round buttons (5 per row). The real radio input is hidden
-   visually but still there, so the keyboard and screen readers work. */
-.rpe-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px; }
-.rpe-option { margin: 0; position: relative; }
-.rpe-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.rpe-option span {
-  display: grid;
-  place-items: center;
-  height: 44px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  font-weight: 700;
-  cursor: pointer;
+/* ---------- Log form (20c): tiles and chips, numbers in one card,
+   extras folded, Save pinned at the bottom ---------- */
+.log-form { display: flex; flex-direction: column; gap: 18px; }
+.log-form > * { margin: 0; }
+.log-form .card { margin: 0; }
+.form-section { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.form-section > legend.section-label { margin: 0 2px 8px; padding: 0; }
+.form-section input[type="date"] { margin: 0; }
+.chip-button[aria-pressed="true"] .icon { color: inherit; }
+.chip-button .icon { width: 1em; height: 1em; vertical-align: -0.15em; }
+/* Sport tiles: 3 per row, the line icon in the sport colour */
+.sport-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.sport-tile { position: relative; margin: 0; font-weight: 600; }
+.sport-tile input, .type-chip input, .rpe-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.sport-tile span {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 66px; padding: 6px;
+  border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: 0.82rem; text-align: center; line-height: 1.15; cursor: pointer;
 }
-.rpe-option input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-.rpe-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
-.rpe .hint { margin: 0; }
+.sport-tile .icon { width: 22px; height: 22px; color: var(--sport); }
+.sport-tile input:checked + span { border: 2px solid var(--sport); background: color-mix(in srgb, var(--sport) 16%, var(--surface)); }
+.sport-tile input:focus-visible + span, .type-chip input:focus-visible + span, .rpe-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Type chips (radio buttons that look like chips) */
+.type-chip { margin: 0; font-weight: 500; }
+.type-chip[hidden] { display: none; }
+.type-chip span {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); font-size: 0.9rem; cursor: pointer;
+}
+.type-chip input:checked + span { background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
+.more-chip { border: 0; background: none; color: var(--accent); font-weight: 600; }
+/* The numbers card: duration big, distance + D+ side by side */
+.numbers-card { display: flex; flex-direction: column; gap: 12px; }
+.numbers-card label { font-size: 0.85rem; }
+.numbers-card .hint { margin: 4px 0 0; }
+.numbers-card input { margin: 0; }
+.big-input { font-family: var(--font-num); font-size: 1.9rem; font-weight: 700; padding: 8px 14px; min-height: 58px;
+  border: 2px solid var(--accent); background: var(--surface); font-variant-numeric: tabular-nums; }
+.mid-input { font-family: var(--font-num); font-size: 1.45rem; font-weight: 700; padding: 8px 12px; min-height: 52px; font-variant-numeric: tabular-nums; }
+.number-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.number-pair:not(:has(> :not([hidden]))) { display: none; }
+.numbers-card .speed { margin: 0; }
+.log-form .match-card { margin: 0; padding: 16px; background: var(--surface); border: 1px solid var(--card-border); }
+.log-form .match-card input { background: var(--bg); }
+.match-card > legend.section-label { float: left; width: 100%; margin: 0 0 10px; }
+.match-card .row-3 { clear: both; align-items: end; }
+/* RPE: ten colour buttons, cool to warm (never green / amber / red) */
+/* the legend on the left, "5 · Moderate" on the right of the same line */
+.form-section.rpe { display: block; }
+.form-section.rpe > legend.section-label { float: left; margin: 0 2px 0; }
+.rpe-what { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.rpe-label { margin: 0 2px 0 0; text-align: right; font-size: 0.85rem; font-weight: 600; line-height: 1.5; color: var(--accent); }
+.rpe-label.is-empty { color: var(--muted); font-weight: 400; }
+.rpe-grid { clear: both; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; padding-top: 8px; }
+@media (max-width: 359px) { .rpe-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.rpe-option { margin: 0; position: relative; }
+.rpe-option span {
+  display: grid; place-items: center; height: 48px; border-radius: 10px; font-size: 1.15rem; cursor: pointer;
+  background: var(--rpe-bg); color: var(--rpe-text);
+}
+.rpe-option.level-low  { --rpe-bg: var(--rpe-low-bg);  --rpe-text: var(--rpe-low-text); }
+.rpe-option.level-mid  { --rpe-bg: var(--rpe-mid-bg);  --rpe-text: var(--rpe-mid-text); }
+.rpe-option.level-high { --rpe-bg: var(--rpe-high-bg); --rpe-text: var(--rpe-high-text); }
+.rpe-option.level-max  { --rpe-bg: var(--rpe-max-bg);  --rpe-text: var(--rpe-max-text); }
+.rpe-option input:checked + span { background: var(--rpe-text); color: var(--rpe-bg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rpe-text) 30%, transparent); font-size: 1.3rem; }
+.rpe-option.level-max input:checked + span { background: var(--text); color: var(--bg); }
+/* Shoes / Title / Notes folded into rows */
+.fold-card { padding: 0; overflow: hidden; }
+.fold-row + .fold-row { border-top: 1px solid var(--border); }
+.fold-row > summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px; cursor: pointer; }
+.fold-row > summary::-webkit-details-marker { display: none; }
+.fold-row > summary > .icon:first-child { color: var(--muted); }
+.fold-label { font-weight: 500; }
+.fold-value { flex: 1; min-width: 0; text-align: right; color: var(--muted); font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fold-chevron { color: var(--muted); transition: transform 0.2s ease; }
+.fold-row[open] .fold-chevron { transform: rotate(180deg); }
+.fold-body { padding: 0 16px 14px; }
+.fold-body select, .fold-body input, .fold-body textarea { margin: 0; }
+.delete-activity { align-self: center; margin: 0; display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; }
+/* Save pinned at the bottom of the screen (safe-area aware) */
+.save-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--bg) 94%, transparent); border-top: 1px solid var(--border);
+}
+.save-bar .button { display: block; max-width: 688px; margin: 0 auto; min-height: 54px; border-radius: 16px; font-size: 1.05rem; font-weight: 700; }
+.is-form .view { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+.is-form .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+@media (max-width: 999px) { .is-form .tabbar { display: none; } }
 
 .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .form-actions .button.primary { flex: 1 1 100%; }

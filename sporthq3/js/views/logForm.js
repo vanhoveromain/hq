@@ -8,12 +8,13 @@ import {
   updatePlannedSession,
 } from "../storage.js?v=202610212125";
 import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610212125";
-import { todayISO, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610212125";
+import { todayISO, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610212125";
 import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610212125";
 import { openSheet } from "../utils/sheet.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610212125";
-import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610212125";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202610212125";
+import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202610212125";
 import { icon } from "../utils/icons.js?v=202610212125";
 import { suggestedShoe } from "../utils/quickLog.js?v=202610212125";
 
@@ -75,120 +76,154 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
   };
   const stats = (activity && activity.match_stats) || {};
 
+  // Step 20c: like a pop-up page. "Cancel" in the top bar (back where you came
+  // from), the quick choices as tiles and chips, the numbers in one card,
+  // shoes / title / notes folded away, and a Save bar pinned at the bottom.
+  const cancelTo = previousScreen(fromPlan ? `#/planner/${startOfWeek(planned.session_date)}` : "#/log");
+  setTopbarBack({ label: "Cancel", chevron: false, href: cancelTo });
+  document.getElementById("page-title").textContent = isEdit ? "Edit activity" : "New activity";
+
   container.innerHTML = `
-    <form id="activity-form" class="card form" novalidate>
-      <h2>${isEdit ? "Edit activity" : "New activity"}</h2>
+    <form id="activity-form" class="form log-form" novalidate>
       ${fromPlan ? `<p class="plan-banner">${icon("calendar")} For your planned <strong>${escapeHtml(sessionName(planned))}</strong> · ${escapeHtml(formatDayLabel(planned.session_date))}</p>` : ""}
       ${workout ? `<p class="plan-banner">${icon("dumbbell")} Workout finished${ticksTotal(workout) ? ` · ${ticksDone(workout)} / ${ticksTotal(workout)} sets ticked` : ""}.
         Check the duration, add how it felt, then save.
         <a href="#/workout/${escapeHtml(planned.id)}">‹ Back to the workout</a></p>` : ""}
 
-      <label for="f-date">Date</label>
-      <input id="f-date" name="activity_date" type="date" required value="${escapeHtml(a.activity_date)}">
+      <fieldset class="form-section">
+        <legend class="section-label">When</legend>
+        <div class="chip-row" id="when-chips">
+          <button type="button" class="chip-button" data-when="today">Today</button>
+          <button type="button" class="chip-button" data-when="yesterday">Yesterday</button>
+          <button type="button" class="chip-button" data-when="other">${icon("calendar")} Other day</button>
+        </div>
+        <label for="f-date" class="visually-hidden">Date</label>
+        <input id="f-date" name="activity_date" type="date" required value="${escapeHtml(a.activity_date)}">
+      </fieldset>
 
-      <label for="f-sport">Sport</label>
-      <select id="f-sport" name="sport">
-        ${SPORTS.map((s) => `<option value="${s.key}">${escapeHtml(s.label)}</option>`).join("")}
-      </select>
+      <fieldset class="form-section">
+        <legend class="section-label">Sport</legend>
+        <div class="sport-tiles">
+          ${SPORTS.map((s) => `
+            <label class="sport-tile sport-${s.key}">
+              <input type="radio" name="sport" value="${s.key}">
+              <span>${sportIcon(s.key)}${escapeHtml(s.label)}</span>
+            </label>`).join("")}
+        </div>
+      </fieldset>
 
-      <label for="f-type">Session type</label>
-      <select id="f-type" name="session_type"></select>
+      <fieldset class="form-section">
+        <legend class="section-label">Type</legend>
+        <div class="chip-row type-chips" id="type-chips"></div>
+      </fieldset>
 
-      <label for="f-title">Title <span class="muted">(optional)</span></label>
-      <input id="f-title" name="title" type="text" autocomplete="off" maxlength="200"
-             placeholder="e.g. Trail avec Lélé" value="${escapeHtml(a.title || "")}">
-
-      <!-- Hidden for a match: there, "Minutes played" in the match card is the duration. -->
-      <div id="duration-box">
-        <label for="f-duration">Duration</label>
-        <input id="f-duration" name="duration" type="text" inputmode="decimal" autocomplete="off"
-               placeholder="45:00 or 1:02:30" required value="${escapeHtml(formatDuration(a.duration_s))}">
-        <p class="hint">Minutes:seconds or hours:minutes:seconds. You can type ":", "," or "."
-          between the numbers (45.30 = 45 min 30 s, 1,02,30 = 1 h 2 min 30 s). "45" alone = 45 minutes.</p>
+      <div class="card numbers-card">
+        <!-- Hidden for a match: there, "Minutes played" in the match card is the duration. -->
+        <div id="duration-box">
+          <label for="f-duration">Duration</label>
+          <input id="f-duration" class="big-input" name="duration" type="text" inputmode="decimal" autocomplete="off"
+                 placeholder="45:00" required value="${escapeHtml(formatDuration(a.duration_s))}">
+          <p class="hint">45:00 or 1:02:30 · "45" = 45 min</p>
+        </div>
+        <div class="number-pair">
+          <div data-field="distance">
+            <label for="f-distance">Distance <span class="muted">km</span></label>
+            <input id="f-distance" class="mid-input" name="distance_km" type="text" inputmode="decimal" autocomplete="off"
+                   value="${a.distance_km ?? ""}">
+          </div>
+          <div data-field="elevation">
+            <label for="f-elevation">D+ <span class="muted">m</span></label>
+            <input id="f-elevation" class="mid-input" name="elevation_m" type="number" inputmode="numeric" min="0" step="1"
+                   value="${a.elevation_m ?? ""}">
+          </div>
+          <div data-field="stairs">
+            <label for="f-stairs">Stairs climbed</label>
+            <input id="f-stairs" class="mid-input" name="stairs_climbed" type="number" inputmode="numeric" min="0" step="1"
+                   value="${a.stairs_climbed ?? ""}">
+          </div>
+        </div>
+        <p id="f-speed" class="speed" aria-live="polite"></p>
       </div>
 
-      <div data-field="distance">
-        <label for="f-distance">Distance (km)</label>
-        <input id="f-distance" name="distance_km" type="text" inputmode="decimal" autocomplete="off"
-               value="${a.distance_km ?? ""}">
-      </div>
-
-      <div data-field="elevation">
-        <label for="f-elevation">Climbing, D+ (m)</label>
-        <input id="f-elevation" name="elevation_m" type="number" inputmode="numeric" min="0" step="1"
-               value="${a.elevation_m ?? ""}">
-      </div>
-
-      <div data-field="shoe">
-        <label for="f-shoe">Shoes</label>
-        <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : null)}</select>
-      </div>
-
-      <div data-field="stairs">
-        <label for="f-stairs">Stairs climbed</label>
-        <input id="f-stairs" name="stairs_climbed" type="number" inputmode="numeric" min="0" step="1"
-               value="${a.stairs_climbed ?? ""}">
-      </div>
-
-      <p id="f-speed" class="speed" aria-live="polite"></p>
-
-      <fieldset id="match-card" class="match-card">
-        <legend>${sportIcon("football")} Match card</legend>
+      <fieldset id="match-card" class="card match-card">
+        <legend class="section-label">${sportIcon("football")} Match card</legend>
         <label for="f-opponent">Opponent</label>
         <input id="f-opponent" name="opponent" type="text" autocomplete="off" value="${escapeHtml(stats.opponent || "")}">
         <div class="row-3">
           <div>
             <label for="f-minutes">Minutes played</label>
-            <input id="f-minutes" name="minutes_played" type="number" inputmode="numeric" min="0" max="200"
+            <input id="f-minutes" class="mid-input" name="minutes_played" type="number" inputmode="numeric" min="0" max="200"
                    value="${stats.minutes_played ?? ""}">
           </div>
           <div>
             <label for="f-goals">Goals</label>
-            <input id="f-goals" name="goals" type="number" inputmode="numeric" min="0" value="${stats.goals ?? 0}">
+            <input id="f-goals" class="mid-input" name="goals" type="number" inputmode="numeric" min="0" value="${stats.goals ?? 0}">
           </div>
           <div>
             <label for="f-assists">Assists</label>
-            <input id="f-assists" name="assists" type="number" inputmode="numeric" min="0" value="${stats.assists ?? 0}">
+            <input id="f-assists" class="mid-input" name="assists" type="number" inputmode="numeric" min="0" value="${stats.assists ?? 0}">
           </div>
         </div>
       </fieldset>
 
-      <fieldset class="rpe">
-        <legend>How hard did it feel? (RPE)</legend>
+      <fieldset class="form-section rpe">
+        <legend class="section-label">How hard? <span class="rpe-what">(RPE)</span></legend>
+        <p id="rpe-label" class="rpe-label"></p>
         <div class="rpe-grid">
           ${Object.keys(RPE_LABELS).map((n) => `
-            <label class="rpe-option">
+            <label class="rpe-option level-${rpeLevel(Number(n))}">
               <input type="radio" name="rpe" value="${n}" ${String(a.rpe) === n ? "checked" : ""}>
-              <span>${n}</span>
+              <span class="num">${n}</span>
             </label>`).join("")}
         </div>
-        <p id="rpe-label" class="hint"></p>
       </fieldset>
 
-      <label for="f-notes">Notes</label>
-      <textarea id="f-notes" name="notes" rows="3">${escapeHtml(a.notes || "")}</textarea>
+      <!-- Less used: folded into rows, tap to open -->
+      <div class="card fold-card">
+        <details class="fold-row" data-field="shoe">
+          <summary>${icon("footprints")}<span class="fold-label">Shoes</span><span class="fold-value" id="shoe-value"></span>${icon("chevron-down", { className: "fold-chevron" })}</summary>
+          <div class="fold-body">
+            <label for="f-shoe" class="visually-hidden">Shoes</label>
+            <select id="f-shoe" name="shoe_id">${shoeOptionsHtml(shoes, isEdit ? a.shoe_id : null)}</select>
+          </div>
+        </details>
+        <details class="fold-row" id="title-fold">
+          <summary>${icon("pencil")}<span class="fold-label">Title</span><span class="fold-value" id="title-value"></span>${icon("chevron-down", { className: "fold-chevron" })}</summary>
+          <div class="fold-body">
+            <label for="f-title" class="visually-hidden">Title</label>
+            <input id="f-title" name="title" type="text" autocomplete="off" maxlength="200"
+                   placeholder="e.g. Trail avec Lélé" value="${escapeHtml(a.title || "")}">
+          </div>
+        </details>
+        <details class="fold-row" id="notes-fold">
+          <summary>${icon("list")}<span class="fold-label">Notes</span><span class="fold-value" id="notes-value"></span>${icon("chevron-down", { className: "fold-chevron" })}</summary>
+          <div class="fold-body">
+            <label for="f-notes" class="visually-hidden">Notes</label>
+            <textarea id="f-notes" name="notes" rows="3">${escapeHtml(a.notes || "")}</textarea>
+          </div>
+        </details>
+      </div>
 
       <p id="form-status" class="status" role="status"></p>
+      ${isEdit ? `<button type="button" id="delete" class="button danger delete-activity">${icon("trash-2")} Delete this activity</button>` : ""}
 
-      <div class="form-actions">
+      <div class="save-bar">
         <button type="submit" class="button primary">${isEdit ? "Save changes" : "Save activity"}</button>
-        <a href="#/log" class="button">Cancel</a>
-        ${isEdit ? `<button type="button" id="delete" class="button danger">Delete</button>` : ""}
       </div>
     </form>
   `;
 
   const form = container.querySelector("#activity-form");
-  const sportSelect = form.querySelector("#f-sport");
-  const typeSelect = form.querySelector("#f-type");
   const status = form.querySelector("#form-status");
 
-  sportSelect.value = getSport(a.sport) ? a.sport : SPORTS[0].key;
+  form.elements.sport.value = getSport(a.sport) ? a.sport : SPORTS[0].key;
   form.dataset.editing = isEdit || fromPlan ? "yes" : "no";
   fillSessionTypes(form, isEdit || fromPlan ? (a.session_type ?? null) : undefined);
   updateVisibleFields(form);
   updateSpeed(form);
   updateRpeLabel(form);
+  setUpWhen(form);
+  setUpFolds(form);
 
   // A new run: pre-select the pair for its surface (trail session -> trail pair).
   // It follows the session type until you pick a shoe yourself.
@@ -196,22 +231,25 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
   let shoePickedByHand = false;
   const suggestShoe = () => {
     if (isEdit || shoePickedByHand) return;
-    shoeSelect.value = suggestedShoe(shoes, recentShoeIds, shoeSurfaceFor(typeSelect.value)) || "";
+    shoeSelect.value = suggestedShoe(shoes, recentShoeIds, shoeSurfaceFor(form.elements.session_type.value)) || "";
+    showShoe(form);
   };
   suggestShoe();
-  shoeSelect.addEventListener("change", () => { shoePickedByHand = true; });
+  shoeSelect.addEventListener("change", () => { shoePickedByHand = true; showShoe(form); });
 
   // When the sport changes: new list of session types, new boxes.
-  sportSelect.addEventListener("change", () => {
-    form.dataset.editing = "no"; // a new sport starts on its first type
-    fillSessionTypes(form, undefined);
-    updateVisibleFields(form);
-    updateSpeed(form);
-    suggestShoe();
-  });
-  typeSelect.addEventListener("change", () => {
-    updateVisibleFields(form);
-    suggestShoe();
+  form.addEventListener("change", (event) => {
+    if (event.target.name === "sport") {
+      form.dataset.editing = "no"; // a new sport starts on its first type
+      fillSessionTypes(form, undefined);
+      updateVisibleFields(form);
+      updateSpeed(form);
+      suggestShoe();
+    }
+    if (event.target.name === "session_type") {
+      updateVisibleFields(form);
+      suggestShoe();
+    }
   });
 
   // Recalculate the pace while you type.
@@ -288,19 +326,70 @@ function drawForm(container, activity, shoes, planned, recentShoeIds) {
   }
 }
 
-// Fills the "Session type" list for the chosen sport, plus a last choice
-// without a type ("Just a run"): it counts as "other" for the rules.
+// Fills the "Type" chips for the chosen sport, plus a last choice without a
+// type ("Just a run"): it counts as "other" for the rules. Sports with many
+// types show the first few and a "More…" chip (20c).
+const TYPES_SHOWN = 5;
 function fillSessionTypes(form, selectedKey) {
   const sport = getSport(form.elements.sport.value);
-  const typeSelect = form.elements.session_type;
-  typeSelect.innerHTML = sport.sessionTypes
-    .map((t) => `<option value="${t.key}">${escapeHtml(t.label)}</option>`)
-    .join("") + `<option value="">${escapeHtml(noTypeLabel(sport))}</option>`;
-  if (selectedKey === null && form.dataset.editing === "yes") {
-    typeSelect.value = ""; // an existing activity saved without a type
-  } else if (selectedKey && sport.sessionTypes.some((t) => t.key === selectedKey)) {
-    typeSelect.value = selectedKey;
-  }
+  const chips = form.querySelector("#type-chips");
+  const choices = [...sport.sessionTypes.map((t) => ({ key: t.key, label: t.label })), { key: "", label: noTypeLabel(sport) }];
+  let value = sport.sessionTypes[0] ? sport.sessionTypes[0].key : "";
+  if (selectedKey === null && form.dataset.editing === "yes") value = ""; // an existing activity saved without a type
+  else if (selectedKey && sport.sessionTypes.some((t) => t.key === selectedKey)) value = selectedKey;
+  const index = choices.findIndex((c) => c.key === value);
+  const folded = choices.length > TYPES_SHOWN + 1 && index < TYPES_SHOWN;
+  chips.innerHTML = choices.map((c, i) => `
+    <label class="type-chip" ${folded && i >= TYPES_SHOWN ? "hidden" : ""}>
+      <input type="radio" name="session_type" value="${escapeHtml(c.key)}" ${c.key === value ? "checked" : ""}>
+      <span>${escapeHtml(c.label)}</span>
+    </label>`).join("")
+    + (folded ? `<button type="button" class="chip-button more-chip" id="more-types">More…</button>` : "");
+  const more = chips.querySelector("#more-types");
+  if (more) more.addEventListener("click", () => {
+    chips.querySelectorAll(".type-chip[hidden]").forEach((chip) => { chip.hidden = false; });
+    more.remove();
+  });
+}
+
+// "Today" / "Yesterday" / "Other day" (20c): the chips fill the date box,
+// which only shows for another day.
+function setUpWhen(form) {
+  const input = form.elements.activity_date;
+  const today = todayISO();
+  const yesterday = addDays(today, -1);
+  const chips = [...form.querySelectorAll("[data-when]")];
+  const show = (which) => {
+    chips.forEach((chip) => chip.setAttribute("aria-pressed", String(chip.dataset.when === which)));
+    input.hidden = which !== "other";
+  };
+  show(input.value === today ? "today" : input.value === yesterday ? "yesterday" : "other");
+  form.querySelector("#when-chips").addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-when]");
+    if (!chip) return;
+    if (chip.dataset.when === "today") input.value = today;
+    if (chip.dataset.when === "yesterday") input.value = yesterday;
+    show(chip.dataset.when);
+    if (chip.dataset.when === "other") input.focus();
+  });
+}
+
+// The folded rows show what's inside them (shoe name, title, start of the notes).
+function setUpFolds(form) {
+  const update = () => {
+    const title = form.elements.title.value.trim();
+    const notes = form.elements.notes.value.trim();
+    form.querySelector("#title-value").textContent = title || "optional";
+    form.querySelector("#notes-value").textContent = notes ? (notes.length > 28 ? notes.slice(0, 28) + "…" : notes) : "add";
+  };
+  form.elements.title.addEventListener("input", update);
+  form.elements.notes.addEventListener("input", update);
+  update();
+  showShoe(form);
+}
+function showShoe(form) {
+  const select = form.querySelector("#f-shoe");
+  form.querySelector("#shoe-value").textContent = select.value ? select.selectedOptions[0].textContent : "none";
 }
 
 // "Just a run (no type)", "Just a swim (no type)"…
@@ -319,6 +408,8 @@ function updateVisibleFields(form) {
   const isMatch = Boolean(type && type.matchCard);
   form.querySelector("#match-card").hidden = !isMatch;
   form.querySelector("#duration-box").hidden = isMatch;
+  // A match with no other numbers (football): no empty numbers card.
+  form.querySelector(".numbers-card").hidden = isMatch && !sport.fields.length;
 }
 
 function updateSpeed(form) {
@@ -331,7 +422,9 @@ function updateSpeed(form) {
 
 function updateRpeLabel(form) {
   const chosen = form.querySelector('input[name="rpe"]:checked');
-  form.querySelector("#rpe-label").textContent = chosen ? RPE_LABELS[chosen.value] : "Optional";
+  const label = form.querySelector("#rpe-label");
+  label.textContent = chosen ? `${chosen.value} · ${RPE_LABELS[chosen.value]}` : "Optional";
+  label.classList.toggle("is-empty", !chosen);
 }
 
 // Reads the form into { activity, matchStats } or { error: "message" }.

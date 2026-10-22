@@ -35,7 +35,21 @@ export function setTopbarBack({ href = "#/dashboard", label, chevron = true, onC
   brandEl().hidden = true;
 }
 
+// The screen you came from (for the log form's "Cancel"): main.js calls
+// clearTopbar() before every screen, so that's where it's noted.
+let previousHash = "";
+let currentHash = "";
+
+// Where "Cancel" / "back" should go: the previous screen, else `fallback`.
+export function previousScreen(fallback) {
+  return previousHash && previousHash !== currentHash ? previousHash : fallback;
+}
+
 export function clearTopbar() {
+  if (window.location.hash !== currentHash) {
+    previousHash = currentHash;
+    currentHash = window.location.hash;
+  }
   if (actionEl()) actionEl().innerHTML = "";
   const link = backEl();
   if (link) {
