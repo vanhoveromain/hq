@@ -6,12 +6,12 @@
 // activities you logged that day that weren't planned ("extra").
 
 import {
-  listPlannedSessions, listActivitiesBetween, listSessionTemplates,
+  listPlannedSessions, listActivitiesBetween,
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
 } from "../storage.js?v=202610221143";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610221143";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610221143";
 import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610221143";
 import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610221143";
 import {
@@ -22,6 +22,10 @@ import { overview } from "../utils/stats.js?v=202610221143";
 import { weekLoadNotes } from "../utils/load.js?v=202610221143";
 import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610221143";
 import { doneInOneTap } from "../utils/quickLog.js?v=202610221143";
+import {
+  pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
+  chooseFromCatalogue, clearSession, catalogueCountLabel,
+} from "../utils/changeSession.js?v=202610221143";
 import { setTopbarAction } from "../utils/topbar.js?v=202610221143";
 import { showToast } from "../utils/toast.js?v=202610221143";
 import { loadWorkout } from "../utils/workout.js?v=202610221143";
@@ -494,7 +498,7 @@ async function drawWeek(container, monday) {
   async function addSession(day) {
     let templates = [];
     try {
-      templates = (await listSessionTemplates()).filter((t) => !t.archived);
+      templates = await activeTemplates();
     } catch (error) {
       return showToast("Could not load the catalogue: " + error.message);
     }
@@ -525,18 +529,14 @@ async function drawWeek(container, monday) {
 
   // Two short steps instead of one long list: first the sport, then a session
   // of that sport ("just a sport" or a catalogue recipe). Returns "sport:<key>",
-  // "template:<id>", "custom" or null (closed).
+  // "template:<id>", "custom" or null (closed). The two sheets live in
+  // utils/changeSession.js (also used by "Choose from the catalogue", 21).
   async function pickSessionToAdd(day, templates) {
     while (true) {
-      const sportItems = SPORTS.map((sport) => {
-        const count = templates.filter((t) => t.sport === sport.key).length;
-        const hint = count ? `<span class="muted small"> · ${count} in catalogue</span>` : "";
-        return `<button type="button" class="sheet-item" data-value="${sport.key}">${sportIcon(sport.key)} ${escapeHtml(sport.label)}${hint}</button>`;
-      }).join("");
-      const sportKey = await openSheet({
+      const sportKey = await pickSport({
         title: `Add on ${formatDayLabel(day)}`,
-        html: `
-          <div class="sheet-list">${sportItems}</div>
+        templates,
+        extraHtml: `
           <h3 class="sheet-subtitle">Something else</h3>
           <div class="sheet-actions">
             <button type="button" class="button" data-value="custom">${icon("pencil")} Custom session (not in the catalogue)</button>
@@ -545,22 +545,11 @@ async function drawWeek(container, monday) {
       if (!sportKey || sportKey === "custom") return sportKey;
 
       // Nothing in the catalogue for this sport: "just a sport" is the only choice.
-      const items = templates.filter((t) => t.sport === sportKey);
-      if (!items.length) return `sport:${sportKey}`;
+      if (!templates.some((t) => t.sport === sportKey)) return `sport:${sportKey}`;
 
       const sport = SPORTS.find((x) => x.key === sportKey);
-      const choice = await openSheet({
-        title: `${sport.label} on ${formatDayLabel(day)}`,
-        html: `
-          <div class="sheet-list">
-            <button type="button" class="sheet-item" data-value="sport:${sport.key}">Just ${escapeHtml(sport.label.toLowerCase())} (no recipe)</button>
-          </div>
-          <h3 class="sheet-subtitle">From your catalogue</h3>
-          <div class="sheet-list">${items.map((t) =>
-            `<button type="button" class="sheet-item" data-value="template:${t.id}">${escapeHtml(t.name)}</button>`).join("")}</div>
-          <div class="sheet-actions">
-            <button type="button" class="button" data-value="back">← Back</button>
-          </div>`,
+      const choice = await pickFromSport({
+        title: `${sport.label} on ${formatDayLabel(day)}`, sportKey, templates, withPlain: true,
       });
       if (choice !== "back") return choice;
     }
@@ -583,6 +572,10 @@ async function drawWeek(container, monday) {
     const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
     const loggedThatDay = activities.some((a) => a.activity_date === session.session_date
       && a.sport === session.sport && !linkedIds.has(a.id));
+    // "Just a sport": the catalogue's sessions of that sport, to pick one (21).
+    let templates = [];
+    if (canChooseFromCatalogue(session)) templates = await activeTemplates().catch(() => []);
+    const catalogueHint = catalogueCountLabel(session.sport, templates);
 
     let main = "";
     if (isPlanned && withRecipe) {
@@ -600,6 +593,7 @@ async function drawWeek(container, monday) {
     }
 
     const rows = [];
+    if (catalogueHint) rows.push(sheetRowHtml("choose", "library", "Choose from the catalogue", { hint: catalogueHint }));
     if (isPlanned && !withRecipe && loggedThatDay) rows.push(sheetRowHtml("done", "check", "Link to what you logged that day"));
     if (isPlanned && !withRecipe) rows.push(sheetRowHtml("start", "play", inProgress ? "Resume with the timer" : "Start with the timer"));
     if (!isDone) rows.push(sheetRowHtml("move", "calendar", "Move or swap day"));
@@ -607,6 +601,7 @@ async function drawWeek(container, monday) {
     if (isCustomSession(session) && !isDone && !isCancelled) rows.push(sheetRowHtml("edit-custom", "pencil", "Edit this session"));
     if (isPlainSession(session) && isPlanned) rows.push(sheetRowHtml("edit-custom", "pencil", "Add details (name, exercises…)"));
     if (isCustomSession(session)) rows.push(sheetRowHtml("to-catalogue", "library", "Add to my catalogue"));
+    if (canClearSession(session)) rows.push(sheetRowHtml("clear", "undo-2", `Clear the session (just ${sportLabel(session.sport).toLowerCase()})`));
     if (session.race_id) rows.push(sheetRowHtml("race", "flag", "Open the race"));
     if (isPlanned) rows.push(sheetRowHtml("cancel", "x", "Mark as skipped"));
     if (isDone) rows.push(sheetRowHtml("reopen", "undo-2", "Not done"));
@@ -635,12 +630,15 @@ async function drawWeek(container, monday) {
       if (choice === "recipe") window.location.hash = `#/catalogue/${session.template_id}`;
       if (choice === "edit-custom") window.location.hash = `#/custom/${session.id}`;
       if (choice === "to-catalogue") await sendToCatalogue(session);
+      if (choice === "choose") await chooseFromCatalogue(session, { onChange: load, templates });
+      if (choice === "clear") await clearSession(session, { onChange: load });
       if (choice === "race") window.location.hash = `#/races/${session.race_id}`;
       if (choice === "delete" && window.confirm("Remove this session from the plan?")) await deletePlannedSession(session.id);
     } catch (error) {
       showToast("Something went wrong: " + error.message);
     }
-    if (choice && !["open-activity", "recipe", "start", "log", "race", "edit-custom"].includes(choice)) await load();
+    // ("choose" / "clear" redraw themselves, and again after an Undo.)
+    if (choice && !["open-activity", "recipe", "start", "log", "race", "edit-custom", "choose", "clear"].includes(choice)) await load();
   }
 
   // "Move or swap day": move this one session, or swap the whole day.
