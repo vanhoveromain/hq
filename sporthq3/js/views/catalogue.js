@@ -31,7 +31,6 @@ export function render(container, { params = [] } = {}) {
 
 async function renderList(container) {
   container.innerHTML = `
-    <a href="#/planner" class="back-link">‹ Plan</a>
     <a href="#/catalogue/new" class="button primary add-button">+ New session</a>
     <div id="catalogue-list"><p class="muted">Loading…</p></div>
   `;

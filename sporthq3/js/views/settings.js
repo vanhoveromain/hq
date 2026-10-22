@@ -10,7 +10,6 @@ const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
 
 export function render(container, { user }) {
   container.innerHTML = `
-    <a href="#/me" class="back-link">‹ Me</a>
 
     <section class="card">
       <h2>Account</h2>

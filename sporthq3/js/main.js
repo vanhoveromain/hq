@@ -20,25 +20,32 @@ import * as weekTemplatesView from "./views/weekTemplates.js?v=202610212125";
 import * as workoutView from "./views/workout.js?v=202610212125";
 import * as customSessionView from "./views/customSession.js?v=202610212125";
 import * as reviewView from "./views/review.js?v=202610212125";
-import { clearTopbar } from "./utils/topbar.js?v=202610212125";
+import { clearTopbar, setTopbarBack } from "./utils/topbar.js?v=202610212125";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
+// `back(params)` = the "‹ Back" link in the top bar instead of the logo (20d),
+// for screens inside another one. The log form sets its own "Cancel".
+const toMe = () => ({ href: "#/me", label: "Me" });
+const toPlan = () => ({ href: "#/planner", label: "Plan" });
 const routes = {
   dashboard: { title: "Home", view: dashboardView },
   planner:   { title: "Weekly plan", view: plannerView },
   log:       { title: "Activity log", view: logView },
-  races:     { title: "Races", view: racesView },
+  races:     { title: "Races", view: racesView, back: (p) => (p[0] ? { href: "#/races", label: "Races" } : null) },
   me:        { title: "Me", view: meView },
-  shoes:     { title: "Shoes", view: shoesView, tab: "me" },
-  blocks:    { title: "Training blocks", view: blocksView, tab: "me" },
-  body:      { title: "Body & goals", view: bodyView, tab: "me" },
-  settings:  { title: "Settings", view: settingsView, tab: "me" },
-  catalogue: { title: "Session catalogue", view: catalogueView, tab: "planner" },
-  weektemplates: { title: "Week templates", view: weekTemplatesView, tab: "planner" },
+  shoes:     { title: "Shoes", view: shoesView, tab: "me", back: (p) => (p[0] ? { href: "#/shoes", label: "Shoes" } : toMe()) },
+  blocks:    { title: "Training blocks", view: blocksView, tab: "me", back: (p) => (p[0] ? { href: "#/blocks", label: "Blocks" } : toMe()) },
+  body:      { title: "Body & goals", view: bodyView, tab: "me", back: toMe },
+  settings:  { title: "Settings", view: settingsView, tab: "me", back: toMe },
+  catalogue: { title: "Session catalogue", view: catalogueView, tab: "planner",
+               back: (p) => (p[0] ? { href: "#/catalogue", label: "Catalogue" } : toPlan()) },
+  weektemplates: { title: "Week templates", view: weekTemplatesView, tab: "planner", back: toPlan },
   workout:   { title: "Workout", view: workoutView, tab: "planner" },
-  custom:    { title: "Custom session", view: customSessionView, tab: "planner" },
-  review:    { title: "Week review", view: reviewView, tab: "planner" },
+  custom:    { title: "Custom session", view: customSessionView, tab: "planner",
+               back: (p) => ({ href: p[0] === "new" && p[1] ? `#/planner/${p[1]}` : "#/planner", label: "Plan" }) },
+  review:    { title: "Week review", view: reviewView, tab: "planner",
+               back: (p) => ({ href: p[0] ? `#/planner/${p[0]}` : "#/planner", label: "Plan" }) },
 };
 const DEFAULT_ROUTE = "dashboard";
 
@@ -97,6 +104,8 @@ function render() {
   }
   window.scrollTo(0, 0); // a new screen starts at the top
   clearTopbar(); // the new screen sets its own top-bar action / back link
+  const back = routes[name].back && routes[name].back(params);
+  if (back) setTopbarBack(back);
   routes[name].view.render(viewEl, { user: currentUser, params });
 }
 

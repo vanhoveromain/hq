@@ -24,7 +24,6 @@ const RANGES = [
 
 export function render(container) {
   container.innerHTML = `
-    <a href="#/me" class="back-link">‹ Me</a>
     <!-- Laptop: weight + PBs on the left, the chart on the right -->
     <div class="body-page">
       <section class="card" id="weight-card"><p class="muted">Loading…</p></section>

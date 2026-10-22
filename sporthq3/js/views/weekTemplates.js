@@ -16,7 +16,6 @@ const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function render(container) {
   container.innerHTML = `
-    <a href="#/planner" class="back-link">‹ Plan</a>
     <div id="templates-list"><p class="muted">Loading…</p></div>
   `;
   const listEl = container.querySelector("#templates-list");

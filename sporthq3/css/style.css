@@ -138,6 +138,8 @@ body {
 }
 
 h1, h2 { line-height: 1.2; margin: 0 0 8px; }
+/* Links are violet everywhere (20d): no browser-default blue / purple. */
+a { color: var(--accent); }
 
 /* Line icons (utils/icons.js, step 17a): inline SVG drawn in the text colour,
    sized with the text around them. */
@@ -1423,7 +1425,7 @@ p.dash-note { margin-bottom: 16px; }
    Phone = one column (summary, then routine + checklist); laptop = summary
    or form left, routine + checklist as a sidebar right. */
 .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 16px; }
-.race-topline { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.race-topline { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 8px; }
 .race-topline .back-link { margin: 0; min-height: 44px; display: inline-flex; align-items: center; }
 .pill-button {
   display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
@@ -1562,3 +1564,30 @@ p.dash-note { margin-bottom: 16px; }
   .stats-filters { flex-direction: row; justify-content: space-between; flex-wrap: wrap; }
 }
 .block-card.is-current { border-left: 4px solid var(--accent-strong); }
+
+/* ---------- Step 20d: block page (summary first) + list rows ---------- */
+.race-pill.is-accent { background: var(--accent); color: var(--accent-text); }
+.block-sum .race-sum-bar p { align-items: baseline; }
+.block-sum .race-sum-bar .num { font-size: 1.25rem; }
+.block-sum .week-segments span { height: 8px; border-radius: 4px; }
+.block-sum .race-sum-box p { margin: 2px 0 0; }
+.block-page .section-label { margin-top: 4px; }
+#block-stats .section-label { margin: 0 0 10px; }
+.list-badge { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); }
+.list-days { flex: none; color: var(--accent); }
+.list-days .num { font-size: 1.4rem; }
+.list-days .unit { color: var(--accent); }
+.note-week { color: var(--accent); font-weight: 600; }
+.block-note .race-run-text { gap: 2px; }
+/* Sport mix: one bar in the sport colours + a legend */
+.mix-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 4px 0 8px; background: var(--segment-empty); }
+.mix-bar span { background: var(--sport); }
+.mix-legend { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.85rem; }
+.mix-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.mix-legend .num { font-size: 1rem; }
+.mix-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sport); }
+.shoe-km .num { font-size: 1.35rem; }
+@media (min-width: 1000px) {
+  .view:has(.block-page) { max-width: 760px; }
+}

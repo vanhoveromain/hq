@@ -12,6 +12,7 @@ import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils
 import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { icon } from "../utils/icons.js?v=202610212125";
+import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610212125";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -44,7 +45,6 @@ export function blockWeek(block, date) {
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
-    <a href="#/me" class="back-link">‹ Me</a>
     <a href="#/blocks/new" class="button primary add-button">+ New block</a>
     <div id="block-list"><p class="muted">Loading…</p></div>
     </div>
@@ -84,7 +84,7 @@ function blockCardHtml(block, today) {
       <strong>${escapeHtml(block.name)}</strong>
       <span class="muted small">${formatDayLabel(block.start_date)} → ${formatDayLabel(block.end_date)}</span>
       ${isCurrent ? `
-        <span class="small"><strong>Week ${week.current} / ${week.total}</strong> · ${daysLeft} day${daysLeft === 1 ? "" : "s"} left</span>
+        <span class="small">Week ${numHtml(week.current)}<span class="unit"> / ${week.total}</span> · ${daysLeft} day${daysLeft === 1 ? "" : "s"} left</span>
         <span class="bar" role="img" aria-label="${percent}% done"><span class="bar-fill" style="width: ${percent}%"></span></span>` : ""}
       ${goal ? `<span class="small block-goal">${icon("target")} ${escapeHtml(goal)}</span>` : ""}
       ${block.races.length ? `<span class="small">${icon("flag")} ${block.races.map((r) => escapeHtml(r.name)).join(", ")}</span>` : ""}
@@ -97,7 +97,10 @@ function blockCardHtml(block, today) {
 // One block
 // ---------------------------------------------------------------------
 
-async function renderBlock(container, blockId) {
+// Step 20d: a summary first (pill, name, dates, one segment per week, goal,
+// stats, races, week notes); the form only behind "Edit" in the top bar.
+// A new block opens straight on the form. `edit` = show the form.
+async function renderBlock(container, blockId, { edit = false } = {}) {
   container.innerHTML = `<p class="muted">Loading…</p>`;
   let block = null;
   let allBlocks = [];
@@ -114,26 +117,86 @@ async function renderBlock(container, blockId) {
     return;
   }
 
-  const isEdit = Boolean(block);
   const today = todayISO();
+  const isEdit = Boolean(block);
+  if (isEdit && !edit) {
+    setTopbarAction({ text: "Edit", label: "Edit this block", onClick: () => renderBlock(container, block.id, { edit: true }) });
+    container.innerHTML = `
+      <div class="block-page">
+        ${blockSummaryHtml(block, today)}
+        <section class="card" id="block-stats"><p class="muted">Counting…</p></section>
+        ${blockRacesHtml(block, today)}
+        <div id="block-notes"></div>
+      </div>`;
+    const recapButton = container.querySelector("#write-recap");
+    if (recapButton) recapButton.addEventListener("click", () => renderBlock(container, block.id, { edit: true }));
+    drawStats(container.querySelector("#block-stats"), container.querySelector("#block-notes"), block, today);
+    return;
+  }
+  clearTopbarAction();
+  drawBlockForm(container, block, allBlocks, today);
+}
+
+// The summary card: Current / Upcoming / Past, name, dates, weeks, goal, recap.
+function blockSummaryHtml(block, today) {
+  const isCurrent = block.start_date <= today && block.end_date >= today;
+  const isPast = block.end_date < today;
+  const week = blockWeek(block, isCurrent ? today : block.end_date);
+  const total = week.total;
+  const segments = Array.from({ length: total }, (_, i) => {
+    const n = i + 1;
+    const state = isPast || (isCurrent && n < week.current) ? "is-done" : isCurrent && n === week.current ? "is-now" : "";
+    return `<span class="${state}"></span>`;
+  }).join("");
+  let weeksLine = "";
+  if (isCurrent) {
+    const left = total - week.current;
+    weeksLine = `<span>Week ${numHtml(week.current)} of ${total}</span>
+      <span class="muted">${left ? `${left} week${left === 1 ? "" : "s"} left` : "last week"}</span>`;
+  } else if (isPast) {
+    weeksLine = `<span>${numHtml(total)} <span class="unit">weeks</span></span><span class="muted">ended</span>`;
+  } else {
+    const days = daysBetween(today, block.start_date);
+    weeksLine = `<span>${numHtml(total)} <span class="unit">weeks</span></span>
+      <span class="muted">starts in ${days} day${days === 1 ? "" : "s"}</span>`;
+  }
+  const pill = isCurrent ? `<span class="race-pill is-accent">Current</span>`
+    : isPast ? `<span class="race-pill">Past</span>` : `<span class="race-pill">Upcoming</span>`;
+  return `
+    <section class="card race-sum block-sum">
+      <p class="race-sum-meta">${pill}<span>${formatDayLabel(block.start_date)} → ${formatDayLabel(block.end_date)}</span></p>
+      <h2 class="race-sum-name">${escapeHtml(block.name)}</h2>
+      <div class="race-sum-bar"><p>${weeksLine}</p><span class="week-segments" aria-hidden="true">${segments}</span></div>
+      ${block.goal ? `<div class="race-sum-box"><span class="race-sum-label-top">Goal</span><p class="pre-line">${escapeHtml(block.goal)}</p></div>` : ""}
+      ${block.recap ? `<div class="race-sum-box"><span class="race-sum-label-top">Recap</span><p class="pre-line">${escapeHtml(block.recap)}</p></div>` : ""}
+      ${needsRecap(block, today) ? `<p class="plan-banner">${icon("square-pen")} This block just ended: write your recap while it's fresh. What worked, what didn't?</p>
+        <button type="button" class="button primary" id="write-recap">Write the recap</button>` : ""}
+    </section>`;
+}
+
+// The block's races as rows (tap = the race).
+function blockRacesHtml(block, today) {
+  if (!block.races.length) return "";
+  const rows = [...block.races]
+    .sort((x, y) => (x.race_date || "").localeCompare(y.race_date || ""))
+    .map((r) => {
+      const days = r.race_date && r.race_date >= today ? daysBetween(today, r.race_date) : null;
+      const detail = [r.race_date ? formatDayLabel(r.race_date) : "no date",
+        RACE_STATUSES[r.status] ? RACE_STATUSES[r.status].label : "",
+        r.result_time_s ? formatDuration(r.result_time_s) : r.goal_time_s ? `goal ${formatDuration(r.goal_time_s)}` : ""].filter(Boolean).join(" · ");
+      return `<a class="race-run" href="#/races/${r.id}">
+        <span class="list-badge">${icon("flag")}</span>
+        <span class="race-run-text"><strong>${escapeHtml(r.name)}</strong><span class="muted small">${escapeHtml(detail)}</span></span>
+        ${days !== null ? `<span class="list-days">${numHtml(days, "d")}</span>` : icon("chevron-right", { className: "is-muted" })}
+      </a>`;
+    }).join("");
+  return `<h3 class="section-label">${block.races.length === 1 ? "Race" : "Races"}</h3><section class="card race-runs">${rows}</section>`;
+}
+
+function drawBlockForm(container, block, allBlocks, today) {
+  const isEdit = Boolean(block);
   const b = block || { start_date: today };
-  const ended = isEdit && block.end_date < today;
-
   container.innerHTML = `
-    <a href="#/blocks" class="back-link">‹ Training blocks</a>
-    ${isEdit ? `
-      <h2 class="race-title">${escapeHtml(block.name)}</h2>
-      <p class="muted race-subtitle">${formatDayLabel(block.start_date)} → ${formatDayLabel(block.end_date)}
-        ${block.start_date <= today && !ended ? ` · <strong>week ${blockWeek(block, today).current} / ${blockWeek(block, today).total}</strong>` : ""}</p>
-      ${needsRecap(block, today) ? `<p class="plan-banner">${icon("square-pen")} This block just ended: write your recap below while it's fresh. What worked, what didn't?</p>` : ""}
-      <section class="card" id="block-stats"><p class="muted">Counting…</p></section>
-      ${block.races.length ? `<section class="card"><h2>Races</h2><ul class="routine-list">${block.races
-        .sort((x, y) => (x.race_date || "").localeCompare(y.race_date || ""))
-        .map((r) => `<li><a href="#/races/${r.id}">${escapeHtml(r.name)}</a>
-          <span class="muted small">${r.race_date ? formatDayLabel(r.race_date) : "no date"} · ${RACE_STATUSES[r.status] ? RACE_STATUSES[r.status].label : ""}
-          ${r.result_time_s ? ` · ${formatDuration(r.result_time_s)}` : r.goal_time_s ? ` · goal ${formatDuration(r.goal_time_s)}` : ""}</span></li>`).join("")}
-        </ul></section>` : ""}` : ""}
-
     <form id="block-form" class="card form" novalidate>
       <h2>${isEdit ? "Block details" : "New block"}</h2>
 
@@ -161,7 +224,7 @@ async function renderBlock(container, blockId) {
       <p id="block-status" class="status" role="status"></p>
       <div class="form-actions">
         <button type="submit" class="button primary">${isEdit ? "Save changes" : "Save block"}</button>
-        <a href="#/blocks" class="button">Cancel</a>
+        <button type="button" class="button" id="cancel">Cancel</button>
         ${isEdit ? `<button type="button" id="delete" class="button danger">Delete</button>` : ""}
       </div>
     </form>
@@ -171,6 +234,10 @@ async function renderBlock(container, blockId) {
   const status = form.querySelector("#block-status");
   form.addEventListener("input", () => {
     if (status.classList.contains("error")) showStatus(status, "", "");
+  });
+  form.querySelector("#cancel").addEventListener("click", () => {
+    if (isEdit) renderBlock(container, block.id);
+    else window.location.hash = "#/blocks";
   });
 
   form.addEventListener("submit", async (event) => {
@@ -218,8 +285,6 @@ async function renderBlock(container, blockId) {
       }
     });
   }
-
-  if (isEdit) drawStats(container.querySelector("#block-stats"), block, today);
 }
 
 function showStatus(element, text, kind) {
@@ -230,9 +295,9 @@ function showStatus(element, text, kind) {
 
 // ---------- Stats from the log ----------
 
-async function drawStats(el, block, today) {
+async function drawStats(el, notesEl, block, today) {
   if (block.start_date > today) {
-    el.innerHTML = `<h2>Stats</h2><p class="muted">The block hasn't started yet.</p>`;
+    el.innerHTML = `<h3 class="section-label">Stats</h3><p class="muted">The block hasn't started yet.</p>`;
     return;
   }
   // A current block is counted up to today.
@@ -262,30 +327,43 @@ async function drawStats(el, block, today) {
   const round1 = (n) => n.toLocaleString("en-GB", { maximumFractionDigits: 1 });
 
   el.innerHTML = `
-    <h2>Stats ${block.end_date >= today ? `<span class="muted small">so far</span>` : ""}</h2>
+    <h3 class="section-label">${block.end_date >= today ? "So far" : "Stats"}</h3>
     ${activities.length ? `
       <div class="stat-grid">
-        <div><strong>${numHtml(activities.length)}</strong><span class="muted small">sessions · ${round1(activities.length / weeks)}/week</span></div>
-        <div><strong>${numHtml(round1(runKm), "km")}</strong><span class="muted small">running · ${round1(runKm / weeks)}/week</span></div>
+        <div><strong>${numHtml(activities.length)}</strong><span class="muted small">sessions · ${round1(activities.length / weeks)} a week</span></div>
+        <div><strong>${numHtml(round1(runKm), "km")}</strong><span class="muted small">running · ${round1(runKm / weeks)} a week</span></div>
         <div><strong>${numHtml(elevation.toLocaleString("en-GB"), "m")}</strong><span class="muted small">D+</span></div>
         <div><strong>${numHtml(formatHours(seconds))}</strong><span class="muted small">total time</span></div>
       </div>
-      <p class="small">${perSport.map((x) => `${sportIcon(x.sport.key)} ${escapeHtml(x.sport.label)} ${x.count}`).join(" · ")}</p>
+      ${sportMixHtml(perSport, activities.length)}
       ${activities.some((a) => a.duration_s == null) ? `<p class="hint">Some sessions have no duration (e.g. imported football), so total time is a minimum.</p>` : ""}`
     : `<p class="muted">Nothing logged in this period.</p>`}
-    ${reviewsHtml(reviews)}
   `;
+  notesEl.innerHTML = reviewsHtml(reviews);
 }
 
-// The weekly review notes of the block (helps to write the recap).
+// Sessions per sport as ONE bar in the sport colours + a small legend (20d),
+// instead of a long sentence.
+function sportMixHtml(perSport, total) {
+  if (!perSport.length) return "";
+  return `
+    <div class="mix-bar" role="img" aria-label="${escapeHtml(perSport.map((x) => `${x.sport.label} ${x.count}`).join(", "))}">
+      ${perSport.map((x) => `<span class="sport-${x.sport.key}" style="width: ${(x.count / total) * 100}%"></span>`).join("")}
+    </div>
+    <ul class="mix-legend">${perSport.map((x) => `
+      <li class="sport-${x.sport.key}"><span class="mix-dot"></span>${escapeHtml(x.sport.label)} ${numHtml(x.count)}</li>`).join("")}</ul>`;
+}
+
+// The weekly review notes of the block (helps to write the recap), as rows.
 function reviewsHtml(reviews) {
   const withNotes = reviews.filter((r) => r.review_notes);
   if (!withNotes.length) return "";
   return `
-    <h3 class="sheet-subtitle">${icon("notebook-pen")} Your week notes</h3>
-    ${withNotes.map((r) => `
-      <div class="block-review">
-        <a href="#/review/${r.week_start}" class="small">${escapeHtml(formatWeekLabel(r.week_start))}</a>
-        <p>${escapeHtml(r.review_notes)}</p>
-      </div>`).join("")}`;
+    <h3 class="section-label">Your week notes</h3>
+    <section class="card race-runs">${withNotes.map((r) => `
+      <a class="race-run block-note" href="#/review/${r.week_start}">
+        <span class="race-run-text"><span class="small note-week">${escapeHtml(formatWeekLabel(r.week_start))}</span>
+          <span class="pre-line">${escapeHtml(r.review_notes)}</span></span>
+        ${icon("chevron-right", { className: "is-muted" })}
+      </a>`).join("")}</section>`;
 }

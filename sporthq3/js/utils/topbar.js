@@ -23,6 +23,11 @@ export function setTopbarAction({ iconName = "", text = "", label = "", onClick 
   slot.querySelector("button").addEventListener("click", onClick);
 }
 
+// Removes the action (e.g. "Edit" while its form is open).
+export function clearTopbarAction() {
+  if (actionEl()) actionEl().innerHTML = "";
+}
+
 // "‹ Me" on the left instead of the logo. `href` = where it goes; or
 // `onClick` for something else (the log form's "Cancel").
 export function setTopbarBack({ href = "#/dashboard", label, chevron = true, onClick = null }) {

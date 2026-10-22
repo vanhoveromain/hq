@@ -16,6 +16,7 @@ import { blockWeek } from "./blocks.js?v=202610212125";
 import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { icon } from "../utils/icons.js?v=202610212125";
+import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610212125";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -188,12 +189,10 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
   // A past race without a result: the run from the log that looks like it.
   const found = race && needsResult(race, today) ? findRaceRun(race, runs, dayRuns) : null;
 
+  clearTopbarAction(); // the summary below sets "Edit" again
   container.innerHTML = `
     <div class="race-page">
-    <div class="race-topline">
-      <a href="#/races" class="back-link">‹ Races</a>
-      ${race && !showForm ? `<button type="button" class="pill-button" id="edit-race">${icon("pencil")} Edit</button>` : ""}
-    </div>
+
     <div class="race-layout">
       <div class="race-main">
         ${showForm ? raceFormHtml(race, blocks) : summaryHtml(race, state, block, runs, today, found)}
@@ -221,10 +220,11 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
 }
 
 function setUpSummary(container, race, refresh) {
-  container.querySelector("#edit-race").addEventListener("click", () => {
+  // "Edit" sits in the top bar (20d), like the block page.
+  setTopbarAction({ text: "Edit", label: "Edit this race", onClick: () => {
     window.scrollTo(0, 0);
     refresh({ editing: true });
-  });
+  } });
   const setDate = container.querySelector("#set-date");
   if (setDate) setDate.addEventListener("click", () => refresh({ editing: true, focus: "r-date" }));
 }

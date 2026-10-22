@@ -6,7 +6,7 @@
 import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610212125";
 import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610212125";
 import { formatDayLabel } from "../utils/dates.js?v=202610212125";
-import { escapeHtml } from "../utils/format.js?v=202610212125";
+import { numHtml, escapeHtml } from "../utils/format.js?v=202610212125";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderForm(container, null);
@@ -20,7 +20,6 @@ export function render(container, { params = [] } = {}) {
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
-    <a href="#/me" class="back-link">‹ Me</a>
     <a href="#/shoes/new" class="button primary add-button">+ Add a pair</a>
     <div id="shoe-list"><p class="muted">Loading…</p></div>
     </div>
@@ -69,7 +68,7 @@ function shoeCardHtml(shoe, { km, runs }) {
         <strong>${escapeHtml(shoe.name)}</strong>
         ${surface ? `<span class="chip">${surface.label}</span>` : ""}
       </span>
-      <span class="shoe-km"><strong>${km.toFixed(1)} km</strong>
+      <span class="shoe-km">${numHtml(km.toFixed(1), "km")}
         <span class="muted">· ${runs} run${runs === 1 ? "" : "s"}</span></span>
       <span class="bar" role="img" aria-label="${percent}% of ${SHOE_RULES.replaceKm} km">
         <span class="bar-fill" style="width: ${percent}%"></span>
