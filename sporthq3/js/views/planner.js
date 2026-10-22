@@ -15,12 +15,13 @@ import { SPORTS, sportIcon, sessionTypeLabel, getSport, checkTrainingRules, LOAD
 import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610212125";
 import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610212125";
 import {
-  sessionName, sessionDetails, completeSession, reopenSession, calendarItems, daySummary,
+  sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
 } from "../utils/plan.js?v=202610212125";
 import { overview } from "../utils/stats.js?v=202610212125";
 import { weekLoadNotes } from "../utils/load.js?v=202610212125";
 import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610212125";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610212125";
 import { setTopbarAction } from "../utils/topbar.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { loadWorkout } from "../utils/workout.js?v=202610212125";
@@ -566,47 +567,71 @@ async function drawWeek(container, monday) {
   }
 
 
-  // ----- tap a session: actions -----
+  // ----- tap a session: actions (20b) -----
+  // One main action (planned with a recipe: Start workout; "just a sport":
+  // Log it), then Done + Log it side by side, then quiet rows for the rest.
   async function sessionMenu(session) {
     if (!session) return;
     const details = sessionDetails(session);
     const isDone = session.status === "done";
     const isCancelled = session.status === "cancelled";
+    const isPlanned = session.status === "planned";
     const workout = loadWorkout();
     const inProgress = workout && workout.plannedId === session.id;
+    const withRecipe = isPlanned && !isPlainSession(session);
+    // Something of that sport already logged that day (and not linked yet)?
+    const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
+    const loggedThatDay = activities.some((a) => a.activity_date === session.session_date
+      && a.sport === session.sport && !linkedIds.has(a.id));
+
+    let main = "";
+    if (isPlanned && withRecipe) {
+      main = `<button type="button" class="button primary sheet-main" data-value="start">${icon("play")} ${inProgress ? "Resume" : "Start"} workout</button>
+        <div class="sheet-pair">
+          <button type="button" class="button" data-value="done">${icon("check")} Done</button>
+          <button type="button" class="button" data-value="log">${icon("square-pen")} Log it</button>
+        </div>`;
+    } else if (isPlanned) {
+      main = `<button type="button" class="button primary sheet-main" data-value="log">${icon("square-pen")} Log it</button>`;
+    } else if (isDone && session.activity_id) {
+      main = `<button type="button" class="button primary sheet-main" data-value="open-activity">Open the logged activity</button>`;
+    } else if (isCancelled) {
+      main = `<button type="button" class="button sheet-main" data-value="uncancel">${icon("undo-2")} Not skipped after all</button>`;
+    }
+
+    const rows = [];
+    if (isPlanned && !withRecipe && loggedThatDay) rows.push(sheetRowHtml("done", "check", "Link to what you logged that day"));
+    if (isPlanned && !withRecipe) rows.push(sheetRowHtml("start", "play", inProgress ? "Resume with the timer" : "Start with the timer"));
+    if (!isDone) rows.push(sheetRowHtml("move", "calendar", "Move or swap day"));
+    if (session.template_id) rows.push(sheetRowHtml("recipe", "library", "Edit the recipe"));
+    if (isCustomSession(session) && !isDone && !isCancelled) rows.push(sheetRowHtml("edit-custom", "pencil", "Edit this session"));
+    if (isPlainSession(session) && isPlanned) rows.push(sheetRowHtml("edit-custom", "pencil", "Add details (name, exercises…)"));
+    if (isCustomSession(session)) rows.push(sheetRowHtml("to-catalogue", "library", "Add to my catalogue"));
+    if (session.race_id) rows.push(sheetRowHtml("race", "flag", "Open the race"));
+    if (isPlanned) rows.push(sheetRowHtml("cancel", "x", "Mark as skipped"));
+    if (isDone) rows.push(sheetRowHtml("reopen", "undo-2", "Not done"));
+    rows.push(sheetRowHtml("delete", "trash-2", "Remove from plan", { danger: true }));
 
     const choice = await openSheet({
       title: sessionName(session),
+      badge: sportBadge(session.sport, sportIcon),
+      subtitle: sheetSubtitle(session),
       html: `
+        ${factsHtml(session, details)}
         ${detailsHtml(session, details)}
-        <div class="sheet-actions">
-          ${!isDone && !isCancelled ? `<button type="button" class="button primary" data-value="start">${icon("play")} ${inProgress ? "Resume" : "Start"} workout</button>
-          <button type="button" class="button" data-value="done">${icon("check", { className: "is-ok" })} Done</button>` : ""}
-          ${isDone ? `<button type="button" class="button" data-value="reopen">${icon("undo-2")} Not done</button>` : ""}
-          ${isDone && session.activity_id ? `<button type="button" class="button" data-value="open-activity">Open the logged activity</button>` : ""}
-          ${!isDone ? (isCancelled
-            ? `<button type="button" class="button" data-value="uncancel">${icon("undo-2")} Un-cancel</button>`
-            : `<button type="button" class="button" data-value="cancel">${icon("x", { className: "is-error" })} Cancel (skipped)</button>`) : ""}
-          ${!isDone ? `<button type="button" class="button" data-value="move">${icon("calendar")} Move to another day</button>
-          <button type="button" class="button" data-value="swap">${icon("arrow-left-right")} Swap this day with another day</button>` : ""}
-          ${session.template_id ? `<button type="button" class="button" data-value="recipe">${icon("library")} Edit the recipe</button>` : ""}
-          ${isCustomSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">${icon("pencil")} Edit this session</button>` : ""}
-          ${isPlainSession(session) && !isDone && !isCancelled ? `<button type="button" class="button" data-value="edit-custom">${icon("pencil")} Add details (name, exercises…)</button>` : ""}
-          ${isCustomSession(session) ? `<button type="button" class="button" data-value="to-catalogue">${icon("library")} Add to my catalogue</button>` : ""}
-          ${session.race_id ? `<button type="button" class="button" data-value="race">${icon("flag")} Open the race</button>` : ""}
-          <button type="button" class="button danger" data-value="delete">${icon("trash-2")} Remove from plan</button>
-        </div>`,
+        ${main ? `<div class="sheet-actions">${main}</div>` : ""}
+        <div class="sheet-rows">${rows.join("")}</div>`,
     });
 
     try {
       if (choice === "start") window.location.hash = `#/workout/${session.id}`;
-      if (choice === "done") await markDone(session);
+      if (choice === "log") window.location.hash = `#/log/new/${session.id}`;
+      if (choice === "done") await doneInOneTap(session, { onChange: load });
       if (choice === "reopen") await reopenSession(session);
       if (choice === "open-activity") window.location.hash = `#/log/${session.activity_id}`;
       if (choice === "cancel") await updatePlannedSession(session.id, { status: "cancelled" });
       if (choice === "uncancel") await updatePlannedSession(session.id, { status: "planned" });
-      if (choice === "move") await moveSession(session);
-      if (choice === "swap") await swapDay(session.session_date);
+      if (choice === "move") await moveOrSwap(session);
       if (choice === "recipe") window.location.hash = `#/catalogue/${session.template_id}`;
       if (choice === "edit-custom") window.location.hash = `#/custom/${session.id}`;
       if (choice === "to-catalogue") await sendToCatalogue(session);
@@ -615,7 +640,20 @@ async function drawWeek(container, monday) {
     } catch (error) {
       showToast("Something went wrong: " + error.message);
     }
-    if (choice && !["open-activity", "recipe", "start", "race", "edit-custom"].includes(choice)) await load();
+    if (choice && !["open-activity", "recipe", "start", "log", "race", "edit-custom"].includes(choice)) await load();
+  }
+
+  // "Move or swap day": move this one session, or swap the whole day.
+  async function moveOrSwap(session) {
+    const choice = await openSheet({
+      title: "Move or swap",
+      html: `<div class="sheet-rows">
+        ${sheetRowHtml("move", "calendar", "Move this session to another day")}
+        ${sheetRowHtml("swap", "arrow-left-right", "Swap the whole day with another day")}
+      </div>`,
+    });
+    if (choice === "move") await moveSession(session);
+    if (choice === "swap") await swapDay(session.session_date);
   }
 
   // A custom session -> a recipe in the catalogue (asks for the name).
@@ -639,36 +677,6 @@ async function drawWeek(container, monday) {
     if (!name) return;
     await addToCatalogue(session, name);
     showToast(`"${name}" added to your catalogue`);
-  }
-
-  // Done: link to an activity of that day, log it now, or just tick it.
-  async function markDone(session) {
-    const sameDay = activities.filter((a) => a.activity_date === session.session_date);
-    const linked = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
-    const candidates = sameDay.filter((a) => !linked.has(a.id));
-    // Same sport first: the most likely match.
-    candidates.sort((a, b) => (b.sport === session.sport) - (a.sport === session.sport));
-
-    const choice = await openSheet({
-      title: "Mark as done",
-      html: `
-        ${candidates.length ? `<h3 class="sheet-subtitle">Link to what you logged that day</h3>
-          <div class="sheet-list">${candidates.map((a) => `
-            <button type="button" class="sheet-item" data-value="link:${a.id}">
-              ${sportIcon(a.sport)} ${escapeHtml(a.title || sessionTypeLabel(a.sport, a.session_type))}
-              <span class="muted small">${[formatDuration(a.duration_s), a.distance_km != null ? formatKm(a.distance_km) : ""].filter(Boolean).join(" · ")}</span>
-            </button>`).join("")}</div>` : ""}
-        <div class="sheet-actions">
-          <button type="button" class="button primary" data-value="log">${icon("square-pen")} Log it now</button>
-          <button type="button" class="button" data-value="tick">${icon("check", { className: "is-ok" })} Just mark done (no log)</button>
-        </div>`,
-    });
-    if (!choice) return;
-    if (choice === "log") {
-      window.location.hash = `#/log/new/${session.id}`; // the log form links it after saving
-      return;
-    }
-    await completeSession(session, choice.startsWith("link:") ? choice.slice(5) : null);
   }
 
   async function moveSession(session) {
@@ -796,20 +804,45 @@ function extraCardHtml(a) {
     </button>`;
 }
 
-// The recipe (or frozen photo) inside the action sheet.
-function detailsHtml(session, details) {
+// Under the sheet's title: "Wed 21 Oct · Upper body + core (· frozen when done)".
+function sheetSubtitle(session) {
   const sport = getSport(session.sport);
+  const kind = session.session_type ? sessionTypeLabel(session.sport, session.session_type) : (sport ? sport.label : "");
+  return [formatDayLabel(session.session_date), kind, session.status === "done" && session.details ? "frozen when done" : ""]
+    .filter(Boolean).join(" · ");
+}
+
+// The session's numbers in one row (20b): exercises, sets, minutes, km; a
+// done session shows what was logged instead.
+function factsHtml(session, details) {
+  const facts = [];
+  const a = session.status === "done" ? session.activity : null;
+  if (a) {
+    if (a.duration_s) facts.push(numHtml(formatDuration(a.duration_s), "logged"));
+    if (a.distance_km != null) facts.push(numHtml(formatKm(a.distance_km)));
+    if (a.rpe) facts.push(numHtml(a.rpe, "RPE"));
+  } else if (details) {
+    const exercises = details.exercises || [];
+    const sets = exercises.reduce((sum, e) => sum + (Number(e.sets) || 0), 0) * (details.rounds || 1);
+    if (exercises.length) facts.push(numHtml(exercises.length, exercises.length === 1 ? "exercise" : "exercises"));
+    if (sets) facts.push(numHtml(sets, "sets"));
+    if (details.rounds) facts.push(numHtml(details.rounds, "rounds"));
+    if (details.target_duration_s) facts.push(numHtml(Math.round(details.target_duration_s / 60), "min"));
+    if (details.target_distance_km) facts.push(numHtml(Number(details.target_distance_km), "km"));
+  }
+  return facts.length ? `<div class="sheet-facts">${facts.map((f) => `<span>${f}</span>`).join("")}</div>` : "";
+}
+
+// The recipe (or frozen photo) inside the action sheet: description, and the
+// exercises folded away (tap to see them).
+function detailsHtml(session, details) {
+  if (!details) return "";
   const lines = [];
-  lines.push(`<p class="muted small">${sport ? sportIcon(sport.key) + " " + escapeHtml(sport.label) : ""}${session.session_type ? " · " + escapeHtml(sessionTypeLabel(session.sport, session.session_type)) : ""}${session.status === "done" && session.details ? " · frozen when done" : ""}</p>`);
-  if (!details) return lines.join("");
   if (details.description) lines.push(`<p class="pre-line">${escapeHtml(details.description)}</p>`);
-  const targets = [details.target_duration_s ? formatDuration(details.target_duration_s) : "",
-    details.target_distance_km ? `${Number(details.target_distance_km)} km` : ""].filter(Boolean);
-  if (targets.length) lines.push(`<p><strong>Target:</strong> ${escapeHtml(targets.join(" · "))}</p>`);
   if (details.exercises && details.exercises.length) {
-    lines.push(`${details.rounds ? `<p><strong>${details.rounds} rounds of:</strong></p>` : ""}
+    lines.push(`<details class="sheet-exercises"><summary>${details.rounds ? `${details.rounds} rounds of ` : ""}${details.exercises.length} exercise${details.exercises.length === 1 ? "" : "s"}</summary>
       <ul class="exercise-list">${details.exercises.map((e) => `
-        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">${icon("check")} ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`).join("")}</ul>`);
+        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">${icon("check")} ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`).join("")}</ul></details>`);
   }
   return lines.join("");
 }

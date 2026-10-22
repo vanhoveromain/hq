@@ -694,6 +694,16 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sheet-header.has-badge { justify-content: flex-start; gap: 12px; }
 .sheet-header.has-badge h2 { font-size: 1.25rem; line-height: 1.2; }
 .sheet-header .sport-badge { width: 2.75rem; height: 2.75rem; border-radius: 14px; }
+/* Session menu (20b): numbers row, one big main action, Done + Log it side by side */
+.sheet-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+.sheet-facts .num { font-size: 1.35rem; }
+.sheet-exercises { margin: 0 0 4px; }
+.sheet-exercises summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 0.9rem; min-height: 36px; display: flex; align-items: center; }
+.sheet-exercises .exercise-list { margin-top: 4px; }
+.sheet-actions .sheet-main { min-height: 54px; border-radius: 14px; font-size: 1.05rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sheet-pair .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border-radius: 12px; }
+.sheet-actions + .sheet-rows { margin-top: 12px; }
 /* Quiet list rows inside a sheet (20a/b): icon, label, › */
 .sheet-rows { display: flex; flex-direction: column; border-top: 1px solid var(--border); margin-top: 8px; }
 .sheet-row {

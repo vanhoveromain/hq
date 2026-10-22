@@ -11,13 +11,14 @@ import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } fro
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610212125";
 import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610212125";
 import { overview } from "../utils/stats.js?v=202610212125";
-import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds, completeSession } from "../utils/plan.js?v=202610212125";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610212125";
 import { weekLoadNotes } from "../utils/load.js?v=202610212125";
 import { showToast } from "../utils/toast.js?v=202610212125";
 import { loadWorkout } from "../utils/workout.js?v=202610212125";
 import { currentSeason } from "../utils/season.js?v=202610212125";
 import { blockWeek } from "./blocks.js?v=202610212125";
 import { icon } from "../utils/icons.js?v=202610212125";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610212125";
 
 // Home layout (step 17c, "Today first"):
 //   1. Today hero (violet): today's sessions with one big button, and the
@@ -216,22 +217,28 @@ async function drawMissed(el, today) {
       <li data-id="${s.id}">
         <span class="hero-missed-name">${escapeHtml(sessionName(s))}
           <span class="small">${escapeHtml(formatDayLabel(s.session_date))}</span></span>
-        <button type="button" class="hero-small-button" data-missed="done" aria-label="Done">${icon("check")}</button>
+        <button type="button" class="hero-small-button" data-missed="done" aria-label="Done: log it with the planned time">${icon("check")}</button>
         <a class="hero-small-button" href="#/log/new/${s.id}">Log</a>
         <button type="button" class="hero-small-button is-quiet" data-missed="skip">Skip</button>
       </li>`).join("")}</ul>
     ${sessions.length > MISSED_SHOWN ? `<p class="small">+ ${sessions.length - MISSED_SHOWN} more
       <a href="#/planner/${week}">in the plan</a></p>` : ""}`;
-  // Done = done without a log; Skip = cancelled (it stays in the plan, struck through).
+  // Done = one-tap log with the planned values (20b, utils/quickLog.js; the
+  // log form when there's no planned time); Skip = cancelled (stays in the plan).
   el.onclick = async (event) => {
     const button = event.target.closest("[data-missed]");
     if (!button) return;
     const session = sessions.find((s) => s.id === button.closest("li").dataset.id);
     button.disabled = true;
     try {
-      if (button.dataset.missed === "done") await completeSession(session);
-      else await updatePlannedSession(session.id, { status: "cancelled" });
-      showToast(button.dataset.missed === "done" ? `${sessionName(session)} marked done` : `${sessionName(session)} marked skipped`);
+      if (button.dataset.missed === "done") {
+        const result = await doneInOneTap(session, { onChange: () => drawMissed(el, today) });
+        if (result === "form") return;
+        if (!result) { button.disabled = false; return; }
+      } else {
+        await updatePlannedSession(session.id, { status: "cancelled" });
+        showToast(`${sessionName(session)} marked skipped`);
+      }
       await drawMissed(el, today);
     } catch (error) {
       showToast("Could not save: " + error.message);

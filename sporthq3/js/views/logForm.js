@@ -15,6 +15,7 @@ import { showToast } from "../utils/toast.js?v=202610212125";
 import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610212125";
 import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml } from "../utils/format.js?v=202610212125";
 import { icon } from "../utils/icons.js?v=202610212125";
+import { suggestedShoe } from "../utils/quickLog.js?v=202610212125";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
@@ -417,15 +418,6 @@ function readLastSport() {
 }
 function saveLastSport(key) {
   try { localStorage.setItem(LAST_SPORT_KEY, key); } catch { /* not important */ }
-}
-
-// The pair to suggest: the last one you ran in with the right surface
-// ("road" / "trail"); if you never did, the last pair you used at all.
-// Retired pairs are never suggested.
-function suggestedShoe(shoes, recentShoeIds, surface) {
-  const inUse = (id) => shoes.find((shoe) => shoe.id === id && !shoe.retired);
-  const sameSurface = recentShoeIds.find((id) => inUse(id) && inUse(id).surface === surface);
-  return sameSurface || recentShoeIds.find((id) => inUse(id)) || null;
 }
 
 // An activity got a new date: its planned session ("done" with it) moves
