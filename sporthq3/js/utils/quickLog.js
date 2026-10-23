@@ -12,13 +12,13 @@
 
 import {
   listActivitiesBetween, listPlannedSessions, saveActivity, deleteActivity, listShoes, listRecentShoeIds,
-} from "../storage.js?v=202610231428";
-import { getSport, getSessionType, sessionTypeLabel, shoeSurfaceFor } from "../rules.js?v=202610231428";
-import { sessionName, sessionDetails, completeSession, reopenSession } from "./plan.js?v=202610231428";
-import { openSheet } from "./sheet.js?v=202610231428";
-import { showToast } from "./toast.js?v=202610231428";
-import { releaseWorkoutOf } from "./savedWorkout.js?v=202610231428";
-import { escapeHtml, formatDuration, formatKm } from "./format.js?v=202610231428";
+} from "../storage.js?v=202610231435";
+import { getSport, getSessionType, sessionTypeLabel, shoeSurfaceFor } from "../rules.js?v=202610231435";
+import { sessionName, sessionDetails, completeSession, reopenSession } from "./plan.js?v=202610231435";
+import { openSheet } from "./sheet.js?v=202610231435";
+import { showToast } from "./toast.js?v=202610231435";
+import { releaseWorkoutOf } from "./savedWorkout.js?v=202610231435";
+import { escapeHtml, formatDuration, formatKm } from "./format.js?v=202610231435";
 
 // The pair of shoes to suggest for a run: the last one you ran in with the
 // right surface ("road" / "trail"); if you never did, the last pair you used

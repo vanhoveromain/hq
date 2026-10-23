@@ -85,6 +85,8 @@
     feedback, 23c "Resume workout" on Home, 23d one look for "selected" in the log form, 23e log list without
     repeated titles (built 2026-10-23 on the draft, same way as 17: Rom tests locally, then main). Next, a separate
     step: Log search + filter by session type
+24. Delete race ideas easily (2026-10-23, Rom: "I cannot delete ideas"): 24a bin on each idea card in the Races list,
+    24b "Delete this idea" on the idea's page, 24c docs
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -139,6 +141,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: delete race ideas (24; no migration). Rom couldn't find how to delete an idea (it was Edit -> bottom
+  of the form -> Delete). races.js deleteIdea(race) = confirm "Delete the idea "<name>"?" -> releaseWorkoutOf its
+  routine sessions (an idea with a date may have some) -> deleteRace (checklist goes too, cascade) -> toast
+  "Deleted: <name>"; no Undo (putting a race back would mean rebuilding its checklist; the question guards
+  mistakes). 24a list: each card of the Ideas group (groupOf = "ideas") gets a bin button in its corner, NEXT to
+  the card link (a button inside a link isn't allowed; .race-idea-item wrapper, 44px target, grey, red on hover
+  with a mouse); the list redraws after. 24b race page: a quiet red "Delete this idea" link under the summary
+  when the race is in the Ideas group, then back to #/races. Upcoming and past races keep Delete inside Edit
+  only (no stray-tap delete of a real race).
 - 2026-10-23: laptop quick wins (23; no migration), from Claude's UX review of the laptop version (screens checked
   at 1440 / 1280 / 1100 px on a fake database). 23a the empty Duration box showed "45:00" big and dark, as if
   filled in: the example is now "e.g. 45:00" in the normal font, light grey (::placeholder on .big-input and
