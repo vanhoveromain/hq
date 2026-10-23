@@ -140,7 +140,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
           ${SPORTS.map((s) => `
             <label class="sport-tile sport-${s.key}">
               <input type="radio" name="sport" value="${s.key}">
-              <span>${sportIcon(s.key)}${escapeHtml(s.label)}</span>
+              <span>${sportIcon(s.key)}<span class="sport-name">${escapeHtml(s.label)}</span><span class="sport-short" aria-hidden="true">${escapeHtml(s.short || s.label)}</span></span>
             </label>`).join("")}
         </div>
       </fieldset>
