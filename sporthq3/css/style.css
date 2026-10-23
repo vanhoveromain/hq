@@ -1360,6 +1360,17 @@ p.dash-note { margin-bottom: 16px; }
   .dashboard { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
   .dash-main, .dash-side { display: block; }
   .race-mode .dash-race { margin: 0 0 16px; border-radius: 20px; }
+  /* Race mode's status strip repeats the This week card, which sits right
+     below on a laptop: only the phone keeps it (28b). */
+  .race-mode .dash-strip { display: none; }
+}
+/* Laptop: each Today session on ONE row, name left, buttons right (28b) */
+@media (min-width: 1000px) {
+  .hero-session { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 16px; }
+  .hero-session-top { grid-column: 1; }
+  .hero-actions { grid-column: 2; margin-top: 0; }
+  .hero-actions .hero-button { flex: none; min-width: 200px; }
+  .hero-choose { grid-column: 1 / -1; justify-self: start; }
 }
 
 /* Drag and drop in the planner */

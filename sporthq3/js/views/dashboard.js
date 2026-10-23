@@ -51,7 +51,6 @@ export function render(container) {
           <div id="dash-load-notes"></div>
         </div>
         <section class="card dash-card" id="dash-week"><p class="muted">Loading…</p></section>
-        <section class="card dash-card" id="dash-load"><p class="muted">Loading…</p></section>
       </div>
       <div class="dash-side">
         <section class="card dash-card dash-race" id="dash-race" hidden></section>
@@ -62,6 +61,9 @@ export function render(container) {
           <a class="dash-tile" id="tile-shoes" hidden></a>
           <a class="dash-tile" id="tile-pb" hidden></a>
         </div>
+        <!-- In the right column on a laptop (28b), so the left one (Today + This week)
+             fits one screen; on a phone CSS order puts it after This week, as before. -->
+        <section class="card dash-card" id="dash-load"><p class="muted">Loading…</p></section>
       </div>
     </div>
   `;
