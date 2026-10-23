@@ -1,6 +1,6 @@
 // season.js — which football season a day belongs to (see FOOTBALL_SEASON).
 
-import { FOOTBALL_SEASON } from "../rules.js?v=202610231521";
+import { FOOTBALL_SEASON } from "../rules.js?v=202610232058";
 
 const pad = (n) => String(n).padStart(2, "0");
 

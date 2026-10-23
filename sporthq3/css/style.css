@@ -51,6 +51,11 @@
   --sport-swimming: #4f46e5;  /* indigo */
   --sport-stairs: #8b5e3c;    /* brown */
   --radius: 14px;
+  /* Page widths (28a): two sizes only, so content doesn't jump between screens.
+     narrow = forms, profiles, detail pages; wide = dashboards, lists, tables.
+     The planner's week (7 day columns) is the one exception: 1400px. */
+  --page-narrow: 760px;
+  --page-wide: 1200px;
   --tabbar-height: 64px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-num: "Barlow Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -205,7 +210,7 @@ p { margin: 0 0 12px; }
 
 /* ---------- Main area ---------- */
 .view {
-  max-width: 720px;
+  max-width: var(--page-narrow);
   margin: 0 auto;
   /* bottom padding keeps content above the fixed tab bar */
   padding: 16px 16px calc(var(--tabbar-height) + 24px + env(safe-area-inset-bottom));
@@ -553,7 +558,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--bg) 94%, transparent); border-top: 1px solid var(--border);
 }
-.save-bar .button { display: block; max-width: 688px; margin: 0 auto; min-height: 54px; border-radius: 16px; font-size: 1.05rem; font-weight: 700; }
+.save-bar .button { display: block; max-width: calc(var(--page-narrow) - 32px); margin: 0 auto; min-height: 54px; border-radius: 16px; font-size: 1.05rem; font-weight: 700; }
 .is-form .view { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 .is-form .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 @media (max-width: 999px) { .is-form .tabbar { display: none; } }
@@ -677,11 +682,16 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .week-nav-title { flex-basis: 150px; }
   .week-head .view-switch { order: 4; margin: 0 auto; }
 }
-/* The stat strip (same look as Home's race-mode strip) + block / review links */
-.plan-strip { margin-bottom: 8px; }
+/* The stat strip (same look as Home's race-mode strip) + block / review links.
+   It sits inside the head row (28c): on a phone it takes its own line below. */
+.week-head .plan-strip { order: 5; flex-basis: 100%; margin: 4px 0 0; }
 /* "2h42 / 4h06" stays on one line; on the narrowest phones the numbers shrink a little to fit */
 .plan-strip #strip-load { white-space: nowrap; }
-@media (max-width: 359px) { .plan-strip .num { font-size: 1.35rem; } }
+@media (max-width: 359px) {
+  .plan-strip .num { font-size: 1.35rem; }
+  /* each column as wide as its numbers, so "2h38 / 4h55" never runs into the warnings count (28c) */
+  .week-head .plan-strip { grid-template-columns: repeat(3, auto); justify-content: space-between; }
+}
 .strip-cell { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 0; border: 0;
   background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .strip-cell:disabled { cursor: default; }
@@ -704,6 +714,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .day.is-today { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong), var(--shadow); }
 .day-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.95rem; margin: 0; }
 .day-name { margin-right: 2px; }
+.day-tags { display: contents; }   /* phone: the tags sit in the row like before */
 .day-add {
   display: inline-grid; place-items: center; flex: none; margin-left: auto;
   width: 36px; height: 36px; border-radius: 50%;
@@ -766,12 +777,26 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Laptop: the 7 days side by side, like a calendar. */
 @media (min-width: 1000px) {
   .view:has(.days) { max-width: 1400px; }
-  .view:has(.month) { max-width: 1100px; }
+  .view:has(.month) { max-width: var(--page-wide); }
   /* every day the same width AND height (the tallest day sets the height) */
   .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
   .day { min-height: 160px; padding: 8px; }
-  .day-title { align-items: center; gap: 4px; font-size: 0.85rem; }
-  .day-add { width: 28px; height: 28px; }
+  /* Day header (28c), the same on every day: date + "+" on line 1,
+     Today + load tag on line 2 (kept even when empty, so the first cards line up) */
+  .day-title { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px; font-size: 0.85rem; }
+  .day-name { grid-column: 1; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .day-add { grid-column: 2; grid-row: 1; width: 28px; height: 28px; }
+  .day-tags { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 4px; min-height: 22px; min-width: 0; }
+  /* one line: in a narrow column the load tag is cut ("Heavy l…") rather than pushing the cards down */
+  .day-tags .day-tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .day-tags .day-tag.is-today { flex: none; }
+  /* Head row (28c): ‹ This week ›, the numbers inline, Week | Month */
+  .week-nav-title { flex: none; min-width: 150px; }
+  .week-head .plan-strip {
+    order: 0; flex: 1; flex-basis: auto; margin: 0; padding: 0 16px;
+    display: flex; justify-content: center; gap: 40px; background: none; border: 0; box-shadow: none;
+  }
+  .week-head .view-switch { margin-left: auto; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
   .plan-row.has-play .plan-card { padding-right: 8px; padding-bottom: 52px; }
   .plan-play { top: auto; bottom: 8px; right: 8px; transform: none; width: 36px; height: 36px; }
@@ -779,6 +804,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .warning-between { display: none !important; }
   .day .warning-chip.warning-dup { display: flex; }
   .warning-chip { align-self: stretch; border-radius: 12px; font-size: 0.75rem; }
+  /* one line in the narrow day column (28d); the full message shows on mouse-over (title) and on tap */
+  .day .warning-chip .chip-short { display: none; }
+  .day .warning-chip .chip-tiny { display: inline; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .plan-card .sport-badge { width: 1.8rem; height: 1.8rem; }
 }
 
@@ -864,6 +892,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (min-width: 1000px) { .toast { bottom: calc(24px + env(safe-area-inset-bottom)); } }  /* no bottom bar on a laptop */
 
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
+/* "Big jump" / race-week load note: amber text on a card, the same look as on Home (28d) */
+.plan-banner.load-banner { background: var(--surface); border-color: var(--card-border); box-shadow: var(--shadow); color: var(--warn-text); font-weight: 500; }
 
 /* Week templates screen */
 .week-template h2 { margin-top: 0; }
@@ -1032,6 +1062,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .warning-chip .icon { width: 15px; height: 15px; }
 .warning-chip.is-muted { background: var(--bg); color: var(--muted); border-color: var(--border); }
 .warning-chip.warning-dup { display: none; }
+.warning-chip .chip-tiny { display: none; }   /* the laptop's narrow columns show the tiny text (28d) */
 /* between two days: centred on the gap, a little over both cards */
 .days > .warning-between { align-self: center; margin: -8px 0; position: relative; z-index: 1; }
 
@@ -1351,10 +1382,21 @@ p.dash-note { margin-bottom: 16px; }
 
 /* Laptop: two real columns (left "now", right overview) */
 @media (min-width: 900px) {
-  .view:has(.dashboard) { max-width: 1200px; }   /* the page may be wider than the phone layout */
+  .view:has(.dashboard) { max-width: var(--page-wide); }   /* the page may be wider than the phone layout */
   .dashboard { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
   .dash-main, .dash-side { display: block; }
   .race-mode .dash-race { margin: 0 0 16px; border-radius: 20px; }
+  /* Race mode's status strip repeats the This week card, which sits right
+     below on a laptop: only the phone keeps it (28b). */
+  .race-mode .dash-strip { display: none; }
+}
+/* Laptop: each Today session on ONE row, name left, buttons right (28b) */
+@media (min-width: 1000px) {
+  .hero-session { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 16px; }
+  .hero-session-top { grid-column: 1; }
+  .hero-actions { grid-column: 2; margin-top: 0; }
+  .hero-actions .hero-button { flex: none; min-width: 200px; }
+  .hero-choose { grid-column: 1 / -1; justify-self: start; }
 }
 
 /* Drag and drop in the planner */
@@ -1405,7 +1447,7 @@ p.dash-note { margin-bottom: 16px; }
 /* ---------- Laptop: wider list screens ---------- */
 .log-head, .activity-item .col { display: none; }
 @media (min-width: 1000px) {
-  .view:has(.log-page), .view:has(.wide-page) { max-width: 1100px; }
+  .view:has(.log-page), .view:has(.wide-page) { max-width: var(--page-wide); }
 
   /* Log: one table row per activity */
   .log-head, .log-page .activity-item {
@@ -1430,11 +1472,17 @@ p.dash-note { margin-bottom: 16px; }
   /* Races, blocks, shoes: cards side by side */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
   .card-grid > .card { margin-bottom: 0; }
-  .wide-page .add-button { max-width: 260px; margin-left: auto; }
+  /* Races, Shoes, Blocks (28e): "+ Add" sits at the right end of the first
+     section's title row, and each count follows its label ("UPCOMING  2") */
+  .wide-page { position: relative; }
+  .wide-page > .add-button { position: absolute; top: 0; right: 0; width: auto; max-width: none; margin: 0; padding: 10px 24px; }
+  .wide-page > div > .week:first-child > .week-title { min-height: 44px; align-items: center; padding-right: 240px; }
+  .wide-page > div > .placeholder:first-child { margin-top: 60px; }
+  .wide-page .week-title { justify-content: flex-start; }
   .wide-page .week, .wide-page .retired { margin-bottom: 24px; }
 }
 @media (min-width: 1000px) {
-  .view:has(.body-page) { max-width: 1100px; }
+  .view:has(.body-page) { max-width: var(--page-wide); }
   .body-page { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-areas: "weight chart" "pb chart";
     column-gap: 16px; align-items: start; }
   #weight-card { grid-area: weight; }
@@ -1566,14 +1614,14 @@ p.dash-note { margin-bottom: 16px; }
 .race-fold-body > .card-head { display: none; }  /* the row above already says "Checklist" */
 
 @media (min-width: 1000px) {
-  .view:has(.race-page) { max-width: 1100px; }
+  .view:has(.race-page) { max-width: var(--page-wide); }
   .race-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-areas: "main side"; gap: 16px; align-items: start; }
   .race-layout .race-main { grid-area: main; }
   .race-layout .race-main > .card:last-child { margin-bottom: 0; }
   .race-layout .race-side { grid-area: side; }
   .race-layout .race-side .card:last-child { margin-bottom: 0; }
-  .race-layout:not(:has(.race-side)) { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
-  .race-page:not(:has(.race-side)) .race-topline { max-width: 760px; margin-inline: auto; }
+  .race-layout:not(:has(.race-side)) { grid-template-columns: minmax(0, 1fr); max-width: var(--page-narrow); margin-inline: auto; }
+  .race-page:not(:has(.race-side)) .race-topline { max-width: var(--page-narrow); margin-inline: auto; }
   .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .form-grid .field-full { grid-column: 1 / -1; }
   .race-form .form-actions .button.primary { flex: 0 0 auto; width: auto; min-width: 160px; }
@@ -1624,7 +1672,7 @@ p.dash-note { margin-bottom: 16px; }
 .bar-chart .axis { fill: var(--muted); font-size: 11px; }
 .bar-chart .target { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
 @media (min-width: 1000px) {
-  .view:has(.stats-page) { max-width: 1100px; }
+  .view:has(.stats-page) { max-width: var(--page-wide); }
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .stats-grid .stats-wide { grid-column: 1 / -1; }
   .stats-filters { flex-direction: row; justify-content: space-between; flex-wrap: wrap; }
@@ -1655,7 +1703,7 @@ p.dash-note { margin-bottom: 16px; }
 .mix-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sport); }
 .shoe-km .num { font-size: 1.35rem; }
 @media (min-width: 1000px) {
-  .view:has(.block-page) { max-width: 760px; }
+  .view:has(.block-page) { max-width: var(--page-narrow); }
 }
 
 /* ---------- Step 20e: Me = your athlete profile ----------

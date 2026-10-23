@@ -3,8 +3,8 @@
 // week, hours already done, your usual week, and a race if there is one.
 // The rules (how much is "too much") stay in rules.js (LOAD_RULES).
 
-import { checkLoad, LOAD_RULES } from "../rules.js?v=202610231521";
-import { calendarItems, racesNotPlanned } from "./plan.js?v=202610231521";
+import { checkLoad, LOAD_RULES } from "../rules.js?v=202610232058";
+import { calendarItems, racesNotPlanned } from "./plan.js?v=202610232058";
 
 // monday              = the week shown
 // sessions, activities = that week's planned sessions and logged activities

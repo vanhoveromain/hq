@@ -3,10 +3,10 @@
 //   #/shoes/new    -> form for a new pair
 //   #/shoes/<id>   -> form to edit that pair
 
-import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610231521";
-import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610231521";
-import { formatDayLabel } from "../utils/dates.js?v=202610231521";
-import { numHtml, escapeHtml } from "../utils/format.js?v=202610231521";
+import { listShoes, getShoe, saveShoe, deleteShoe, getShoeDistances } from "../storage.js?v=202610232058";
+import { SHOE_RULES, SHOE_SURFACES, shoeStatus } from "../rules.js?v=202610232058";
+import { formatDayLabel } from "../utils/dates.js?v=202610232058";
+import { numHtml, escapeHtml } from "../utils/format.js?v=202610232058";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderForm(container, null);
@@ -35,7 +35,10 @@ async function renderList(container) {
 
     listEl.innerHTML = `
       ${active.length
-        ? `<div class="card-grid">${active.map(card).join("")}</div>`
+        ? `<section class="week">
+            <h2 class="week-title"><span>In use</span><span class="muted">${active.length}</span></h2>
+            <div class="card-grid">${active.map(card).join("")}</div>
+          </section>`
         : `<section class="card placeholder"><p>No shoes in use. Tap <strong>+ Add a pair</strong>.</p></section>`}
       ${retired.length ? `
         <details class="retired">

@@ -4,23 +4,23 @@
 // screen you're on, e.g. index.html#/planner. Changing it doesn't reload the
 // page; we just draw a different view inside <main>. This is a "hash router".
 
-import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610231521";
-import * as loginView from "./views/login.js?v=202610231521";
-import * as dashboardView from "./views/dashboard.js?v=202610231521";
-import * as plannerView from "./views/planner.js?v=202610231521";
-import * as logView from "./views/log.js?v=202610231521";
-import * as racesView from "./views/races.js?v=202610231521";
-import * as meView from "./views/me.js?v=202610231521";
-import * as shoesView from "./views/shoes.js?v=202610231521";
-import * as blocksView from "./views/blocks.js?v=202610231521";
-import * as bodyView from "./views/body.js?v=202610231521";
-import * as settingsView from "./views/settings.js?v=202610231521";
-import * as catalogueView from "./views/catalogue.js?v=202610231521";
-import * as weekTemplatesView from "./views/weekTemplates.js?v=202610231521";
-import * as workoutView from "./views/workout.js?v=202610231521";
-import * as customSessionView from "./views/customSession.js?v=202610231521";
-import * as reviewView from "./views/review.js?v=202610231521";
-import { clearTopbar, setTopbarBack } from "./utils/topbar.js?v=202610231521";
+import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610232058";
+import * as loginView from "./views/login.js?v=202610232058";
+import * as dashboardView from "./views/dashboard.js?v=202610232058";
+import * as plannerView from "./views/planner.js?v=202610232058";
+import * as logView from "./views/log.js?v=202610232058";
+import * as racesView from "./views/races.js?v=202610232058";
+import * as meView from "./views/me.js?v=202610232058";
+import * as shoesView from "./views/shoes.js?v=202610232058";
+import * as blocksView from "./views/blocks.js?v=202610232058";
+import * as bodyView from "./views/body.js?v=202610232058";
+import * as settingsView from "./views/settings.js?v=202610232058";
+import * as catalogueView from "./views/catalogue.js?v=202610232058";
+import * as weekTemplatesView from "./views/weekTemplates.js?v=202610232058";
+import * as workoutView from "./views/workout.js?v=202610232058";
+import * as customSessionView from "./views/customSession.js?v=202610232058";
+import * as reviewView from "./views/review.js?v=202610232058";
+import { clearTopbar, setTopbarBack } from "./utils/topbar.js?v=202610232058";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.

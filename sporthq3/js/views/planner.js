@@ -10,29 +10,29 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610231521";
-import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610231521";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610231521";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610231521";
+} from "../storage.js?v=202610232058";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610232058";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610232058";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610232058";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202610231521";
-import { overview } from "../utils/stats.js?v=202610231521";
-import { weekLoadNotes } from "../utils/load.js?v=202610231521";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610231521";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610231521";
+} from "../utils/plan.js?v=202610232058";
+import { overview } from "../utils/stats.js?v=202610232058";
+import { weekLoadNotes } from "../utils/load.js?v=202610232058";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610232058";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610232058";
 import {
   pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
   chooseFromCatalogue, clearSession, catalogueCountLabel,
-} from "../utils/changeSession.js?v=202610231521";
-import { setTopbarAction } from "../utils/topbar.js?v=202610231521";
-import { showToast } from "../utils/toast.js?v=202610231521";
-import { loadWorkout } from "../utils/workout.js?v=202610231521";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610231521";
-import { blockWeek } from "./blocks.js?v=202610231521";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610231521";
-import { icon } from "../utils/icons.js?v=202610231521";
+} from "../utils/changeSession.js?v=202610232058";
+import { setTopbarAction } from "../utils/topbar.js?v=202610232058";
+import { showToast } from "../utils/toast.js?v=202610232058";
+import { loadWorkout } from "../utils/workout.js?v=202610232058";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610232058";
+import { blockWeek } from "./blocks.js?v=202610232058";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610232058";
+import { icon } from "../utils/icons.js?v=202610232058";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -68,7 +68,9 @@ function viewSwitchHtml(active, weekHref, monthHref) {
 }
 
 // "‹ This week ›" (or the month) + the Week | Month switch, on one row (20a).
-function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml }) {
+// `stripHtml` (week only, 28c): the done / load / warnings numbers. A laptop
+// shows them inline in this row; a phone puts them on their own line below.
+function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml, stripHtml = "" }) {
   return `
     <div class="week-head">
       <a class="nav-button" href="${prevHref}" aria-label="${prevLabel}">${icon("chevron-left")}</a>
@@ -77,6 +79,7 @@ function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, s
         ${subtitle ? `<span class="muted small">${escapeHtml(subtitle)}</span>` : ""}
       </div>
       <a class="nav-button" href="${nextHref}" aria-label="${nextLabel}">${icon("chevron-right")}</a>
+      ${stripHtml}
       ${switchHtml}
     </div>`;
 }
@@ -123,15 +126,16 @@ async function drawWeek(container, monday) {
       nextHref: `#/planner/${addDays(monday, 7)}`, nextLabel: "Next week",
       title: formatWeekLabel(monday), subtitle: rangeLabel(monday, sunday),
       switchHtml: viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`),
+      stripHtml: `
+        <div class="card dash-strip plan-strip">
+          <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
+          <span><span class="strip-label">Load</span><span id="strip-load">–</span></span>
+          <button type="button" class="strip-cell" id="strip-warnings" disabled>
+            <span class="strip-label">Warnings</span><span id="strip-warnings-count">–</span></button>
+        </div>`,
     })}
     <div id="workout-banner"></div>
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
-    <div class="card dash-strip plan-strip">
-      <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
-      <span><span class="strip-label">Load</span><span id="strip-load">–</span></span>
-      <button type="button" class="strip-cell" id="strip-warnings" disabled>
-        <span class="strip-label">Warnings</span><span id="strip-warnings-count">–</span></button>
-    </div>
     <div class="week-links">
       <a id="week-block" class="week-block" hidden></a>
       ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
@@ -214,8 +218,10 @@ async function drawWeek(container, monday) {
         <section class="day ${day === today ? "is-today" : ""} ${day < today ? "is-past" : ""}" data-day="${day}">
           <h2 class="day-title">
             <span class="day-name">${dayHeading(day)}</span>
-            ${day === today ? `<span class="day-tag is-today">Today</span>` : ""}
-            ${tag ? `<span class="day-tag tag-${tag.key}">${escapeHtml(tag.label)}</span>` : ""}
+            <span class="day-tags">
+              ${day === today ? `<span class="day-tag is-today">Today</span>` : ""}
+              ${tag ? `<span class="day-tag tag-${tag.key}">${escapeHtml(tag.label)}</span>` : ""}
+            </span>
             <button type="button" class="day-add" data-add="${day}" aria-label="Add a session on ${formatDayLabel(day)}">${icon("plus")}</button>
           </h2>
           ${dayRaces.map(raceMarkerHtml).join("")}
@@ -773,9 +779,11 @@ function raceMarkerHtml(race) {
 // crossed-out bell. `where` = "warning-between" (between two day cards) or
 // "warning-dup" (the same chip inside the later day, for the laptop's columns).
 function warningChipHtml(w, index, where = "") {
+  // title = the full message when you point at it with a mouse (28d: on a laptop the chip is cut to one line).
   return `<button type="button" class="warning-chip ${where} ${w.muted ? "is-muted" : ""}" data-warning="${index}"
-    aria-label="${escapeHtml((w.muted ? "Muted: " : "Warning: ") + w.message)}">
-    ${icon(w.muted ? "bell-off" : "alert-triangle")}<span>${escapeHtml(w.short || w.message)}</span></button>`;
+    aria-label="${escapeHtml((w.muted ? "Muted: " : "Warning: ") + w.message)}" title="${escapeHtml(w.message)}">
+    ${icon(w.muted ? "bell-off" : "alert-triangle")}<span class="chip-short">${escapeHtml(w.short || w.message)}</span>
+    <span class="chip-tiny">${escapeHtml(w.tiny || w.short || w.message)}</span></button>`;
 }
 
 // `today` = to spot a session left open on a past day ("missed?").
