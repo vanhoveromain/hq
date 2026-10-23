@@ -68,7 +68,9 @@ function viewSwitchHtml(active, weekHref, monthHref) {
 }
 
 // "‹ This week ›" (or the month) + the Week | Month switch, on one row (20a).
-function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml }) {
+// `stripHtml` (week only, 28c): the done / load / warnings numbers. A laptop
+// shows them inline in this row; a phone puts them on their own line below.
+function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml, stripHtml = "" }) {
   return `
     <div class="week-head">
       <a class="nav-button" href="${prevHref}" aria-label="${prevLabel}">${icon("chevron-left")}</a>
@@ -77,6 +79,7 @@ function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, s
         ${subtitle ? `<span class="muted small">${escapeHtml(subtitle)}</span>` : ""}
       </div>
       <a class="nav-button" href="${nextHref}" aria-label="${nextLabel}">${icon("chevron-right")}</a>
+      ${stripHtml}
       ${switchHtml}
     </div>`;
 }
@@ -123,15 +126,16 @@ async function drawWeek(container, monday) {
       nextHref: `#/planner/${addDays(monday, 7)}`, nextLabel: "Next week",
       title: formatWeekLabel(monday), subtitle: rangeLabel(monday, sunday),
       switchHtml: viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`),
+      stripHtml: `
+        <div class="card dash-strip plan-strip">
+          <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
+          <span><span class="strip-label">Load</span><span id="strip-load">–</span></span>
+          <button type="button" class="strip-cell" id="strip-warnings" disabled>
+            <span class="strip-label">Warnings</span><span id="strip-warnings-count">–</span></button>
+        </div>`,
     })}
     <div id="workout-banner"></div>
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
-    <div class="card dash-strip plan-strip">
-      <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
-      <span><span class="strip-label">Load</span><span id="strip-load">–</span></span>
-      <button type="button" class="strip-cell" id="strip-warnings" disabled>
-        <span class="strip-label">Warnings</span><span id="strip-warnings-count">–</span></button>
-    </div>
     <div class="week-links">
       <a id="week-block" class="week-block" hidden></a>
       ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
@@ -214,8 +218,10 @@ async function drawWeek(container, monday) {
         <section class="day ${day === today ? "is-today" : ""} ${day < today ? "is-past" : ""}" data-day="${day}">
           <h2 class="day-title">
             <span class="day-name">${dayHeading(day)}</span>
-            ${day === today ? `<span class="day-tag is-today">Today</span>` : ""}
-            ${tag ? `<span class="day-tag tag-${tag.key}">${escapeHtml(tag.label)}</span>` : ""}
+            <span class="day-tags">
+              ${day === today ? `<span class="day-tag is-today">Today</span>` : ""}
+              ${tag ? `<span class="day-tag tag-${tag.key}">${escapeHtml(tag.label)}</span>` : ""}
+            </span>
             <button type="button" class="day-add" data-add="${day}" aria-label="Add a session on ${formatDayLabel(day)}">${icon("plus")}</button>
           </h2>
           ${dayRaces.map(raceMarkerHtml).join("")}

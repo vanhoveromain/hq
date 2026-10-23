@@ -682,11 +682,16 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .week-nav-title { flex-basis: 150px; }
   .week-head .view-switch { order: 4; margin: 0 auto; }
 }
-/* The stat strip (same look as Home's race-mode strip) + block / review links */
-.plan-strip { margin-bottom: 8px; }
+/* The stat strip (same look as Home's race-mode strip) + block / review links.
+   It sits inside the head row (28c): on a phone it takes its own line below. */
+.week-head .plan-strip { order: 5; flex-basis: 100%; margin: 4px 0 0; }
 /* "2h42 / 4h06" stays on one line; on the narrowest phones the numbers shrink a little to fit */
 .plan-strip #strip-load { white-space: nowrap; }
-@media (max-width: 359px) { .plan-strip .num { font-size: 1.35rem; } }
+@media (max-width: 359px) {
+  .plan-strip .num { font-size: 1.35rem; }
+  /* each column as wide as its numbers, so "2h38 / 4h55" never runs into the warnings count (28c) */
+  .week-head .plan-strip { grid-template-columns: repeat(3, auto); justify-content: space-between; }
+}
 .strip-cell { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 0; border: 0;
   background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .strip-cell:disabled { cursor: default; }
@@ -709,6 +714,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .day.is-today { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong), var(--shadow); }
 .day-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.95rem; margin: 0; }
 .day-name { margin-right: 2px; }
+.day-tags { display: contents; }   /* phone: the tags sit in the row like before */
 .day-add {
   display: inline-grid; place-items: center; flex: none; margin-left: auto;
   width: 36px; height: 36px; border-radius: 50%;
@@ -775,8 +781,22 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   /* every day the same width AND height (the tallest day sets the height) */
   .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
   .day { min-height: 160px; padding: 8px; }
-  .day-title { align-items: center; gap: 4px; font-size: 0.85rem; }
-  .day-add { width: 28px; height: 28px; }
+  /* Day header (28c), the same on every day: date + "+" on line 1,
+     Today + load tag on line 2 (kept even when empty, so the first cards line up) */
+  .day-title { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px; font-size: 0.85rem; }
+  .day-name { grid-column: 1; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .day-add { grid-column: 2; grid-row: 1; width: 28px; height: 28px; }
+  .day-tags { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 4px; min-height: 22px; min-width: 0; }
+  /* one line: in a narrow column the load tag is cut ("Heavy l…") rather than pushing the cards down */
+  .day-tags .day-tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .day-tags .day-tag.is-today { flex: none; }
+  /* Head row (28c): ‹ This week ›, the numbers inline, Week | Month */
+  .week-nav-title { flex: none; min-width: 150px; }
+  .week-head .plan-strip {
+    order: 0; flex: 1; flex-basis: auto; margin: 0; padding: 0 16px;
+    display: flex; justify-content: center; gap: 40px; background: none; border: 0; box-shadow: none;
+  }
+  .week-head .view-switch { margin-left: auto; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
   .plan-row.has-play .plan-card { padding-right: 8px; padding-bottom: 52px; }
   .plan-play { top: auto; bottom: 8px; right: 8px; transform: none; width: 36px; height: 36px; }
