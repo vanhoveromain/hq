@@ -98,6 +98,11 @@
 29. Laptop bigger pieces (2026-10-23; Rom logs almost all his runs on the laptop): 29a two-column log form + cursor in
     Duration, 29b actions next to the content, 29c month view with names + Today button, 29d keyboard shortcuts,
     29e docs. Workout mode on the laptop skipped on purpose (Rom trains with his phone)
+30. Phone quick fixes (2026-10-23, after Claude's UX review of the phone version): 30a Week review arrows on one row,
+    30b weigh-in Today / Other day, 30c workout mode one dark bar, 30d race / block names in the top bar, 30e "Clear
+    session" on one line, 30f docs. Still open from that review: flow round (Plan scrolls to today, compact Plan
+    header, compact sport tiles in the log form, a round "+" button instead of the full-width Add buttons) and
+    polish (fade on sideways chip rows, date on the title line in the Log list)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -152,6 +157,16 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: phone quick fixes (30; no migration). 30a review.js used an old .week-nav header with no styling
+  left (‹ title › stacked): now the planner's .week-head + .nav-button, a 44px .nav-spacer when there is no next
+  week. 30b Body weigh-in: Today / Other day chips above one row kg + Save; the date box only for another day
+  ("Today" resets it to today); was cut on a phone. 30c < 720px: .is-workout:has(.workout-strip) .topbar hidden,
+  the strip gets the notch padding (env(safe-area-inset-top)); the workout's error / orphan pages keep the top bar
+  (no tab bar there: their only way out). 30d topbar.js setPageTitle: race / block name ("New race" / "New block"),
+  set only if the address is still that page when the data arrives; top bar grid = minmax(max-content, 1fr)
+  minmax(0, max-content) minmax(max-content, 1fr) so the title takes what's left and ends in …; laptop title max
+  28vw. 30e planner session menu: "Clear session" + hint "just <sport>"; a sheet row with a hint keeps its label
+  on one line and cuts the hint (the catalogue hint shows "3 runnin…" at 390px, nothing at 320px: accepted).
 - 2026-10-23: laptop bigger pieces (29; no migration). Utility classes .laptop-only / .phone-only (1000px). 29a log
   form: .log-col wrappers (display: contents on a phone) -> >= 1000px a 2-column grid on the wide page width: left
   When / Sport / Type (+ banners), right numbers card, match card, RPE, shoes / title / notes; Save bar full width.
