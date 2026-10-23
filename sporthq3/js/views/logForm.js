@@ -6,17 +6,17 @@ import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
   updatePlannedSession,
-} from "../storage.js?v=202610221248";
-import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610221248";
-import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610221248";
-import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610221248";
-import { openSheet } from "../utils/sheet.js?v=202610221248";
-import { showToast } from "../utils/toast.js?v=202610221248";
-import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610221248";
-import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202610221248";
-import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202610221248";
-import { icon } from "../utils/icons.js?v=202610221248";
-import { suggestedShoe } from "../utils/quickLog.js?v=202610221248";
+} from "../storage.js?v=202610231428";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610231428";
+import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610231428";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610231428";
+import { openSheet } from "../utils/sheet.js?v=202610231428";
+import { showToast } from "../utils/toast.js?v=202610231428";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610231428";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202610231428";
+import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202610231428";
+import { icon } from "../utils/icons.js?v=202610231428";
+import { suggestedShoe } from "../utils/quickLog.js?v=202610231428";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
@@ -152,7 +152,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
         <div id="duration-box">
           <label for="f-duration">Duration</label>
           <input id="f-duration" class="big-input" name="duration" type="text" inputmode="decimal" autocomplete="off"
-                 placeholder="45:00" required value="${escapeHtml(formatDuration(a.duration_s))}">
+                 placeholder="e.g. 45:00" required value="${escapeHtml(formatDuration(a.duration_s))}">
           <p class="hint">45:00 or 1:02:30 · "45" = 45 min</p>
         </div>
         <div class="number-pair">

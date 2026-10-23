@@ -6,20 +6,20 @@ import {
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
   getTrainingBlock, listPersonalBests,
-} from "../storage.js?v=202610221248";
-import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610221248";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610221248";
-import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610221248";
-import { overview } from "../utils/stats.js?v=202610221248";
-import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610221248";
-import { weekLoadNotes } from "../utils/load.js?v=202610221248";
-import { showToast } from "../utils/toast.js?v=202610221248";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610221248";
-import { currentSeason } from "../utils/season.js?v=202610221248";
-import { blockWeek } from "./blocks.js?v=202610221248";
-import { icon } from "../utils/icons.js?v=202610221248";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610221248";
-import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610221248";
+} from "../storage.js?v=202610231428";
+import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610231428";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610231428";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610231428";
+import { overview } from "../utils/stats.js?v=202610231428";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610231428";
+import { weekLoadNotes } from "../utils/load.js?v=202610231428";
+import { showToast } from "../utils/toast.js?v=202610231428";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610231428";
+import { currentSeason } from "../utils/season.js?v=202610231428";
+import { blockWeek } from "./blocks.js?v=202610231428";
+import { icon } from "../utils/icons.js?v=202610231428";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610231428";
+import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610231428";
 
 // Home layout (step 17c, "Today first"):
 //   1. Today hero (violet): today's sessions with one big button, and the
@@ -120,12 +120,16 @@ async function drawWeek(todayEl, weekEl, today, container) {
   // "Choose session" button (21), for the morning you know what you'll do.
   const templates = todays.some(canChooseFromCatalogue) ? await activeTemplates().catch(() => []) : [];
   const canChoose = (s) => canChooseFromCatalogue(s) && templates.some((t) => t.sport === s.sport);
+  // The workout in progress belongs to one of today's sessions: that session's
+  // big button says "Resume workout", so the separate row would say it twice (23c).
+  const activeId = saved.state === "active" ? saved.workout.plannedId : null;
+  const resumeInHero = todays.some((s) => s.id === activeId && s.status === "planned");
   todayEl.innerHTML = `
     <h2 class="hero-label"><a href="#/planner">Today · ${escapeHtml(formatDayLabel(today))}</a></h2>
-    ${saved.state === "active" ? `<a class="hero-resume" href="#/workout/${escapeHtml(saved.workout.plannedId)}">
+    ${saved.state === "active" && !resumeInHero ? `<a class="hero-resume" href="#/workout/${escapeHtml(saved.workout.plannedId)}">
       ${icon("dumbbell")} <span>Workout in progress: <strong>${escapeHtml(saved.workout.name)}</strong></span> ${icon("chevron-right")}</a>` : ""}
     ${saved.state === "orphan" ? unfinishedRowHtml(saved.workout, saved.reason, "in-hero") : ""}
-    ${todays.length ? todays.map((s) => heroSessionHtml(s, canChoose(s))).join("")
+    ${todays.length ? todays.map((s) => heroSessionHtml(s, canChoose(s), s.id === activeId)).join("")
       : `<p class="hero-rest">${icon("moon")} Nothing planned: rest day</p>
          <a class="hero-button is-quiet" href="#/planner">${icon("plus")} Plan something</a>`}
   `;
@@ -192,7 +196,9 @@ async function drawWeek(todayEl, weekEl, today, container) {
 // one big button. With a recipe the big button starts the workout; without
 // one ("just a run") it logs it. The small button next to it does the other.
 // `canChoose` = a "just a sport" session that can pick a catalogue session (21).
-function heroSessionHtml(s, canChoose = false) {
+// `inProgress` = a workout of this session is saved on this device: the big
+// button resumes it, whether the session has a recipe or not (23c).
+function heroSessionHtml(s, canChoose = false, inProgress = false) {
   const details = sessionDetails(s);
   const facts = [];
   if (details && details.exercises && details.exercises.length) facts.push(numHtml(details.exercises.length, "exercises"));
@@ -202,7 +208,10 @@ function heroSessionHtml(s, canChoose = false) {
   const withRecipe = !isPlainSession(s);
   let actions = "";
   if (s.status === "planned") {
-    actions = withRecipe
+    actions = inProgress
+      ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Resume workout</a>
+         <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
+      : withRecipe
       ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Start workout</a>
          <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
       : `<a class="hero-button" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>
