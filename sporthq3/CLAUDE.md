@@ -95,6 +95,9 @@
 28. Laptop layout pass (2026-10-23, from the UX review): 28a two page widths, 28b Home columns balanced, 28c planner
     header in one row + day headers line up, 28d warning chips one line + amber load banner, 28e "Add" buttons next
     to their section, 28f docs
+29. Laptop bigger pieces (2026-10-23; Rom logs almost all his runs on the laptop): 29a two-column log form + cursor in
+    Duration, 29b actions next to the content, 29c month view with names + Today button, 29d keyboard shortcuts,
+    29e docs. Workout mode on the laptop skipped on purpose (Rom trains with his phone)
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -149,6 +152,21 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: laptop bigger pieces (29; no migration). Utility classes .laptop-only / .phone-only (1000px). 29a log
+  form: .log-col wrappers (display: contents on a phone) -> >= 1000px a 2-column grid on the wide page width: left
+  When / Sport / Type (+ banners), right numbers card, match card, RPE, shoes / title / notes; Save bar full width.
+  New activity on a laptop (min-width 1000px AND hover: hover) focuses Duration (Rom: yes; never on a phone, never
+  when editing). Enter already saved from any box (implicit form submit; Notes is a textarea). 29b setTopbarAction
+  { phoneOnly }: the top-bar button hides on a laptop where the screen shows the action by its content: race and
+  block pages = "Edit" in the .race-sum card's corner (topbar.js addSummaryEditButton; in topbar.js because
+  races.js already imports blocks.js), planner week = links Copy last week · Templates · Catalogue · Manage
+  templates (same actions as "⋯"), month = Session catalogue · Week templates, Me = no gear (Settings row on the
+  page). 29c laptop month: monthDayNames() = races, planned sessions not skipped, unplanned logged activities,
+  each as badge + name, MONTH_NAMES_SHOWN = 3 then "+N more", title = full list; phone keeps the icons. headHtml
+  { todayHref }: a "Today" button after › on a laptop when another week / month is shown (phone keeps "Back to this
+  week"). Phone fix: a long week title wraps instead of running under the arrows. 29d js/utils/shortcuts.js: N, ← →
+  (planner, clicks .week-head > .nav-button), T, /, ?; never in a box, with a dialog open, with Cmd / Ctrl / Alt,
+  or without the tab bar; ‹ › / Today titles name their key; Settings "Keyboard shortcuts" card (laptop only).
 - 2026-10-23: laptop layout pass (28; no migration). Phone layouts unchanged unless said. 28a tokens --page-narrow
   (760px: base .view = Me, Settings, log form, editors, review, block page) and --page-wide (1200px: Home, Log, Stats,
   Races + race page, Body, Shoes, Blocks, Month); planner week keeps 1400px. 28b Home: #dash-load moved into
