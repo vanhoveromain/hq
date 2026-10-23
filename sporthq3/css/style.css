@@ -804,6 +804,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   .warning-between { display: none !important; }
   .day .warning-chip.warning-dup { display: flex; }
   .warning-chip { align-self: stretch; border-radius: 12px; font-size: 0.75rem; }
+  /* one line in the narrow day column (28d); the full message shows on mouse-over (title) and on tap */
+  .day .warning-chip .chip-short { display: none; }
+  .day .warning-chip .chip-tiny { display: inline; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .plan-card .sport-badge { width: 1.8rem; height: 1.8rem; }
 }
 
@@ -889,6 +892,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (min-width: 1000px) { .toast { bottom: calc(24px + env(safe-area-inset-bottom)); } }  /* no bottom bar on a laptop */
 
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
+/* "Big jump" / race-week load note: amber text on a card, the same look as on Home (28d) */
+.plan-banner.load-banner { background: var(--surface); border-color: var(--card-border); box-shadow: var(--shadow); color: var(--warn-text); font-weight: 500; }
 
 /* Week templates screen */
 .week-template h2 { margin-top: 0; }
@@ -1057,6 +1062,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .warning-chip .icon { width: 15px; height: 15px; }
 .warning-chip.is-muted { background: var(--bg); color: var(--muted); border-color: var(--border); }
 .warning-chip.warning-dup { display: none; }
+.warning-chip .chip-tiny { display: none; }   /* the laptop's narrow columns show the tiny text (28d) */
 /* between two days: centred on the gap, a little over both cards */
 .days > .warning-between { align-self: center; margin: -8px 0; position: relative; z-index: 1; }
 

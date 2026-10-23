@@ -166,6 +166,8 @@ export function sessionTypeLabel(sportKey, typeKey) {
 // (planned sessions that aren't cancelled, and logged activities).
 // A warning = { rule, days: ["2026-10-13", "2026-10-14"], message, short, canMute }
 // `short` = a few words for the planner's small warning chips (step 20a).
+// `tiny`  = even fewer, for the laptop's narrow day columns (28d), e.g. "Sun → Mon"
+//           (the day's load tag right above already says "Heavy legs"); none = `short`.
 // canMute: the rule is about your weekly habits, so you may say "this is my
 // normal pattern, don't warn me" (Plan -> tap the warning). Race warnings are
 // one-off, so they can't be muted.
@@ -202,6 +204,7 @@ export const TRAINING_RULES = [
           message: `Heavy legs two days in a row: ${shortDay(day)} ${heavyByDay[day].map(itemLabel).join(" + ")}`
             + ` → ${shortDay(next)} ${heavyByDay[next].map(itemLabel).join(" + ")}`,
           short: `Heavy legs ${shortDay(day)} → ${shortDay(next)}`,
+          tiny: `${shortDay(day)} → ${shortDay(next)}`,
         });
       }
       return warnings;
@@ -220,6 +223,7 @@ export const TRAINING_RULES = [
           days: [day],
           message: `Leg explosivity AND intervals on ${shortDay(day)}: pick one`,
           short: "Explosivity + intervals",
+          tiny: "Explo + intervals",
         }));
     },
   },
@@ -238,6 +242,7 @@ export const TRAINING_RULES = [
             days: [before, day],
             message: `Rest the day before your race: ${planned.map(itemLabel).join(" + ")} on ${shortDay(before)}`,
             short: `Rest before the race: ${shortDay(before)}`,
+            tiny: "Rest before race",
           }] : [];
         });
     },
@@ -255,6 +260,7 @@ export const TRAINING_RULES = [
           days: [day],
           message: `${races.map(itemLabel).join(" + ")} on ${shortDay(day)}: ${others.map(itemLabel).join(" + ")} planned the same day`,
           short: "Something else on race day",
+          tiny: "Busy race day",
         }] : [];
       });
     },

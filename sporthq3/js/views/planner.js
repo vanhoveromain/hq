@@ -779,9 +779,11 @@ function raceMarkerHtml(race) {
 // crossed-out bell. `where` = "warning-between" (between two day cards) or
 // "warning-dup" (the same chip inside the later day, for the laptop's columns).
 function warningChipHtml(w, index, where = "") {
+  // title = the full message when you point at it with a mouse (28d: on a laptop the chip is cut to one line).
   return `<button type="button" class="warning-chip ${where} ${w.muted ? "is-muted" : ""}" data-warning="${index}"
-    aria-label="${escapeHtml((w.muted ? "Muted: " : "Warning: ") + w.message)}">
-    ${icon(w.muted ? "bell-off" : "alert-triangle")}<span>${escapeHtml(w.short || w.message)}</span></button>`;
+    aria-label="${escapeHtml((w.muted ? "Muted: " : "Warning: ") + w.message)}" title="${escapeHtml(w.message)}">
+    ${icon(w.muted ? "bell-off" : "alert-triangle")}<span class="chip-short">${escapeHtml(w.short || w.message)}</span>
+    <span class="chip-tiny">${escapeHtml(w.tiny || w.short || w.message)}</span></button>`;
 }
 
 // `today` = to spot a session left open on a past day ("missed?").
