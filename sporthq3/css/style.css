@@ -1160,7 +1160,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .block-reminder { color: var(--accent); font-weight: 600; }
 
 /* Body & goals */
-.weigh-form input[type="date"] { flex: 1.4; }
+.weigh-when { margin-bottom: 8px; }
+.weigh-form input[type="date"] { margin-bottom: 8px; }
 .weigh-form input[name="weight_kg"] { flex: 1; min-width: 70px; }
 .goal-line { margin: 12px 0 6px; }
 .goal-edit, .weigh-list { margin-top: 16px; }

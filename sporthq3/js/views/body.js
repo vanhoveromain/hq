@@ -65,10 +65,18 @@ async function drawWeight(container) {
 
   card.innerHTML = `
     <h2>Weight</h2>
-    <form id="weigh-form" class="add-item weigh-form" novalidate>
-      <input type="date" name="weigh_date" value="${todayISO()}" aria-label="Date">
-      <input type="text" name="weight_kg" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Weight in kg">
-      <button type="submit" class="button primary">Save</button>
+    <!-- Today / Other day chips like the log form (30b): the date box only shows
+         for another day, so kg + Save keep a whole row on a phone. -->
+    <form id="weigh-form" class="weigh-form" novalidate>
+      <div class="chip-row weigh-when" id="weigh-when">
+        <button type="button" class="chip-button" data-when="today" aria-pressed="true">Today</button>
+        <button type="button" class="chip-button" data-when="other" aria-pressed="false">${icon("calendar")} Other day</button>
+      </div>
+      <input type="date" name="weigh_date" value="${todayISO()}" aria-label="Date" hidden>
+      <div class="add-item">
+        <input type="text" name="weight_kg" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Weight in kg">
+        <button type="submit" class="button primary">Save</button>
+      </div>
     </form>
     <p id="weigh-status" class="status" role="status"></p>
     ${latest ? `<p class="weight-latest">Latest: <strong>${numHtml(kgText(latest.weight_kg))}</strong> <span class="muted small">· ${escapeHtml(formatDayLabel(latest.weigh_date))}</span></p>` : ""}
@@ -87,6 +95,17 @@ async function drawWeight(container) {
   `;
 
   const status = card.querySelector("#weigh-status");
+  // Today / Other day (30b): "Other day" shows the date box; "Today" hides it and resets it to today.
+  card.querySelector("#weigh-when").addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-when]");
+    if (!chip) return;
+    const other = chip.dataset.when === "other";
+    for (const c of card.querySelectorAll("#weigh-when [data-when]")) c.setAttribute("aria-pressed", String(c === chip));
+    const dateBox = card.querySelector('input[name="weigh_date"]');
+    dateBox.hidden = !other;
+    if (other) dateBox.focus();
+    else dateBox.value = todayISO();
+  });
   card.querySelector("#weigh-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.target;
