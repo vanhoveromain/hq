@@ -81,6 +81,10 @@
 22. Unfinished workout fix (2026-10-22, Rom's bug report): 22a workout page "session removed" + Log it anyway /
     Discard, 22b Home / planner banner only when the session is still planned, 22c removing or skipping a
     session frees its saved workout, 22d no underline on links styled as buttons
+23. Laptop quick wins (2026-10-23, after Claude's UX review of the laptop version): 23a duration example, 23b hover
+    feedback, 23c "Resume workout" on Home, 23d one look for "selected" in the log form, 23e log list without
+    repeated titles (built 2026-10-23 on the draft, same way as 17: Rom tests locally, then main). Next, a separate
+    step: Log search + filter by session type
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -135,6 +139,22 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: laptop quick wins (23; no migration), from Claude's UX review of the laptop version (screens checked
+  at 1440 / 1280 / 1100 px on a fake database). 23a the empty Duration box showed "45:00" big and dark, as if
+  filled in: the example is now "e.g. 45:00" in the normal font, light grey (::placeholder on .big-input and
+  .mid-input). 23b hover: only inside @media (hover: hover) (= a real mouse; a phone would keep a hover look stuck
+  after a tap): cards that open a screen (a.card, .dash-tile, Home cards) lift (--shadow-hover; dark mode: no
+  shadow, the border lights up, --card-border-hover), planner cards a bit darker + lift, rows (log, sheet, routine,
+  race fold, checklist) --hover-bg, buttons / chips / sport tiles / type chips a darker border, RPE buttons an
+  inner ring. 23c Home: when the saved workout belongs to one of today's planned sessions, that session's big
+  button says "Resume workout" (+ the small Log it button) and the "Workout in progress" row is hidden; the row
+  stays for a workout of another session. 23d log form (Rom approved, replaces the 20c look): the chosen sport
+  tile and type chip are violet (accent border + light violet tile; filled violet chip) instead of the sport
+  colour / black; the sport icon keeps its colour. RPE 9-10 were dark red even when not chosen: new tokens
+  --rpe-max-soft-bg / -text (light and dark) make them light like 1-8, the chosen button is filled in its band
+  colour (the --rpe-max-* tokens stay for the RPE badges in the log list). 23e log list: a title equal to the
+  session type (ignoring capitals) is hidden, like a match title that names the opponent. Kept as decided on
+  2026-10-20: column titles inside each week card.
 - 2026-10-22: unfinished workout fix (22; no migration). Bug (Rom): Home showed "Workout in progress: Spa30 -
   Explo" and the link said "This session doesn't exist (any more)". Cause: the workout in progress lives in
   localStorage on that device (utils/workout.js) and points to a planned session; removing the session (Remove
