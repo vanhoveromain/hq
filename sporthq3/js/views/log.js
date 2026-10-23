@@ -4,15 +4,16 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610231441";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610231441";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610231441";
-import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610231441";
-import { sportBadge } from "../utils/plan.js?v=202610231441";
-import * as logForm from "./logForm.js?v=202610231441";
-import * as statsView from "./stats.js?v=202610231441";
+import { listActivities } from "../storage.js?v=202610231521";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610231521";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610231521";
+import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610231521";
+import { sportBadge } from "../utils/plan.js?v=202610231521";
+import * as logForm from "./logForm.js?v=202610231521";
+import * as statsView from "./stats.js?v=202610231521";
 
 const PAGE_SIZE = 30;
+const SEARCH_WAIT_MS = 350; // search once you stop typing for this long (not at every letter)
 const SPORT_FILTER_KEY = "sporthq3.logSport"; // the sport picked on this device ("all" or a sport key)
 
 export function render(container, { params = [] } = {}) {
@@ -35,6 +36,12 @@ async function renderList(container) {
       <a href="#/log/new" class="button primary add-button">+ Add activity</a>
       <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
     </div>
+    <!-- Search + type filter (27). The type box only shows once a sport is picked. -->
+    <div class="log-search-row">
+      <input type="search" id="log-search" class="log-search" placeholder="Search title, notes, opponent…"
+             aria-label="Search your activities" autocomplete="off" enterkeyhint="search">
+      <select id="type-filter" class="type-filter" aria-label="Filter by session type" hidden></select>
+    </div>
     <div id="activity-list"><p class="muted">Loading…</p></div>
     <button id="load-more" class="button load-more" hidden>Load more</button>
     <p id="list-status" class="status" role="status"></p>
@@ -45,9 +52,15 @@ async function renderList(container) {
   const status = container.querySelector("#list-status");
 
   const chips = container.querySelector("#sport-chips");
+  const searchBox = container.querySelector("#log-search");
+  const typeBox = container.querySelector("#type-filter");
 
   let sport = readSportFilter();
-  let activities = []; // everything loaded so far (for the chosen sport)
+  let sessionType = "all"; // not remembered: it resets when the sport changes
+  let search = "";         // not remembered: a search is a one-off
+  let activities = [];     // everything loaded so far (for the chosen filters)
+  let request = 0;         // goes up at every new question to the database
+  let searchTimer = null;
 
   function drawChips() {
     chips.innerHTML =
@@ -55,17 +68,39 @@ async function renderList(container) {
       SPORTS.map((s) => `<button type="button" class="chip-button" data-sport="${s.key}" aria-pressed="${s.key === sport}">${sportIcon(s.key)} ${escapeHtml(s.label)}</button>`).join("");
   }
 
+  // The type box: that sport's types + "No type" ("just a run"). Hidden for "All sports".
+  function drawTypeBox() {
+    const chosen = getSport(sport);
+    typeBox.hidden = !chosen;
+    if (!chosen) return;
+    typeBox.innerHTML =
+      `<option value="all">All types</option>` +
+      chosen.sessionTypes.map((t) => `<option value="${t.key}">${escapeHtml(t.label)}</option>`).join("") +
+      `<option value="none">No type (just ${escapeHtml(chosen.label.toLowerCase())})</option>`;
+    typeBox.value = sessionType;
+  }
+
+  // Start again from the top with the current filters.
+  function reload() {
+    activities = [];
+    moreButton.hidden = true;
+    status.textContent = "";
+    listEl.innerHTML = `<p class="muted">Loading…</p>`;
+    loadPage();
+  }
+
   async function loadPage() {
     moreButton.disabled = true;
-    const sportAsked = sport;
+    const asked = ++request;
     try {
-      const page = await listActivities({ limit: PAGE_SIZE, offset: activities.length, sport: sportAsked });
-      // Another chip was tapped while this page was loading: drop this stale answer.
-      if (sportAsked !== sport) return;
+      const page = await listActivities({ limit: PAGE_SIZE, offset: activities.length, sport, sessionType, search });
+      // The filters changed while this page was loading: a newer question is
+      // on its way, so drop this late answer.
+      if (asked !== request) return;
       activities = activities.concat(page);
       listEl.innerHTML = activities.length
         ? groupByWeek(activities).map(weekHtml).join("")
-        : emptyHtml(sport);
+        : (search || sessionType !== "all") ? noMatchHtml(search) : emptyHtml(sport);
       // A full page means there may be more; a short page means we reached the end.
       moreButton.hidden = page.length < PAGE_SIZE;
     } catch (error) {
@@ -79,18 +114,47 @@ async function renderList(container) {
     const chip = event.target.closest("[data-sport]");
     if (!chip || chip.dataset.sport === sport) return;
     sport = chip.dataset.sport;
+    sessionType = "all"; // a type belongs to one sport
     saveSportFilter(sport);
     drawChips();
-    // Start again from the top for the new sport
-    activities = [];
-    moreButton.hidden = true;
-    status.textContent = "";
-    listEl.innerHTML = `<p class="muted">Loading…</p>`;
-    loadPage();
+    drawTypeBox();
+    reload();
+  });
+
+  typeBox.addEventListener("change", () => {
+    sessionType = typeBox.value;
+    reload();
+  });
+
+  // Search once you stop typing (SEARCH_WAIT_MS); Enter searches at once.
+  // "input" also fires when the box's own ✕ clears it.
+  searchBox.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(runSearch, SEARCH_WAIT_MS);
+  });
+  searchBox.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") { clearTimeout(searchTimer); runSearch(); }
+  });
+  function runSearch() {
+    const text = searchBox.value.trim();
+    if (text === search) return;
+    search = text;
+    reload();
+  }
+
+  // "Clear search" in the "nothing matches" message: back to the full list of that sport.
+  listEl.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-clear-filters]")) return;
+    searchBox.value = "";
+    search = "";
+    sessionType = "all";
+    drawTypeBox();
+    reload();
   });
 
   moreButton.addEventListener("click", loadPage);
   drawChips();
+  drawTypeBox();
   await loadPage();
 }
 
@@ -99,6 +163,13 @@ function emptyHtml(sport) {
     return `<section class="card placeholder"><p>No activities yet. Tap <strong>+ Add activity</strong> to log your first one.</p></section>`;
   }
   return `<section class="card placeholder"><p>No ${escapeHtml(getSport(sport).label.toLowerCase())} sessions logged yet.</p></section>`;
+}
+
+// Nothing matches the search / the type picked.
+function noMatchHtml(search) {
+  const what = search ? `Nothing matches "${escapeHtml(search)}"` : "No sessions of that type";
+  return `<section class="card placeholder log-no-match"><p>${what}.</p>
+    <button type="button" class="button" data-clear-filters>${search ? "Clear search" : "Show all types"}</button></section>`;
 }
 
 // The remembered sport, if it still exists (a sport could be renamed or removed in rules.js).

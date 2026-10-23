@@ -1586,6 +1586,19 @@ p.dash-note { margin-bottom: 16px; }
 /* Log: sport chips scroll sideways on a phone instead of wrapping onto 3 lines */
 .log-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
 .log-filters .chip-button { white-space: nowrap; }
+/* Log search + type filter (27): one row, the search box takes the room left */
+.log-search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.log-search-row input, .log-search-row select { margin: 0; min-height: 44px; background: var(--surface); }
+.log-search { flex: 1; min-width: 0; font-size: 1rem; /* 16px: iPhone doesn't zoom in on the box */ }
+.type-filter { flex: none; width: auto; max-width: 45%; padding: 8px 12px; }
+.type-filter[hidden] { display: none; }
+/* Phone: not enough room for both, the type box gets its own line under the search */
+@media (max-width: 699px) {
+  .log-search-row { flex-wrap: wrap; }
+  .type-filter { flex: 1 1 100%; max-width: none; }
+}
+.log-no-match { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.log-no-match p { margin: 0; }
 
 /* Stats page */
 .stats-filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }

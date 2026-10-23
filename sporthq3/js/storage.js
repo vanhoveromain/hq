@@ -7,7 +7,7 @@
 // supabase-js is loaded straight from a CDN, with an exact version number so
 // it can never change under our feet.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610231441";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610231521";
 
 // When a magic link fails (expired, already used…), Supabase sends you back
 // with the reason in the address (#error_description=…). The client below
@@ -119,18 +119,48 @@ function withMatchStats(row) {
 // The select text "*, match_stats(*)" means: every column of the activity,
 // plus every column of its match card if it has one.
 // `sport` = a sport key to keep only that sport, or "all" / nothing for every sport.
-export async function listActivities({ limit = 30, offset = 0, sport = "all" } = {}) {
+// `sessionType` = a session type key, "none" for sessions without a type ("just a run"),
+//                 or "all" / nothing for every type (27).
+// `search` = text to find in the title, the notes or a match card's opponent,
+//            ignoring capitals; "" / nothing = no search (27).
+export async function listActivities({ limit = 30, offset = 0, sport = "all", sessionType = "all", search = "" } = {}) {
   let query = supabase
     .from("activities")
     .select("*, match_stats(*)");
-  // Filtered in the database (not in the browser), so each page is 30 sessions OF that sport.
+  // Filtered in the database (not in the browser), so each page is 30 sessions
+  // that match, and "Load more" keeps working.
   if (sport && sport !== "all") query = query.eq("sport", sport);
+  if (sessionType === "none") query = query.is("session_type", null);
+  else if (sessionType && sessionType !== "all") query = query.eq("session_type", sessionType);
+
+  const term = cleanSearch(search);
+  if (term) {
+    // The opponent lives in another table (match_stats): first find the
+    // match cards that mention it, then add their activities to the search.
+    const { data: cards, error: cardsError } = await supabase
+      .from("match_stats").select("activity_id").ilike("opponent", `%${term}%`);
+    if (cardsError) throw cardsError;
+    // "title contains it OR notes contain it (OR it's one of those matches)".
+    // ilike = "like, ignoring capitals"; * = "anything here"; the quotes keep
+    // spaces and dots inside the value.
+    const conditions = [`title.ilike."*${term}*"`, `notes.ilike."*${term}*"`];
+    if (cards.length) conditions.push(`id.in.(${cards.map((c) => c.activity_id).join(",")})`);
+    query = query.or(conditions.join(","));
+  }
+
   const { data, error } = await query
     .order("activity_date", { ascending: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
   return data.map(withMatchStats);
+}
+
+// The search text, safe to put in a database filter: characters that mean
+// something there (wildcards % _ *, the commas and brackets of "or(…)",
+// quotes, backslashes) become spaces; extra spaces go.
+function cleanSearch(text) {
+  return String(text || "").replace(/[%_*,()"\\:]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export async function getActivity(id) {
