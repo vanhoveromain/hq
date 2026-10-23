@@ -923,6 +923,21 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
 /* "Big jump" / race-week load note: amber text on a card, the same look as on Home (28d) */
 .plan-banner.load-banner { background: var(--surface); border-color: var(--card-border); box-shadow: var(--shadow); color: var(--warn-text); font-weight: 500; }
+/* 31b: a button now (tap = whole note on a phone) */
+.load-banner { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.load-banner .icon { flex: none; }
+.load-banner .load-short { display: none; }
+@media (max-width: 999px) {
+  /* Phone: one amber line; tapped (aria-expanded) = the whole note */
+  .load-banner[aria-expanded="false"] .load-short { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .load-banner[aria-expanded="false"] .load-full { display: none; }
+  .load-banner { padding: 8px 12px; }
+  /* Block link + Week review always on one line; a long block name ends in "…" */
+  .week-links { flex-wrap: nowrap; }
+  .week-links .week-block { min-width: 0; }
+  .week-links .week-block > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .week-links .week-review-link { flex: none; }
+}
 
 /* Week templates screen */
 .week-template h2 { margin-top: 0; }

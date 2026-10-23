@@ -258,9 +258,18 @@ async function drawWeek(container, monday) {
     warningsButton.classList.toggle("is-warning", count > 0);
     warningsButton.disabled = count === 0;
     container.querySelector("#week-empty").hidden = sessions.length > 0;
+    // Phone (31b): one amber line with the first sentence ("Big jump: 9 sessions
+    // this week vs 5 usually"), tap = the whole note. Laptop: the whole note.
     container.querySelector("#week-load").innerHTML = loadNotes
-      .map((note) => `<p class="plan-banner load-banner" role="note">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("");
+      .map((note) => `<button type="button" class="plan-banner load-banner" aria-expanded="false">${icon("trending-up")}
+        <span class="load-short">${escapeHtml(note.split(". ")[0])}</span><span class="load-full">${escapeHtml(note)}</span></button>`).join("");
   }
+
+  // A load note (31b): tap opens / closes the whole text (phone).
+  container.querySelector("#week-load").addEventListener("click", (event) => {
+    const note = event.target.closest(".load-banner");
+    if (note) note.setAttribute("aria-expanded", String(note.getAttribute("aria-expanded") !== "true"));
+  });
 
   // Warnings in the stat strip: tap = scroll to the first warning chip you can see.
   container.querySelector("#strip-warnings").addEventListener("click", () => {
@@ -390,7 +399,8 @@ async function drawWeek(container, monday) {
       const link = container.querySelector("#week-block");
       const week = blockWeek(block, day);
       link.href = `#/blocks/${block.id}`;
-      link.innerHTML = `${icon("book-open")} ${escapeHtml(block.name)} · week ${week.current} / ${week.total}`;
+      // The text in its own span so a long name ends in "…" on a phone (31b).
+      link.innerHTML = `${icon("book-open")} <span>${escapeHtml(block.name)} · week ${week.current} / ${week.total}</span>`;
       link.hidden = false;
     } catch { /* not important: the planner works without it */ }
   }
