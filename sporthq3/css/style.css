@@ -687,6 +687,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none;
 }
 .nav-button .icon { width: 20px; height: 20px; }
+.nav-spacer { flex: none; width: 44px; height: 44px; }   /* week review: no › after this week (30a) */
 .week-head .view-switch { margin: 0; }
 .week-head .view-switch a { padding: 6px 12px; }
 .week-nav-title strong { white-space: nowrap; }
