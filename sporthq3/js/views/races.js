@@ -17,7 +17,7 @@ import { blockWeek } from "./blocks.js?v=202610232118";
 import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610232118";
 import { showToast } from "../utils/toast.js?v=202610232118";
 import { icon } from "../utils/icons.js?v=202610232118";
-import { setTopbarAction, clearTopbarAction, addSummaryEditButton } from "../utils/topbar.js?v=202610232118";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202610232118";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -208,6 +208,9 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
   let bests = [];
   try {
     [race, blocks] = await Promise.all([raceId ? getRace(raceId) : null, listTrainingBlocks()]);
+    // The race's own name in the top bar (30d), "New race" for a new one.
+    // (only if you're still on a race: the answer may arrive after you moved on)
+    if (window.location.hash.startsWith("#/races/")) setPageTitle(race ? race.name : raceId ? "Race" : "New race");
     if (race) runs = await listRaceActivities(race.id);
     if (race && needsResult(race, todayISO())) {
       [dayRuns, bests] = await Promise.all([listRunsOn(race.race_date), listPersonalBests()]);

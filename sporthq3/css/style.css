@@ -178,7 +178,9 @@ p { margin: 0 0 12px; }
   /* 3 columns: logo | title | empty mirror of the logo column,
      so the title sits in the centre of the page, not of the leftover space. */
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* (30d) the sides never shrink below their content ("‹ Blocks", "Edit"); the
+     title gets what is left and ends in "…" when it doesn't fit */
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, max-content) minmax(max-content, 1fr);
   align-items: center;
   gap: 12px;
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
@@ -190,7 +192,9 @@ p { margin: 0 0 12px; }
 .brand { display: flex; text-decoration: none; }
 .brand[hidden] { display: none; }
 .brand img { display: block; height: 30px; width: auto; }  /* logo is 188 x 104 */
-.page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); text-align: center; }
+.page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); text-align: center;
+  /* a long race / block name ends in "…" instead of pushing "‹ Races" / "Edit" away (30d) */
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Step 20: "‹ Me" instead of the logo on a screen inside another one, and
    one action on the right (planner "⋯", block "Edit"). The negative margins
    keep the bar as thin as before while the tap area stays 44px. */
@@ -353,7 +357,7 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
   /* the tabs take the right side of the bar: the screen's action sits next
      to the logo / back link instead, and the title stays in the middle */
   .topbar { display: flex; }
-  .page-title { position: absolute; left: 50%; transform: translateX(-50%); }
+  .page-title { position: absolute; left: 50%; transform: translateX(-50%); max-width: 28vw; }
   .topbar-right { margin-left: 12px; }
   .topbar-button { margin: -7px 0; }
   .tabbar a.active { color: var(--topbar-text); background: rgba(255, 255, 255, 0.14); }

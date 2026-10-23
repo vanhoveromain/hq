@@ -35,6 +35,13 @@ export function addSummaryEditButton(container, label, onClick) {
   summary.querySelector(".sum-edit").addEventListener("click", onClick);
 }
 
+// The title in the middle of the top bar, when the screen knows a better one
+// than main.js's (30d: the race's or block's own name). Long names end in "…" (CSS).
+export function setPageTitle(text) {
+  const title = document.getElementById("page-title");
+  if (title) title.textContent = text;
+}
+
 // Removes the action (e.g. "Edit" while its form is open).
 export function clearTopbarAction() {
   if (actionEl()) actionEl().innerHTML = "";
