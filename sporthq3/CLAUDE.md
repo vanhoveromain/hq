@@ -87,6 +87,7 @@
     step: Log search + filter by session type
 24. Delete race ideas easily (2026-10-23, Rom: "I cannot delete ideas"): 24a bin on each idea card in the Races list,
     24b "Delete this idea" on the idea's page, 24c docs
+25. Races list order (2026-10-23, Rom): Upcoming, then Past races, then Ideas
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -141,6 +142,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: Races list order (25; no migration). Rom: Upcoming (registered / to register) first, then Past races,
+  then Ideas last (was Upcoming, Ideas, Past). Only the order of the sections changed (races.js renderList); each
+  group keeps its sorting and card look.
 - 2026-10-23: delete race ideas (24; no migration). Rom couldn't find how to delete an idea (it was Edit -> bottom
   of the form -> Delete). races.js deleteIdea(race) = confirm "Delete the idea "<name>"?" -> releaseWorkoutOf its
   routine sessions (an idea with a date may have some) -> deleteRace (checklist goes too, cascade) -> toast

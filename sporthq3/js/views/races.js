@@ -30,7 +30,7 @@ export function render(container, { params = [] } = {}) {
 // The list
 // ---------------------------------------------------------------------
 
-// Which group a race goes in:
+// Which group a race goes in (shown in this order since 2026-10-23: upcoming, past, ideas):
 //   upcoming = a date from today on, and "to register" or "registered"
 //   past     = finished, cancelled, or a date before today
 //   ideas    = everything else (no date yet, or an idea / potential race)
@@ -65,16 +65,16 @@ async function renderList(container) {
         ${upcoming.length ? `<div class="card-grid">${upcoming.map((r) => raceCardHtml(r, today, "upcoming")).join("")}</div>`
           : `<p class="muted">No race booked. Set a race to "To register" or "Registered" (with a date) to see it here.</p>`}
       </section>
-      ${ideas.length ? `
-        <section class="week">
-          <h2 class="week-title"><span>${icon("lightbulb")} Ideas</span><span class="muted">${ideas.length}</span></h2>
-          <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today, "ideas")).join("")}</div>
-        </section>` : ""}
       ${past.length ? `
         <details class="retired" open>
           <summary>Past races (${past.length})</summary>
           <div class="card-grid">${past.map((r) => raceCardHtml(r, today, "past")).join("")}</div>
         </details>` : ""}
+      ${ideas.length ? `
+        <section class="week">
+          <h2 class="week-title"><span>${icon("lightbulb")} Ideas</span><span class="muted">${ideas.length}</span></h2>
+          <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today, "ideas")).join("")}</div>
+        </section>` : ""}
     `;
     // The bin on an idea card (24a): delete it straight from the list.
     // onclick (not addEventListener) so a redraw never piles up listeners.
