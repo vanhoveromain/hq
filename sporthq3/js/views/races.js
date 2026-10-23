@@ -76,6 +76,14 @@ async function renderList(container) {
           <div class="card-grid">${past.map((r) => raceCardHtml(r, today, "past")).join("")}</div>
         </details>` : ""}
     `;
+    // The bin on an idea card (24a): delete it straight from the list.
+    // onclick (not addEventListener) so a redraw never piles up listeners.
+    listEl.onclick = async (event) => {
+      const button = event.target.closest("[data-delete-idea]");
+      if (!button) return;
+      const race = ideas.find((r) => r.id === button.dataset.deleteIdea);
+      if (race && await deleteIdea(race)) renderList(container);
+    };
   } catch (error) {
     listEl.innerHTML = `<p class="status error"></p>`;
     listEl.querySelector(".status").textContent = "Could not load races: " + error.message;
@@ -111,11 +119,17 @@ function raceCardHtml(race, today, group) {
   }
 
   if (group === "ideas") {
+    // The bin sits NEXT to the link (a button inside a link isn't allowed),
+    // placed in the card's corner by CSS (24a).
     return `
-      <a class="card race-card race-idea" href="${href}">
-        <span class="race-top"><strong>${icon("lightbulb")} ${escapeHtml(race.name)}</strong>${chip}</span>
-        <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date yet"}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
-      </a>`;
+      <div class="race-idea-item">
+        <a class="card race-card race-idea" href="${href}">
+          <span class="race-top"><strong>${icon("lightbulb")} ${escapeHtml(race.name)}</strong>${chip}</span>
+          <span class="muted small">${race.race_date ? formatDayLabel(race.race_date) : "No date yet"}${facts ? ` · ${escapeHtml(facts)}` : ""}</span>
+        </a>
+        <button type="button" class="race-idea-delete" data-delete-idea="${escapeHtml(race.id)}"
+                aria-label="Delete the idea ${escapeHtml(race.name)}" title="Delete this idea">${icon("trash-2")}</button>
+      </div>`;
   }
 
   // Past: finished with a result, or cancelled / never run.
@@ -136,6 +150,22 @@ function paceText(seconds, km) {
   return pace ? ` (${pace})` : "";
 }
 
+
+// Asks, then deletes a race idea (24a / 24b). Its checklist goes with it
+// (cascade). Returns true when it was deleted.
+async function deleteIdea(race) {
+  if (!window.confirm(`Delete the idea "${race.name}"?`)) return false;
+  try {
+    // An idea with a date may have routine sessions: free a workout saved for one (step 22).
+    releaseWorkoutOf((await listRaceSessions(race.id)).map((s) => s.id));
+    await deleteRace(race.id);
+    showToast(`Deleted: ${race.name}`);
+    return true;
+  } catch (error) {
+    showToast("Could not delete: " + error.message);
+    return false;
+  }
+}
 
 // ---------------------------------------------------------------------
 // One race: a summary first (step 19), the details form behind "Edit"
@@ -228,6 +258,11 @@ function setUpSummary(container, race, refresh) {
   } });
   const setDate = container.querySelector("#set-date");
   if (setDate) setDate.addEventListener("click", () => refresh({ editing: true, focus: "r-date" }));
+  // An idea can be deleted right here, no need to go through Edit (24b).
+  const deleteButton = container.querySelector("#delete-idea");
+  if (deleteButton) deleteButton.addEventListener("click", async () => {
+    if (await deleteIdea(race)) window.location.hash = "#/races";
+  });
 }
 
 
@@ -249,6 +284,8 @@ function summaryHtml(race, state, block, runs, today, found) {
         <p>${escapeHtml(race.notes)}</p>
       </section>` : ""}
     ${state === "past" ? foldedRowsHtml(race, block) : ""}
+    ${groupOf(race, today) === "ideas" ? `
+      <button type="button" class="link-button race-delete-idea" id="delete-idea">${icon("trash-2")} Delete this idea</button>` : ""}
   `;
 }
 
