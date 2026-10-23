@@ -1,9 +1,10 @@
 // Settings (opened from the Me tab): account, password, muted warnings, JSON backup.
 
-import { signOut, setPassword, exportAllData, getMutedWarnings, saveMutedWarnings } from "../storage.js?v=202610232058";
-import { escapeHtml } from "../utils/format.js?v=202610232058";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610232058";
-import { icon } from "../utils/icons.js?v=202610232058";
+import { signOut, setPassword, exportAllData, getMutedWarnings, saveMutedWarnings } from "../storage.js?v=202610232118";
+import { escapeHtml } from "../utils/format.js?v=202610232118";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610232118";
+import { icon } from "../utils/icons.js?v=202610232118";
+import { showShortcuts } from "../utils/shortcuts.js?v=202610232118";
 
 const MIN_PASSWORD_LENGTH = 12;
 const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
@@ -50,6 +51,13 @@ export function render(container, { user }) {
       <button id="export" type="button" class="button primary">Export my data</button>
       <p id="export-status" class="status" role="status"></p>
     </section>
+
+    <section class="card laptop-only">
+      <h2>${icon("keyboard")} Keyboard shortcuts</h2>
+      <p class="muted">On a laptop: <kbd>N</kbd> new activity, <kbd>←</kbd> <kbd>→</kbd> weeks in the planner,
+        <kbd>T</kbd> today, <kbd>/</kbd> search the log, <kbd>?</kbd> the list anywhere.</p>
+      <button id="shortcuts" type="button" class="button">Show all shortcuts</button>
+    </section>
   `;
 
   // textContent / .value (not innerHTML) so an email can never be read as HTML code.
@@ -59,6 +67,7 @@ export function render(container, { user }) {
   showLastExport(container.querySelector("#last-export"));
   drawMuted(container.querySelector("#muted-list"));
   container.querySelector("#export").addEventListener("click", () => runExport(container));
+  container.querySelector("#shortcuts").addEventListener("click", showShortcuts);
 
   container.querySelector("#sign-out").addEventListener("click", async () => {
     try {

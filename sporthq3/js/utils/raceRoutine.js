@@ -7,10 +7,10 @@
 
 import {
   listRaceSessions, listPlannedSessions, createPlannedSession, updatePlannedSession, deletePlannedSession,
-} from "../storage.js?v=202610232058";
-import { RACE_ROUTINE } from "../rules.js?v=202610232058";
-import { addDays, formatDayLabel } from "./dates.js?v=202610232058";
-import { releaseWorkoutOf } from "./savedWorkout.js?v=202610232058";
+} from "../storage.js?v=202610232118";
+import { RACE_ROUTINE } from "../rules.js?v=202610232118";
+import { addDays, formatDayLabel } from "./dates.js?v=202610232118";
+import { releaseWorkoutOf } from "./savedWorkout.js?v=202610232118";
 
 // Which routine sessions already exist for this race, by routine key.
 function routineKeyOf(session) {
