@@ -6,14 +6,14 @@
 import {
   listPlannedSessions, listActivitiesBetween, listMatchesBetween, listWeighIns,
   getWeekReview, saveWeekReview,
-} from "../storage.js?v=202610232118";
-import { sportIcon } from "../rules.js?v=202610232118";
-import { todayISO, startOfWeek, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610232118";
-import { escapeHtml, formatHours } from "../utils/format.js?v=202610232118";
-import { overview } from "../utils/stats.js?v=202610232118";
-import { sessionName } from "../utils/plan.js?v=202610232118";
-import { showToast } from "../utils/toast.js?v=202610232118";
-import { icon } from "../utils/icons.js?v=202610232118";
+} from "../storage.js?v=202610232156";
+import { sportIcon } from "../rules.js?v=202610232156";
+import { todayISO, startOfWeek, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610232156";
+import { escapeHtml, formatHours } from "../utils/format.js?v=202610232156";
+import { overview } from "../utils/stats.js?v=202610232156";
+import { sessionName } from "../utils/plan.js?v=202610232156";
+import { showToast } from "../utils/toast.js?v=202610232156";
+import { icon } from "../utils/icons.js?v=202610232156";
 
 export async function render(container, { params = [] } = {}) {
   const thisMonday = startOfWeek(todayISO());
@@ -22,13 +22,16 @@ export async function render(container, { params = [] } = {}) {
   const sunday = addDays(monday, 6);
 
   container.innerHTML = `
-    <div class="week-nav">
-      <a class="button small-button" href="#/review/${addDays(monday, -7)}" aria-label="Previous week">‹</a>
+    <!-- Same header as the planner (30a): ‹ title › on one row; no next week
+         after this one, an empty space keeps the title centred. -->
+    <div class="week-head">
+      <a class="nav-button" href="#/review/${addDays(monday, -7)}" aria-label="Previous week">${icon("chevron-left")}</a>
       <div class="week-nav-title">
         <strong>${formatWeekLabel(monday)}</strong>
         <span class="muted small">${formatDayLabel(monday)} – ${formatDayLabel(sunday)}</span>
       </div>
-      ${monday < thisMonday ? `<a class="button small-button" href="#/review/${addDays(monday, 7)}" aria-label="Next week">›</a>` : `<span></span>`}
+      ${monday < thisMonday ? `<a class="nav-button" href="#/review/${addDays(monday, 7)}" aria-label="Next week">${icon("chevron-right")}</a>`
+        : `<span class="nav-spacer" aria-hidden="true"></span>`}
     </div>
     <a class="today-link" href="#/planner/${monday}">${icon("calendar")} Open this week in the plan</a>
     <div id="review-body"><p class="muted">Loading…</p></div>

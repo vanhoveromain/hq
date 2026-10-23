@@ -178,7 +178,9 @@ p { margin: 0 0 12px; }
   /* 3 columns: logo | title | empty mirror of the logo column,
      so the title sits in the centre of the page, not of the leftover space. */
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* (30d) the sides never shrink below their content ("‹ Blocks", "Edit"); the
+     title gets what is left and ends in "…" when it doesn't fit */
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, max-content) minmax(max-content, 1fr);
   align-items: center;
   gap: 12px;
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
@@ -190,7 +192,9 @@ p { margin: 0 0 12px; }
 .brand { display: flex; text-decoration: none; }
 .brand[hidden] { display: none; }
 .brand img { display: block; height: 30px; width: auto; }  /* logo is 188 x 104 */
-.page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); text-align: center; }
+.page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); text-align: center;
+  /* a long race / block name ends in "…" instead of pushing "‹ Races" / "Edit" away (30d) */
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Step 20: "‹ Me" instead of the logo on a screen inside another one, and
    one action on the right (planner "⋯", block "Edit"). The negative margins
    keep the bar as thin as before while the tap area stays 44px. */
@@ -353,7 +357,7 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
   /* the tabs take the right side of the bar: the screen's action sits next
      to the logo / back link instead, and the title stays in the middle */
   .topbar { display: flex; }
-  .page-title { position: absolute; left: 50%; transform: translateX(-50%); }
+  .page-title { position: absolute; left: 50%; transform: translateX(-50%); max-width: 28vw; }
   .topbar-right { margin-left: 12px; }
   .topbar-button { margin: -7px 0; }
   .tabbar a.active { color: var(--topbar-text); background: rgba(255, 255, 255, 0.14); }
@@ -687,6 +691,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none;
 }
 .nav-button .icon { width: 20px; height: 20px; }
+.nav-spacer { flex: none; width: 44px; height: 44px; }   /* week review: no › after this week (30a) */
 .week-head .view-switch { margin: 0; }
 .week-head .view-switch a { padding: 6px 12px; }
 .week-nav-title strong { white-space: nowrap; }
@@ -871,6 +876,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sheet-row-label { flex: 1; min-width: 0; }
 .sheet-row-chevron { color: var(--muted); opacity: 0.7; }
 .sheet-row.is-danger { color: var(--error); font-weight: 600; }
+/* A hint on the right ("just running", 30e): the label stays on one line, the hint is what gets cut */
+.sheet-row:has(> .muted.small) .sheet-row-label { flex: 1 0 auto; white-space: nowrap; }
+.sheet-row > .muted.small { flex: 0 1 auto; min-width: 0; margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sheet-row.is-danger > .icon:first-child { color: var(--error); }
 .sheet-close { border: 0; background: none; font-size: 1.3rem; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; }
 .sheet-body { padding: 0 16px calc(20px + env(safe-area-inset-bottom)); }
@@ -1071,6 +1079,14 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (min-width: 720px) {
   .workout-strip { margin: 0 0 16px; border-radius: 16px; }
 }
+/* Phone (30c): the dark workout strip IS the top of the screen. The app's top
+   bar would be a second dark bar above it; the strip has its own "‹ Plan".
+   Only when the strip is there: the error / "session removed" pages keep the
+   top bar (the tab bar is hidden in workout mode, it's their only way out). */
+@media (max-width: 719px) {
+  .is-workout:has(.workout-strip) .topbar { display: none; }
+  .is-workout .workout-strip { padding-top: calc(10px + env(safe-area-inset-top)); }
+}
 
 /* Training-rule warnings on the planner (20a): a small amber chip with a few
    words; tap = the full message (+ mute). Between two day cards on a phone,
@@ -1159,7 +1175,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .block-reminder { color: var(--accent); font-weight: 600; }
 
 /* Body & goals */
-.weigh-form input[type="date"] { flex: 1.4; }
+.weigh-when { margin-bottom: 8px; }
+.weigh-form input[type="date"] { margin-bottom: 8px; }
 .weigh-form input[name="weight_kg"] { flex: 1; min-width: 70px; }
 .goal-line { margin: 12px 0 6px; }
 .goal-edit, .weigh-list { margin-top: 16px; }

@@ -5,8 +5,8 @@
 // main.js clears both before drawing a new screen, so a screen only sets
 // what it needs and never has to clean up after itself.
 
-import { escapeHtml } from "./format.js?v=202610232118";
-import { icon } from "./icons.js?v=202610232118";
+import { escapeHtml } from "./format.js?v=202610232156";
+import { icon } from "./icons.js?v=202610232156";
 
 const actionEl = () => document.getElementById("topbar-action");
 const backEl = () => document.getElementById("topbar-back");
@@ -33,6 +33,13 @@ export function addSummaryEditButton(container, label, onClick) {
   summary.insertAdjacentHTML("afterbegin",
     `<button type="button" class="button small-button sum-edit laptop-only" aria-label="${escapeHtml(label)}">Edit</button>`);
   summary.querySelector(".sum-edit").addEventListener("click", onClick);
+}
+
+// The title in the middle of the top bar, when the screen knows a better one
+// than main.js's (30d: the race's or block's own name). Long names end in "…" (CSS).
+export function setPageTitle(text) {
+  const title = document.getElementById("page-title");
+  if (title) title.textContent = text;
 }
 
 // Removes the action (e.g. "Edit" while its form is open).

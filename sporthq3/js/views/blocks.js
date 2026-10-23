@@ -6,13 +6,13 @@
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
   listWeekReviews,
-} from "../storage.js?v=202610232118";
-import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610232118";
-import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610232118";
-import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610232118";
-import { showToast } from "../utils/toast.js?v=202610232118";
-import { icon } from "../utils/icons.js?v=202610232118";
-import { setTopbarAction, clearTopbarAction, addSummaryEditButton } from "../utils/topbar.js?v=202610232118";
+} from "../storage.js?v=202610232156";
+import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610232156";
+import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610232156";
+import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610232156";
+import { showToast } from "../utils/toast.js?v=202610232156";
+import { icon } from "../utils/icons.js?v=202610232156";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202610232156";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -119,6 +119,8 @@ async function renderBlock(container, blockId, { edit = false } = {}) {
 
   const today = todayISO();
   const isEdit = Boolean(block);
+  // The block's own name in the top bar (30d), if you're still on a block page.
+  if (window.location.hash.startsWith("#/blocks/")) setPageTitle(block ? block.name : "New block");
   if (isEdit && !edit) {
     const startEditing = () => renderBlock(container, block.id, { edit: true });
     // Phone: "Edit" in the top bar. Laptop: in the summary card's corner (29b).

@@ -12,12 +12,12 @@
 // The two pickers (sport, then a session of that sport) are also used by the
 // planner's "+" (pickSessionToAdd), so both look the same.
 
-import { listSessionTemplates, updatePlannedSession } from "../storage.js?v=202610232118";
-import { SPORTS, sportIcon, sportLabel } from "../rules.js?v=202610232118";
-import { sessionName, isCustomSession, isPlainSession } from "./plan.js?v=202610232118";
-import { openSheet } from "./sheet.js?v=202610232118";
-import { showToast } from "./toast.js?v=202610232118";
-import { escapeHtml } from "./format.js?v=202610232118";
+import { listSessionTemplates, updatePlannedSession } from "../storage.js?v=202610232156";
+import { SPORTS, sportIcon, sportLabel } from "../rules.js?v=202610232156";
+import { sessionName, isCustomSession, isPlainSession } from "./plan.js?v=202610232156";
+import { openSheet } from "./sheet.js?v=202610232156";
+import { showToast } from "./toast.js?v=202610232156";
+import { escapeHtml } from "./format.js?v=202610232156";
 
 // What a change touches (and what Undo puts back).
 const KIND_FIELDS = ["template_id", "sport", "session_type", "title", "details"];

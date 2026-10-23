@@ -1,10 +1,10 @@
 // Settings (opened from the Me tab): account, password, muted warnings, JSON backup.
 
-import { signOut, setPassword, exportAllData, getMutedWarnings, saveMutedWarnings } from "../storage.js?v=202610232118";
-import { escapeHtml } from "../utils/format.js?v=202610232118";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610232118";
-import { icon } from "../utils/icons.js?v=202610232118";
-import { showShortcuts } from "../utils/shortcuts.js?v=202610232118";
+import { signOut, setPassword, exportAllData, getMutedWarnings, saveMutedWarnings } from "../storage.js?v=202610232156";
+import { escapeHtml } from "../utils/format.js?v=202610232156";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610232156";
+import { icon } from "../utils/icons.js?v=202610232156";
+import { showShortcuts } from "../utils/shortcuts.js?v=202610232156";
 
 const MIN_PASSWORD_LENGTH = 12;
 const LAST_EXPORT_KEY = "sporthq3.lastExport"; // remembered on this device only
