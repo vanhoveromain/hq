@@ -1072,6 +1072,14 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (min-width: 720px) {
   .workout-strip { margin: 0 0 16px; border-radius: 16px; }
 }
+/* Phone (30c): the dark workout strip IS the top of the screen. The app's top
+   bar would be a second dark bar above it; the strip has its own "‹ Plan".
+   Only when the strip is there: the error / "session removed" pages keep the
+   top bar (the tab bar is hidden in workout mode, it's their only way out). */
+@media (max-width: 719px) {
+  .is-workout:has(.workout-strip) .topbar { display: none; }
+  .is-workout .workout-strip { padding-top: calc(10px + env(safe-area-inset-top)); }
+}
 
 /* Training-rule warnings on the planner (20a): a small amber chip with a few
    words; tap = the full message (+ mute). Between two day cards on a phone,
