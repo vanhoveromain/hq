@@ -632,7 +632,9 @@ async function drawWeek(container, monday) {
     if (isCustomSession(session) && !isDone && !isCancelled) rows.push(sheetRowHtml("edit-custom", "pencil", "Edit this session"));
     if (isPlainSession(session) && isPlanned) rows.push(sheetRowHtml("edit-custom", "pencil", "Add details (name, exercises…)"));
     if (isCustomSession(session)) rows.push(sheetRowHtml("to-catalogue", "library", "Add to my catalogue"));
-    if (canClearSession(session)) rows.push(sheetRowHtml("clear", "undo-2", `Clear the session (just ${sportLabel(session.sport).toLowerCase()})`));
+    // Short label, the "just <sport>" as a grey hint on the right: one line on a phone (30e).
+    if (canClearSession(session)) rows.push(sheetRowHtml("clear", "undo-2", "Clear session",
+      { hint: `just ${sportLabel(session.sport).toLowerCase()}` }));
     if (session.race_id) rows.push(sheetRowHtml("race", "flag", "Open the race"));
     if (isPlanned) rows.push(sheetRowHtml("cancel", "x", "Mark as skipped"));
     if (isDone) rows.push(sheetRowHtml("reopen", "undo-2", "Not done"));

@@ -876,6 +876,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sheet-row-label { flex: 1; min-width: 0; }
 .sheet-row-chevron { color: var(--muted); opacity: 0.7; }
 .sheet-row.is-danger { color: var(--error); font-weight: 600; }
+/* A hint on the right ("just running", 30e): the label stays on one line, the hint is what gets cut */
+.sheet-row:has(> .muted.small) .sheet-row-label { flex: 1 0 auto; white-space: nowrap; }
+.sheet-row > .muted.small { flex: 0 1 auto; min-width: 0; margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sheet-row.is-danger > .icon:first-child { color: var(--error); }
 .sheet-close { border: 0; background: none; font-size: 1.3rem; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; }
 .sheet-body { padding: 0 16px calc(20px + env(safe-area-inset-bottom)); }
