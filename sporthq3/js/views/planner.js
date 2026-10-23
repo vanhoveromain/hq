@@ -752,6 +752,23 @@ async function drawWeek(container, monday) {
   }
 
   await load();
+  // Phone (31a): this week opens on today's card (on a Friday it's 3 screens
+  // down). Only here, after the first drawing: later redraws (add, move,
+  // tick) never jump.
+  if (monday === thisMonday) scrollToToday(daysEl);
+}
+
+// Scrolls a phone's week so today's card sits just under the top bar, unless
+// it's already well in sight (Monday, Tuesday) or you're on a laptop (7 columns).
+function scrollToToday(daysEl) {
+  if (!window.matchMedia("(max-width: 999px)").matches || !daysEl.isConnected) return;
+  const todayCard = daysEl.querySelector(".day.is-today");
+  if (!todayCard) return;
+  const top = todayCard.getBoundingClientRect().top;
+  if (top < window.innerHeight * 0.6) return; // already in sight
+  const topbar = document.querySelector(".topbar");
+  const offset = (topbar ? topbar.offsetHeight : 0) + 8;
+  window.scrollTo({ top: window.scrollY + top - offset, behavior: "auto" });
 }
 
 
