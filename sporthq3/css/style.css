@@ -496,6 +496,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .numbers-card input { margin: 0; }
 .big-input { font-family: var(--font-num); font-size: 1.9rem; font-weight: 700; padding: 8px 14px; min-height: 58px;
   border: 2px solid var(--accent); background: var(--surface); font-variant-numeric: tabular-nums; }
+/* The example ("45:00") must not look like a value already typed: light, thin, normal font */
+.big-input::placeholder, .mid-input::placeholder { font-family: var(--font); font-size: 1.1rem; font-weight: 400; color: var(--muted); opacity: 0.7; }
 .mid-input { font-family: var(--font-num); font-size: 1.45rem; font-weight: 700; padding: 8px 12px; min-height: 52px; font-variant-numeric: tabular-nums; }
 .number-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .number-pair:not(:has(> :not([hidden]))) { display: none; }

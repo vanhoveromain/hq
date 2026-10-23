@@ -152,7 +152,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
         <div id="duration-box">
           <label for="f-duration">Duration</label>
           <input id="f-duration" class="big-input" name="duration" type="text" inputmode="decimal" autocomplete="off"
-                 placeholder="45:00" required value="${escapeHtml(formatDuration(a.duration_s))}">
+                 placeholder="e.g. 45:00" required value="${escapeHtml(formatDuration(a.duration_s))}">
           <p class="hint">45:00 or 1:02:30 · "45" = 45 min</p>
         </div>
         <div class="number-pair">
