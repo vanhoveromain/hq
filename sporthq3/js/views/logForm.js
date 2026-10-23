@@ -113,6 +113,9 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
 
   container.innerHTML = `
     <form id="activity-form" class="form log-form" novalidate>
+      <!-- Laptop (29a): two columns, what you did on the left, the numbers on the
+           right, so the whole form fits one screen. Phone: one column as before. -->
+      <div class="log-col log-col-what">
       ${fromPlan ? `<p class="plan-banner">${icon("calendar")} For your planned <strong>${escapeHtml(sessionName(planned))}</strong> · ${escapeHtml(formatDayLabel(planned.session_date))}</p>` : ""}
       ${workout ? `<p class="plan-banner">${icon("dumbbell")} Workout finished${ticksTotal(workout) ? ` · ${ticksDone(workout)} / ${ticksTotal(workout)} sets ticked` : ""}.
         Check the duration, add how it felt, then save.
@@ -147,6 +150,8 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
         <div class="chip-row type-chips" id="type-chips"></div>
       </fieldset>
 
+      </div>
+      <div class="log-col log-col-numbers">
       <div class="card numbers-card">
         <!-- Hidden for a match: there, "Minutes played" in the match card is the duration. -->
         <div id="duration-box">
@@ -233,6 +238,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
           </div>
         </details>
       </div>
+      </div>
 
       <p id="form-status" class="status" role="status"></p>
       ${isEdit ? `<button type="button" id="delete" class="button danger delete-activity">${icon("trash-2")} Delete this activity</button>` : ""}
@@ -248,6 +254,12 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
 
   form.elements.sport.value = getSport(a.sport) ? a.sport : SPORTS[0].key;
   form.dataset.editing = isEdit || fromPlan ? "yes" : "no";
+  // Laptop, new activity (29a, Rom's choice): the cursor waits in Duration, so
+  // you click the sport and just type the time. Never on a phone (the keyboard
+  // would cover the sport tiles) and never when editing.
+  if (!isEdit && window.matchMedia("(min-width: 1000px) and (hover: hover)").matches) {
+    setTimeout(() => form.querySelector("#f-duration").focus(), 0);
+  }
   fillSessionTypes(form, isEdit || fromPlan ? (a.session_type ?? null) : undefined);
   updateVisibleFields(form);
   updateSpeed(form);

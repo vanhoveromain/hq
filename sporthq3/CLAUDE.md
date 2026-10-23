@@ -16,7 +16,8 @@
 - Every table has a `user_id` column (needed for RLS now, and for multi-user later).
 - Schema changes only via SQL migrations in `supabase/migrations/`, never ad-hoc in the dashboard.
 - JSON export for backup.
-- Mobile-first, responsive (sessions are logged from my phone).
+- Mobile-first, responsive. Rom logs almost all his runs from the LAPTOP (said 2026-10-23; this line used to say
+  "sessions are logged from my phone"), so the laptop log form matters as much as the phone.
 - ES modules + magic link need the app served over http (local static server), not opened as `file://`.
 
 ## Security

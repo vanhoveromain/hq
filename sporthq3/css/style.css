@@ -562,6 +562,16 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .is-form .view { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 .is-form .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 @media (max-width: 999px) { .is-form .tabbar { display: none; } }
+/* Log form columns (29a): phone = one list (the wrappers melt away); laptop = two columns */
+.log-col { display: contents; }
+@media (min-width: 1000px) {
+  .view:has(.log-form) { max-width: var(--page-wide); }
+  .log-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; row-gap: 18px; align-items: start; }
+  .log-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .log-col > * { margin: 0; }
+  .log-form > :not(.log-col) { grid-column: 1 / -1; }
+  .save-bar .button { max-width: calc(var(--page-wide) - 32px); }
+}
 
 .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .form-actions .button.primary { flex: 1 1 100%; }
