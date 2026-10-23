@@ -17,7 +17,7 @@ import { blockWeek } from "./blocks.js?v=202610232058";
 import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610232058";
 import { showToast } from "../utils/toast.js?v=202610232058";
 import { icon } from "../utils/icons.js?v=202610232058";
-import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610232058";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton } from "../utils/topbar.js?v=202610232058";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -265,10 +265,13 @@ async function renderRace(container, raceId, { editing = false, focus = null } =
 
 function setUpSummary(container, race, refresh) {
   // "Edit" sits in the top bar (20d), like the block page.
-  setTopbarAction({ text: "Edit", label: "Edit this race", onClick: () => {
+  const startEditing = () => {
     window.scrollTo(0, 0);
     refresh({ editing: true });
-  } });
+  };
+  // Phone: "Edit" in the top bar. Laptop: in the summary card's corner (29b).
+  setTopbarAction({ text: "Edit", label: "Edit this race", onClick: startEditing, phoneOnly: true });
+  addSummaryEditButton(container, "Edit this race", startEditing);
   const setDate = container.querySelector("#set-date");
   if (setDate) setDate.addEventListener("click", () => refresh({ editing: true, focus: "r-date" }));
   // An idea can be deleted right here, no need to go through Edit (24b).

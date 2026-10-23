@@ -14,13 +14,25 @@ const brandEl = () => document.querySelector(".topbar .brand");
 
 // The action on the right. Give `iconName` for an icon-only button (then
 // `label` is read out), or `text` for a word ("Edit").
+// `phoneOnly` (29b): hidden on a laptop, where the screen shows the same
+// action next to its content instead (far from the top-left corner).
 //   setTopbarAction({ iconName: "more", label: "More", onClick })
-export function setTopbarAction({ iconName = "", text = "", label = "", onClick }) {
+export function setTopbarAction({ iconName = "", text = "", label = "", onClick, phoneOnly = false }) {
   const slot = actionEl();
   if (!slot) return;
-  slot.innerHTML = `<button type="button" class="topbar-button ${iconName ? "is-icon" : ""}"
+  slot.innerHTML = `<button type="button" class="topbar-button ${iconName ? "is-icon" : ""} ${phoneOnly ? "phone-only" : ""}"
     ${label ? `aria-label="${escapeHtml(label)}"` : ""}>${iconName ? icon(iconName) : escapeHtml(text)}</button>`;
   slot.querySelector("button").addEventListener("click", onClick);
+}
+
+// Laptop only (29b): an "Edit" button in the top-right corner of a summary
+// card (.race-sum: the race page and the block page), next to what it edits.
+export function addSummaryEditButton(container, label, onClick) {
+  const summary = container.querySelector(".race-sum");
+  if (!summary) return;
+  summary.insertAdjacentHTML("afterbegin",
+    `<button type="button" class="button small-button sum-edit laptop-only" aria-label="${escapeHtml(label)}">Edit</button>`);
+  summary.querySelector(".sum-edit").addEventListener("click", onClick);
 }
 
 // Removes the action (e.g. "Edit" while its form is open).

@@ -118,7 +118,8 @@ async function drawWeek(container, monday) {
 
   // The planning tools (catalogue, templates, copy last week) live in the
   // "⋯" of the top bar (20a), so the week starts right at the top.
-  setTopbarAction({ iconName: "more", label: "Planning: catalogue, templates, copy last week", onClick: () => planningMenu() });
+  // Phone: "⋯" in the top bar. Laptop: the same tools as a row of links above the days (29b).
+  setTopbarAction({ iconName: "more", label: "Planning: catalogue, templates, copy last week", onClick: () => planningMenu(), phoneOnly: true });
   container.innerHTML = `
     <div class="planner">
     ${headHtml({
@@ -138,6 +139,12 @@ async function drawWeek(container, monday) {
     ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
     <div class="week-links">
       <a id="week-block" class="week-block" hidden></a>
+      <span class="plan-tools laptop-only" id="plan-tools">
+        <button type="button" class="link-button" data-tool="copy">${icon("copy")} Copy last week</button>
+        <button type="button" class="link-button" data-tool="templates">${icon("clipboard-list")} Templates</button>
+        <a href="#/catalogue">${icon("library")} Catalogue</a>
+        <a href="#/weektemplates">${icon("list")} Manage templates</a>
+      </span>
       ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
     </div>
     <p id="week-empty" class="muted week-summary" hidden>Nothing planned yet. Tap + on a day, or ⋯ (top right) to copy last week or apply a template.</p>
@@ -314,6 +321,14 @@ async function drawWeek(container, monday) {
   }
 
   // The "⋯" menu (top bar): the planning tools of this week.
+  // The laptop's tool links (29b): the same actions as the "⋯" menu.
+  container.querySelector("#plan-tools").addEventListener("click", async (event) => {
+    const tool = event.target.closest("[data-tool]");
+    if (!tool) return;
+    if (tool.dataset.tool === "copy") await copyLastWeek();
+    if (tool.dataset.tool === "templates") await templatesMenu();
+  });
+
   async function planningMenu() {
     const choice = await openSheet({
       title: "Planning",
@@ -898,7 +913,7 @@ async function drawMonth(container, month) {
   const today = todayISO();
   const title = parseISODate(first).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-  setTopbarAction({ iconName: "more", label: "Planning: catalogue, templates", onClick: () => monthMenu() });
+  setTopbarAction({ iconName: "more", label: "Planning: catalogue, templates", onClick: () => monthMenu(), phoneOnly: true });
   container.innerHTML = `
     <div class="planner">
     ${headHtml({
@@ -909,6 +924,10 @@ async function drawMonth(container, month) {
     })}
     ${month !== today.slice(0, 7) ? `<a class="today-link" href="#/planner/month/${today.slice(0, 7)}">${icon("undo-2")} Back to this month</a>` : ""}
     <p id="month-summary" class="muted week-summary"></p>
+    <div class="week-links month-tools laptop-only">
+      <a href="#/catalogue">${icon("library")} Session catalogue</a>
+      <a href="#/weektemplates">${icon("clipboard-list")} Week templates</a>
+    </div>
     <div class="month card">
       <div class="month-head">${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<span>${d}</span>`).join("")}</div>
       <div id="month-grid" class="month-grid"><p class="muted">Loading…</p></div>

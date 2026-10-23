@@ -12,7 +12,7 @@ import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils
 import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610232058";
 import { showToast } from "../utils/toast.js?v=202610232058";
 import { icon } from "../utils/icons.js?v=202610232058";
-import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610232058";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton } from "../utils/topbar.js?v=202610232058";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -120,7 +120,9 @@ async function renderBlock(container, blockId, { edit = false } = {}) {
   const today = todayISO();
   const isEdit = Boolean(block);
   if (isEdit && !edit) {
-    setTopbarAction({ text: "Edit", label: "Edit this block", onClick: () => renderBlock(container, block.id, { edit: true }) });
+    const startEditing = () => renderBlock(container, block.id, { edit: true });
+    // Phone: "Edit" in the top bar. Laptop: in the summary card's corner (29b).
+    setTopbarAction({ text: "Edit", label: "Edit this block", onClick: startEditing, phoneOnly: true });
     container.innerHTML = `
       <div class="block-page">
         ${blockSummaryHtml(block, today)}
@@ -128,6 +130,7 @@ async function renderBlock(container, blockId, { edit = false } = {}) {
         ${blockRacesHtml(block, today)}
         <div id="block-notes"></div>
       </div>`;
+    addSummaryEditButton(container, "Edit this block", startEditing);
     const recapButton = container.querySelector("#write-recap");
     if (recapButton) recapButton.addEventListener("click", () => renderBlock(container, block.id, { edit: true }));
     drawStats(container.querySelector("#block-stats"), container.querySelector("#block-notes"), block, today);

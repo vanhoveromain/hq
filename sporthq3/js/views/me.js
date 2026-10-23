@@ -17,7 +17,8 @@ import { icon } from "../utils/icons.js?v=202610232058";
 const PB_SHORT = { "5k": "5k", "10k": "10k", half: "Half", marathon: "Marathon" };
 
 export function render(container, { user } = {}) {
-  setTopbarAction({ iconName: "settings", label: "Settings", onClick: () => { window.location.hash = "#/settings"; } });
+  // Laptop: no gear, the Settings row is on the page already (29b).
+  setTopbarAction({ iconName: "settings", label: "Settings", onClick: () => { window.location.hash = "#/settings"; }, phoneOnly: true });
   const today = todayISO();
   const year = today.slice(0, 4);
   container.innerHTML = `
