@@ -2,16 +2,16 @@
 // numbers, personal bests), small tiles to Body & goals, Shoes, Training
 // blocks and the football season, then Settings (also the gear in the top bar).
 
-import { listActivitiesBetween, listRunsWithTimes, listPersonalBests, listWeighIns, getSettings, listTrainingBlocks } from "../storage.js?v=202610231521";
-import { PB_DISTANCES } from "../rules.js?v=202610231521";
-import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610231521";
-import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610231521";
-import { autoPersonalBests, distanceKeyOf } from "../utils/body.js?v=202610231521";
-import { overview } from "../utils/stats.js?v=202610231521";
-import { setTopbarAction } from "../utils/topbar.js?v=202610231521";
-import { drawFootball, drawShoes } from "./dashboard.js?v=202610231521";
-import { blockWeek } from "./blocks.js?v=202610231521";
-import { icon } from "../utils/icons.js?v=202610231521";
+import { listActivitiesBetween, listRunsWithTimes, listPersonalBests, listWeighIns, getSettings, listTrainingBlocks } from "../storage.js?v=202610232058";
+import { PB_DISTANCES } from "../rules.js?v=202610232058";
+import { todayISO, formatDayLabel } from "../utils/dates.js?v=202610232058";
+import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610232058";
+import { autoPersonalBests, distanceKeyOf } from "../utils/body.js?v=202610232058";
+import { overview } from "../utils/stats.js?v=202610232058";
+import { setTopbarAction } from "../utils/topbar.js?v=202610232058";
+import { drawFootball, drawShoes } from "./dashboard.js?v=202610232058";
+import { blockWeek } from "./blocks.js?v=202610232058";
+import { icon } from "../utils/icons.js?v=202610232058";
 
 // Short names for the PB row (the full ones are in Body & goals).
 const PB_SHORT = { "5k": "5k", "10k": "10k", half: "Half", marathon: "Marathon" };
