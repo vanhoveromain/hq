@@ -7,17 +7,17 @@ import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions, listRunsOn, linkActivityToRace,
   listPersonalBests, savePersonalBest,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610231441";
-import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610231441";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610231441";
-import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610231441";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610231441";
-import { sportBadge } from "../utils/plan.js?v=202610231441";
-import { blockWeek } from "./blocks.js?v=202610231441";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610231441";
-import { showToast } from "../utils/toast.js?v=202610231441";
-import { icon } from "../utils/icons.js?v=202610231441";
-import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610231441";
+} from "../storage.js?v=202610231521";
+import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610231521";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610231521";
+import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610231521";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610231521";
+import { sportBadge } from "../utils/plan.js?v=202610231521";
+import { blockWeek } from "./blocks.js?v=202610231521";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610231521";
+import { showToast } from "../utils/toast.js?v=202610231521";
+import { icon } from "../utils/icons.js?v=202610231521";
+import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610231521";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);

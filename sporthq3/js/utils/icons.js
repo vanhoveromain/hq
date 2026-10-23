@@ -9,7 +9,7 @@
 //   icon("check", { label: "Done" })       -> an icon that IS the content (e.g. an icon-only status)
 //   icon("check", { className: "is-ok" })  -> extra CSS class (is-ok = green, is-error = red, is-muted)
 
-import { escapeHtml } from "./format.js?v=202610231441";
+import { escapeHtml } from "./format.js?v=202610231521";
 
 // The inside of each <svg>: name -> shapes.
 export const ICONS = {
