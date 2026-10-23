@@ -35,7 +35,10 @@ async function renderList(container) {
 
     listEl.innerHTML = `
       ${active.length
-        ? `<div class="card-grid">${active.map(card).join("")}</div>`
+        ? `<section class="week">
+            <h2 class="week-title"><span>In use</span><span class="muted">${active.length}</span></h2>
+            <div class="card-grid">${active.map(card).join("")}</div>
+          </section>`
         : `<section class="card placeholder"><p>No shoes in use. Tap <strong>+ Add a pair</strong>.</p></section>`}
       ${retired.length ? `
         <details class="retired">

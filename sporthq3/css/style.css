@@ -1472,7 +1472,13 @@ p.dash-note { margin-bottom: 16px; }
   /* Races, blocks, shoes: cards side by side */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
   .card-grid > .card { margin-bottom: 0; }
-  .wide-page .add-button { max-width: 260px; margin-left: auto; }
+  /* Races, Shoes, Blocks (28e): "+ Add" sits at the right end of the first
+     section's title row, and each count follows its label ("UPCOMING  2") */
+  .wide-page { position: relative; }
+  .wide-page > .add-button { position: absolute; top: 0; right: 0; width: auto; max-width: none; margin: 0; padding: 10px 24px; }
+  .wide-page > div > .week:first-child > .week-title { min-height: 44px; align-items: center; padding-right: 240px; }
+  .wide-page > div > .placeholder:first-child { margin-top: 60px; }
+  .wide-page .week-title { justify-content: flex-start; }
   .wide-page .week, .wide-page .retired { margin-bottom: 24px; }
 }
 @media (min-width: 1000px) {
