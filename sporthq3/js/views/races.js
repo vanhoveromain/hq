@@ -7,17 +7,17 @@ import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions, listRunsOn, linkActivityToRace,
   listPersonalBests, savePersonalBest,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202610231435";
-import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610231435";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610231435";
-import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610231435";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610231435";
-import { sportBadge } from "../utils/plan.js?v=202610231435";
-import { blockWeek } from "./blocks.js?v=202610231435";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610231435";
-import { showToast } from "../utils/toast.js?v=202610231435";
-import { icon } from "../utils/icons.js?v=202610231435";
-import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610231435";
+} from "../storage.js?v=202610231441";
+import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610231441";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202610231441";
+import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202610231441";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202610231441";
+import { sportBadge } from "../utils/plan.js?v=202610231441";
+import { blockWeek } from "./blocks.js?v=202610231441";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202610231441";
+import { showToast } from "../utils/toast.js?v=202610231441";
+import { icon } from "../utils/icons.js?v=202610231441";
+import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610231441";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);
@@ -30,7 +30,7 @@ export function render(container, { params = [] } = {}) {
 // The list
 // ---------------------------------------------------------------------
 
-// Which group a race goes in:
+// Which group a race goes in (shown in this order since 2026-10-23: upcoming, past, ideas):
 //   upcoming = a date from today on, and "to register" or "registered"
 //   past     = finished, cancelled, or a date before today
 //   ideas    = everything else (no date yet, or an idea / potential race)
@@ -40,6 +40,9 @@ function groupOf(race, today) {
   if (race.race_date && (race.status === "to_register" || race.status === "registered")) return "upcoming";
   return "ideas";
 }
+
+// Past races shown before "Show all" (26): the list keeps the ideas in sight.
+const PAST_SHOWN = 5;
 
 async function renderList(container) {
   container.innerHTML = `
@@ -65,20 +68,30 @@ async function renderList(container) {
         ${upcoming.length ? `<div class="card-grid">${upcoming.map((r) => raceCardHtml(r, today, "upcoming")).join("")}</div>`
           : `<p class="muted">No race booked. Set a race to "To register" or "Registered" (with a date) to see it here.</p>`}
       </section>
+      ${past.length ? `
+        <details class="retired" open>
+          <summary>Past races (${past.length})</summary>
+          <div class="card-grid" id="past-grid">${past.slice(0, PAST_SHOWN).map((r) => raceCardHtml(r, today, "past")).join("")}</div>
+          ${past.length > PAST_SHOWN ? `
+            <button type="button" class="link-button show-all-past" data-show-all-past>Show all ${past.length} past races</button>` : ""}
+        </details>` : ""}
       ${ideas.length ? `
         <section class="week">
           <h2 class="week-title"><span>${icon("lightbulb")} Ideas</span><span class="muted">${ideas.length}</span></h2>
           <div class="card-grid">${ideas.map((r) => raceCardHtml(r, today, "ideas")).join("")}</div>
         </section>` : ""}
-      ${past.length ? `
-        <details class="retired" open>
-          <summary>Past races (${past.length})</summary>
-          <div class="card-grid">${past.map((r) => raceCardHtml(r, today, "past")).join("")}</div>
-        </details>` : ""}
     `;
     // The bin on an idea card (24a): delete it straight from the list.
     // onclick (not addEventListener) so a redraw never piles up listeners.
     listEl.onclick = async (event) => {
+      // "Show all N past races" (26): add the older ones in place.
+      const showAll = event.target.closest("[data-show-all-past]");
+      if (showAll) {
+        listEl.querySelector("#past-grid").insertAdjacentHTML("beforeend",
+          past.slice(PAST_SHOWN).map((r) => raceCardHtml(r, today, "past")).join(""));
+        showAll.remove();
+        return;
+      }
       const button = event.target.closest("[data-delete-idea]");
       if (!button) return;
       const race = ideas.find((r) => r.id === button.dataset.deleteIdea);

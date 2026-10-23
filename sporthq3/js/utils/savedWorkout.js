@@ -11,10 +11,10 @@
 //     "Discard" when it can't;
 //   - releaseWorkoutOf() is called before a session is removed or skipped.
 
-import { getPlannedSession } from "../storage.js?v=202610231435";
-import { escapeHtml } from "./format.js?v=202610231435";
-import { icon } from "./icons.js?v=202610231435";
-import { loadWorkout, clearWorkout, ticksDone } from "./workout.js?v=202610231435";
+import { getPlannedSession } from "../storage.js?v=202610231441";
+import { escapeHtml } from "./format.js?v=202610231441";
+import { icon } from "./icons.js?v=202610231441";
+import { loadWorkout, clearWorkout, ticksDone } from "./workout.js?v=202610231441";
 
 // The address of the log form for a workout without its session.
 export const LOG_ANYWAY_HREF = "#/log/new/workout";

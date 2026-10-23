@@ -6,13 +6,13 @@
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
   listWeekReviews,
-} from "../storage.js?v=202610231435";
-import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610231435";
-import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610231435";
-import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610231435";
-import { showToast } from "../utils/toast.js?v=202610231435";
-import { icon } from "../utils/icons.js?v=202610231435";
-import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610231435";
+} from "../storage.js?v=202610231441";
+import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610231441";
+import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610231441";
+import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610231441";
+import { showToast } from "../utils/toast.js?v=202610231441";
+import { icon } from "../utils/icons.js?v=202610231441";
+import { setTopbarAction, clearTopbarAction } from "../utils/topbar.js?v=202610231441";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
