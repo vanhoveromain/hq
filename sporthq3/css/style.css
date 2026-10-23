@@ -690,6 +690,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .week-head .view-switch { margin: 0; }
 .week-head .view-switch a { padding: 6px 12px; }
 .week-nav-title strong { white-space: nowrap; }
+/* Phone: a long title ("Week of 2 Nov 2026") wraps instead of running under the arrows (29c) */
+@media (max-width: 999px) { .week-nav-title strong { white-space: normal; text-wrap: balance; } }
 .week-nav-title span { white-space: nowrap; }
 @media (max-width: 359px) {
   .week-nav-title { flex-basis: 150px; }
@@ -714,6 +716,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .week-links .week-review-link { margin-left: auto; }
 /* The planner's tools on a laptop (29b): Copy last week · Templates · Catalogue */
 .plan-tools { display: inline-flex; align-items: center; gap: 20px; margin-left: 24px; }
+.week-links:has(.plan-tools) { justify-content: flex-start; }
 .plan-tools .link-button { min-height: 36px; gap: 6px; }
 .plan-tools .icon, .month-tools .icon { width: 16px; height: 16px; }
 .month-tools { justify-content: center; gap: 24px; }
@@ -1460,6 +1463,15 @@ p.dash-note { margin-bottom: 16px; }
   .month-day { min-height: 92px; align-items: flex-start; padding: 6px 8px; }
   .month-icons { justify-content: flex-start; }
   .month-icons .sport-badge.small { width: 1.9rem; height: 1.9rem; }
+  /* 29c: each day lists its sessions by name (icon + name, one line each) */
+  .month-day { min-height: 104px; }
+  .month-names { display: flex; flex-direction: column; gap: 3px; width: 100%; min-width: 0; margin-top: 2px; }
+  .month-name { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 0.78rem; font-weight: 500; line-height: 1.3; }
+  .month-name > span:last-child { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .month-name .sport-badge.small { flex: none; width: 1.25rem; height: 1.25rem; }
+  .month-name > .icon { flex: none; width: 1rem; height: 1rem; color: var(--accent); }
+  .month-more { font-size: 0.72rem; color: var(--muted); padding-left: 2px; }
+  .today-button { flex: none; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none; }
 }
 
 /* ---------- Laptop: wider list screens ---------- */

@@ -70,7 +70,9 @@ function viewSwitchHtml(active, weekHref, monthHref) {
 // "‹ This week ›" (or the month) + the Week | Month switch, on one row (20a).
 // `stripHtml` (week only, 28c): the done / load / warnings numbers. A laptop
 // shows them inline in this row; a phone puts them on their own line below.
-function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml, stripHtml = "" }) {
+// `todayHref` (29c): when another week / month is shown, a laptop gets a "Today"
+// button right after › (a phone keeps its "Back to this week" link below).
+function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml, stripHtml = "", todayHref = "" }) {
   return `
     <div class="week-head">
       <a class="nav-button" href="${prevHref}" aria-label="${prevLabel}">${icon("chevron-left")}</a>
@@ -79,6 +81,7 @@ function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, s
         ${subtitle ? `<span class="muted small">${escapeHtml(subtitle)}</span>` : ""}
       </div>
       <a class="nav-button" href="${nextHref}" aria-label="${nextLabel}">${icon("chevron-right")}</a>
+      ${todayHref ? `<a class="button small-button today-button laptop-only" href="${todayHref}">Today</a>` : ""}
       ${stripHtml}
       ${switchHtml}
     </div>`;
@@ -127,6 +130,7 @@ async function drawWeek(container, monday) {
       nextHref: `#/planner/${addDays(monday, 7)}`, nextLabel: "Next week",
       title: formatWeekLabel(monday), subtitle: rangeLabel(monday, sunday),
       switchHtml: viewSwitchHtml("week", `#/planner/${monday}`, `#/planner/month/${monday.slice(0, 7)}`),
+      todayHref: monday !== thisMonday ? "#/planner" : "",
       stripHtml: `
         <div class="card dash-strip plan-strip">
           <span><span class="strip-label">Done</span><span id="strip-done">–</span></span>
@@ -136,7 +140,7 @@ async function drawWeek(container, monday) {
         </div>`,
     })}
     <div id="workout-banner"></div>
-    ${monday !== thisMonday ? `<a class="today-link" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
+    ${monday !== thisMonday ? `<a class="today-link phone-only" href="#/planner">${icon("undo-2")} Back to this week</a>` : ""}
     <div class="week-links">
       <a id="week-block" class="week-block" hidden></a>
       <span class="plan-tools laptop-only" id="plan-tools">
@@ -147,7 +151,8 @@ async function drawWeek(container, monday) {
       </span>
       ${monday <= thisMonday ? `<a class="week-review-link" href="#/review/${monday}">${icon("notebook-pen")} Week review</a>` : ""}
     </div>
-    <p id="week-empty" class="muted week-summary" hidden>Nothing planned yet. Tap + on a day, or ⋯ (top right) to copy last week or apply a template.</p>
+    <p id="week-empty" class="muted week-summary" hidden>Nothing planned yet. Tap + on a day, or
+      <span class="phone-only">⋯ (top right)</span><span class="laptop-only">the links above</span> to copy last week or apply a template.</p>
     <div id="week-load"></div>
     <div id="days" class="days"><p class="muted">Loading…</p></div>
     </div>
@@ -921,8 +926,9 @@ async function drawMonth(container, month) {
       nextHref: `#/planner/month/${nextMonth}`, nextLabel: "Next month",
       title, subtitle: "",
       switchHtml: viewSwitchHtml("month", `#/planner/${month === today.slice(0, 7) ? today : first}`, `#/planner/month/${month}`),
+      todayHref: month !== today.slice(0, 7) ? `#/planner/month/${today.slice(0, 7)}` : "",
     })}
-    ${month !== today.slice(0, 7) ? `<a class="today-link" href="#/planner/month/${today.slice(0, 7)}">${icon("undo-2")} Back to this month</a>` : ""}
+    ${month !== today.slice(0, 7) ? `<a class="today-link phone-only" href="#/planner/month/${today.slice(0, 7)}">${icon("undo-2")} Back to this month</a>` : ""}
     <p id="month-summary" class="muted week-summary"></p>
     <div class="week-links month-tools laptop-only">
       <a href="#/catalogue">${icon("library")} Session catalogue</a>
@@ -949,9 +955,16 @@ async function drawMonth(container, month) {
       const { icons, done } = daySummary(day, sessions, activities, (sport) => sportBadge(sport, sportIcon, "small"));
       const classes = ["month-day", day.slice(0, 7) !== month ? "is-other" : "", day === today ? "is-today" : "",
         done ? "is-done" : ""].join(" ");
-      return `<a class="${classes}" href="#/planner/${day}" aria-label="${escapeHtml(formatDayLabel(day))}: ${icons.length ? icons.length + " session(s)" : "rest"}">
+      const names = monthDayNames(day, sessions, activities, unplannedRaces);
+      // Phone: the sport icons. Laptop (29c): the names, 3 at most, the full list on mouse-over.
+      return `<a class="${classes}" href="#/planner/${day}" aria-label="${escapeHtml(formatDayLabel(day))}: ${icons.length ? icons.length + " session(s)" : "rest"}"
+          ${names.length ? `title="${escapeHtml(names.map((n) => n.name).join("\n"))}"` : ""}>
         <span class="month-date">${Number(day.slice(8))}</span>
-        <span class="month-icons">${unplannedRaces.some((r) => r.race_date === day) ? `<span class="month-race" title="Race">${icon("flag", { label: "Race" })}</span>` : ""}${icons.join("")}</span>
+        <span class="month-icons phone-only">${unplannedRaces.some((r) => r.race_date === day) ? `<span class="month-race" title="Race">${icon("flag", { label: "Race" })}</span>` : ""}${icons.join("")}</span>
+        ${names.length ? `<span class="month-names laptop-only">
+          ${names.slice(0, MONTH_NAMES_SHOWN).map((n) => `<span class="month-name">${n.iconHtml}<span>${escapeHtml(n.name)}</span></span>`).join("")}
+          ${names.length > MONTH_NAMES_SHOWN ? `<span class="month-more">+${names.length - MONTH_NAMES_SHOWN} more</span>` : ""}
+        </span>` : ""}
       </a>`;
     }).join("");
 
@@ -966,6 +979,22 @@ async function drawMonth(container, month) {
     grid.innerHTML = `<p class="status error"></p>`;
     grid.querySelector(".status").textContent = "Could not load the month: " + error.message;
   }
+}
+
+// How many session names a month day shows on a laptop before "+N more" (29c).
+const MONTH_NAMES_SHOWN = 3;
+
+// What a month day lists on a laptop (29c): its races, its planned sessions
+// (not skipped) and what was logged without a plan, each { name, iconHtml }.
+function monthDayNames(day, sessions, activities, unplannedRaces) {
+  const linkedIds = new Set(sessions.map((s) => s.activity_id).filter(Boolean));
+  return [
+    ...unplannedRaces.filter((r) => r.race_date === day).map((r) => ({ name: r.name, iconHtml: icon("flag") })),
+    ...sessions.filter((s) => s.session_date === day && s.status !== "cancelled")
+      .map((s) => ({ name: sessionName(s), iconHtml: sportBadge(s.sport, sportIcon, "small") })),
+    ...activities.filter((a) => a.activity_date === day && !linkedIds.has(a.id))
+      .map((a) => ({ name: a.title || sessionTypeLabel(a.sport, a.session_type), iconHtml: sportBadge(a.sport, sportIcon, "small") })),
+  ];
 }
 
 // "2026-11" from a Date.
