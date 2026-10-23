@@ -179,7 +179,10 @@ function activityHtml(a) {
 
   // A match title like "vs RC Mons" says the same as the match line: show it once.
   const opponent = hasMatchCard && stats.opponent ? stats.opponent.toLowerCase() : "";
-  const showTitle = a.title && !(opponent && a.title.toLowerCase().includes(opponent));
+  // Same for a title equal to the session type ("Team training" twice) (23e).
+  const typeLabel = sessionTypeLabel(a.sport, a.session_type);
+  const sameAsType = a.title && a.title.trim().toLowerCase() === typeLabel.toLowerCase();
+  const showTitle = a.title && !sameAsType && !(opponent && a.title.toLowerCase().includes(opponent));
 
   // Laptop columns (hidden on a phone, where activity-meta shows instead).
   const distance = [a.distance_km != null ? numHtml(formatKm(a.distance_km)) : "", a.elevation_m ? numHtml(a.elevation_m, "m D+") : "",
@@ -193,7 +196,7 @@ function activityHtml(a) {
         ${sportBadge(a.sport, sportIcon)}
         <span class="col col-date">${formatDayLabel(a.activity_date)}</span>
         <span class="activity-main">
-          <span class="activity-title">${escapeHtml(sessionTypeLabel(a.sport, a.session_type))}</span>
+          <span class="activity-title">${escapeHtml(typeLabel)}</span>
           ${showTitle ? `<span class="activity-subtitle">${escapeHtml(a.title)}</span>` : ""}
           ${matchLine}
           <span class="muted activity-meta activity-date">${formatDayLabel(a.activity_date)}</span>
