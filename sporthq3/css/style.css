@@ -59,6 +59,8 @@
   --rpe-mid-bg: #ede9fe;  --rpe-mid-text: #5b21b6;
   --rpe-high-bg: #fce7f3; --rpe-high-text: #9d174d;
   --rpe-max-bg: #831843;  --rpe-max-text: #ffffff;
+  /* RPE 9-10 buttons in the log form: light until chosen, like 1-8 (23d) */
+  --rpe-max-soft-bg: #fbcfe8; --rpe-max-soft-text: #831843;
   /* Home (17c): the Today hero, the amber warning line, empty bar segments */
   --hero-bg: #6d28d9;
   --hero-text: #ffffff;
@@ -118,6 +120,7 @@
     --rpe-mid-bg: #3b2a66;  --rpe-mid-text: #ddd6fe;
     --rpe-high-bg: #5c1d3f; --rpe-high-text: #fbcfe8;
     --rpe-max-bg: #f9a8d4;  --rpe-max-text: #500724;
+    --rpe-max-soft-bg: #7a1f4f; --rpe-max-soft-text: #fce7f3;
     --hero-bg: #4c1d95;
     --hero-button-text: #4c1d95;
     --warn-bg: #3b2b0b;
@@ -484,7 +487,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   font-size: 0.82rem; text-align: center; line-height: 1.15; cursor: pointer;
 }
 .sport-tile .icon { width: 22px; height: 22px; color: var(--sport); }
-.sport-tile input:checked + span { border: 2px solid var(--sport); background: color-mix(in srgb, var(--sport) 16%, var(--surface)); }
+.sport-tile input:checked + span { border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
 .sport-tile input:focus-visible + span, .type-chip input:focus-visible + span, .rpe-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Type chips (radio buttons that look like chips) */
 .type-chip { margin: 0; font-weight: 500; }
@@ -493,7 +496,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--surface); font-size: 0.9rem; cursor: pointer;
 }
-.type-chip input:checked + span { background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
+.type-chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
 .more-chip { border: 0; background: none; color: var(--accent); font-weight: 600; }
 /* The numbers card: duration big, distance + D+ side by side */
 .numbers-card { display: flex; flex-direction: column; gap: 12px; }
@@ -529,9 +532,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .rpe-option.level-low  { --rpe-bg: var(--rpe-low-bg);  --rpe-text: var(--rpe-low-text); }
 .rpe-option.level-mid  { --rpe-bg: var(--rpe-mid-bg);  --rpe-text: var(--rpe-mid-text); }
 .rpe-option.level-high { --rpe-bg: var(--rpe-high-bg); --rpe-text: var(--rpe-high-text); }
-.rpe-option.level-max  { --rpe-bg: var(--rpe-max-bg);  --rpe-text: var(--rpe-max-text); }
+.rpe-option.level-max  { --rpe-bg: var(--rpe-max-soft-bg); --rpe-text: var(--rpe-max-soft-text); }
 .rpe-option input:checked + span { background: var(--rpe-text); color: var(--rpe-bg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rpe-text) 30%, transparent); font-size: 1.3rem; }
-.rpe-option.level-max input:checked + span { background: var(--text); color: var(--bg); }
 /* Shoes / Title / Notes folded into rows */
 .fold-card { padding: 0; overflow: hidden; }
 .fold-row + .fold-row { border-top: 1px solid var(--border); }
