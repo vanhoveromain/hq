@@ -10,7 +10,7 @@
 // Cmd / Ctrl / Alt held (the browser's own shortcuts keep working), or on
 // screens without the tab bar (login, workout mode).
 
-import { openSheet } from "./sheet.js?v=202610232058";
+import { openSheet } from "./sheet.js?v=202610232118";
 
 export const SHORTCUTS = [
   { keys: ["N"], what: "New activity" },

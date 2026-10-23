@@ -10,8 +10,8 @@
 //
 // Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610232058";
-import { icon } from "./utils/icons.js?v=202610232058";
+import { addDays } from "./utils/dates.js?v=202610232118";
+import { icon } from "./utils/icons.js?v=202610232118";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
