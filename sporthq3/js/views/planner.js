@@ -75,13 +75,13 @@ function viewSwitchHtml(active, weekHref, monthHref) {
 function headHtml({ prevHref, prevLabel, nextHref, nextLabel, title, subtitle, switchHtml, stripHtml = "", todayHref = "" }) {
   return `
     <div class="week-head">
-      <a class="nav-button" href="${prevHref}" aria-label="${prevLabel}">${icon("chevron-left")}</a>
+      <a class="nav-button" href="${prevHref}" aria-label="${prevLabel}" title="${prevLabel} (←)">${icon("chevron-left")}</a>
       <div class="week-nav-title">
         <strong>${escapeHtml(title)}</strong>
         ${subtitle ? `<span class="muted small">${escapeHtml(subtitle)}</span>` : ""}
       </div>
-      <a class="nav-button" href="${nextHref}" aria-label="${nextLabel}">${icon("chevron-right")}</a>
-      ${todayHref ? `<a class="button small-button today-button laptop-only" href="${todayHref}">Today</a>` : ""}
+      <a class="nav-button" href="${nextHref}" aria-label="${nextLabel}" title="${nextLabel} (→)">${icon("chevron-right")}</a>
+      ${todayHref ? `<a class="button small-button today-button laptop-only" href="${todayHref}" title="Today (T)">Today</a>` : ""}
       ${stripHtml}
       ${switchHtml}
     </div>`;

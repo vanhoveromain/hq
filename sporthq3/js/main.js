@@ -21,6 +21,7 @@ import * as workoutView from "./views/workout.js?v=202610232058";
 import * as customSessionView from "./views/customSession.js?v=202610232058";
 import * as reviewView from "./views/review.js?v=202610232058";
 import { clearTopbar, setTopbarBack } from "./utils/topbar.js?v=202610232058";
+import { startShortcuts } from "./utils/shortcuts.js?v=202610232058";
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.
@@ -129,6 +130,7 @@ async function start() {
   });
 
   window.addEventListener("hashchange", render);
+  startShortcuts(); // laptop keyboard shortcuts (29d): N, ← →, T, /, ?
   render();
 }
 

@@ -1799,3 +1799,13 @@ p.dash-note { margin-bottom: 16px; }
   .rpe-option input:not(:checked) + span:hover { box-shadow: inset 0 0 0 2px var(--rpe-text); }
   .button.primary:not(:disabled):hover, .hero-button:hover { filter: brightness(1.08); }
 }
+
+/* Keyboard shortcuts (29d): the keys drawn like little keys */
+kbd {
+  display: inline-block; min-width: 1.6em; padding: 1px 6px; border: 1px solid var(--border); border-bottom-width: 2px;
+  border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; font-size: 0.85em; font-weight: 600; text-align: center;
+}
+.shortcut-list { margin: 0 0 12px; }
+.shortcut-list > div { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.shortcut-list dt { flex: none; width: 70px; margin: 0; }
+.shortcut-list dd { margin: 0; }
