@@ -83,12 +83,14 @@
     session frees its saved workout, 22d no underline on links styled as buttons
 23. Laptop quick wins (2026-10-23, after Claude's UX review of the laptop version): 23a duration example, 23b hover
     feedback, 23c "Resume workout" on Home, 23d one look for "selected" in the log form, 23e log list without
-    repeated titles (built 2026-10-23 on the draft, same way as 17: Rom tests locally, then main). Next, a separate
-    step: Log search + filter by session type
+    repeated titles (built 2026-10-23 on the draft, same way as 17: Rom tests locally, then main). Log search + filter
+    by session type followed as its own step (27)
 24. Delete race ideas easily (2026-10-23, Rom: "I cannot delete ideas"): 24a bin on each idea card in the Races list,
     24b "Delete this idea" on the idea's page, 24c docs
 25. Races list order (2026-10-23, Rom): Upcoming, then Past races, then Ideas
 26. Races list: only the last 5 past races + "Show all N past races" (2026-10-23, Rom)
+27. Log search + type filter (2026-10-23): 27a storage (filters in the database), 27b type filter, 27c search box +
+    "nothing matches", 27d docs
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -143,6 +145,18 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: Log search + type filter (27; no migration). storage.js listActivities({ sport, sessionType, search }):
+  everything filtered in the DATABASE (like the sport chips), so "Load more" pages stay 30 matching sessions.
+  sessionType = a key, "none" (is null: "just a run") or "all". search = title OR notes OR a match card's opponent,
+  ignoring capitals: the opponent lives in match_stats, so it is looked up first (ilike) and its activity ids join
+  the or(...) filter (title.ilike."*x*", notes.ilike."*x*", id.in.(...)); the quotes keep spaces and dots, and
+  cleanSearch() turns characters that mean something in a filter (% _ * , ( ) " \ :) into spaces first. Checked
+  against the live API that these filters parse. views/log.js: a search box under the sport chips (searches once
+  you stop typing for 350 ms, or on Enter) and, once a sport is picked, a type box (All types, the sport's types,
+  "No type (just <sport>)"); all three combine. A request counter drops late answers (replaces the old sport-only
+  check). Remembered per device: the sport only (as before); the type resets when the sport changes, the search is
+  a one-off. Nothing found = "Nothing matches "…"" (or "No sessions of that type") + Clear search / Show all types.
+  Laptop: search + type on one row under the chips; phone (< 700px): the type box on its own line.
 - 2026-10-23: Races list shows the 5 most recent past races (26; no migration; races.js PAST_SHOWN = 5), then a
   centred "Show all N past races" button that adds the older ones in place (the count in "Past races (N)" stays the
   full total). Not remembered: the list is back to 5 next time. Reason: about 29 races came from Notion, mostly
