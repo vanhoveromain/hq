@@ -91,6 +91,9 @@
 26. Races list: only the last 5 past races + "Show all N past races" (2026-10-23, Rom)
 27. Log search + type filter (2026-10-23): 27a storage (filters in the database), 27b type filter, 27c search box +
     "nothing matches", 27d docs
+28. Laptop layout pass (2026-10-23, from the UX review): 28a two page widths, 28b Home columns balanced, 28c planner
+    header in one row + day headers line up, 28d warning chips one line + amber load banner, 28e "Add" buttons next
+    to their section, 28f docs
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -145,6 +148,21 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-23: laptop layout pass (28; no migration). Phone layouts unchanged unless said. 28a tokens --page-narrow
+  (760px: base .view = Me, Settings, log form, editors, review, block page) and --page-wide (1200px: Home, Log, Stats,
+  Races + race page, Body, Shoes, Blocks, Month); planner week keeps 1400px. 28b Home: #dash-load moved into
+  .dash-side (under the tiles; phone order unchanged thanks to CSS order); >= 1000px each Today session = one grid
+  row (name left, buttons right, buttons min 200px); race mode's strip hidden >= 900px (Rom: yes, laptop only).
+  28c planner: headHtml takes stripHtml, the done / load / warnings strip lives in the head row: laptop = inline
+  between ‹ › and Week | Month (no card look), phone = order 5 + full width (a card on its own line, as before);
+  day header on laptop = grid, line 1 date + "+", line 2 .day-tags (Today + load tag, min-height kept when empty,
+  load tag cut with … if the column is narrow) so every day's first card starts at the same height. Also fixed the
+  320px phone strip ("2h38 / 4h55" ran into the warnings count: columns sized to their content there). 28d rules.js
+  warnings get `tiny` ("Sun → Mon", "Explo + intervals", "Rest before race", "Busy race day"); the laptop's day
+  columns show it on one line (title = full message on mouse-over, tap as before), the phone keeps `short`; the
+  planner's load banner = amber text on a card like Home's note (was grey). 28e Races / Shoes / Blocks on a laptop:
+  "+ Add" is placed at the right end of the first section's title row (absolute in .wide-page), counts follow
+  their label; Shoes got an "In use" section title (all widths).
 - 2026-10-23: Log search + type filter (27; no migration). storage.js listActivities({ sport, sessionType, search }):
   everything filtered in the DATABASE (like the sport chips), so "Load more" pages stay 30 matching sessions.
   sessionType = a key, "none" (is null: "just a run") or "all". search = title OR notes OR a match card's opponent,
