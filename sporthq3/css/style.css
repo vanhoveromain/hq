@@ -1463,6 +1463,7 @@ p.dash-note { margin-bottom: 16px; }
 /* "Delete this idea" on the idea's page (24b): quiet, red */
 .race-delete-idea { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--error); }
 .race-delete-idea .icon { width: 16px; height: 16px; }
+.show-all-past { display: flex; margin: 8px auto 0; }  /* centred under the past races (26) */
 .race-result { font-family: var(--font-num); font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .race-result .muted { font-family: var(--font); font-size: 0.85rem; font-weight: 400; margin-left: 4px; }
 .race-past.is-not-run { opacity: 0.6; }

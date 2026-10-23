@@ -41,6 +41,9 @@ function groupOf(race, today) {
   return "ideas";
 }
 
+// Past races shown before "Show all" (26): the list keeps the ideas in sight.
+const PAST_SHOWN = 5;
+
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
@@ -68,7 +71,9 @@ async function renderList(container) {
       ${past.length ? `
         <details class="retired" open>
           <summary>Past races (${past.length})</summary>
-          <div class="card-grid">${past.map((r) => raceCardHtml(r, today, "past")).join("")}</div>
+          <div class="card-grid" id="past-grid">${past.slice(0, PAST_SHOWN).map((r) => raceCardHtml(r, today, "past")).join("")}</div>
+          ${past.length > PAST_SHOWN ? `
+            <button type="button" class="link-button show-all-past" data-show-all-past>Show all ${past.length} past races</button>` : ""}
         </details>` : ""}
       ${ideas.length ? `
         <section class="week">
@@ -79,6 +84,14 @@ async function renderList(container) {
     // The bin on an idea card (24a): delete it straight from the list.
     // onclick (not addEventListener) so a redraw never piles up listeners.
     listEl.onclick = async (event) => {
+      // "Show all N past races" (26): add the older ones in place.
+      const showAll = event.target.closest("[data-show-all-past]");
+      if (showAll) {
+        listEl.querySelector("#past-grid").insertAdjacentHTML("beforeend",
+          past.slice(PAST_SHOWN).map((r) => raceCardHtml(r, today, "past")).join(""));
+        showAll.remove();
+        return;
+      }
       const button = event.target.closest("[data-delete-idea]");
       if (!button) return;
       const race = ideas.find((r) => r.id === button.dataset.deleteIdea);
