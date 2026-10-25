@@ -10,8 +10,8 @@
 //
 // Later steps add more to this file: personal-best distances.
 
-import { addDays } from "./utils/dates.js?v=202610252239";
-import { icon } from "./utils/icons.js?v=202610252239";
+import { addDays } from "./utils/dates.js?v=202610252302";
+import { icon } from "./utils/icons.js?v=202610252302";
 
 
 // How a session counts for the rules (e.g. "no two heavy-leg days in a row").
@@ -24,6 +24,7 @@ export const CATEGORIES = {
 };
 
 // icon: the name of the sport's line icon in utils/icons.js (sportIcon() draws it).
+// short: a one-word name where room is tight (the phone's log form, 31c).
 // Which extra boxes the activity form shows for a sport:
 //   distance  -> km          elevation -> D+ in metres
 //   stairs    -> stairs climbed
@@ -34,7 +35,7 @@ export const CATEGORIES = {
 //            assists. "Minutes played" is then also used as the duration.
 export const SPORTS = [
   {
-    key: "running", label: "Running", icon: "footprints",
+    key: "running", label: "Running", short: "Run", icon: "footprints",
     fields: ["distance", "elevation", "shoe"], speed: "per_km",
     sessionTypes: [
       { key: "easy_run",        label: "Easy run (EF)",   category: "easy_run" },
@@ -48,7 +49,7 @@ export const SPORTS = [
     ],
   },
   {
-    key: "football", label: "Football", icon: "football",
+    key: "football", label: "Football", short: "Football", icon: "football",
     fields: [], speed: null,
     sessionTypes: [
       { key: "team_training", label: "Team training", category: "heavy_legs" },
@@ -57,7 +58,7 @@ export const SPORTS = [
     ],
   },
   {
-    key: "muscle", label: "Muscle training", icon: "dumbbell",
+    key: "muscle", label: "Muscle training", short: "Gym", icon: "dumbbell",
     fields: [], speed: null,
     sessionTypes: [
       { key: "explosivity",     label: "Leg explosivity",   category: "heavy_legs" },
@@ -66,21 +67,21 @@ export const SPORTS = [
     ],
   },
   {
-    key: "biking", label: "Biking", icon: "bike",
+    key: "biking", label: "Biking", short: "Bike", icon: "bike",
     fields: ["distance", "elevation"], speed: "kmh",
     sessionTypes: [
       { key: "ride", label: "Ride", category: "other" },
     ],
   },
   {
-    key: "swimming", label: "Swimming", icon: "waves",
+    key: "swimming", label: "Swimming", short: "Swim", icon: "waves",
     fields: ["distance"], speed: "per_100m",
     sessionTypes: [
       { key: "swim", label: "Swim", category: "other" },
     ],
   },
   {
-    key: "stairs", label: "Stair stepper", icon: "stairs",
+    key: "stairs", label: "Stair stepper", short: "Stairs", icon: "stairs",
     fields: ["stairs"], speed: null,
     sessionTypes: [
       { key: "stairs", label: "Stairs", category: "other" },

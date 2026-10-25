@@ -371,6 +371,25 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
 
 /* ---------- Activity log: list ---------- */
 .add-button { display: block; text-align: center; text-decoration: none; margin-bottom: 16px; line-height: 24px; }
+/* Phone (31e, Rom chose it from a mock-up): the "+ Add …" button becomes a round
+   "+" floating at the bottom right, just above the tab bar (thumb zone), on Log,
+   Races, Shoes, Blocks and Catalogue. The text stays for screen readers (aria-label). */
+@media (max-width: 999px) {
+  .view .add-button {
+    position: fixed; z-index: 20; margin: 0; padding: 0;
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(var(--tabbar-height) + 16px + env(safe-area-inset-bottom));
+    width: 58px; height: 58px; min-height: 0; border-radius: 50%;
+    display: grid; place-items: center;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent), 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  .view .add-button .add-text { display: none; }
+  .view .add-button .add-plus { font-size: 2.1rem; font-weight: 300; line-height: 1; margin-top: -3px; }
+  /* room under the list so the last row is never hidden behind the "+" */
+  .view:has(.add-button) { padding-bottom: calc(var(--tabbar-height) + 100px + env(safe-area-inset-bottom)); }
+  /* a toast (e.g. "Deleted: …") sits above the "+" instead of under it */
+  body:has(.view .add-button) .toast { bottom: calc(var(--tabbar-height) + 90px + env(safe-area-inset-bottom)); }
+}
 .load-more { width: 100%; }
 
 .week { margin-bottom: 20px; }
@@ -493,12 +512,23 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sport-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .sport-tile { position: relative; margin: 0; font-weight: 600; }
 .sport-tile input, .type-chip input, .rpe-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.sport-tile span {
+.sport-tile > span {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 66px; padding: 6px;
   border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
   font-size: 0.82rem; text-align: center; line-height: 1.15; cursor: pointer;
 }
 .sport-tile .icon { width: 22px; height: 22px; color: var(--sport); }
+.sport-tile .sport-short { display: none; }
+/* Phone (31c): the 6 sports on ONE row of small tiles with a short name
+   ("Run", "Gym"…), so Duration is in sight without scrolling */
+@media (max-width: 999px) {
+  .sport-tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .sport-tile > span { min-height: 56px; padding: 6px 2px; gap: 3px; border-radius: 12px; font-size: 0.72rem; }
+  .sport-tile .icon { width: 20px; height: 20px; }
+  /* the full name stays for screen readers (the short one is aria-hidden) */
+  .sport-tile .sport-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .sport-tile .sport-short { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 .sport-tile input:checked + span { border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
 .sport-tile input:focus-visible + span, .type-chip input:focus-visible + span, .rpe-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Type chips (radio buttons that look like chips) */
@@ -923,6 +953,21 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
 /* "Big jump" / race-week load note: amber text on a card, the same look as on Home (28d) */
 .plan-banner.load-banner { background: var(--surface); border-color: var(--card-border); box-shadow: var(--shadow); color: var(--warn-text); font-weight: 500; }
+/* 31b: a button now (tap = whole note on a phone) */
+.load-banner { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.load-banner .icon { flex: none; }
+.load-banner .load-short { display: none; }
+@media (max-width: 999px) {
+  /* Phone: one amber line; tapped (aria-expanded) = the whole note */
+  .load-banner[aria-expanded="false"] .load-short { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .load-banner[aria-expanded="false"] .load-full { display: none; }
+  .load-banner { padding: 8px 12px; }
+  /* Block link + Week review always on one line; a long block name ends in "…" */
+  .week-links { flex-wrap: nowrap; }
+  .week-links .week-block { min-width: 0; }
+  .week-links .week-block > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .week-links .week-review-link { flex: none; }
+}
 
 /* Week templates screen */
 .week-template h2 { margin-top: 0; }

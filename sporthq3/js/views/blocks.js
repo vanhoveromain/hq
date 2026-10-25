@@ -6,13 +6,13 @@
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
   listWeekReviews,
-} from "../storage.js?v=202610252239";
-import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610252239";
-import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610252239";
-import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610252239";
-import { showToast } from "../utils/toast.js?v=202610252239";
-import { icon } from "../utils/icons.js?v=202610252239";
-import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202610252239";
+} from "../storage.js?v=202610252302";
+import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610252302";
+import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610252302";
+import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610252302";
+import { showToast } from "../utils/toast.js?v=202610252302";
+import { icon } from "../utils/icons.js?v=202610252302";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202610252302";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
@@ -45,7 +45,7 @@ export function blockWeek(block, date) {
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
-    <a href="#/blocks/new" class="button primary add-button">+ New block</a>
+    <a href="#/blocks/new" class="button primary add-button" aria-label="New block"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">New block</span></a>
     <div id="block-list"><p class="muted">Loading…</p></div>
     </div>
   `;

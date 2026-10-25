@@ -10,29 +10,29 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610252239";
-import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610252239";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610252239";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610252239";
+} from "../storage.js?v=202610252302";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610252302";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610252302";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610252302";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202610252239";
-import { overview } from "../utils/stats.js?v=202610252239";
-import { weekLoadNotes } from "../utils/load.js?v=202610252239";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610252239";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610252239";
+} from "../utils/plan.js?v=202610252302";
+import { overview } from "../utils/stats.js?v=202610252302";
+import { weekLoadNotes } from "../utils/load.js?v=202610252302";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610252302";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610252302";
 import {
   pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
   chooseFromCatalogue, clearSession, catalogueCountLabel,
-} from "../utils/changeSession.js?v=202610252239";
-import { setTopbarAction } from "../utils/topbar.js?v=202610252239";
-import { showToast } from "../utils/toast.js?v=202610252239";
-import { loadWorkout } from "../utils/workout.js?v=202610252239";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610252239";
-import { blockWeek } from "./blocks.js?v=202610252239";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610252239";
-import { icon } from "../utils/icons.js?v=202610252239";
+} from "../utils/changeSession.js?v=202610252302";
+import { setTopbarAction } from "../utils/topbar.js?v=202610252302";
+import { showToast } from "../utils/toast.js?v=202610252302";
+import { loadWorkout } from "../utils/workout.js?v=202610252302";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610252302";
+import { blockWeek } from "./blocks.js?v=202610252302";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610252302";
+import { icon } from "../utils/icons.js?v=202610252302";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -258,9 +258,18 @@ async function drawWeek(container, monday) {
     warningsButton.classList.toggle("is-warning", count > 0);
     warningsButton.disabled = count === 0;
     container.querySelector("#week-empty").hidden = sessions.length > 0;
+    // Phone (31b): one amber line with the first sentence ("Big jump: 9 sessions
+    // this week vs 5 usually"), tap = the whole note. Laptop: the whole note.
     container.querySelector("#week-load").innerHTML = loadNotes
-      .map((note) => `<p class="plan-banner load-banner" role="note">${icon("trending-up")} ${escapeHtml(note)}</p>`).join("");
+      .map((note) => `<button type="button" class="plan-banner load-banner" aria-expanded="false">${icon("trending-up")}
+        <span class="load-short">${escapeHtml(note.split(". ")[0])}</span><span class="load-full">${escapeHtml(note)}</span></button>`).join("");
   }
+
+  // A load note (31b): tap opens / closes the whole text (phone).
+  container.querySelector("#week-load").addEventListener("click", (event) => {
+    const note = event.target.closest(".load-banner");
+    if (note) note.setAttribute("aria-expanded", String(note.getAttribute("aria-expanded") !== "true"));
+  });
 
   // Warnings in the stat strip: tap = scroll to the first warning chip you can see.
   container.querySelector("#strip-warnings").addEventListener("click", () => {
@@ -390,7 +399,8 @@ async function drawWeek(container, monday) {
       const link = container.querySelector("#week-block");
       const week = blockWeek(block, day);
       link.href = `#/blocks/${block.id}`;
-      link.innerHTML = `${icon("book-open")} ${escapeHtml(block.name)} · week ${week.current} / ${week.total}`;
+      // The text in its own span so a long name ends in "…" on a phone (31b).
+      link.innerHTML = `${icon("book-open")} <span>${escapeHtml(block.name)} · week ${week.current} / ${week.total}</span>`;
       link.hidden = false;
     } catch { /* not important: the planner works without it */ }
   }
@@ -752,6 +762,23 @@ async function drawWeek(container, monday) {
   }
 
   await load();
+  // Phone (31a): this week opens on today's card (on a Friday it's 3 screens
+  // down). Only here, after the first drawing: later redraws (add, move,
+  // tick) never jump.
+  if (monday === thisMonday) scrollToToday(daysEl);
+}
+
+// Scrolls a phone's week so today's card sits just under the top bar, unless
+// it's already well in sight (Monday, Tuesday) or you're on a laptop (7 columns).
+function scrollToToday(daysEl) {
+  if (!window.matchMedia("(max-width: 999px)").matches || !daysEl.isConnected) return;
+  const todayCard = daysEl.querySelector(".day.is-today");
+  if (!todayCard) return;
+  const top = todayCard.getBoundingClientRect().top;
+  if (top < window.innerHeight * 0.6) return; // already in sight
+  const topbar = document.querySelector(".topbar");
+  const offset = (topbar ? topbar.offsetHeight : 0) + 8;
+  window.scrollTo({ top: window.scrollY + top - offset, behavior: "auto" });
 }
 
 
