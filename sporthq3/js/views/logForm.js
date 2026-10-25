@@ -6,17 +6,17 @@ import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
   updatePlannedSession,
-} from "../storage.js?v=202610232156";
-import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610232156";
-import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610232156";
-import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610232156";
-import { openSheet } from "../utils/sheet.js?v=202610232156";
-import { showToast } from "../utils/toast.js?v=202610232156";
-import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610232156";
-import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202610232156";
-import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202610232156";
-import { icon } from "../utils/icons.js?v=202610232156";
-import { suggestedShoe } from "../utils/quickLog.js?v=202610232156";
+} from "../storage.js?v=202610252233";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202610252233";
+import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202610252233";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202610252233";
+import { openSheet } from "../utils/sheet.js?v=202610252233";
+import { showToast } from "../utils/toast.js?v=202610252233";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202610252233";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202610252233";
+import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202610252233";
+import { icon } from "../utils/icons.js?v=202610252233";
+import { suggestedShoe } from "../utils/quickLog.js?v=202610252233";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 
@@ -140,7 +140,7 @@ function drawForm(container, activity, shoes, planned, recentShoeIds, orphan = n
           ${SPORTS.map((s) => `
             <label class="sport-tile sport-${s.key}">
               <input type="radio" name="sport" value="${s.key}">
-              <span>${sportIcon(s.key)}${escapeHtml(s.label)}</span>
+              <span>${sportIcon(s.key)}<span class="sport-name">${escapeHtml(s.label)}</span><span class="sport-short" aria-hidden="true">${escapeHtml(s.short || s.label)}</span></span>
             </label>`).join("")}
         </div>
       </fieldset>

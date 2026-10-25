@@ -3,16 +3,16 @@
 //
 // The period and sport you pick are remembered on this device.
 
-import { listActivitiesForStats, listPlannedForStats, listWeighIns } from "../storage.js?v=202610232156";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel, STATS_RULES } from "../rules.js?v=202610232156";
-import { todayISO, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610232156";
-import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610232156";
+import { listActivitiesForStats, listPlannedForStats, listWeighIns } from "../storage.js?v=202610252233";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel, STATS_RULES } from "../rules.js?v=202610252233";
+import { todayISO, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610252233";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610252233";
 import {
   PERIODS, periodRange, bucketUnit, bucketKey, bucketKeys, overview, runningStats, footballStats,
   countByType, adherence, currentStreak, busiestWeek,
-} from "../utils/stats.js?v=202610232156";
-import { drawBarChart } from "../utils/barChart.js?v=202610232156";
-import { icon } from "../utils/icons.js?v=202610232156";
+} from "../utils/stats.js?v=202610252233";
+import { drawBarChart } from "../utils/barChart.js?v=202610252233";
+import { icon } from "../utils/icons.js?v=202610252233";
 
 const FILTER_KEY = "sporthq3.statsFilter";
 

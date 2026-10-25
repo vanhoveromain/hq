@@ -4,13 +4,13 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610232156";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610232156";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610232156";
-import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610232156";
-import { sportBadge } from "../utils/plan.js?v=202610232156";
-import * as logForm from "./logForm.js?v=202610232156";
-import * as statsView from "./stats.js?v=202610232156";
+import { listActivities } from "../storage.js?v=202610252233";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610252233";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610252233";
+import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610252233";
+import { sportBadge } from "../utils/plan.js?v=202610252233";
+import * as logForm from "./logForm.js?v=202610252233";
+import * as statsView from "./stats.js?v=202610252233";
 
 const PAGE_SIZE = 30;
 const SEARCH_WAIT_MS = 350; // search once you stop typing for this long (not at every letter)
@@ -33,7 +33,7 @@ async function renderList(container) {
     </div>
     <!-- Phone: button above the sport chips. Laptop: chips left, button right, one line. -->
     <div class="log-toolbar">
-      <a href="#/log/new" class="button primary add-button">+ Add activity</a>
+      <a href="#/log/new" class="button primary add-button" aria-label="Add activity"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">Add activity</span></a>
       <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
     </div>
     <!-- Search + type filter (27). The type box only shows once a sport is picked. -->

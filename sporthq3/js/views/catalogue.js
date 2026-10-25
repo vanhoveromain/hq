@@ -13,12 +13,12 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202610232156";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610232156";
-import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610232156";
-import { startOfWeek } from "../utils/dates.js?v=202610232156";
-import { isCustomSession, isPlainSession, sessionName, sportBadge } from "../utils/plan.js?v=202610232156";
-import { icon } from "../utils/icons.js?v=202610232156";
+} from "../storage.js?v=202610252233";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610252233";
+import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610252233";
+import { startOfWeek } from "../utils/dates.js?v=202610252233";
+import { isCustomSession, isPlainSession, sessionName, sportBadge } from "../utils/plan.js?v=202610252233";
+import { icon } from "../utils/icons.js?v=202610252233";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -31,7 +31,7 @@ export function render(container, { params = [] } = {}) {
 
 async function renderList(container) {
   container.innerHTML = `
-    <a href="#/catalogue/new" class="button primary add-button">+ New session</a>
+    <a href="#/catalogue/new" class="button primary add-button" aria-label="New session"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">New session</span></a>
     <div id="catalogue-list"><p class="muted">Loading…</p></div>
   `;
   const listEl = container.querySelector("#catalogue-list");

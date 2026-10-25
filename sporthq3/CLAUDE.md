@@ -100,9 +100,10 @@
     29e docs. Workout mode on the laptop skipped on purpose (Rom trains with his phone)
 30. Phone quick fixes (2026-10-23, after Claude's UX review of the phone version): 30a Week review arrows on one row,
     30b weigh-in Today / Other day, 30c workout mode one dark bar, 30d race / block names in the top bar, 30e "Clear
-    session" on one line, 30f docs. Still open from that review: flow round (Plan scrolls to today, compact Plan
-    header, compact sport tiles in the log form, a round "+" button instead of the full-width Add buttons) and
-    polish (fade on sideways chip rows, date on the title line in the Log list)
+    session" on one line, 30f docs. Flow round followed as 31; still open: polish (fade on sideways chip rows,
+    date on the title line in the Log list)
+31. Phone flow round (2026-10-23 / 25): 31a Plan opens on today, 31b compact Plan header, 31c sports on one row in the
+    log form, 31d mock-up (round "+" vs full-width Add, Rom: yes), 31e round "+" button, 31f docs
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -157,6 +158,17 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-25: phone flow round (31; no migration). Phone = under 1000px; laptop unchanged. 31a planner.js
+  scrollToToday(): only this week, only after the FIRST drawing of the week (redraws after add / move / tick never
+  jump), instant scroll so today's card sits under the top bar, skipped when it's already in the top 60% of the
+  screen. 31b the load note is a button (aria-expanded): phone = one amber line with its first sentence (text before
+  the first ". "), tap = the whole note; laptop = the whole note. Block link + Week review on one line, a long block
+  name ends in …. 31c rules.js SPORTS `short` (Run, Football, Gym, Bike, Swim, Stairs); phone log form = 6 small
+  tiles on one row (the full name visually hidden, kept for screen readers; base tile style now `.sport-tile >
+  span`); laptop keeps 3 × 2 with full names. 31d/31e Rom chose the round "+" from a mock-up (it replaces the
+  2026-10-20 full-width Log button on a phone): .add-button markup = "+" span + text span + aria-label; phone CSS =
+  fixed 58px circle bottom right above the tab bar (safe areas), .view gets extra bottom room, toasts move above it;
+  laptop shows "+ Add …" as before (Log toolbar, title row of Races / Shoes / Blocks, Catalogue on top).
 - 2026-10-23: phone quick fixes (30; no migration). 30a review.js used an old .week-nav header with no styling
   left (‹ title › stacked): now the planner's .week-head + .nav-button, a 44px .nav-spacer when there is no next
   week. 30b Body weigh-in: Today / Other day chips above one row kg + Save; the date box only for another day
