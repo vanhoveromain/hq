@@ -371,6 +371,25 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
 
 /* ---------- Activity log: list ---------- */
 .add-button { display: block; text-align: center; text-decoration: none; margin-bottom: 16px; line-height: 24px; }
+/* Phone (31e, Rom chose it from a mock-up): the "+ Add …" button becomes a round
+   "+" floating at the bottom right, just above the tab bar (thumb zone), on Log,
+   Races, Shoes, Blocks and Catalogue. The text stays for screen readers (aria-label). */
+@media (max-width: 999px) {
+  .view .add-button {
+    position: fixed; z-index: 20; margin: 0; padding: 0;
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(var(--tabbar-height) + 16px + env(safe-area-inset-bottom));
+    width: 58px; height: 58px; min-height: 0; border-radius: 50%;
+    display: grid; place-items: center;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent), 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  .view .add-button .add-text { display: none; }
+  .view .add-button .add-plus { font-size: 2.1rem; font-weight: 300; line-height: 1; margin-top: -3px; }
+  /* room under the list so the last row is never hidden behind the "+" */
+  .view:has(.add-button) { padding-bottom: calc(var(--tabbar-height) + 100px + env(safe-area-inset-bottom)); }
+  /* a toast (e.g. "Deleted: …") sits above the "+" instead of under it */
+  body:has(.view .add-button) .toast { bottom: calc(var(--tabbar-height) + 90px + env(safe-area-inset-bottom)); }
+}
 .load-more { width: 100%; }
 
 .week { margin-bottom: 20px; }

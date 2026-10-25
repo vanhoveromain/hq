@@ -33,7 +33,7 @@ async function renderList(container) {
     </div>
     <!-- Phone: button above the sport chips. Laptop: chips left, button right, one line. -->
     <div class="log-toolbar">
-      <a href="#/log/new" class="button primary add-button">+ Add activity</a>
+      <a href="#/log/new" class="button primary add-button" aria-label="Add activity"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">Add activity</span></a>
       <div class="chip-row log-filters" id="sport-chips" aria-label="Filter by sport"></div>
     </div>
     <!-- Search + type filter (27). The type box only shows once a sport is picked. -->

@@ -31,7 +31,7 @@ export function render(container, { params = [] } = {}) {
 
 async function renderList(container) {
   container.innerHTML = `
-    <a href="#/catalogue/new" class="button primary add-button">+ New session</a>
+    <a href="#/catalogue/new" class="button primary add-button" aria-label="New session"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">New session</span></a>
     <div id="catalogue-list"><p class="muted">Loading…</p></div>
   `;
   const listEl = container.querySelector("#catalogue-list");

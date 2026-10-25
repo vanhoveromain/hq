@@ -45,7 +45,7 @@ export function blockWeek(block, date) {
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
-    <a href="#/blocks/new" class="button primary add-button">+ New block</a>
+    <a href="#/blocks/new" class="button primary add-button" aria-label="New block"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">New block</span></a>
     <div id="block-list"><p class="muted">Loading…</p></div>
     </div>
   `;

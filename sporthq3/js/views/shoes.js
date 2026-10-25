@@ -20,7 +20,7 @@ export function render(container, { params = [] } = {}) {
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
-    <a href="#/shoes/new" class="button primary add-button">+ Add a pair</a>
+    <a href="#/shoes/new" class="button primary add-button" aria-label="Add a pair"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">Add a pair</span></a>
     <div id="shoe-list"><p class="muted">Loading…</p></div>
     </div>
   `;

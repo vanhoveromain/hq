@@ -47,7 +47,7 @@ const PAST_SHOWN = 5;
 async function renderList(container) {
   container.innerHTML = `
     <div class="wide-page">
-    <a href="#/races/new" class="button primary add-button">+ Add a race</a>
+    <a href="#/races/new" class="button primary add-button" aria-label="Add a race"><span class="add-plus" aria-hidden="true">+</span> <span class="add-text">Add a race</span></a>
     <div id="race-list"><p class="muted">Loading…</p></div>
     </div>
   `;
