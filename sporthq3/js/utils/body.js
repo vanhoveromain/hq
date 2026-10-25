@@ -1,6 +1,6 @@
 // body.js — calculations for Body & goals (no database here, just maths).
 
-import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610252233";
+import { PB_DISTANCES, PB_RULES, WEIGHT_TREND_POINTS } from "../rules.js?v=202610252302";
 
 // Best run for each PB distance.
 // Returns { "10k": { estimated_s, exact, run } | null, ... }

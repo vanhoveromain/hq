@@ -104,6 +104,7 @@
     date on the title line in the Log list)
 31. Phone flow round (2026-10-23 / 25): 31a Plan opens on today, 31b compact Plan header, 31c sports on one row in the
     log form, 31d mock-up (round "+" vs full-width Add, Rom: yes), 31e round "+" button, 31f docs
+32. New brand colours (2026-10-25, Rom picked them): deep purple #3d0079 + cool grey #e9edf2 page; done 2026-10-25
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -158,6 +159,14 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-25: brand colours (32; no migration). Rom picked deep purple #3d0079 (accent, hero, links, bars,
+  logo tile) and cool grey #e9edf2 (page background), after a side-by-side preview against the old violet.
+  Derived by Claude, all tokens in style.css: greys turned cool to sit on the blue-ish page (muted #5b6472 keeps
+  4.5:1 on #e9edf2; text #161922, border #d6dce4); top bar stays charcoal (#13111a, a touch of purple).
+  Dark mode: #3d0079 is unreadable as text on dark (1.3:1), so links / active tab / lines use lilac #c4a5ff
+  (also the infield on the logo tile, the strip accent and the race-mode accent); the hero keeps #3d0079 as a
+  fill. --race-mode-button = #5b2a9e (a lifted purple: #3d0079 vanishes on the dark race block). Logos and
+  app icons regenerated with brand/export.mjs. Sport HQ = deep purple in the HQ family (was violet).
 - 2026-10-25: phone flow round (31; no migration). Phone = under 1000px; laptop unchanged. 31a planner.js
   scrollToToday(): only this week, only after the FIRST drawing of the week (redraws after add / move / tick never
   jump), instant scroll so today's card sits under the top bar, skipped when it's already in the top 60% of the
@@ -556,7 +565,7 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   password, backup (moved out of Me; not a 6th tab, the tab bar stays at 5).
 - 2026-10-14: accent = VIOLET (#6d28d9 / #7c3aed lines / #a78bfa brand + dark mode). Orange felt too
   "Strava". Rom's end goal is one HQ hub hosting all his HQs (sport, work, personal) with the SAME
-  style and one accent per HQ: hub = ink (black & white), Sport = violet, Work = blue, Personal =
+  style and one accent per HQ: hub = ink (black & white), Sport = violet (deep purple since 2026-10-25), Work = blue, Personal =
   raspberry. Green / amber / red are reserved for done / warning / error in every HQ, so no HQ uses
   them as accent. (If Work HQ uses QED's teal + green later, its green clashes with "done".) Later:
   move the shared style into one stylesheet the HQs share, each HQ setting only --accent tokens.
