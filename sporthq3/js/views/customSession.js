@@ -3,7 +3,7 @@
 //   #/custom/new/<YYYY-MM-DD>  -> new custom session on that day
 //   #/custom/<plannedId>       -> edit it
 
-import { renderEditor } from "./catalogue.js?v=202610232156";
+import { renderEditor } from "./catalogue.js?v=202610252233";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null, { date: params[1] });
