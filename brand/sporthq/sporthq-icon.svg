@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="22" fill="#6d28d9"/>
+  <rect width="100" height="100" rx="22" fill="#3d0079"/>
   <svg x="6" y="29.40" width="88" height="48.68" viewBox="0 0 188 104">
   <defs>
     <!-- The lane line is cut out of the track, so it shows whatever is behind the logo -->
@@ -9,7 +9,7 @@
       <path d="M181.5 28.5 V104" stroke="#fff" stroke-width="13"/>
     </mask>
   </defs>
-  <path d="M139 41.5 H159 A16 16 0 0 1 159 73.5 H139 A16 16 0 0 1 139 41.5 Z" fill="#a78bfa"/>
+  <path d="M139 41.5 H159 A16 16 0 0 1 159 73.5 H139 A16 16 0 0 1 139 41.5 Z" fill="#c4a5ff"/>
   <g fill="none" stroke="#ffffff" stroke-width="1.5">
     <rect x="130" y="46" width="38" height="23"/>
     <path d="M149 46 V69"/>

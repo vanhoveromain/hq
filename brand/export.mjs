@@ -14,9 +14,9 @@ catch { playwright = require(execSync("npm root -g").toString().trim() + "/playw
 const C = {
   black: "#111111",
   white: "#ffffff",
-  violet: "#6d28d9",       // SportHQ violet (same as --accent in sporthq3/css/style.css)
-  violetLight: "#a78bfa",  // infield on the violet tile
-  violetTint: "#ede9fe",   // infield on a light page
+  purple: "#3d0079",       // SportHQ deep purple (same as --accent in sporthq3/css/style.css)
+  purpleLight: "#c4a5ff",  // infield on the purple tile (same as --accent in dark mode)
+  purpleTint: "#ece4f7",   // infield on a light page
 };
 
 // ---------- Letters (stroke drawing, 104 units tall) ----------
@@ -72,19 +72,19 @@ const hqIcon = (rounded) => svg(100, 100, `
 
 const SHQ_H = 88 * 104 / SHQ_W;
 const shqIcon = (rounded) => svg(100, 100, `
-  <rect width="100" height="100" ${rounded ? 'rx="22"' : ""} fill="${C.violet}"/>
-  <svg x="6" y="${(50 - 44 * SHQ_H / 104).toFixed(2)}" width="88" height="${SHQ_H.toFixed(2)}" viewBox="0 0 ${SHQ_W} 104">${shqLetters({ ink: C.white, infield: C.violetLight, pitch: C.white, id: "lane-icon" })}</svg>`);
+  <rect width="100" height="100" ${rounded ? 'rx="22"' : ""} fill="${C.purple}"/>
+  <svg x="6" y="${(50 - 44 * SHQ_H / 104).toFixed(2)}" width="88" height="${SHQ_H.toFixed(2)}" viewBox="0 0 ${SHQ_W} 104">${shqLetters({ ink: C.white, infield: C.purpleLight, pitch: C.white, id: "lane-icon" })}</svg>`);
 
 // Favicons: the stadium alone. 32 px keeps the centre circle, 16 px only the halfway line.
 const favicon32 = svg(100, 100, `
-  <rect width="100" height="100" rx="22" fill="${C.violet}"/>
-  <path d="M40 34.5 H60 A15.5 15.5 0 0 1 60 65.5 H40 A15.5 15.5 0 0 1 40 34.5 Z" fill="${C.violetLight}"/>
+  <rect width="100" height="100" rx="22" fill="${C.purple}"/>
+  <path d="M40 34.5 H60 A15.5 15.5 0 0 1 60 65.5 H40 A15.5 15.5 0 0 1 40 34.5 Z" fill="${C.purpleLight}"/>
   <path d="M40 28 H60 A22 22 0 0 1 60 72 H40 A22 22 0 0 1 40 28 Z" fill="none" stroke="${C.white}" stroke-width="13"/>
   <path d="M50 34.5 V65.5" stroke="${C.white}" stroke-width="4"/>
   <circle cx="50" cy="50" r="6" fill="none" stroke="${C.white}" stroke-width="3.5"/>`);
 const favicon16 = svg(100, 100, `
-  <rect width="100" height="100" rx="22" fill="${C.violet}"/>
-  <path d="M41 36 H59 A14 14 0 0 1 59 64 H41 A14 14 0 0 1 41 36 Z" fill="${C.violetLight}"/>
+  <rect width="100" height="100" rx="22" fill="${C.purple}"/>
+  <path d="M41 36 H59 A14 14 0 0 1 59 64 H41 A14 14 0 0 1 41 36 Z" fill="${C.purpleLight}"/>
   <path d="M41 28 H59 A22 22 0 0 1 59 72 H41 A22 22 0 0 1 41 28 Z" fill="none" stroke="${C.white}" stroke-width="16"/>
   <path d="M50 36 V64" stroke="${C.white}" stroke-width="7"/>`);
 
@@ -92,14 +92,14 @@ const SVGS = {
   "brand/hq/hq-mark.svg": hqMark(C.black),
   "brand/hq/hq-mark-white.svg": hqMark(C.white),
   "brand/hq/hq-icon.svg": hqIcon(true),
-  "brand/sporthq/sporthq-mark.svg": shqMark(C.violet, C.violetTint, C.violet),
+  "brand/sporthq/sporthq-mark.svg": shqMark(C.purple, C.purpleTint, C.purple),
   "brand/sporthq/sporthq-mark-white.svg": shqMark(C.white, "rgba(255,255,255,0.2)", C.white),
   "brand/sporthq/sporthq-icon.svg": shqIcon(true),
   "brand/sporthq/sporthq-favicon.svg": favicon32,
   "brand/sporthq/sporthq-favicon-16.svg": favicon16,
   "sporthq3/icons/icon.svg": favicon32,
-  // App header: the top bar is always charcoal, so light violet letters (same as the old text logo)
-  "sporthq3/icons/logo.svg": shqMark(C.violetLight, "rgba(167,139,250,0.25)", C.violetLight),
+  // App header: the top bar is always charcoal, so light purple letters (same as the old text logo)
+  "sporthq3/icons/logo.svg": shqMark(C.purpleLight, "rgba(196,165,255,0.25)", C.purpleLight),
 };
 
 // [output path, svg source, size in px]
