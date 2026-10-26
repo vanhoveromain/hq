@@ -6,20 +6,20 @@ import {
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
   getTrainingBlock, listPersonalBests,
-} from "../storage.js?v=202610260939";
-import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610260939";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610260939";
-import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610260939";
-import { overview } from "../utils/stats.js?v=202610260939";
-import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610260939";
-import { weekLoadNotes } from "../utils/load.js?v=202610260939";
-import { showToast } from "../utils/toast.js?v=202610260939";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610260939";
-import { currentSeason } from "../utils/season.js?v=202610260939";
-import { blockWeek } from "./blocks.js?v=202610260939";
-import { icon } from "../utils/icons.js?v=202610260939";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610260939";
-import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610260939";
+} from "../storage.js?v=202610261241";
+import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610261241";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610261241";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610261241";
+import { overview } from "../utils/stats.js?v=202610261241";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610261241";
+import { weekLoadNotes } from "../utils/load.js?v=202610261241";
+import { showToast } from "../utils/toast.js?v=202610261241";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610261241";
+import { currentSeason } from "../utils/season.js?v=202610261241";
+import { blockWeek } from "./blocks.js?v=202610261241";
+import { icon } from "../utils/icons.js?v=202610261241";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610261241";
+import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610261241";
 
 // Home layout (step 17c, "Today first"):
 //   1. Today hero (violet): today's sessions with one big button, and the
@@ -196,7 +196,9 @@ async function drawWeek(todayEl, weekEl, today, container) {
 
 // One of today's sessions inside the hero: icon, name, a few numbers and
 // one big button. With a recipe the big button starts the workout; without
-// one ("just a run") it logs it. The small button next to it does the other.
+// one ("just a run") it logs it. The button next to it does the other: a
+// labelled "Log it" when the big one starts a workout (runs are often done
+// without the app open, then logged), a small play icon otherwise.
 // `canChoose` = a "just a sport" session that can pick a catalogue session (21).
 // `inProgress` = a workout of this session is saved on this device: the big
 // button resumes it, whether the session has a recipe or not (23c).
@@ -212,10 +214,10 @@ function heroSessionHtml(s, canChoose = false, inProgress = false) {
   if (s.status === "planned") {
     actions = inProgress
       ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Resume workout</a>
-         <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
+         <a class="hero-button is-secondary" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>`
       : withRecipe
       ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Start workout</a>
-         <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
+         <a class="hero-button is-secondary" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>`
       : `<a class="hero-button" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>
          <a class="hero-icon-button" href="#/workout/${s.id}" aria-label="Start with the timer">${icon("play")}</a>`;
   }

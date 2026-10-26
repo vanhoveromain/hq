@@ -10,29 +10,29 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610260939";
-import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610260939";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610260939";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610260939";
+} from "../storage.js?v=202610261241";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610261241";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610261241";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610261241";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, canAdjustSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202610260939";
-import { overview } from "../utils/stats.js?v=202610260939";
-import { weekLoadNotes } from "../utils/load.js?v=202610260939";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610260939";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610260939";
+} from "../utils/plan.js?v=202610261241";
+import { overview } from "../utils/stats.js?v=202610261241";
+import { weekLoadNotes } from "../utils/load.js?v=202610261241";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610261241";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610261241";
 import {
   pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
   chooseFromCatalogue, clearSession, catalogueCountLabel,
-} from "../utils/changeSession.js?v=202610260939";
-import { setTopbarAction } from "../utils/topbar.js?v=202610260939";
-import { showToast } from "../utils/toast.js?v=202610260939";
-import { loadWorkout } from "../utils/workout.js?v=202610260939";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610260939";
-import { blockWeek } from "./blocks.js?v=202610260939";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610260939";
-import { icon } from "../utils/icons.js?v=202610260939";
+} from "../utils/changeSession.js?v=202610261241";
+import { setTopbarAction } from "../utils/topbar.js?v=202610261241";
+import { showToast } from "../utils/toast.js?v=202610261241";
+import { loadWorkout } from "../utils/workout.js?v=202610261241";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610261241";
+import { blockWeek } from "./blocks.js?v=202610261241";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610261241";
+import { icon } from "../utils/icons.js?v=202610261241";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -861,11 +861,17 @@ function sessionCardHtml(session, today) {
       </span>
       <span class="plan-status">${STATUS_ICON[session.status]}</span>
     </button>`;
-  // Today's session with a recipe: a round play button starts the workout in
-  // one tap (20a). It sits next to the card (a button can't hold a button).
-  const canStart = session.status === "planned" && session.session_date === today && !isPlainSession(session);
-  return canStart ? `<div class="plan-row has-play">${card}
-    <a class="plan-play" href="#/workout/${session.id}" aria-label="Start workout: ${escapeHtml(sessionName(session))}">${icon("play")}</a></div>` : card;
+  // Today's planned session gets quick buttons next to the card (a button
+  // can't hold a button): "Log it" (runs done without the app open, logged
+  // after) and, with a recipe, a round play button that starts the workout (20a).
+  if (session.status !== "planned" || session.session_date !== today) return card;
+  const name = escapeHtml(sessionName(session));
+  const play = isPlainSession(session) ? ""
+    : `<a class="plan-play" href="#/workout/${session.id}" aria-label="Start workout: ${name}">${icon("play")}</a>`;
+  return `<div class="plan-row has-quick${play ? " has-play" : ""}">${card}
+    <span class="plan-quick">
+      <a class="plan-log" href="#/log/new/${session.id}" aria-label="Log it: ${name}">${icon("square-pen")} Log it</a>
+      ${play}</span></div>`;
 }
 
 function extraCardHtml(a) {

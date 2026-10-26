@@ -801,11 +801,21 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .plan-card.status-cancelled { background: transparent; border: 1px dashed var(--border); border-left: 4px dashed var(--border); color: var(--muted); }
 .plan-card.status-cancelled .sport-badge { opacity: 0.5; }
 .skipped-tag { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
-/* Today's session with a recipe: a round play button on the card (20a) */
+/* Today's planned session: "Log it" + (with a recipe) a round play button on the card (20a) */
 .plan-row { position: relative; }
-.plan-row.has-play .plan-card { padding-right: 60px; }
-.plan-play {
+.plan-row.has-quick .plan-card { padding-right: 110px; }
+.plan-row.has-play .plan-card { padding-right: 160px; }
+.plan-quick {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; gap: 8px;
+}
+.plan-log {
+  display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border-radius: 22px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none;
+  font-size: 0.9rem; font-weight: 600;
+}
+.plan-log .icon { width: 18px; height: 18px; }
+.plan-play {
   display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
   background: var(--accent); color: var(--accent-text); text-decoration: none;
 }
@@ -856,8 +866,12 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   }
   .week-head .view-switch { margin-left: auto; }
   .plan-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; }
-  .plan-row.has-play .plan-card { padding-right: 8px; padding-bottom: 52px; }
-  .plan-play { top: auto; bottom: 8px; right: 8px; transform: none; width: 36px; height: 36px; }
+  .plan-row.has-quick .plan-card, .plan-row.has-play .plan-card { padding-right: 8px; padding-bottom: 52px; }
+  /* narrow day column: the buttons span the card's width, "Log it" without its pen icon */
+  .plan-quick { top: auto; bottom: 8px; left: 8px; right: 8px; transform: none; gap: 6px; }
+  .plan-play { flex: none; width: 36px; height: 36px; }
+  .plan-log { flex: 1; justify-content: center; height: 36px; padding: 0 8px; font-size: 0.85rem; white-space: nowrap; }
+  .plan-log .icon { display: none; }
   /* 7 columns: a warning chip can't sit between two days, so it shows in the later day */
   .warning-between { display: none !important; }
   .day .warning-chip.warning-dup { display: flex; }
@@ -1326,6 +1340,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   font-weight: 700; font-size: 1.05rem; text-decoration: none;
 }
 .hero-button.is-quiet { flex: none; align-self: flex-start; min-height: 44px; background: var(--hero-soft); color: var(--hero-text) !important; font-size: 0.95rem; }
+/* "Log it" next to Start / Resume workout: labelled, outlined, narrower than the main button */
+.hero-button.is-secondary { flex: 0 1 auto; background: transparent; color: var(--hero-text) !important; border: 1px solid var(--hero-line); font-size: 0.95rem; }
 .hero-icon-button { flex: none; width: 52px; min-height: 52px; border-radius: 14px; border: 1px solid var(--hero-line); display: grid; place-items: center; }
 .hero-button .icon, .hero-icon-button .icon { width: 20px; height: 20px; }
 /* "Choose session" under a "just a sport" session (21): small, quiet, still 44px tall */
@@ -1481,6 +1497,7 @@ p.dash-note { margin-bottom: 16px; }
   .hero-session-top { grid-column: 1; }
   .hero-actions { grid-column: 2; margin-top: 0; }
   .hero-actions .hero-button { flex: none; min-width: 200px; }
+  .hero-actions .hero-button.is-secondary { min-width: 0; }
   .hero-choose { grid-column: 1 / -1; justify-self: start; }
 }
 
