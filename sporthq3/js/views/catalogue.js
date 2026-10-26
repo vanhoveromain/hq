@@ -13,12 +13,12 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202610252302";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610252302";
-import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610252302";
-import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610252302";
-import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202610252302";
-import { icon } from "../utils/icons.js?v=202610252302";
+} from "../storage.js?v=202610260939";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610260939";
+import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610260939";
+import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610260939";
+import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202610260939";
+import { icon } from "../utils/icons.js?v=202610260939";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);

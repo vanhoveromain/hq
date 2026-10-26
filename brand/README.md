@@ -29,7 +29,7 @@
 | `sporthq/sporthq-icon.svg`, `sporthq/sporthq-icon-1024.png` | App icon |
 | `sporthq/sporthq-favicon.svg`, `-32.png`, `-16.png`, `-16.svg` | Browser tab: the stadium alone |
 
-SportHQ3 uses copies in `sporthq3/icons/` (`icon.svg` = favicon, `icon-192/512.png` + `apple-touch-icon.png` = app icon, `logo.svg` = header logo in light purple for the charcoal top bar).
+SportHQ3 uses copies in `sporthq3/icons/` (`icon.svg` = favicon, `icon-192/512.png` + `apple-touch-icon.png` = app icon, `logo.svg` = header logo in white for the deep purple top bar).
 
 PNG app icons are square on purpose: iOS and Android round the corners themselves.
 
