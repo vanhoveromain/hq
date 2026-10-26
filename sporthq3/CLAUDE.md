@@ -166,7 +166,9 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - 2026-10-26: Home "Log it" button (no migration). Rom often runs without SportHQ open and logs afterwards; the
   icon-only pen next to "Start workout" / "Resume workout" was easy to miss. It is now a labelled, outlined
   "Log it" button (.hero-button.is-secondary, dashboard.js heroSessionHtml), narrower than the main button.
-  "Just a sport" sessions keep "Log it" big + the small play icon.
+  "Just a sport" sessions keep "Log it" big + the small play icon. Planner: today's planned session (with or
+  without a recipe) gets a "Log it" pill next to the round play button (planner.js sessionCardHtml, .plan-quick /
+  .plan-log); on the laptop's narrow day columns both sit under the card text, "Log it" stretched, no pen icon.
 - 2026-10-26: adjust one session only (35; no migration). Rom could only change a planned catalogue session by
   editing its recipe (= every planned session using it). Rom chose "becomes a copy" over "stays linked + override"
   (the override would touch done / reopen, workout mode, copy week and templates). plan.js canAdjustSession =
@@ -338,8 +340,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   green / amber / red). Warnings: rules.js adds `short` to each warning ("Heavy legs Thu → Fri"); a warning
   about two days of the shown week in a row = one amber chip BETWEEN the two day cards (laptop: inside the
   later day, the 7 columns leave no gap), others = a chip inside their day; tap = full message (+ mute for
-  habit rules; race rules show the message only). Today's planned session with a recipe gets a round play
-  button (Start workout) next to the card. Skipped = greyed, dashed, "Skipped" (no strikethrough, no red ✕).
+  habit rules; race rules show the message only). Today's planned session gets a "Log it" pill and, with a
+  recipe, a round play button (Start workout) on the card (laptop: both span the card, "Log it" without icon). Skipped = greyed, dashed, "Skipped" (no strikethrough, no red ✕).
   20b session sheet: openSheet takes `badge` + `subtitle` (sheet.js) and sheetRowHtml (quiet rows). Header =
   sport badge, name, day · type; a numbers row; ONE main action (planned with a recipe: Start / Resume
   workout + Done and Log it side by side; "just a sport": Log it; done: Open the logged activity; skipped:

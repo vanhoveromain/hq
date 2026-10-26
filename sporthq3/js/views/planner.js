@@ -861,11 +861,17 @@ function sessionCardHtml(session, today) {
       </span>
       <span class="plan-status">${STATUS_ICON[session.status]}</span>
     </button>`;
-  // Today's session with a recipe: a round play button starts the workout in
-  // one tap (20a). It sits next to the card (a button can't hold a button).
-  const canStart = session.status === "planned" && session.session_date === today && !isPlainSession(session);
-  return canStart ? `<div class="plan-row has-play">${card}
-    <a class="plan-play" href="#/workout/${session.id}" aria-label="Start workout: ${escapeHtml(sessionName(session))}">${icon("play")}</a></div>` : card;
+  // Today's planned session gets quick buttons next to the card (a button
+  // can't hold a button): "Log it" (runs done without the app open, logged
+  // after) and, with a recipe, a round play button that starts the workout (20a).
+  if (session.status !== "planned" || session.session_date !== today) return card;
+  const name = escapeHtml(sessionName(session));
+  const play = isPlainSession(session) ? ""
+    : `<a class="plan-play" href="#/workout/${session.id}" aria-label="Start workout: ${name}">${icon("play")}</a>`;
+  return `<div class="plan-row has-quick${play ? " has-play" : ""}">${card}
+    <span class="plan-quick">
+      <a class="plan-log" href="#/log/new/${session.id}" aria-label="Log it: ${name}">${icon("square-pen")} Log it</a>
+      ${play}</span></div>`;
 }
 
 function extraCardHtml(a) {
