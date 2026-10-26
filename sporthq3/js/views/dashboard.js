@@ -6,20 +6,20 @@ import {
   listWeighIns, getSettings, listMatchesBetween, listShoes, getShoeDistances,
   listRacesBetween, getMutedWarnings, updatePlannedSession, getWeekReview,
   getTrainingBlock, listPersonalBests,
-} from "../storage.js?v=202610260939";
-import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610260939";
-import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610260939";
-import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610260939";
-import { overview } from "../utils/stats.js?v=202610260939";
-import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610260939";
-import { weekLoadNotes } from "../utils/load.js?v=202610260939";
-import { showToast } from "../utils/toast.js?v=202610260939";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610260939";
-import { currentSeason } from "../utils/season.js?v=202610260939";
-import { blockWeek } from "./blocks.js?v=202610260939";
-import { icon } from "../utils/icons.js?v=202610260939";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610260939";
-import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610260939";
+} from "../storage.js?v=202610261241";
+import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202610261241";
+import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610261241";
+import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202610261241";
+import { overview } from "../utils/stats.js?v=202610261241";
+import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202610261241";
+import { weekLoadNotes } from "../utils/load.js?v=202610261241";
+import { showToast } from "../utils/toast.js?v=202610261241";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610261241";
+import { currentSeason } from "../utils/season.js?v=202610261241";
+import { blockWeek } from "./blocks.js?v=202610261241";
+import { icon } from "../utils/icons.js?v=202610261241";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610261241";
+import { activeTemplates, canChooseFromCatalogue, chooseFromCatalogue } from "../utils/changeSession.js?v=202610261241";
 
 // Home layout (step 17c, "Today first"):
 //   1. Today hero (violet): today's sessions with one big button, and the

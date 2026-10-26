@@ -6,14 +6,14 @@
 import {
   listPlannedSessions, listActivitiesBetween, listMatchesBetween, listWeighIns,
   getWeekReview, saveWeekReview,
-} from "../storage.js?v=202610260939";
-import { sportIcon } from "../rules.js?v=202610260939";
-import { todayISO, startOfWeek, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610260939";
-import { escapeHtml, formatHours } from "../utils/format.js?v=202610260939";
-import { overview } from "../utils/stats.js?v=202610260939";
-import { sessionName } from "../utils/plan.js?v=202610260939";
-import { showToast } from "../utils/toast.js?v=202610260939";
-import { icon } from "../utils/icons.js?v=202610260939";
+} from "../storage.js?v=202610261241";
+import { sportIcon } from "../rules.js?v=202610261241";
+import { todayISO, startOfWeek, addDays, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610261241";
+import { escapeHtml, formatHours } from "../utils/format.js?v=202610261241";
+import { overview } from "../utils/stats.js?v=202610261241";
+import { sessionName } from "../utils/plan.js?v=202610261241";
+import { showToast } from "../utils/toast.js?v=202610261241";
+import { icon } from "../utils/icons.js?v=202610261241";
 
 export async function render(container, { params = [] } = {}) {
   const thisMonday = startOfWeek(todayISO());
