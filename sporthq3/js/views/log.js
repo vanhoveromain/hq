@@ -4,13 +4,13 @@
 //   #/log/new      -> empty form (see logForm.js)
 //   #/log/<id>     -> form to edit that activity
 
-import { listActivities } from "../storage.js?v=202610252302";
-import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610252302";
-import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610252302";
-import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610252302";
-import { sportBadge } from "../utils/plan.js?v=202610252302";
-import * as logForm from "./logForm.js?v=202610252302";
-import * as statsView from "./stats.js?v=202610252302";
+import { listActivities } from "../storage.js?v=202610260916";
+import { SPORTS, sportIcon, sessionTypeLabel, getSport, getSessionType } from "../rules.js?v=202610260916";
+import { startOfWeek, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610260916";
+import { formatDuration, formatHours, formatKm, formatSpeed, escapeHtml, numHtml, rpeLevel } from "../utils/format.js?v=202610260916";
+import { sportBadge } from "../utils/plan.js?v=202610260916";
+import * as logForm from "./logForm.js?v=202610260916";
+import * as statsView from "./stats.js?v=202610260916";
 
 const PAGE_SIZE = 30;
 const SEARCH_WAIT_MS = 350; // search once you stop typing for this long (not at every letter)

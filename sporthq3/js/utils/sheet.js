@@ -15,8 +15,8 @@
 // Optional (step 20b): `badge` = HTML shown before the title (a sport badge),
 // `subtitle` = a grey line under the title ("Wed 21 Oct · Upper body").
 
-import { escapeHtml } from "./format.js?v=202610252302";
-import { icon } from "./icons.js?v=202610252302";
+import { escapeHtml } from "./format.js?v=202610260916";
+import { icon } from "./icons.js?v=202610260916";
 
 export function openSheet({ title, html, onReady, badge = "", subtitle = "" }) {
   return new Promise((resolve) => {

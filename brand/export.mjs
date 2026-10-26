@@ -98,8 +98,8 @@ const SVGS = {
   "brand/sporthq/sporthq-favicon.svg": favicon32,
   "brand/sporthq/sporthq-favicon-16.svg": favicon16,
   "sporthq3/icons/icon.svg": favicon32,
-  // App header: the top bar is always charcoal, so light purple letters (same as the old text logo)
-  "sporthq3/icons/logo.svg": shqMark(C.purpleLight, "rgba(196,165,255,0.25)", C.purpleLight),
+  // App header: the top bar is deep purple, so white letters (same as sporthq-mark-white.svg)
+  "sporthq3/icons/logo.svg": shqMark(C.white, "rgba(255,255,255,0.2)", C.white),
 };
 
 // [output path, svg source, size in px]

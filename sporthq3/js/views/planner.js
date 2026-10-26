@@ -10,29 +10,29 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610252302";
-import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610252302";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610252302";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610252302";
+} from "../storage.js?v=202610260916";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610260916";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610260916";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610260916";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202610252302";
-import { overview } from "../utils/stats.js?v=202610252302";
-import { weekLoadNotes } from "../utils/load.js?v=202610252302";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610252302";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610252302";
+} from "../utils/plan.js?v=202610260916";
+import { overview } from "../utils/stats.js?v=202610260916";
+import { weekLoadNotes } from "../utils/load.js?v=202610260916";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610260916";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610260916";
 import {
   pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
   chooseFromCatalogue, clearSession, catalogueCountLabel,
-} from "../utils/changeSession.js?v=202610252302";
-import { setTopbarAction } from "../utils/topbar.js?v=202610252302";
-import { showToast } from "../utils/toast.js?v=202610252302";
-import { loadWorkout } from "../utils/workout.js?v=202610252302";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610252302";
-import { blockWeek } from "./blocks.js?v=202610252302";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610252302";
-import { icon } from "../utils/icons.js?v=202610252302";
+} from "../utils/changeSession.js?v=202610260916";
+import { setTopbarAction } from "../utils/topbar.js?v=202610260916";
+import { showToast } from "../utils/toast.js?v=202610260916";
+import { loadWorkout } from "../utils/workout.js?v=202610260916";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610260916";
+import { blockWeek } from "./blocks.js?v=202610260916";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610260916";
+import { icon } from "../utils/icons.js?v=202610260916";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
