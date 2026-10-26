@@ -80,12 +80,12 @@
   --segment-empty: #dde2e9;
   --load-past: #d9cdee;         /* past weeks in the load chart */
   /* Race mode (17d): the dark race block on top of Home */
-  --race-mode-bg: #13111a;
+  --race-mode-bg: #3d0079;      /* purple, so the block continues the top bar (34) */
   --race-mode-text: #ffffff;
   --race-mode-muted: #d3d6de;
   --race-mode-accent: #c4a5ff;
   --race-mode-soft: rgba(255, 255, 255, 0.14);
-  --race-mode-empty: #3a3646;
+  --race-mode-empty: rgba(255, 255, 255, 0.2);
   --race-mode-button: #5b2a9e;   /* lifted purple: #3d0079 vanishes on the dark block */
   /* Workout mode (18): the dark strip on top and the bar pinned at the bottom */
   --strip-accent: #c4a5ff;
@@ -134,7 +134,7 @@
     --warn-text: #fcd34d;
     --segment-empty: #2f2c3b;
     --load-past: #4a3a6e;
-    --race-mode-bg: #221a33;   /* a touch of purple, so the block stands out from the dark page */
+    --race-mode-bg: #3d0079;
     --race-mode-button: #5b2a9e;
     --tick-halo: rgba(196, 165, 255, 0.3);
     --done-bg: #14301f;
@@ -1815,7 +1815,7 @@ p.dash-note { margin-bottom: 16px; }
 }
 .me-who { display: flex; align-items: center; gap: 14px; }
 .me-avatar { flex: none; display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%;
-  background: var(--race-mode-button); color: #ffffff; font-size: 1.6rem; font-weight: 700; }
+  background: var(--race-mode-soft); color: #ffffff; font-size: 1.6rem; font-weight: 700; }
 .me-name { margin: 0; font-size: 1.45rem; line-height: 1.15; overflow-wrap: anywhere; }
 .me-tagline { margin: 2px 0 0; font-size: 0.85rem; color: var(--race-mode-muted); }
 .me-year { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }

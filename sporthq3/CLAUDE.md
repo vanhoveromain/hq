@@ -106,6 +106,7 @@
     log form, 31d mock-up (round "+" vs full-width Add, Rom: yes), 31e round "+" button, 31f docs
 32. New brand colours (2026-10-25, Rom picked them): deep purple #3d0079 + cool grey #e9edf2 page; done 2026-10-25
 33. Purple top bar (2026-10-26, Rom: the logo on top should show the brand colour): top bar #3d0079 + white logo
+34. Race mode and Me blocks purple (2026-10-26, Rom), so they continue the purple top bar
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -160,6 +161,11 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-26: race mode and Me blocks purple (34; no migration). --race-mode-bg = #3d0079 (light and dark), so
+  the blocks glued to the top bar continue it; the upcoming race page summary (.race-sum.is-dark) uses the same
+  token and turns purple too. --race-mode-empty = rgba(255, 255, 255, 0.2) (week segments still to come); the Me
+  avatar = --race-mode-soft + white initial (#5b2a9e didn't show on purple). Lilac accent 6.9:1 and grey text
+  #d3d6de 9.8:1 on #3d0079. --race-mode-button stays #5b2a9e (the Today card's button in race mode is on white).
 - 2026-10-26: purple top bar (33; no migration). Rom: the lilac logo on the charcoal bar didn't show the new
   colour. --topbar-bg = #3d0079 (light AND dark mode), header logo = white (sporthq3/icons/logo.svg, from
   brand/export.mjs, same drawing as sporthq-mark-white.svg); theme-color / manifest theme_color = #3d0079.
