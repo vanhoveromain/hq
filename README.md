@@ -22,3 +22,4 @@ See `sporthq3/CLAUDE.md` for the brief, rules and decisions. Database schema liv
 ## Brand
 
 `brand/` — hq (umbrella) and sporthq logos, app icons and favicons. See `brand/README.md`.
+SportHQ brand book: `brand/sporthq-guidelines.html`.

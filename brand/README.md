@@ -2,6 +2,8 @@
 
 `hq` is the umbrella for the personal tools in this repo. `sporthq` is the first product under it.
 
+**SportHQ brand book:** `sporthq-guidelines.html` (logo, colour incl. dark mode and sport colours, number font, components, icons, voice, accessibility, tokens). Open it from the repo root or on GitHub Pages so the logo files load.
+
 - **hq**: black letters, white tile.
 - **sporthq**: lowercase s + hq. The q is a stadium (running track with one lane line, football pitch in the infield). White letters on a deep purple tile.
 - Letters are drawn shapes, not a font: they look the same everywhere.
