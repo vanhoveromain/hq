@@ -5,8 +5,8 @@
 // main.js clears both before drawing a new screen, so a screen only sets
 // what it needs and never has to clean up after itself.
 
-import { escapeHtml } from "./format.js?v=202610260926";
-import { icon } from "./icons.js?v=202610260926";
+import { escapeHtml } from "./format.js?v=202610260939";
+import { icon } from "./icons.js?v=202610260939";
 
 const actionEl = () => document.getElementById("topbar-action");
 const backEl = () => document.getElementById("topbar-back");

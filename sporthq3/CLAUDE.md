@@ -107,6 +107,8 @@
 32. New brand colours (2026-10-25, Rom picked them): deep purple #3d0079 + cool grey #e9edf2 page; done 2026-10-25
 33. Purple top bar (2026-10-26, Rom: the logo on top should show the brand colour): top bar #3d0079 + white logo
 34. Race mode and Me blocks purple (2026-10-26, Rom), so they continue the purple top bar
+35. Adjust one planned session without touching the recipe (2026-10-26, Rom: "one long interval run is not the same
+    as another", e.g. 6x3min this week); built 2026-10-26 on the draft
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -161,6 +163,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-26: adjust one session only (35; no migration). Rom could only change a planned catalogue session by
+  editing its recipe (= every planned session using it). Rom chose "becomes a copy" over "stays linked + override"
+  (the override would touch done / reopen, workout mode, copy week and templates). plan.js canAdjustSession =
+  planned + has a recipe + not race routine. Planner session menu: "Adjust this session only" (above "Edit the
+  recipe") -> #/custom/<id>; catalogue.js renderCustomEditor pre-fills from the recipe (snapshotOf), title "Adjust
+  this session", intro names the day and the recipe. Saving = a custom session (template_id null, details + custom:
+  true, sport and session type kept so the rules still count it); the recipe is never changed. Trade-off: that
+  session no longer follows later recipe edits, and a week template saved from it keeps only its sport (the
+  existing custom-session warning says so). "Clear session" / "Choose from the catalogue" still work on it.
 - 2026-10-26: race mode and Me blocks purple (34; no migration). --race-mode-bg = #3d0079 (light and dark), so
   the blocks glued to the top bar continue it; the upcoming race page summary (.race-sum.is-dark) uses the same
   token and turns purple too. --race-mode-empty = rgba(255, 255, 255, 0.2) (week segments still to come); the Me

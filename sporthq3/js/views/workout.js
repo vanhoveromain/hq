@@ -8,17 +8,17 @@
 // saving it marks the session done, freezes what you really did and offers
 // to update the recipe.
 
-import { getPlannedSession } from "../storage.js?v=202610260926";
-import { escapeHtml, formatDuration, numHtml } from "../utils/format.js?v=202610260926";
-import { startOfWeek } from "../utils/dates.js?v=202610260926";
-import { sessionName, sessionDetails } from "../utils/plan.js?v=202610260926";
-import { openSheet } from "../utils/sheet.js?v=202610260926";
-import { icon } from "../utils/icons.js?v=202610260926";
+import { getPlannedSession } from "../storage.js?v=202610260939";
+import { escapeHtml, formatDuration, numHtml } from "../utils/format.js?v=202610260939";
+import { startOfWeek } from "../utils/dates.js?v=202610260939";
+import { sessionName, sessionDetails } from "../utils/plan.js?v=202610260939";
+import { openSheet } from "../utils/sheet.js?v=202610260939";
+import { icon } from "../utils/icons.js?v=202610260939";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
   REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
-} from "../utils/workout.js?v=202610260926";
-import { LOG_ANYWAY_HREF } from "../utils/savedWorkout.js?v=202610260926";
+} from "../utils/workout.js?v=202610260939";
+import { LOG_ANYWAY_HREF } from "../utils/savedWorkout.js?v=202610260939";
 
 export async function render(container, { params = [] } = {}) {
   const plannedId = params[0];

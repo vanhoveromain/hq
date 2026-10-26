@@ -10,29 +10,29 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202610260926";
-import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610260926";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610260926";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610260926";
+} from "../storage.js?v=202610260939";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202610260939";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202610260939";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610260939";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
-  isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202610260926";
-import { overview } from "../utils/stats.js?v=202610260926";
-import { weekLoadNotes } from "../utils/load.js?v=202610260926";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610260926";
-import { doneInOneTap } from "../utils/quickLog.js?v=202610260926";
+  isCustomSession, isPlainSession, canAdjustSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
+} from "../utils/plan.js?v=202610260939";
+import { overview } from "../utils/stats.js?v=202610260939";
+import { weekLoadNotes } from "../utils/load.js?v=202610260939";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202610260939";
+import { doneInOneTap } from "../utils/quickLog.js?v=202610260939";
 import {
   pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
   chooseFromCatalogue, clearSession, catalogueCountLabel,
-} from "../utils/changeSession.js?v=202610260926";
-import { setTopbarAction } from "../utils/topbar.js?v=202610260926";
-import { showToast } from "../utils/toast.js?v=202610260926";
-import { loadWorkout } from "../utils/workout.js?v=202610260926";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610260926";
-import { blockWeek } from "./blocks.js?v=202610260926";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202610260926";
-import { icon } from "../utils/icons.js?v=202610260926";
+} from "../utils/changeSession.js?v=202610260939";
+import { setTopbarAction } from "../utils/topbar.js?v=202610260939";
+import { showToast } from "../utils/toast.js?v=202610260939";
+import { loadWorkout } from "../utils/workout.js?v=202610260939";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202610260939";
+import { blockWeek } from "./blocks.js?v=202610260939";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202610260939";
+import { icon } from "../utils/icons.js?v=202610260939";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -638,6 +638,7 @@ async function drawWeek(container, monday) {
     if (isPlanned && !withRecipe && loggedThatDay) rows.push(sheetRowHtml("done", "check", "Link to what you logged that day"));
     if (isPlanned && !withRecipe) rows.push(sheetRowHtml("start", "play", inProgress ? "Resume with the timer" : "Start with the timer"));
     if (!isDone) rows.push(sheetRowHtml("move", "calendar", "Move or swap day"));
+    if (canAdjustSession(session)) rows.push(sheetRowHtml("edit-custom", "pencil", "Adjust this session only"));
     if (session.template_id) rows.push(sheetRowHtml("recipe", "library", "Edit the recipe"));
     if (isCustomSession(session) && !isDone && !isCancelled) rows.push(sheetRowHtml("edit-custom", "pencil", "Edit this session"));
     if (isPlainSession(session) && isPlanned) rows.push(sheetRowHtml("edit-custom", "pencil", "Add details (name, exercises…)"));

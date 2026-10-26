@@ -13,12 +13,12 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202610260926";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610260926";
-import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610260926";
-import { startOfWeek } from "../utils/dates.js?v=202610260926";
-import { isCustomSession, isPlainSession, sessionName, sportBadge } from "../utils/plan.js?v=202610260926";
-import { icon } from "../utils/icons.js?v=202610260926";
+} from "../storage.js?v=202610260939";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202610260939";
+import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202610260939";
+import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202610260939";
+import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202610260939";
+import { icon } from "../utils/icons.js?v=202610260939";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -146,9 +146,10 @@ async function renderCustomEditor(container, { date, plannedId }) {
       container.querySelector(".status").textContent = "Could not load: " + error.message;
       return;
     }
-    // Editable: a custom session, or a "just a sport" one (no recipe, no
-    // details yet: saving gives it its own details = it becomes custom).
-    const editable = planned && (isCustomSession(planned) || isPlainSession(planned));
+    // Editable: a custom session, a "just a sport" one (no recipe, no
+    // details yet: saving gives it its own details = it becomes custom), or
+    // a catalogue one adjusted for this day only (it becomes a custom copy).
+    const editable = planned && (isCustomSession(planned) || isPlainSession(planned) || canAdjustSession(planned));
     if (!editable || planned.status !== "planned") {
       container.innerHTML = `<section class="card"><p>This custom session can't be edited (any more).</p>
         <a class="button" href="#/planner">Back to the plan</a></section>`;
@@ -158,13 +159,17 @@ async function renderCustomEditor(container, { date, plannedId }) {
   }
   const backToPlan = `#/planner/${startOfWeek(date)}`;
   const addingDetails = Boolean(planned && isPlainSession(planned));
+  const adjusting = Boolean(planned && canAdjustSession(planned));
   let t = { sport: "muscle", exercises: [] };
   if (addingDetails) t = { name: sessionName(planned), sport: planned.sport, session_type: planned.session_type, exercises: [] };
+  else if (adjusting) t = { ...snapshotOf(planned.template), sport: planned.sport, session_type: planned.session_type };
   else if (planned) t = { ...planned.details, sport: planned.sport, session_type: planned.session_type };
 
   drawEditor(container, t, {
-    title: addingDetails ? "Add details" : planned ? "Edit custom session" : "Custom session",
-    intro: "Just for this day. It isn't added to your catalogue unless you tick the box below.",
+    title: addingDetails ? "Add details" : adjusting ? "Adjust this session" : planned ? "Edit custom session" : "Custom session",
+    intro: adjusting
+      ? `Only for ${formatDayLabel(date)}: the recipe "${planned.template.name}" in your catalogue stays as it is.`
+      : "Just for this day. It isn't added to your catalogue unless you tick the box below.",
     saveLabel: planned ? "Save changes" : "Add to the plan",
     cancelHref: backToPlan,
     custom: true,
