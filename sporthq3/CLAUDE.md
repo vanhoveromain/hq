@@ -105,6 +105,7 @@
 31. Phone flow round (2026-10-23 / 25): 31a Plan opens on today, 31b compact Plan header, 31c sports on one row in the
     log form, 31d mock-up (round "+" vs full-width Add, Rom: yes), 31e round "+" button, 31f docs
 32. New brand colours (2026-10-25, Rom picked them): deep purple #3d0079 + cool grey #e9edf2 page; done 2026-10-25
+33. Purple top bar (2026-10-26, Rom: the logo on top should show the brand colour): top bar #3d0079 + white logo
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -159,6 +160,13 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-26: purple top bar (33; no migration). Rom: the lilac logo on the charcoal bar didn't show the new
+  colour. --topbar-bg = #3d0079 (light AND dark mode), header logo = white (sporthq3/icons/logo.svg, from
+  brand/export.mjs, same drawing as sporthq-mark-white.svg); theme-color / manifest theme_color = #3d0079.
+  The workout strip, workout bar and Finish button stay charcoal through a new token --strip-bg (#13111a,
+  dark #08070b); they used --topbar-bg before. Race mode block and Me header keep --race-mode-bg (charcoal),
+  so they now sit under a purple bar instead of continuing it: Rom checks how that looks. Back links / the
+  top bar button keep the lilac --strip-accent (6.9:1 on #3d0079). Brand book updated.
 - 2026-10-25: brand colours (32; no migration). Rom picked deep purple #3d0079 (accent, hero, links, bars,
   logo tile) and cool grey #e9edf2 (page background), after a side-by-side preview against the old violet.
   Derived by Claude, all tokens in style.css: greys turned cool to sit on the blue-ish page (muted #5b6472 keeps

@@ -5,7 +5,7 @@
 // app, the password is the way in. The link is handy the first time
 // (before you've set a password) or if you forget it.
 
-import { sendMagicLink, signInWithPassword } from "../storage.js?v=202610252302";
+import { sendMagicLink, signInWithPassword } from "../storage.js?v=202610260916";
 
 const EMAIL_KEY = "sporthq3.lastEmail"; // remembered on this device only
 const COOLDOWN_SECONDS = 60;            // Supabase allows ~1 email per minute
