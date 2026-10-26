@@ -196,7 +196,9 @@ async function drawWeek(todayEl, weekEl, today, container) {
 
 // One of today's sessions inside the hero: icon, name, a few numbers and
 // one big button. With a recipe the big button starts the workout; without
-// one ("just a run") it logs it. The small button next to it does the other.
+// one ("just a run") it logs it. The button next to it does the other: a
+// labelled "Log it" when the big one starts a workout (runs are often done
+// without the app open, then logged), a small play icon otherwise.
 // `canChoose` = a "just a sport" session that can pick a catalogue session (21).
 // `inProgress` = a workout of this session is saved on this device: the big
 // button resumes it, whether the session has a recipe or not (23c).
@@ -212,10 +214,10 @@ function heroSessionHtml(s, canChoose = false, inProgress = false) {
   if (s.status === "planned") {
     actions = inProgress
       ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Resume workout</a>
-         <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
+         <a class="hero-button is-secondary" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>`
       : withRecipe
       ? `<a class="hero-button" href="#/workout/${s.id}">${icon("play")} Start workout</a>
-         <a class="hero-icon-button" href="#/log/new/${s.id}" aria-label="Log it instead">${icon("square-pen")}</a>`
+         <a class="hero-button is-secondary" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>`
       : `<a class="hero-button" href="#/log/new/${s.id}">${icon("square-pen")} Log it</a>
          <a class="hero-icon-button" href="#/workout/${s.id}" aria-label="Start with the timer">${icon("play")}</a>`;
   }

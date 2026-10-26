@@ -1326,6 +1326,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   font-weight: 700; font-size: 1.05rem; text-decoration: none;
 }
 .hero-button.is-quiet { flex: none; align-self: flex-start; min-height: 44px; background: var(--hero-soft); color: var(--hero-text) !important; font-size: 0.95rem; }
+/* "Log it" next to Start / Resume workout: labelled, outlined, narrower than the main button */
+.hero-button.is-secondary { flex: 0 1 auto; background: transparent; color: var(--hero-text) !important; border: 1px solid var(--hero-line); font-size: 0.95rem; }
 .hero-icon-button { flex: none; width: 52px; min-height: 52px; border-radius: 14px; border: 1px solid var(--hero-line); display: grid; place-items: center; }
 .hero-button .icon, .hero-icon-button .icon { width: 20px; height: 20px; }
 /* "Choose session" under a "just a sport" session (21): small, quiet, still 44px tall */
@@ -1481,6 +1483,7 @@ p.dash-note { margin-bottom: 16px; }
   .hero-session-top { grid-column: 1; }
   .hero-actions { grid-column: 2; margin-top: 0; }
   .hero-actions .hero-button { flex: none; min-width: 200px; }
+  .hero-actions .hero-button.is-secondary { min-width: 0; }
   .hero-choose { grid-column: 1 / -1; justify-self: start; }
 }
 

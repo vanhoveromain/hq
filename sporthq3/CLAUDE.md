@@ -163,6 +163,10 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-26: Home "Log it" button (no migration). Rom often runs without SportHQ open and logs afterwards; the
+  icon-only pen next to "Start workout" / "Resume workout" was easy to miss. It is now a labelled, outlined
+  "Log it" button (.hero-button.is-secondary, dashboard.js heroSessionHtml), narrower than the main button.
+  "Just a sport" sessions keep "Log it" big + the small play icon.
 - 2026-10-26: adjust one session only (35; no migration). Rom could only change a planned catalogue session by
   editing its recipe (= every planned session using it). Rom chose "becomes a copy" over "stays linked + override"
   (the override would touch done / reopen, workout mode, copy week and templates). plan.js canAdjustSession =
@@ -443,7 +447,8 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
   Stat font also on stats / block stat grids (.stat-grid strong), race countdown and result, weight, PBs,
   workout timer and weights. Planner meta lines only get tabular digits (small grey text, kept quiet).
   17c Home A (dashboard.js): order = Today hero (violet, --hero-* tokens; big "Start workout" when the
-  session has a recipe, "Log it" when it's "just a sport", the other one as a small icon button; rest-day
+  session has a recipe + a labelled outlined "Log it" next to it; "Log it" when it's "just a sport" + a small
+  play icon button; rest-day
   state; workout-in-progress resume row) with "Did you do it?" rows inside it -> review nudge + load notes
   -> next race (big countdown, km / D+ / goal, block as one segment per week, checklist bar) -> this week
   (N / M done, day strip, ALL warnings as one amber line -> planner) -> training load (done hours, planned
