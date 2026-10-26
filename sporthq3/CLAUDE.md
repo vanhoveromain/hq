@@ -105,6 +105,8 @@
 31. Phone flow round (2026-10-23 / 25): 31a Plan opens on today, 31b compact Plan header, 31c sports on one row in the
     log form, 31d mock-up (round "+" vs full-width Add, Rom: yes), 31e round "+" button, 31f docs
 32. New brand colours (2026-10-25, Rom picked them): deep purple #3d0079 + cool grey #e9edf2 page; done 2026-10-25
+33. Adjust one planned session without touching the recipe (2026-10-26, Rom: "one long interval run is not the same
+    as another", e.g. 6x3min this week); built 2026-10-26 on the draft
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -159,6 +161,15 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-10-26: adjust one session only (33; no migration). Rom could only change a planned catalogue session by
+  editing its recipe (= every planned session using it). Rom chose "becomes a copy" over "stays linked + override"
+  (the override would touch done / reopen, workout mode, copy week and templates). plan.js canAdjustSession =
+  planned + has a recipe + not race routine. Planner session menu: "Adjust this session only" (above "Edit the
+  recipe") -> #/custom/<id>; catalogue.js renderCustomEditor pre-fills from the recipe (snapshotOf), title "Adjust
+  this session", intro names the day and the recipe. Saving = a custom session (template_id null, details + custom:
+  true, sport and session type kept so the rules still count it); the recipe is never changed. Trade-off: that
+  session no longer follows later recipe edits, and a week template saved from it keeps only its sport (the
+  existing custom-session warning says so). "Clear session" / "Choose from the catalogue" still work on it.
 - 2026-10-25: brand colours (32; no migration). Rom picked deep purple #3d0079 (accent, hero, links, bars,
   logo tile) and cool grey #e9edf2 (page background), after a side-by-side preview against the old violet.
   Derived by Claude, all tokens in style.css: greys turned cool to sit on the blue-ish page (muted #5b6472 keeps

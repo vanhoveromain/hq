@@ -34,6 +34,14 @@ export function isPlainSession(session) {
   return !session.template_id && !isCustomSession(session);
 }
 
+// A planned catalogue session can be adjusted for that day only (e.g. Long
+// intervals 5x3min -> 6x3min this week): it becomes a custom copy, the
+// recipe stays as it is. Not race-routine sessions (the routine relies on them).
+export function canAdjustSession(session) {
+  return session.status === "planned" && Boolean(session.template_id && session.template)
+    && session.source !== "race_routine" && !session.race_id;
+}
+
 // A sport icon in a small round badge tinted with the sport's colour
 // (colours live in style.css: --sport-running, …). `size` "small" for the
 // compact views (Home strip, month calendar).

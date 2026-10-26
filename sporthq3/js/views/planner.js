@@ -16,7 +16,7 @@ import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWee
 import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202610252302";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
-  isCustomSession, isPlainSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
+  isCustomSession, isPlainSession, canAdjustSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
 } from "../utils/plan.js?v=202610252302";
 import { overview } from "../utils/stats.js?v=202610252302";
 import { weekLoadNotes } from "../utils/load.js?v=202610252302";
@@ -638,6 +638,7 @@ async function drawWeek(container, monday) {
     if (isPlanned && !withRecipe && loggedThatDay) rows.push(sheetRowHtml("done", "check", "Link to what you logged that day"));
     if (isPlanned && !withRecipe) rows.push(sheetRowHtml("start", "play", inProgress ? "Resume with the timer" : "Start with the timer"));
     if (!isDone) rows.push(sheetRowHtml("move", "calendar", "Move or swap day"));
+    if (canAdjustSession(session)) rows.push(sheetRowHtml("edit-custom", "pencil", "Adjust this session only"));
     if (session.template_id) rows.push(sheetRowHtml("recipe", "library", "Edit the recipe"));
     if (isCustomSession(session) && !isDone && !isCancelled) rows.push(sheetRowHtml("edit-custom", "pencil", "Edit this session"));
     if (isPlainSession(session) && isPlanned) rows.push(sheetRowHtml("edit-custom", "pencil", "Add details (name, exercises…)"));
