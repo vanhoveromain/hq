@@ -3,15 +3,20 @@
     {
       "source": "/",
       "has": [{ "type": "host", "value": "www.ownhq.app" }],
-      "destination": "/sporthq3/",
+      "destination": "/sporthq3",
       "permanent": false
     }
   ],
   "rewrites": [
     {
-      "source": "/:path*",
+      "source": "/",
       "has": [{ "type": "host", "value": "sport.ownhq.app" }],
-      "destination": "/sporthq3/:path*"
+      "destination": "/sporthq3"
+    },
+    {
+      "source": "/:path+",
+      "has": [{ "type": "host", "value": "sport.ownhq.app" }],
+      "destination": "/sporthq3/:path+"
     }
   ]
 }
