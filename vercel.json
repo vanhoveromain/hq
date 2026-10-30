@@ -1,0 +1,17 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "www.ownhq.app" }],
+      "destination": "/sporthq3/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "sport.ownhq.app" }],
+      "destination": "/sporthq3/:path*"
+    }
+  ]
+}
