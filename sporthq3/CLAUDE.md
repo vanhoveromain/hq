@@ -11,8 +11,9 @@
 - Vanilla HTML, CSS, JavaScript (ES modules). No frameworks, no build step, no npm runtime deps.
 - Data: Supabase (Postgres) via supabase-js loaded from a CDN (pinned version).
 - **All Supabase access goes through `js/storage.js`.** UI code never imports supabase-js directly.
-- Auth: email + password (main way in, works in the iPhone home-screen app) and magic link (backup),
-  single user. Row Level Security (RLS) on every table, scoped to `auth.uid()`.
+- Auth: the shared hq login on ownhq.app (`hq-home/auth.js`, since 2026-11-05): email + password, magic link as
+  backup, single user. SportHQ3 has no login screen of its own. Row Level Security (RLS) on every table,
+  scoped to `auth.uid()`.
 - Every table has a `user_id` column (needed for RLS now, and for multi-user later).
 - Schema changes only via SQL migrations in `supabase/migrations/`, never ad-hoc in the dashboard.
 - JSON export for backup.
@@ -109,6 +110,7 @@
 34. Race mode and Me blocks purple (2026-10-26, Rom), so they continue the purple top bar
 35. Adjust one planned session without touching the recipe (2026-10-26, Rom: "one long interval run is not the same
     as another", e.g. 6x3min this week); built 2026-10-26 on the draft
+36. Shared hq login (2026-11-05, Rom: log in on ownhq.app, not in SportHQ3): built 2026-11-05 on the draft
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -163,6 +165,19 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-11-05: shared hq login (36; no migration). Rom: "when you access HQ you log in; then you can go to any
+  sub-HQ; open a sub-HQ directly without passing by HQ = log in too". The login page is ownhq.app (hq-home/index.html
+  + home.js); hq-home/auth.js owns the ONE Supabase client (same project, same user, same pinned supabase-js) and
+  keeps the session in cookies for the whole ownhq.app domain (Domain=ownhq.app, split into hq-auth.0, .1… because a
+  cookie holds ~4 KB), so every *.ownhq.app site shares it (localStorage is per site and couldn't). storage.js loads
+  it with `await import("https://ownhq.app/auth.js")` (localhost: "/_hq/auth.js", served by serve.py from
+  ../hq-home/); hq-home/vercel.json allows that cross-site load (CORS). main.js: requireLogin() = the user, or off
+  to ownhq.app/?next=<this address> and back after logging in (next = https://*.ownhq.app only); a logout here or on
+  another hq site (noticed when the tab comes back) = back to the login page. views/login.js and js/config.js
+  removed (keys live in auth.js). Everyone logs in once more after the switch (the old session was in
+  localStorage). The live workout is unaffected (still localStorage). GitHub Pages copy no longer logs in
+  (not an ownhq.app site). RISK to check on the iPhone home-screen app: the login now happens on another site
+  (ownhq.app), which iOS may open outside the app; if the app can't log in, re-add it to the Home Screen.
 - 2026-10-26: Home "Log it" button (no migration). Rom often runs without SportHQ open and logs afterwards; the
   icon-only pen next to "Start workout" / "Resume workout" was easy to miss. It is now a labelled, outlined
   "Log it" button (.hero-button.is-secondary, dashboard.js heroSessionHtml), narrower than the main button.

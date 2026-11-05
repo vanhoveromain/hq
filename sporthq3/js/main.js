@@ -4,8 +4,7 @@
 // screen you're on, e.g. index.html#/planner. Changing it doesn't reload the
 // page; we just draw a different view inside <main>. This is a "hash router".
 
-import { getCurrentUser, getLoginErrorFromUrl, onAuthChange } from "./storage.js?v=202610261241";
-import * as loginView from "./views/login.js?v=202610261241";
+import { requireLogin, loginUrl, onAuthChange } from "./storage.js?v=202610261241";
 import * as dashboardView from "./views/dashboard.js?v=202610261241";
 import * as plannerView from "./views/planner.js?v=202610261241";
 import * as logView from "./views/log.js?v=202610261241";
@@ -55,7 +54,6 @@ const titleEl = document.getElementById("page-title");
 const tabbarEl = document.getElementById("tabbar");
 
 let currentUser = null;
-let loginMessage = ""; // e.g. "This link has expired", shown on the login screen
 
 
 // Splits the address after "#" into the screen name and extra parts:
@@ -68,21 +66,9 @@ function currentRoute() {
   return { name: routes[name] ? name : null, params };
 }
 
-// Turns "Email link is invalid or has expired" into a message with a next step.
-function loginErrorMessage() {
-  const reason = getLoginErrorFromUrl();
-  return reason ? reason + ". Please ask for a new link." : "";
-}
-
 // Draws the right screen for the current state (logged in? which tab?).
 function render() {
-  if (!currentUser) {
-    tabbarEl.hidden = true;
-    titleEl.textContent = "Log in";
-    clearTopbar();
-    loginView.render(viewEl, { message: loginMessage });
-    return;
-  }
+  if (!currentUser) return; // on the way to the hq login page
 
   const { name, params } = currentRoute();
   if (!name) {
@@ -113,20 +99,18 @@ function render() {
 }
 
 async function start() {
-  loginMessage = loginErrorMessage();
-
-  try {
-    currentUser = await getCurrentUser();
-  } catch (error) {
-    loginMessage = "Could not check your login: " + error.message;
-  }
+  // Not logged in: requireLogin sends you to the hq login page (ownhq.app),
+  // which brings you back to this exact screen afterwards.
+  currentUser = await requireLogin();
 
   onAuthChange((user) => {
-    const wasLoggedIn = Boolean(currentUser);
+    if (!user) {
+      // Logged out (here or on another hq site): to the hq login page.
+      currentUser = null;
+      window.location.replace(loginUrl(window.location.href));
+      return;
+    }
     currentUser = user;
-    if (user) loginMessage = "";
-    // Only redraw when logging in or out, not on silent token refreshes.
-    if (wasLoggedIn !== Boolean(user)) render();
   });
 
   window.addEventListener("hashchange", render);

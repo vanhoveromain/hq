@@ -8,7 +8,7 @@
 //
 // They never fire while you type in a box, while a pop-up is open, with
 // Cmd / Ctrl / Alt held (the browser's own shortcuts keep working), or on
-// screens without the tab bar (login, workout mode).
+// screens without the tab bar (workout mode).
 
 import { openSheet } from "./sheet.js?v=202610261241";
 

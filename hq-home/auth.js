@@ -18,7 +18,11 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = "https://cmctqoshvncnzxavghqf.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_PATtWKyTn8z2ree9fs53jg_3tps8MW4";
 
-export const HOME_URL = "https://ownhq.app/";
+const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
+
+// The login page. While testing on your computer (localhost), SportHQ3's
+// serve.py shows hq-home/ at /_hq/ on the same server, so the login is local too.
+export const HOME_URL = ON_OWNHQ ? "https://ownhq.app/" : window.location.origin + "/_hq/";
 
 // When a magic link fails, Supabase sends you back with the reason after "#".
 // The client cleans the address as soon as it starts, so copy it first.
@@ -29,7 +33,6 @@ const hashAtStart = window.location.hash;
 // Cookie storage (shared by all *.ownhq.app sites)
 // ---------------------------------------------------------------------
 
-const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
 // On ownhq.app and its subdomains: share across all of them. Elsewhere
 // (localhost while developing): a normal cookie for this site only.
 const DOMAIN = ON_OWNHQ ? "; Domain=ownhq.app" : "";
@@ -115,7 +118,10 @@ export function safeNext(value) {
   try {
     const url = new URL(value);
     const hqHost = /(^|\.)ownhq\.app$/.test(url.hostname);
-    return url.protocol === "https:" && hqHost ? url.href : null;
+    if (url.protocol === "https:" && hqHost) return url.href;
+    // Testing on your computer: the same local server is fine too.
+    if (!ON_OWNHQ && url.origin === window.location.origin) return url.href;
+    return null;
   } catch {
     return null;
   }

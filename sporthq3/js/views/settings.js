@@ -71,7 +71,7 @@ export function render(container, { user }) {
 
   container.querySelector("#sign-out").addEventListener("click", async () => {
     try {
-      await signOut(); // main.js hears the logout and shows the login screen
+      await signOut(); // main.js hears the logout and sends you to the hq login page
     } catch (error) {
       showStatus(container.querySelector("#me-status"), "Could not sign out: " + error.message, "error");
     }

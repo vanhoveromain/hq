@@ -302,8 +302,6 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
 .status.warning { color: #b45309; }
 @media (prefers-color-scheme: dark) { .status.warning { color: #fbbf24; } }
 
-.login { margin-top: 24px; }
-
 /* ---------- Bottom tab bar ---------- */
 .tabbar {
   position: fixed;
@@ -617,10 +615,6 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .form-actions a.button { text-decoration: none; text-align: center; line-height: 24px; }
 .button.danger { color: var(--error); margin-left: auto; }
 
-/* ---------- Login: password + link ---------- */
-.login-alt { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-.login-alt .button { width: 100%; }
-.login-alt p { margin-bottom: 8px; font-size: 0.9rem; }
 
 /* Present for the password manager, invisible on screen. */
 .visually-hidden {
