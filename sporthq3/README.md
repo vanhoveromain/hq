@@ -3,9 +3,9 @@
 Personal training hub: weekly planner, activity log, races, shoes, body & goals.
 Vanilla HTML/CSS/JS + Supabase. Brief, rules and decisions: see `CLAUDE.md`.
 
-**Live:** https://vanhoveromain.github.io/hq/sporthq3/ (published from `main` by GitHub Pages).
-On iPhone: open it in Safari → Share → Add to Home Screen, then log in with your **password**
-(set it once under Me → Password after a first login by email link).
+**Live:** https://sport.ownhq.app (Vercel, from `main`).
+**Login:** shared by every hq site and done on https://ownhq.app (`hq-home/`): SportHQ3 sends you
+there when you're not logged in and you come back after. Password = the one set under Me → Password.
 
 ## Run it on your Mac
 
@@ -25,7 +25,8 @@ The app must be opened through a small local web server (not by double-clicking
    (The first time, macOS may offer to install "command line developer tools": accept.)
    `serve.py` is a mini web server that tells the browser never to keep old copies of files,
    so you always test the latest version.
-4. Open **http://localhost:8000** in your browser.
+4. Open **http://localhost:8000** in your browser. Not logged in yet? It sends you to the local
+   copy of the hq login page (**http://localhost:8000/_hq/**) and back.
 5. Stop the server with **Ctrl + C** in Terminal.
 
 ## Files
@@ -34,9 +35,8 @@ The app must be opened through a small local web server (not by double-clicking
 |---|---|
 | `index.html` | The single page: top bar, main area, bottom tab bar |
 | `css/style.css` | All styles (mobile-first, light + dark mode) |
-| `js/config.js` | Supabase URL + publishable key (public by design) |
 | `js/storage.js` | The only file that talks to Supabase |
-| `js/main.js` | Starts the app, login check, switches screens (hash router) |
+| `js/main.js` | Starts the app, login check (shared hq login on ownhq.app), switches screens (hash router) |
 | `js/rules.js` | The rulebook: sports, session types, categories (later: training rules) |
 | `js/utils/*.js` | Helpers: dates, formatting, planned-session helpers (`plan.js`), workout in progress (`workout.js`), race routine (`raceRoutine.js`), body maths (`body.js`), weight chart (`weightChart.js`), football season (`season.js`), drag and drop (`dragDrop.js`), stats maths (`stats.js`), bar chart (`barChart.js`), training-load check (`load.js`), pop-up sheet, toast |
 | `js/views/*.js` | One file per screen (`shoes.js`, `blocks.js`, `body.js` and `settings.js` open from Me, `catalogue.js`, `weekTemplates.js`, `workout.js` and `review.js` (week review) from Plan; `races.js` = Races tab) |

@@ -4,81 +4,43 @@
 // "save this run"). That way, if we ever change database, only this file
 // changes. Think of it as the one messenger allowed into the cupboard.
 
-// supabase-js is loaded straight from a CDN, with an exact version number so
-// it can never change under our feet.
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=202610261241";
+// The login is shared by every hq site: it lives on ownhq.app (hq-home/auth.js),
+// and so does the Supabase client. Loading it from there means SportHQ3 uses
+// the same login as ownhq.app and QED HQ: log in once, logged in everywhere.
+// (supabase-js itself is still the pinned 2.117.2 from jsDelivr, loaded by auth.js.)
+//
+// While testing on your computer (localhost), serve.py shows hq-home/ at /_hq/,
+// so the same file is loaded from there.
+const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
+const AUTH_URL = ON_OWNHQ ? "https://ownhq.app/auth.js" : "/_hq/auth.js";
 
-// When a magic link fails (expired, already used…), Supabase sends you back
-// with the reason in the address (#error_description=…). The client below
-// cleans the address as soon as it starts, so we copy it first.
-const addressHashAtStart = window.location.hash;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// "await import(...)" = load that file now and wait for it, before anything
+// else in the app runs (every screen needs it).
+const hq = await import(AUTH_URL);
+const supabase = hq.supabase;
 
 
 // ---------------------------------------------------------------------
-// Auth (logging in and out)
+// Auth (the login itself happens on ownhq.app)
 // ---------------------------------------------------------------------
 
-// Returns the logged-in user, or null if nobody is logged in.
-// When you arrive from a magic link, supabase-js first reads the login
-// token from the URL; awaiting getSession() waits for that to finish.
-export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  return data.session ? data.session.user : null;
-}
+// Returns the logged-in user. Not logged in: sends you to the hq login page,
+// which brings you back here afterwards.
+export const requireLogin = hq.requireLogin;
 
-// Returns the reason a magic link failed, or "" if it didn't.
-// (URLSearchParams also turns the "+" in the address back into spaces.)
-export function getLoginErrorFromUrl() {
-  const params = new URLSearchParams(addressHashAtStart.replace(/^#/, ""));
-  return params.get("error_description") || "";
-}
+// Address of the hq login page that brings you back to `next`.
+export const loginUrl = hq.loginUrl;
 
-// Emails a magic link. shouldCreateUser: false means "only for people who
-// already exist" — a second safety net on top of disabled sign-ups.
-export async function sendMagicLink(email) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: false,
-      // Come back to this same page after clicking the link.
-      emailRedirectTo: window.location.origin + window.location.pathname,
-    },
-  });
-  if (error) throw error;
-}
+// Logs out of every hq site (the login is shared).
+export const signOut = hq.signOut;
 
-// Logs in with email + password (works inside the iPhone home-screen app,
-// which can't receive the magic link because links always open in Safari).
-export async function signInWithPassword(email, password) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  // Success: onAuthChange (below) fires and main.js shows the app.
-}
+// Sets or changes the password of the logged-in user (the same password for
+// every hq site).
+export const setPassword = hq.setPassword;
 
-// Sets or changes the password of the logged-in user.
-export async function setPassword(password) {
-  const { error } = await supabase.auth.updateUser({ password });
-  if (error) throw error;
-}
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
-
-// Calls `callback(user)` whenever you log in or out (also in another tab).
-export function onAuthChange(callback) {
-  supabase.auth.onAuthStateChange((event, session) => {
-    // setTimeout(…, 0) = "run this right after the current work is done".
-    // Supabase advises not to do more Supabase work *inside* this listener,
-    // because it can freeze; pushing it to the next tick avoids that.
-    setTimeout(() => callback(session ? session.user : null), 0);
-  });
-}
+// Calls `callback(user)` when you log in or out, also from another hq site
+// (checked when you come back to this tab).
+export const onAuthChange = hq.onAuthChange;
 
 
 // ---------------------------------------------------------------------

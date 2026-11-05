@@ -6,13 +6,13 @@
 import {
   listTrainingBlocks, getTrainingBlock, saveTrainingBlock, deleteTrainingBlock, listActivitiesBetween,
   listWeekReviews,
-} from "../storage.js?v=202610261241";
-import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202610261241";
-import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202610261241";
-import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202610261241";
-import { showToast } from "../utils/toast.js?v=202610261241";
-import { icon } from "../utils/icons.js?v=202610261241";
-import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202610261241";
+} from "../storage.js?v=202611051430";
+import { SPORTS, RACE_STATUSES, sportIcon } from "../rules.js?v=202611051430";
+import { todayISO, formatDayLabel, startOfWeek, formatWeekLabel } from "../utils/dates.js?v=202611051430";
+import { escapeHtml, formatDuration, formatHours, numHtml } from "../utils/format.js?v=202611051430";
+import { showToast } from "../utils/toast.js?v=202611051430";
+import { icon } from "../utils/icons.js?v=202611051430";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202611051430";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderBlock(container, null);
