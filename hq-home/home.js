@@ -26,6 +26,20 @@ function show(user) {
     return;
   }
   root.dataset.auth = user ? "in" : "out";
+  if (user) greet(user);
+}
+
+// Logged-in header: today's date, a greeting for the time of day, and who
+// is logged in (top bar).
+function greet(user) {
+  const now = new Date();
+  const hour = now.getHours();
+  const part = hour < 5 ? "evening" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+  document.getElementById("greeting").textContent = `Good ${part}`;
+  document.getElementById("today").textContent = now.toLocaleDateString("en-GB", {
+    weekday: "long", day: "numeric", month: "long",
+  });
+  document.getElementById("who").textContent = user.email || "";
 }
 
 async function start() {

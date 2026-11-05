@@ -26,9 +26,9 @@ const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
 // The HQ portal first, then each HQ. Work HQ and Personal HQ are planned: they
 // join this list when they exist (guidelines §02: no invented URLs).
 const SPACES = [
-  { id: "hq", name: "All HQs", note: "ownhq.app", url: ON_OWNHQ ? "https://ownhq.app/" : "/_hq/" },
-  { id: "qed", name: "QED HQ", note: "qed.ownhq.app", url: "https://qed.ownhq.app/" },
-  { id: "sport", name: "Sport HQ", note: "sport.ownhq.app", url: ON_OWNHQ ? "https://sport.ownhq.app/" : "/" },
+  { id: "hq", name: "All HQs", url: ON_OWNHQ ? "https://ownhq.app/" : "/_hq/" },
+  { id: "qed", name: "QED HQ", url: "https://qed.ownhq.app/" },
+  { id: "sport", name: "Sport HQ", url: ON_OWNHQ ? "https://sport.ownhq.app/" : "/" },
 ];
 
 const CSS = `
@@ -50,7 +50,6 @@ hq-switcher{position:relative;display:inline-flex;min-width:0}
 .hqsw-item .hqsw-sym{width:28px;height:28px;flex:none;display:grid;place-items:center}
 .hqsw-item .hqsw-sym svg{width:28px;height:28px;display:block}
 .hqsw-item .hqsw-sym.is-hq svg{width:22px;height:22px}
-.hqsw-item small{display:block;font:400 12px/1.3 var(--hq-font-mono,ui-monospace,monospace);color:var(--hq-secondary-text,#666)}
 .hqsw-item .hqsw-check{margin-left:auto;width:16px;height:16px;color:var(--hq-accent-text,#242424)}
 .hqsw-sep{height:1px;margin:6px 4px;background:var(--hq-border,#E5E5E3)}
 @media (prefers-reduced-motion: reduce){.hqsw-btn,.hqsw-caret{transition:none}}
@@ -77,7 +76,7 @@ class HqSwitcher extends HTMLElement {
 
     const item = (s) => `<li role="none"><a role="menuitem" class="hqsw-item" href="${s.url}" ${s.id === current.id ? 'aria-current="page"' : ""}>
       <span class="hqsw-sym ${s.id === "hq" ? "is-hq" : ""}">${SYMBOLS[s.id]}</span>
-      <span>${s.name}<small>${s.note}</small></span>${s.id === current.id ? CHECK : ""}</a></li>`;
+      <span>${s.name}</span>${s.id === current.id ? CHECK : ""}</a></li>`;
 
     this.innerHTML = `<button type="button" class="hqsw-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}" aria-label="${label}, switch HQ">
         <span class="hqsw-sym">${SYMBOLS[current.id]}</span><span class="hqsw-name">${label}</span>${CARET}</button>
