@@ -62,8 +62,16 @@ h1{font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin:
 .card:hover .open{background:var(--hq-ink);border-color:var(--hq-ink);color:var(--page);transform:translate(2px,-2px)}
 .card h2{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin:28px 0 6px}
 .card p{margin:0;color:var(--hq-secondary-text);font-size:15px}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin:auto 0 0;padding:24px 0 0;list-style:none}
-.tags li{font-size:12px;line-height:1;padding:6px 10px;border-radius:999px;background:var(--hq-subtle);color:var(--hq-secondary-text)}
+
+/* Planned HQs (guidelines: planned, no URL, no features described) */
+.soon{margin-top:40px}
+@media (min-width:640px){.soon{margin-top:48px}}
+.soon h2{margin:0 0 12px;font:500 12px/1.4 var(--hq-font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--hq-secondary-text)}
+.soon ul{display:grid;grid-template-columns:1fr;gap:12px;margin:0;padding:0;list-style:none}
+@media (min-width:720px){.soon ul{grid-template-columns:1fr 1fr;gap:20px}}
+.planned{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px dashed var(--hq-border-strong);border-radius:12px}
+.planned img{display:block;width:36px;height:36px;opacity:.55;filter:saturate(.6)}
+.planned strong{font-size:15px;font-weight:600;color:var(--hq-secondary-text)}
 
 /* Logged out: centred login panel */
 .auth{flex:1;display:flex;align-items:center;justify-content:center;padding-top:32px;padding-bottom:64px}
@@ -148,9 +156,6 @@ main{padding-bottom:env(safe-area-inset-bottom)}
           </div>
           <h2>QED HQ</h2>
           <p>QED's internal tools, links and the team onboarding plan.</p>
-          <ul class="tags" aria-label="Inside">
-            <li>Tools</li><li>Links</li><li>Onboarding</li>
-          </ul>
         </a>
       </li>
       <li>
@@ -161,12 +166,17 @@ main{padding-bottom:env(safe-area-inset-bottom)}
           </div>
           <h2>Sport HQ</h2>
           <p>Training planner, activity log, races, shoes, body and goals.</p>
-          <ul class="tags" aria-label="Inside">
-            <li>Planner</li><li>Log</li><li>Races</li><li>Shoes</li><li>Body</li><li>Goals</li>
-          </ul>
         </a>
       </li>
     </ul>
+
+    <section class="soon" aria-labelledby="soon-title">
+      <h2 id="soon-title">Coming soon</h2>
+      <ul>
+        <li class="planned"><img src="work-hq.svg" alt="" width="36" height="36"><strong>Work HQ</strong></li>
+        <li class="planned"><img src="personal-hq.svg" alt="" width="36" height="36"><strong>Personal HQ</strong></li>
+      </ul>
+    </section>
   </section>
 </main>
 
