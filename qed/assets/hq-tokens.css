@@ -1,0 +1,89 @@
+/* HQ design tokens: HQ Brand Guidelines v1.0 (brand/guidelines-v1.0/).
+   One copy per app (each Vercel project only serves its own folder):
+   hq-home/hq-tokens.css, qed/assets/hq-tokens.css, sporthq3/css/hq-tokens.css.
+   Change it HERE, then copy it (same file everywhere).
+
+   Status (guidelines §05): the four product primaries are APPROVED. Neutrals,
+   support shades and dark mode are PROPOSED / PROVISIONAL.
+   Added here (not in the kit, flagged for designer QA):
+   - --hq-accent-text: accent used as TEXT (links). QED's #547B91 is only 4.35:1
+     on the canvas, so QED text uses its dark shade (6.45:1).
+   - dark-mode accents (--hq-accent-text, --hq-accent-light, --hq-accent-dark)
+     lifted for contrast on the dark surfaces (≥ 5.8:1).
+   - status colours (success / warning / danger): never colour alone (§05). */
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
+
+:root {
+  --hq-canvas: #FAFAF9;
+  --hq-surface: #FFFFFF;
+  --hq-subtle: #F2F2F0;
+  --hq-border: #E5E5E3;
+  --hq-border-strong: #D4D4D1;   /* hover / input borders */
+  --hq-primary-text: #242424;
+  --hq-secondary-text: #666666;
+  --hq-white: #FFFFFF;
+  --hq-ink: #242424;             /* parent brand: charcoal on white */
+
+  /* Parent HQ has no colour accent: charcoal is its "accent". */
+  --hq-accent: #242424;
+  --hq-accent-light: #F2F2F0;
+  --hq-accent-dark: #000000;
+  --hq-accent-text: #242424;
+  --hq-on-accent: #FFFFFF;
+
+  --hq-success: #276B43;  --hq-success-light: #E8F3EC;
+  --hq-warning: #8A5A12;  --hq-warning-light: #FBF1DE;
+  --hq-danger:  #B3261E;  --hq-danger-light:  #FBEAE8;
+
+  --hq-radius: 8px;
+  --hq-radius-sm: 6px;
+  --hq-font: "Geist Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --hq-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --hq-shadow-pop: 0 8px 24px rgba(36, 36, 36, 0.12), 0 1px 2px rgba(36, 36, 36, 0.06); /* menus only */
+  --hq-ease: 160ms ease;
+  color-scheme: light;
+}
+
+[data-hq="sport"]    { --hq-accent: #75638F; --hq-accent-light: #F1EDF5; --hq-accent-dark: #594771; --hq-accent-text: #75638F; }
+[data-hq="work"]     { --hq-accent: #486B94; --hq-accent-light: #EBF0F6; --hq-accent-dark: #345173; --hq-accent-text: #486B94; }
+[data-hq="qed"]      { --hq-accent: #547B91; --hq-accent-light: #EBF2F5; --hq-accent-dark: #3B6075; --hq-accent-text: #3B6075; }
+[data-hq="personal"] { --hq-accent: #9F597A; --hq-accent-light: #F7EDF1; --hq-accent-dark: #793E5D; --hq-accent-text: #9F597A; }
+
+/* Dark mode (PROVISIONAL, guidelines §08): follows the device, unless the page
+   forces data-theme="light" / "dark". */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --hq-canvas: #171819; --hq-surface: #222426; --hq-subtle: #2B2E30; --hq-border: #3B3E40; --hq-border-strong: #4A4E51;
+    --hq-primary-text: #F4F4F2; --hq-secondary-text: #ACB0B2; --hq-ink: #F4F4F2;
+    --hq-accent: #F4F4F2; --hq-accent-light: #2B2E30; --hq-accent-dark: #FFFFFF; --hq-accent-text: #F4F4F2; --hq-on-accent: #171819;
+    --hq-success: #7FCB9A; --hq-success-light: #1E3326;
+    --hq-warning: #E9B866; --hq-warning-light: #3A2E17;
+    --hq-danger:  #F2A099; --hq-danger-light:  #3D2220;
+    --hq-shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+  :root:not([data-theme="light"])[data-hq="sport"] { --hq-accent: #75638F; --hq-accent-light: #2F2A38; --hq-accent-dark: #C2B4DA; --hq-accent-text: #B9A9D3; --hq-on-accent: #FFFFFF; }
+  :root:not([data-theme="light"])[data-hq="qed"]   { --hq-accent: #547B91; --hq-accent-light: #233038; --hq-accent-dark: #A7C6D8; --hq-accent-text: #9FC0D3; --hq-on-accent: #FFFFFF; }
+}
+:root[data-theme="dark"] {
+  --hq-canvas: #171819; --hq-surface: #222426; --hq-subtle: #2B2E30; --hq-border: #3B3E40; --hq-border-strong: #4A4E51;
+  --hq-primary-text: #F4F4F2; --hq-secondary-text: #ACB0B2; --hq-ink: #F4F4F2;
+  --hq-accent: #F4F4F2; --hq-accent-light: #2B2E30; --hq-accent-dark: #FFFFFF; --hq-accent-text: #F4F4F2; --hq-on-accent: #171819;
+  --hq-success: #7FCB9A; --hq-success-light: #1E3326;
+  --hq-warning: #E9B866; --hq-warning-light: #3A2E17;
+  --hq-danger:  #F2A099; --hq-danger-light:  #3D2220;
+  --hq-shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+:root[data-theme="dark"][data-hq="sport"] { --hq-accent: #75638F; --hq-accent-light: #2F2A38; --hq-accent-dark: #C2B4DA; --hq-accent-text: #B9A9D3; --hq-on-accent: #FFFFFF; }
+:root[data-theme="dark"][data-hq="qed"]   { --hq-accent: #547B91; --hq-accent-light: #233038; --hq-accent-dark: #A7C6D8; --hq-accent-text: #9FC0D3; --hq-on-accent: #FFFFFF; }

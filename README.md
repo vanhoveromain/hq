@@ -6,9 +6,9 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 
 | Domain | Vercel project root | What |
 |---|---|---|
-| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page + the shared hq login (cards to QED HQ and Sport HQ) |
+| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (cards to QED HQ and Sport HQ) + the shared HQ switcher (`switcher.js`) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
-| `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`), behind the hq login |
+| `qed.ownhq.app` | `qed/` | QED HQ: tools hub + onboarding plan (`qed/onboarding/`), behind the HQ login |
 
 ## Shared hq login
 
@@ -44,5 +44,6 @@ See `sporthq3/CLAUDE.md` for the brief, rules and decisions. Database schema liv
 
 ## Brand
 
-`brand/` — hq (umbrella) and sporthq logos, app icons and favicons. See `brand/README.md`.
-SportHQ brand book: `brand/sporthq-guidelines.html`.
+HQ Brand Guidelines v1.0 live in `brand/guidelines-v1.0/`; tokens, fonts and logos in `brand/`. See `brand/README.md`.
+Every HQ app (hq-home, QED HQ, Sport HQ) uses the shared tokens (`hq-tokens.css`), Geist, and the HQ switcher
+(`<hq-switcher current="…">` from `https://ownhq.app/switcher.js`) in its top bar.

@@ -1,44 +1,54 @@
-# Brand: hq & sporthq
+# Brand: HQ
 
-`hq` is the umbrella for the personal tools in this repo. `sporthq` is the first product under it.
+Source of truth: **HQ Brand Guidelines v1.0** in `guidelines-v1.0/` (designer handoff kit, saved 2026-11-05).
+Start with `guidelines-v1.0/README_START_HERE.md`, then `01_Brand_Book/HQ_Brand_Guidelines_FULL.md` (or the PDF).
+It replaces the old hq / sporthq logos and the SportHQ brand book (removed; still in git history).
 
-**SportHQ brand book:** `sporthq-guidelines.html` (logo, colour incl. dark mode and sport colours, number font, components, icons, voice, accessibility, tokens). Open it from the repo root or on GitHub Pages so the logo files load.
+## In short
 
-- **hq**: black letters, white tile.
-- **sporthq**: lowercase s + hq. The q is a stadium (running track with one lane line, football pitch in the infield). White letters on a deep purple tile.
-- Letters are drawn shapes, not a font: they look the same everywhere.
+- **HQ** (parent): charcoal `#242424` monogram on white. Name is "HQ"; `ownhq.app` is the address, not the brand.
+- **Products** are named `[Name] HQ` (with a space) and each has a white symbol on a muted square:
 
-## Colours
+| HQ | Accent | Light | Dark | URL |
+|---|---|---|---|---|
+| Sport HQ | `#75638F` | `#F1EDF5` | `#594771` | sport.ownhq.app |
+| QED HQ | `#547B91` | `#EBF2F5` | `#3B6075` | qed.ownhq.app |
+| Work HQ (planned) | `#486B94` | `#EBF0F6` | `#345173` | — |
+| Personal HQ (planned) | `#9F597A` | `#F7EDF1` | `#793E5D` | — |
 
-| Use | Hex |
-|---|---|
-| hq letters | `#111111` |
-| hq tile | `#ffffff` |
-| sporthq deep purple (tile, letters on light) | `#3d0079` (same as `--accent` in `sporthq3/css/style.css`) |
-| Infield on the purple tile, logo on dark | `#c4a5ff` (same as `--accent` in dark mode) |
-| Infield on a light page | `#ece4f7` |
-| SportHQ3 page background | `#e9edf2` |
+- Neutrals: canvas `#FAFAF9`, surface `#FFFFFF`, subtle `#F2F2F0`, border `#E5E5E3`, text `#242424` / `#666666`.
+- Type: Geist Sans (Geist Mono only for fixed-width / identifiers). Radius 8px (6px small). 4px spacing scale.
+- Shared top bar with the product identity + HQ switcher (`hq-home/switcher.js`).
 
 ## Files
 
 | File | Use |
 |---|---|
-| `hq/hq-mark.svg`, `hq/hq-mark-white.svg` | Logo on its own, for light / dark backgrounds |
-| `hq/hq-icon.svg`, `hq/hq-icon-512.png`, `hq/hq-icon-180.png` | App icon |
-| `sporthq/sporthq-mark.svg`, `sporthq/sporthq-mark-white.svg` | Logo on its own, for light / dark backgrounds (the lane line is see-through) |
-| `sporthq/sporthq-icon.svg`, `sporthq/sporthq-icon-1024.png` | App icon |
-| `sporthq/sporthq-favicon.svg`, `-32.png`, `-16.png`, `-16.svg` | Browser tab: the stadium alone |
+| `hq-tokens.css` | The shared design tokens (`--hq-*`) + Geist @font-face. Copied into each app: `hq-home/hq-tokens.css`, `qed/assets/hq-tokens.css`, `sporthq3/css/hq-tokens.css`. Edit here, then copy. |
+| `fonts/` | Geist Sans + Geist Mono variable woff2 (SIL OFL, `fonts/OFL.txt`, from the official `geist` npm package 1.9.1). Copied next to each app's tokens file. |
+| `logos/hq-mark.svg`, `hq-mark-white.svg` | Parent HQ mark for light / dark backgrounds |
+| `logos/hq-icon.svg`, `hq-icon-*.png` | Parent app icon (white tile, 0.25× clear space) |
+| `logos/{sport,qed,work,personal}-hq.svg` | Product symbols, unchanged from the kit |
+| `logos/*-icon-*.png`, `*-square.svg` | App icons / favicons (square: iOS and Android round the corners) |
 
-SportHQ3 uses copies in `sporthq3/icons/` (`icon.svg` = favicon, `icon-192/512.png` + `apple-touch-icon.png` = app icon, `logo.svg` = header logo in white for the deep purple top bar).
+## Parent mark: provisional
 
-PNG app icons are square on purpose: iOS and Android round the corners themselves.
+The approved parent logo is the small reference image `guidelines-v1.0/06_References/HQ_Approved_User_Reference_95x97.png`.
+The kit's own SVG is an automatic, stair-stepped trace. `export.mjs` holds a clean geometric redraw (arcs + straight
+shapes) lined up on the reference, used in the apps. It is still **provisional**: not the designer-approved vector
+master (guidelines §03 / §12). Replace the paths in `export.mjs` once the master is signed off.
 
-## Changing the logo
+## Changing a logo
 
-All files come from `export.mjs`. Edit it, then run from the repo root:
+All logo files come from `export.mjs`, which also copies what each app needs. From the repo root:
 
 ```
 node brand/export.mjs
 ```
 
 It needs Playwright (Chromium) for the PNGs.
+
+## Open points from the kit (§12 release QA)
+
+Vector master for the parent mark; 16px checks of the product symbols (QED's hub is the most complex); dark-mode
+contrast is provisional; trademark / originality checks before any public launch.

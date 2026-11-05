@@ -1,0 +1,43 @@
+:root {
+  --hq-canvas: #FAFAF9;
+  --hq-surface: #FFFFFF;
+  --hq-subtle: #F2F2F0;
+  --hq-border: #E5E5E3;
+  --hq-primary-text: #242424;
+  --hq-secondary-text: #666666;
+  --hq-white: #FFFFFF;
+  --hq-radius: 8px;
+  --hq-font: "Geist Sans", system-ui, sans-serif;
+  --hq-font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+[data-hq="sport"] {
+  --hq-accent: #75638F;
+  --hq-accent-light: #F1EDF5;
+  --hq-accent-dark: #594771;
+}
+[data-hq="work"] {
+  --hq-accent: #486B94;
+  --hq-accent-light: #EBF0F6;
+  --hq-accent-dark: #345173;
+}
+[data-hq="qed"] {
+  --hq-accent: #547B91;
+  --hq-accent-light: #EBF2F5;
+  --hq-accent-dark: #3B6075;
+}
+[data-hq="personal"] {
+  --hq-accent: #9F597A;
+  --hq-accent-light: #F7EDF1;
+  --hq-accent-dark: #793E5D;
+}
+
+/* Provisional dark neutral tokens: test contrast and interactions before release. */
+[data-theme="dark"] {
+  --hq-canvas: #171819;
+  --hq-surface: #222426;
+  --hq-subtle: #2B2E30;
+  --hq-border: #3B3E40;
+  --hq-primary-text: #F4F4F2;
+  --hq-secondary-text: #ACB0B2;
+}

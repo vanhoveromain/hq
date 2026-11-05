@@ -1,0 +1,13 @@
+{
+  "name": "HQ designer handoff",
+  "version": "1.0",
+  "date": "2026-11-05",
+  "sourceLogo": "06_References/HQ_Approved_User_Reference_95x97.png",
+  "parentTraceStatus": "provisional",
+  "approvedProductColors": {
+    "sport": "#75638F",
+    "work": "#486B94",
+    "qed": "#547B91",
+    "personal": "#9F597A"
+  }
+}

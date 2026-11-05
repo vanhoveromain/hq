@@ -1,28 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-hq="sport">
 <head>
   <meta charset="utf-8">
   <!-- viewport-fit=cover lets the app use the full iPhone screen; the CSS
        then adds padding for the notch / home bar (safe-area insets). -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#3d0079">
-  <title>SportHQ3</title>
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#222426" media="(prefers-color-scheme: dark)">
+  <title>Sport HQ</title>
   <!-- "Add to Home Screen": app name, icon, and open full screen (no browser bars) -->
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <meta name="apple-mobile-web-app-title" content="SportHQ3">
+  <link rel="icon" href="icons/sport-hq.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/sport-hq-icon-180.png">
+  <meta name="apple-mobile-web-app-title" content="Sport HQ">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="stylesheet" href="css/style.css?v=202611051430">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <!-- HQ Brand Guidelines v1.0: shared HQ tokens + Geist fonts, then the app's styles -->
+  <link rel="preload" href="css/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/hq-tokens.css?v=202611051635">
+  <link rel="stylesheet" href="css/style.css?v=202611051635">
 </head>
 <body>
-  <!-- Left: the logo, or "‹ Back" on a screen inside another one. Right: one
+  <!-- Left: Sport HQ (symbol + name, opens the HQ switcher: hq-home/switcher.js),
+       or "‹ Back" on a screen inside another one. Right: one
        action of the screen (e.g. the planner's "⋯"). See js/utils/topbar.js. -->
   <header class="topbar">
     <div class="topbar-left">
-      <a class="brand" href="#/dashboard" aria-label="SportHQ3, back to Home"><img src="icons/logo.svg" alt="" width="54" height="30"></a>
+      <hq-switcher class="brand" current="sport"><a class="brand-link" href="#/dashboard" aria-label="Sport HQ, back to Home"><img src="icons/sport-hq.svg" alt="" width="28" height="28"><span>Sport HQ</span></a></hq-switcher>
       <a class="topbar-back" id="topbar-back" href="#/dashboard" hidden></a>
     </div>
     <h1 id="page-title" class="page-title"></h1>
@@ -46,6 +51,6 @@
 
   <!-- type="module" turns on ES modules (import/export between files).
        Modules only work when the page is served over http, not file://. -->
-  <script type="module" src="js/main.js?v=202611051430"></script>
+  <script type="module" src="js/main.js?v=202611051635"></script>
 </body>
 </html>

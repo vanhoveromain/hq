@@ -4,23 +4,30 @@
 // screen you're on, e.g. index.html#/planner. Changing it doesn't reload the
 // page; we just draw a different view inside <main>. This is a "hash router".
 
-import { requireLogin, loginUrl, onAuthChange } from "./storage.js?v=202611051430";
-import * as dashboardView from "./views/dashboard.js?v=202611051430";
-import * as plannerView from "./views/planner.js?v=202611051430";
-import * as logView from "./views/log.js?v=202611051430";
-import * as racesView from "./views/races.js?v=202611051430";
-import * as meView from "./views/me.js?v=202611051430";
-import * as shoesView from "./views/shoes.js?v=202611051430";
-import * as blocksView from "./views/blocks.js?v=202611051430";
-import * as bodyView from "./views/body.js?v=202611051430";
-import * as settingsView from "./views/settings.js?v=202611051430";
-import * as catalogueView from "./views/catalogue.js?v=202611051430";
-import * as weekTemplatesView from "./views/weekTemplates.js?v=202611051430";
-import * as workoutView from "./views/workout.js?v=202611051430";
-import * as customSessionView from "./views/customSession.js?v=202611051430";
-import * as reviewView from "./views/review.js?v=202611051430";
-import { clearTopbar, setTopbarBack } from "./utils/topbar.js?v=202611051430";
-import { startShortcuts } from "./utils/shortcuts.js?v=202611051430";
+import { requireLogin, loginUrl, onAuthChange } from "./storage.js?v=202611051635";
+import * as dashboardView from "./views/dashboard.js?v=202611051635";
+import * as plannerView from "./views/planner.js?v=202611051635";
+import * as logView from "./views/log.js?v=202611051635";
+import * as racesView from "./views/races.js?v=202611051635";
+import * as meView from "./views/me.js?v=202611051635";
+import * as shoesView from "./views/shoes.js?v=202611051635";
+import * as blocksView from "./views/blocks.js?v=202611051635";
+import * as bodyView from "./views/body.js?v=202611051635";
+import * as settingsView from "./views/settings.js?v=202611051635";
+import * as catalogueView from "./views/catalogue.js?v=202611051635";
+import * as weekTemplatesView from "./views/weekTemplates.js?v=202611051635";
+import * as workoutView from "./views/workout.js?v=202611051635";
+import * as customSessionView from "./views/customSession.js?v=202611051635";
+import * as reviewView from "./views/review.js?v=202611051635";
+import { clearTopbar, setTopbarBack } from "./utils/topbar.js?v=202611051635";
+import { startShortcuts } from "./utils/shortcuts.js?v=202611051635";
+
+// The HQ switcher in the top bar (<hq-switcher>, step 37): shared by every HQ,
+// served by ownhq.app like the login (localhost: serve.py's /_hq/). Loaded on
+// the side: if it can't load, the Sport HQ name in the top bar simply stays a
+// link to Home.
+const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
+import(ON_OWNHQ ? "https://ownhq.app/switcher.js" : "/_hq/switcher.js").catch(() => {});
 
 // The list of screens: address name -> title + module that draws it.
 // `tab` = which bottom tab lights up, for screens that live "inside" another tab.

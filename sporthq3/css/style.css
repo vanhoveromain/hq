@@ -1,143 +1,129 @@
-/* SportHQ3 — mobile-first styles.
-   "Mobile-first" = the base rules are for a phone; the @media rule at the
-   bottom adds tweaks for bigger screens. */
+/* Sport HQ — mobile-first styles.
+   "Mobile-first" = the base rules are for a phone; the @media rules lower
+   down add tweaks for bigger screens. */
 
 /* ---------- Design tokens: change a colour once here, it changes everywhere ----------
-   Look chosen on 2026-10-14 ("A + C"): soft white cards with a light shadow,
-   a charcoal top bar, small uppercase card labels, a thin accent line on
-   dashboard cards and planner sessions; done = green.
-   HQ family: every HQ shares this style and only changes its ACCENT
-   (hub = ink, Sport = deep purple, Work = blue, Personal = raspberry). Green,
-   amber and red keep their meaning (done / warning / error) in every HQ. */
-/* Number font (step 17b): Barlow Condensed, stored in the app (fonts/, SIL Open
-   Font License) instead of loaded from Google: works offline, nothing sent to
-   Google. Only for numbers (.num); the rest stays in the phone's own font. */
-@font-face {
-  font-family: "Barlow Condensed";
-  src: url("../fonts/barlow-condensed-latin-600-normal.woff2") format("woff2");
-  font-weight: 600; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Barlow Condensed";
-  src: url("../fonts/barlow-condensed-latin-700-normal.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
-}
+   HQ Brand Guidelines v1.0 (brand/guidelines-v1.0/, since 2026-11-05, step 37):
+   calm neutrals (canvas #FAFAF9, white surfaces, #E5E5E3 borders, charcoal
+   #242424 text), ONE accent per HQ (Sport HQ = muted violet #75638F), Geist Sans
+   (numbers too, with tabular digits), 8px radius, a white shared top bar with
+   the Sport HQ symbol + HQ switcher. The shared values (--hq-*) come from
+   css/hq-tokens.css (a copy of brand/hq-tokens.css, which also loads the Geist
+   fonts from css/fonts/). Below, the app's own names point at them.
+   Green, amber and red keep their meaning (done / warning / error) and are never
+   the only signal (an icon or a word goes with them). */
 
 :root {
-  --bg: #e9edf2;
-  --surface: #ffffff;
-  --text: #161922;
-  --muted: #5b6472;
-  --border: #d6dce4;
-  --card-border: transparent;   /* light mode: cards are lifted by a shadow, no border */
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.09); /* a card under the mouse (23b) */
-  --hover-bg: rgba(0, 0, 0, 0.035);   /* a row under the mouse */
-  --card-border-hover: transparent;
-  --accent: #3d0079;            /* Sport HQ deep purple, dark enough for white text and small text */
-  --accent-strong: #3d0079;     /* lines and bars: the deep purple already reads well thin */
-  --accent-text: #ffffff;
-  --topbar-bg: #3d0079;         /* deep purple top bar with the white logo (33) */
-  --strip-bg: #13111a;          /* charcoal for the workout strip and bar (dark, not branded) */
-  --topbar-text: #ffffff;
-  --ok: #15803d;
-  --done-line: #16a34a;
-  --error: #b91c1c;
-  /* One colour per sport (planner cards, month, Home strip). Never green /
-     amber / red (done / warning / error) and not the purple accent. */
-  --sport-running: #2563eb;   /* blue */
-  --sport-football: #0891b2;  /* cyan */
-  --sport-muscle: #db2777;    /* pink */
-  --sport-biking: #ea580c;    /* orange */
-  --sport-swimming: #4f46e5;  /* indigo */
-  --sport-stairs: #8b5e3c;    /* brown */
-  --radius: 14px;
+  --bg: var(--hq-canvas);
+  --surface: var(--hq-surface);
+  --text: var(--hq-primary-text);
+  --muted: var(--hq-secondary-text);
+  --border: var(--hq-border);
+  --card-border: var(--hq-border);  /* flat cards with a light border (guidelines §07) */
+  --shadow: none;
+  --shadow-hover: none;              /* a card under the mouse: its border darkens */
+  --hover-bg: rgba(36, 36, 36, 0.04); /* a row under the mouse */
+  --card-border-hover: var(--hq-border-strong);
+  --accent: #75638F;            /* Sport HQ violet: buttons, active tab, lines, links (5.1:1 on the canvas) */
+  --accent-strong: #75638F;     /* lines and bars */
+  --accent-text: #FFFFFF;       /* text on an accent fill (5.3:1) */
+  --accent-soft: #F1EDF5;       /* pale violet: selected chips, tinted panels */
+  --accent-deep: #594771;       /* violet as big text on the pale tint (7.1:1) */
+  --topbar-bg: var(--hq-surface); /* white shared top bar (guidelines §08) */
+  --topbar-text: var(--hq-primary-text);
+  --strip-bg: #242424;          /* charcoal for the workout strip and bar (focus mode, not branded) */
+  --strip-text: #FFFFFF;
+  --ok: var(--hq-success);
+  --done-line: #3F9A63;
+  --error: var(--hq-danger);
+  --warn-line: #B7791F;         /* amber lines (missed session, worn shoes) */
+  /* One colour per sport (planner cards, month, Home strip): data colours
+     (guidelines §07 allows extra chart colours), muted to sit with the brand.
+     Never green / amber / red (done / warning / error) and not the violet accent. */
+  --sport-running: #3F6FB0;   /* blue */
+  --sport-football: #2A8293;  /* teal */
+  --sport-muscle: #B04F7E;    /* raspberry */
+  --sport-biking: #B8682A;    /* orange */
+  --sport-swimming: #5A5FB0;  /* indigo */
+  --sport-stairs: #8A6748;    /* brown */
+  --radius: 8px;                /* guidelines §07: default 8px, small 6px */
+  --radius-sm: 6px;
   /* Page widths (28a): two sizes only, so content doesn't jump between screens.
      narrow = forms, profiles, detail pages; wide = dashboards, lists, tables.
      The planner's week (7 day columns) is the one exception: 1400px. */
   --page-narrow: 760px;
   --page-wide: 1200px;
   --tabbar-height: 64px;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-num: "Barlow Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font: var(--hq-font);
+  --font-num: var(--hq-font);   /* numbers: Geist Sans with tabular digits (.num) */
+  --font-mono: var(--hq-font-mono);
   /* RPE bands, cool to warm (never green / amber / red): background + text */
-  --rpe-low-bg: #dbeafe;  --rpe-low-text: #1d4ed8;
-  --rpe-mid-bg: #ece4f7;  --rpe-mid-text: #3d0079;
-  --rpe-high-bg: #fce7f3; --rpe-high-text: #9d174d;
-  --rpe-max-bg: #831843;  --rpe-max-text: #ffffff;
+  --rpe-low-bg: #E3ECF7;  --rpe-low-text: #2F5A8F;
+  --rpe-mid-bg: #F1EDF5;  --rpe-mid-text: #594771;
+  --rpe-high-bg: #F7E6EE; --rpe-high-text: #8A3A62;
+  --rpe-max-bg: #793E5D;  --rpe-max-text: #FFFFFF;
   /* RPE 9-10 buttons in the log form: light until chosen, like 1-8 (23d) */
-  --rpe-max-soft-bg: #fbcfe8; --rpe-max-soft-text: #831843;
-  /* Home (17c): the Today hero, the amber warning line, empty bar segments */
-  --hero-bg: #3d0079;
-  --hero-text: #ffffff;
-  --hero-muted: rgba(255, 255, 255, 0.82);
-  --hero-soft: rgba(255, 255, 255, 0.16);
-  --hero-line: rgba(255, 255, 255, 0.26);
-  --hero-button-bg: #ffffff;
-  --hero-button-text: #3d0079;
-  --warn-bg: #fef3c7;
-  --warn-text: #92400e;
-  --segment-empty: #dde2e9;
-  --load-past: #d9cdee;         /* past weeks in the load chart */
-  /* Race mode (17d): the dark race block on top of Home */
-  --race-mode-bg: #3d0079;      /* purple, so the block continues the top bar (34) */
-  --race-mode-text: #ffffff;
-  --race-mode-muted: #d3d6de;
-  --race-mode-accent: #c4a5ff;
-  --race-mode-soft: rgba(255, 255, 255, 0.14);
-  --race-mode-empty: rgba(255, 255, 255, 0.2);
-  --race-mode-button: #5b2a9e;   /* lifted purple: #3d0079 vanishes on the dark block */
-  /* Workout mode (18): the dark strip on top and the bar pinned at the bottom */
-  --strip-accent: #c4a5ff;
-  --strip-muted: #a3a9b5;
-  --strip-track: #3a3646;
-  --tick-halo: rgba(61, 0, 121, 0.25);
-  --done-bg: #dcfce7;
+  --rpe-max-soft-bg: #EFD3E0; --rpe-max-soft-text: #6A2F4E;
+  /* Home (17c): the Today panel (pale violet, dark text), the amber warning line, empty bar segments */
+  --hero-bg: var(--accent-soft);
+  --hero-text: var(--hq-primary-text);
+  --hero-muted: var(--hq-secondary-text);
+  --hero-soft: rgba(117, 99, 143, 0.12);
+  --hero-line: rgba(117, 99, 143, 0.24);
+  --hero-button-bg: var(--accent);
+  --hero-button-text: #FFFFFF;
+  --warn-bg: var(--hq-warning-light);
+  --warn-text: var(--hq-warning);
+  --segment-empty: #E5E5E3;
+  --load-past: #D6CEE2;         /* past weeks in the load chart */
+  /* Race mode (17d), race page summary, Me header: the same pale violet panel */
+  --race-mode-bg: var(--accent-soft);
+  --race-mode-text: var(--hq-primary-text);
+  --race-mode-muted: var(--hq-secondary-text);
+  --race-mode-accent: var(--accent-deep);
+  --race-mode-soft: rgba(117, 99, 143, 0.14);
+  --race-mode-empty: rgba(117, 99, 143, 0.22);
+  --race-mode-button: var(--accent);
+  /* Workout mode (18): the charcoal strip on top and the bar pinned at the bottom */
+  --strip-accent: #C2B4DA;      /* light violet on charcoal (8.5:1) */
+  --strip-muted: #ACB0B2;
+  --strip-track: #3B3E40;
+  --tick-halo: rgba(117, 99, 143, 0.25);
+  --done-bg: var(--hq-success-light);
 }
 
-/* Dark mode follows the phone's setting automatically. Shadows don't show
-   on dark backgrounds, so cards get a thin border instead. */
+/* Dark mode follows the phone's setting (PROVISIONAL dark tokens, guidelines §05 / §08).
+   The violet is too dark for text on dark surfaces, so links / lines use a lifted violet. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f0e14;
-    --surface: #1a1822;
-    --text: #f2f0f6;
-    --muted: #a39fb0;
-    --border: #2f2c3b;
-    --card-border: #262331;
-    --shadow: none;
-    --shadow-hover: none;              /* dark mode: the card's border lights up instead */
     --hover-bg: rgba(255, 255, 255, 0.05);
-    --card-border-hover: #433f52;
-    --accent: #c4a5ff;
-    --accent-strong: #c4a5ff;
-    --accent-text: #1a0d33;
-    --topbar-bg: #3d0079;
-    --strip-bg: #08070b;
-    --ok: #4ade80;
-    --done-line: #4ade80;
-    --error: #f87171;
-    --sport-running: #60a5fa;
-    --sport-football: #22d3ee;
-    --sport-muscle: #f472b6;
-    --sport-biking: #fb923c;
-    --sport-swimming: #818cf8;
-    --sport-stairs: #c08a5e;
-    --rpe-low-bg: #1e3a5f;  --rpe-low-text: #bfdbfe;
-    --rpe-mid-bg: #2f1f4d;  --rpe-mid-text: #e4d9ff;
-    --rpe-high-bg: #5c1d3f; --rpe-high-text: #fbcfe8;
-    --rpe-max-bg: #f9a8d4;  --rpe-max-text: #500724;
-    --rpe-max-soft-bg: #7a1f4f; --rpe-max-soft-text: #fce7f3;
-    --hero-bg: #3d0079;
-    --hero-button-text: #3d0079;
-    --warn-bg: #3b2b0b;
-    --warn-text: #fcd34d;
-    --segment-empty: #2f2c3b;
-    --load-past: #4a3a6e;
-    --race-mode-bg: #3d0079;
-    --race-mode-button: #5b2a9e;
-    --tick-halo: rgba(196, 165, 255, 0.3);
-    --done-bg: #14301f;
+    --accent: #B9A9D3;
+    --accent-strong: #B9A9D3;
+    --accent-text: #1E1A26;
+    --accent-soft: #2F2A38;
+    --accent-deep: #C2B4DA;
+    --strip-bg: #0F1011;
+    --done-line: #7FCB9A;
+    --warn-line: #E9B866;
+    --sport-running: #8DB0E0;
+    --sport-football: #6FC3D1;
+    --sport-muscle: #E39BBE;
+    --sport-biking: #E5A36E;
+    --sport-swimming: #A3A7E6;
+    --sport-stairs: #C9A684;
+    --rpe-low-bg: #1F2C3D;  --rpe-low-text: #BCD3EE;
+    --rpe-mid-bg: #2F2A38;  --rpe-mid-text: #D8CCEA;
+    --rpe-high-bg: #3A2230; --rpe-high-text: #F0C6DA;
+    --rpe-max-bg: #E0A9C4;  --rpe-max-text: #3A1828;
+    --rpe-max-soft-bg: #4A2638; --rpe-max-soft-text: #F7DCE8;
+    --hero-soft: rgba(185, 169, 211, 0.12);
+    --hero-line: rgba(185, 169, 211, 0.22);
+    --hero-button-text: #1E1A26;
+    --segment-empty: #3B3E40;
+    --load-past: #4A4258;
+    --race-mode-soft: rgba(185, 169, 211, 0.14);
+    --race-mode-empty: rgba(185, 169, 211, 0.22);
+    --tick-halo: rgba(185, 169, 211, 0.3);
   }
 }
 
@@ -166,7 +152,7 @@ a { color: var(--accent); }
 
 /* Numbers (step 17b): value in the condensed stat font, digits all the same
    width (so 1:11 and 8:88 line up), unit small and light next to it. */
-.num { font-family: var(--font-num); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 0.01em; }
+.num { font-family: var(--font-num); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.01em; }
 .unit { font-family: var(--font); font-size: 0.8rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
 h2 { font-size: 1.15rem; }
 p { margin: 0 0 12px; }
@@ -188,12 +174,20 @@ p { margin: 0 0 12px; }
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
   background: var(--topbar-bg);
   color: var(--topbar-text);
+  border-bottom: 1px solid var(--border);
 }
 .topbar-left { justify-self: start; display: flex; align-items: center; min-width: 0; }
 .topbar-right { justify-self: end; display: flex; align-items: center; }
 .brand { display: flex; text-decoration: none; }
 .brand[hidden] { display: none; }
-.brand img { display: block; height: 30px; width: auto; }  /* logo is 188 x 104 */
+.brand-link { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; color: var(--text); font-weight: 600; text-decoration: none; }
+.brand-link img { display: block; width: 28px; height: 28px; }
+/* Phone: the switcher shows the symbol only (the name is read out), so the
+   page title keeps the middle of the bar. */
+@media (max-width: 479px) {
+  .topbar .hqsw-name, .brand-link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .topbar .hqsw-btn { gap: 4px; }
+}
 .page-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--topbar-text); text-align: center;
   /* a long race / block name ends in "…" instead of pushing "‹ Races" / "Edit" away (30d) */
   min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -202,17 +196,17 @@ p { margin: 0 0 12px; }
    keep the bar as thin as before while the tap area stays 44px. */
 .topbar-back {
   display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin: -7px 0 -7px -8px; padding: 0 8px;
-  color: var(--strip-accent); font-weight: 600; font-size: 0.95rem; text-decoration: none; white-space: nowrap;
+  color: var(--accent); font-weight: 600; font-size: 0.95rem; text-decoration: none; white-space: nowrap;
 }
 .topbar-back .icon { width: 20px; height: 20px; stroke-width: 2.25; }
 .topbar-button {
   display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
-  margin: -7px -10px -7px 0; padding: 0 10px; border: 0; border-radius: 10px; background: transparent;
-  color: var(--strip-accent); font: inherit; font-weight: 600; cursor: pointer;
+  margin: -7px -10px -7px 0; padding: 0 10px; border: 0; border-radius: var(--radius); background: transparent;
+  color: var(--accent); font: inherit; font-weight: 600; cursor: pointer;
 }
 .topbar-button.is-icon { color: var(--topbar-text); }
 .topbar-button .icon { width: 22px; height: 22px; }
-.topbar-button:hover { background: rgba(255, 255, 255, 0.1); }
+.topbar-button:hover { background: var(--hover-bg); }
 
 /* ---------- Main area ---------- */
 .view {
@@ -261,7 +255,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   font-weight: 600;
   min-height: 44px;            /* big enough for a thumb */
   padding: 10px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -281,7 +275,7 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
 .orphan-workout h2 { margin-bottom: 4px; }
 .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .button-row .button.primary { flex: 1 1 180px; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-.unfinished-workout { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 12px; }
+.unfinished-workout { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: var(--radius); }
 .unfinished-workout p { display: flex; align-items: flex-start; gap: 8px; margin: 0; }
 .unfinished-workout p > span { flex: 1; min-width: 0; }
 .unfinished-workout .small { display: block; opacity: 0.85; }
@@ -299,8 +293,7 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
 .status:empty { display: none; }
 .status.ok { color: var(--ok); }
 .status.error { color: var(--error); }
-.status.warning { color: #b45309; }
-@media (prefers-color-scheme: dark) { .status.warning { color: #fbbf24; } }
+.status.warning { color: var(--warn-text); }
 
 /* ---------- Bottom tab bar ---------- */
 .tabbar {
@@ -314,7 +307,6 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
   border-top: 1px solid var(--border);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
 }
 
 
@@ -345,22 +337,22 @@ a.button, a.hero-button, a.hero-small-button { text-decoration: none; text-align
     top: 0; bottom: auto; left: auto; right: 16px; height: auto;
     padding: 0; gap: 4px; align-items: center;
     /* same height as the top bar: its padding + the 30px logo */
-    min-height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top);
+    min-height: calc(64px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top);
     background: transparent; border: 0; box-shadow: none; z-index: 11;
   }
   .tabbar a {
-    flex: none; flex-direction: row; gap: 6px; padding: 8px 12px; border-radius: 999px;
-    font-size: 0.9rem; color: rgba(255, 255, 255, 0.78);
+    flex: none; flex-direction: row; gap: 6px; padding: 8px 12px; border-radius: var(--radius-sm);
+    font-size: 0.9rem; color: var(--muted);
   }
   .tabbar a .icon { width: 20px; height: 20px; }
-  .tabbar a:hover { background: rgba(255, 255, 255, 0.1); }
+  .tabbar a:hover { background: var(--hover-bg); color: var(--text); }
   /* the tabs take the right side of the bar: the screen's action sits next
      to the logo / back link instead, and the title stays in the middle */
   .topbar { display: flex; }
   .page-title { position: absolute; left: 50%; transform: translateX(-50%); max-width: 28vw; }
   .topbar-right { margin-left: 12px; }
   .topbar-button { margin: -7px 0; }
-  .tabbar a.active { color: var(--topbar-text); background: rgba(255, 255, 255, 0.14); }
+  .tabbar a.active { color: var(--accent); background: var(--accent-soft); }
   .view { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
 }
 /* Small laptops: icons only (the label is still read out), so the tabs
@@ -514,7 +506,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sport-tile input, .type-chip input, .rpe-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .sport-tile > span {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 66px; padding: 6px;
-  border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); color: var(--text);
   font-size: 0.82rem; text-align: center; line-height: 1.15; cursor: pointer;
 }
 .sport-tile .icon { width: 22px; height: 22px; color: var(--sport); }
@@ -523,7 +515,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
    ("Run", "Gym"…), so Duration is in sight without scrolling */
 @media (max-width: 999px) {
   .sport-tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
-  .sport-tile > span { min-height: 56px; padding: 6px 2px; gap: 3px; border-radius: 12px; font-size: 0.72rem; }
+  .sport-tile > span { min-height: 56px; padding: 6px 2px; gap: 3px; border-radius: var(--radius); font-size: 0.72rem; }
   .sport-tile .icon { width: 20px; height: 20px; }
   /* the full name stays for screen readers (the short one is aria-hidden) */
   .sport-tile .sport-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -535,7 +527,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .type-chip { margin: 0; font-weight: 500; }
 .type-chip[hidden] { display: none; }
 .type-chip span {
-  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--surface); font-size: 0.9rem; cursor: pointer;
 }
 .type-chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
@@ -568,7 +560,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 @media (max-width: 359px) { .rpe-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .rpe-option { margin: 0; position: relative; }
 .rpe-option span {
-  display: grid; place-items: center; height: 48px; border-radius: 10px; font-size: 1.15rem; cursor: pointer;
+  display: grid; place-items: center; height: 48px; border-radius: var(--radius); font-size: 1.15rem; cursor: pointer;
   background: var(--rpe-bg); color: var(--rpe-text);
 }
 .rpe-option.level-low  { --rpe-bg: var(--rpe-low-bg);  --rpe-text: var(--rpe-low-text); }
@@ -595,7 +587,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--bg) 94%, transparent); border-top: 1px solid var(--border);
 }
-.save-bar .button { display: block; max-width: calc(var(--page-narrow) - 32px); margin: 0 auto; min-height: 54px; border-radius: 16px; font-size: 1.05rem; font-weight: 700; }
+.save-bar .button { display: block; max-width: calc(var(--page-narrow) - 32px); margin: 0 auto; min-height: 54px; border-radius: var(--radius); font-size: 1.05rem; font-weight: 700; }
 .is-form .view { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 .is-form .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 @media (max-width: 999px) { .is-form .tabbar { display: none; } }
@@ -661,7 +653,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--muted);
@@ -671,12 +663,12 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Progress bar: grey track, coloured fill whose width = % of the replace distance. */
 .bar { display: block; height: 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; }
 .bar-fill { display: block; height: 100%; background: var(--ok); border-radius: 4px; }
-.status-warn .bar-fill { background: #d97706; }
+.status-warn .bar-fill { background: var(--warn-line); }
 .status-replace .bar-fill { background: var(--error); }
 .status-retired { opacity: 0.7; }
 .status-retired .bar-fill { background: var(--muted); }
 .shoe-message { font-size: 0.85rem; font-weight: 700; }
-.status-warn .shoe-message { color: #b45309; }
+.status-warn .shoe-message { color: var(--warn-text); }
 .status-replace .shoe-message { color: var(--error); }
 
 .retired { margin-bottom: 16px; }
@@ -686,9 +678,6 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .checkbox { display: flex; align-items: center; gap: 8px; font-weight: 400; margin-bottom: 12px; }
 .checkbox input { width: 20px; height: 20px; margin: 0; }
 
-@media (prefers-color-scheme: dark) {
-  .status-warn .shoe-message { color: #fbbf24; }
-}
 
 /* ---------- Catalogue editor ---------- */
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -713,7 +702,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .week-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
 .week-nav-title { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.25; }
 .nav-button {
-  flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px;
+  flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius);
   border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none;
 }
 .nav-button .icon { width: 20px; height: 20px; }
@@ -775,7 +764,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .day-add .icon { width: 18px; height: 18px; stroke-width: 2.25; }
 /* The day's load tag (20a, rules.js dayLoadTag): the heaviest kind of
    session that day. Cool colours / grey, never green / amber / red. */
-.day-tag { padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; line-height: 1.5; white-space: nowrap;
+.day-tag { padding: 2px 8px; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 700; line-height: 1.5; white-space: nowrap;
   background: var(--bg); color: var(--muted); }
 .day-tag.tag-heavy_legs { background: var(--rpe-high-bg); color: var(--rpe-high-text); }
 .day-tag.tag-easy_run { background: var(--rpe-low-bg); color: var(--rpe-low-text); }
@@ -788,7 +777,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   display: flex; align-items: center; gap: 10px; width: 100%;
   text-align: left; font: inherit; color: inherit; cursor: pointer;
   padding: 10px; margin: 0;
-  border: 0; border-left: 4px solid var(--accent-strong); border-radius: 10px; background: var(--bg);
+  border: 0; border-left: 4px solid var(--accent-strong); border-radius: var(--radius); background: var(--bg);
 }
 .plan-card.status-done { border-left-color: var(--done-line); }
 /* Skipped (cancelled): greyed and dashed, a quiet "Skipped" (20a) */
@@ -804,7 +793,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   display: flex; align-items: center; gap: 8px;
 }
 .plan-log {
-  display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border-radius: 22px;
+  display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none;
   font-size: 0.9rem; font-weight: 600;
 }
@@ -869,7 +858,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   /* 7 columns: a warning chip can't sit between two days, so it shows in the later day */
   .warning-between { display: none !important; }
   .day .warning-chip.warning-dup { display: flex; }
-  .warning-chip { align-self: stretch; border-radius: 12px; font-size: 0.75rem; }
+  .warning-chip { align-self: stretch; border-radius: var(--radius); font-size: 0.75rem; }
   /* one line in the narrow day column (28d); the full message shows on mouse-over (title) and on tap */
   .day .warning-chip .chip-short { display: none; }
   .day .warning-chip .chip-tiny { display: inline; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -880,7 +869,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sheet {
   border: 0; padding: 0; margin: auto auto 0;
   width: 100%; max-width: 560px; max-height: 85vh;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--radius) 16px 0 0;
   background: var(--surface); color: var(--text);
 }
 .sheet::backdrop { background: rgba(0, 0, 0, 0.45); }
@@ -893,16 +882,16 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .sheet-heading p { margin: 2px 0 0; }
 .sheet-header.has-badge { justify-content: flex-start; gap: 12px; }
 .sheet-header.has-badge h2 { font-size: 1.25rem; line-height: 1.2; }
-.sheet-header .sport-badge { width: 2.75rem; height: 2.75rem; border-radius: 14px; }
+.sheet-header .sport-badge { width: 2.75rem; height: 2.75rem; border-radius: var(--radius); }
 /* Session menu (20b): numbers row, one big main action, Done + Log it side by side */
-.sheet-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+.sheet-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 12px; padding: 10px 12px; border-radius: var(--radius); background: var(--bg); }
 .sheet-facts .num { font-size: 1.35rem; }
 .sheet-exercises { margin: 0 0 4px; }
 .sheet-exercises summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 0.9rem; min-height: 36px; display: flex; align-items: center; }
 .sheet-exercises .exercise-list { margin-top: 4px; }
-.sheet-actions .sheet-main { min-height: 54px; border-radius: 14px; font-size: 1.05rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.sheet-actions .sheet-main { min-height: 54px; border-radius: var(--radius); font-size: 1.05rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.sheet-pair .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border-radius: 12px; }
+.sheet-pair .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border-radius: var(--radius); }
 .sheet-actions + .sheet-rows { margin-top: 12px; }
 /* Quiet list rows inside a sheet (20a/b): icon, label, › */
 .sheet-rows { display: flex; flex-direction: column; border-top: 1px solid var(--border); margin-top: 8px; }
@@ -928,7 +917,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   display: flex; justify-content: flex-start; align-items: center; gap: 8px;
   text-align: left; font: inherit; color: inherit; cursor: pointer;
   padding: 12px; min-height: 44px;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
 }
 .sheet-item > .muted { margin-left: auto; }  /* a hint (e.g. "· 7 in catalogue") sits on the right */
 .sheet-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
@@ -938,14 +927,14 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .chip-button {
   font: inherit; font-size: 0.9rem; cursor: pointer; color: inherit;
   padding: 8px 12px; min-height: 40px;
-  border: 1px solid var(--border); border-radius: 999px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);
 }
 .chip-button:disabled { opacity: 0.4; cursor: default; }
 .exercise-list { margin: 0 0 8px; padding-left: 20px; }
 .exercise-list li { margin-bottom: 4px; }
 .pre-line { white-space: pre-line; }
 @media (min-width: 700px) {
-  .sheet { margin: auto; border-radius: 16px; }
+  .sheet { margin: auto; border-radius: var(--radius); }
 }
 
 /* ---------- Toast (small message at the bottom) ---------- */
@@ -953,14 +942,14 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   position: fixed; left: 50%; transform: translateX(-50%);
   bottom: calc(var(--tabbar-height) + 16px + env(safe-area-inset-bottom));
   z-index: 50; display: flex; align-items: center; gap: 12px;
-  max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 12px;
+  max-width: calc(100% - 32px); padding: 12px 16px; border-radius: var(--radius);
   background: var(--text); color: var(--bg); box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 .toast button { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
-@media (prefers-color-scheme: dark) { .toast button { color: #3d0079; } }
+@media (prefers-color-scheme: dark) { .toast button { color: #594771; } }
 @media (min-width: 1000px) { .toast { bottom: calc(24px + env(safe-area-inset-bottom)); } }  /* no bottom bar on a laptop */
 
-.plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
+.plan-banner { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-size: 0.9rem; }
 /* "Big jump" / race-week load note: amber text on a card, the same look as on Home (28d) */
 .plan-banner.load-banner { background: var(--surface); border-color: var(--card-border); box-shadow: var(--shadow); color: var(--warn-text); font-weight: 500; }
 /* 31b: a button now (tap = whole note on a phone) */
@@ -994,7 +983,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 
 .workout-strip {
   margin: -16px -16px 16px; padding: 10px 16px 14px;
-  background: var(--strip-bg); color: var(--topbar-text);
+  background: var(--strip-bg); color: var(--strip-text);
   display: flex; flex-direction: column; gap: 12px;
 }
 .strip-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
@@ -1016,7 +1005,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .strip-chip {
   display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px;
   font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
-  color: var(--topbar-text); background: transparent; border: 1px solid var(--strip-track); border-radius: 999px;
+  color: var(--strip-text); background: transparent; border: 1px solid var(--strip-track); border-radius: var(--radius-sm);
 }
 .strip-chip[aria-pressed="false"] { color: var(--strip-muted); }
 .strip-about { margin: 0; font-size: 0.82rem; color: var(--strip-muted); white-space: pre-line; }
@@ -1039,7 +1028,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .now-note { margin: -6px 0 0; color: var(--muted); font-size: 0.9rem; }
 .workout-now .tick-row { margin-top: 0; }
 .now-button {
-  width: 100%; min-height: 64px; border-radius: 16px;
+  width: 100%; min-height: 64px; border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center; gap: 10px;
   background: var(--accent); border: 2px solid var(--accent); color: var(--accent-text);
   font-size: 1.15rem; font-weight: 700;
@@ -1104,7 +1093,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .workout-actions .button { width: 100%; }
 .finish-button {
   min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--strip-bg); border-color: var(--strip-bg); color: var(--topbar-text); font-size: 1.05rem;
+  background: var(--strip-bg); border-color: var(--strip-bg); color: var(--strip-text); font-size: 1.05rem;
 }
 .workout-actions .button.danger { margin-left: 0; border-color: transparent; background: transparent; }
 
@@ -1113,8 +1102,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
   max-width: 560px; margin: 0 auto;
   padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
-  border-radius: 22px 22px 0 0;
-  background: var(--strip-bg); color: var(--topbar-text);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--strip-bg); color: var(--strip-text);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.18);
   display: flex; flex-direction: column; gap: 10px;
 }
@@ -1122,8 +1111,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .bar-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .bar-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--strip-accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bar-left { font-size: 3.2rem; line-height: 0.95; }
-.workout-bar .button { min-height: 52px; border-radius: 14px; font-weight: 700; flex-shrink: 0; }
-.bar-more { background: transparent; color: var(--topbar-text); border-color: var(--strip-track); }
+.workout-bar .button { min-height: 52px; border-radius: var(--radius); font-weight: 700; flex-shrink: 0; }
+.bar-more { background: transparent; color: var(--strip-text); border-color: var(--strip-track); }
 .bar-skip { background: var(--strip-accent); border-color: var(--strip-accent); color: var(--strip-bg); }
 .bar-track { height: 6px; border-radius: 3px; background: var(--strip-track); overflow: hidden; }
 .bar-track span { display: block; height: 100%; width: 0; background: var(--strip-accent); border-radius: 3px; transition: width 1s linear; }
@@ -1132,7 +1121,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .workout-banner { display: block; text-decoration: none; color: inherit; }
 
 @media (min-width: 720px) {
-  .workout-strip { margin: 0 0 16px; border-radius: 16px; }
+  .workout-strip { margin: 0 0 16px; border-radius: var(--radius); }
 }
 /* Phone (30c): the dark workout strip IS the top of the screen. The app's top
    bar would be a second dark bar above it; the strip has its own "‹ Plan".
@@ -1148,7 +1137,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
    inside the later day on a laptop. Muted ones are grey (16e). */
 .warning-chip {
   display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; max-width: 100%;
-  min-height: 32px; padding: 4px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--warn-text) 30%, transparent);
+  min-height: 32px; padding: 4px 12px; border-radius: var(--radius-sm); border: 1px solid color-mix(in srgb, var(--warn-text) 30%, transparent);
   background: var(--warn-bg); color: var(--warn-text); font: inherit; font-size: 0.8rem; font-weight: 600; text-align: left; cursor: pointer;
 }
 .warning-chip .icon { width: 15px; height: 15px; }
@@ -1161,14 +1150,13 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* Step 16: race marker on a planner day, missed sessions, load notes, week review */
 .race-marker {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
-  margin: 0; padding: 8px 10px; border-radius: 10px;
+  margin: 0; padding: 8px 10px; border-radius: var(--radius);
   border: 1px dashed var(--accent-strong); color: inherit; text-decoration: none;
 }
 .month-race { display: inline-flex; align-items: center; height: 1.6rem; color: var(--accent); }
 /* A session left "planned" on a past day: dashed amber line + a small tag. */
-.plan-card.is-missed { border-left: 4px dashed #d97706; }
-.missed-tag { display: block; color: #b45309; }
-@media (prefers-color-scheme: dark) { .missed-tag { color: #fbbf24; } }
+.plan-card.is-missed { border-left: 4px dashed var(--warn-line); }
+.missed-tag { display: block; color: var(--warn-text); }
 .load-banner { margin: 0 0 12px; }
 .week-review-link { color: var(--accent); text-decoration: none; }
 .review-list { margin: 0; padding-left: 1.2rem; }
@@ -1307,7 +1295,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 /* The Today hero: purple block, white text, one big button */
 .dash-hero {
   background: var(--hero-bg); color: var(--hero-text);
-  border-radius: 20px; padding: 18px; margin-bottom: 16px;
+  border-radius: var(--radius); padding: 18px; margin-bottom: 16px;
   display: flex; flex-direction: column; gap: 14px;
 }
 .dash-hero a { color: inherit; }
@@ -1318,7 +1306,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 #dash-today > p:only-child { margin: 0; }
 .hero-session + .hero-session { border-top: 1px solid var(--hero-line); padding-top: 14px; }
 .hero-session-top { display: flex; align-items: center; gap: 12px; }
-.hero-badge { flex: none; width: 48px; height: 48px; border-radius: 14px; background: var(--hero-soft); display: grid; place-items: center; }
+.hero-badge { flex: none; width: 48px; height: 48px; border-radius: var(--radius); background: var(--hero-soft); display: grid; place-items: center; }
 .hero-badge .icon { width: 26px; height: 26px; }
 .hero-session-text { flex: 1; min-width: 0; }
 .hero-name { margin: 0; font-size: 1.4rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
@@ -1328,7 +1316,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .hero-session.status-cancelled .hero-name { text-decoration: line-through; opacity: 0.8; }
 .hero-actions { display: flex; gap: 10px; margin-top: 14px; }
 .hero-button {
-  flex: 1; min-height: 52px; padding: 0 16px; border-radius: 14px;
+  flex: 1; min-height: 52px; padding: 0 16px; border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center; gap: 8px;
   background: var(--hero-button-bg); color: var(--hero-button-text) !important;
   font-weight: 700; font-size: 1.05rem; text-decoration: none;
@@ -1336,17 +1324,17 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .hero-button.is-quiet { flex: none; align-self: flex-start; min-height: 44px; background: var(--hero-soft); color: var(--hero-text) !important; font-size: 0.95rem; }
 /* "Log it" next to Start / Resume workout: labelled, outlined, narrower than the main button */
 .hero-button.is-secondary { flex: 0 1 auto; background: transparent; color: var(--hero-text) !important; border: 1px solid var(--hero-line); font-size: 0.95rem; }
-.hero-icon-button { flex: none; width: 52px; min-height: 52px; border-radius: 14px; border: 1px solid var(--hero-line); display: grid; place-items: center; }
+.hero-icon-button { flex: none; width: 52px; min-height: 52px; border-radius: var(--radius); border: 1px solid var(--hero-line); display: grid; place-items: center; }
 .hero-button .icon, .hero-icon-button .icon { width: 20px; height: 20px; }
 /* "Choose session" under a "just a sport" session (21): small, quiet, still 44px tall */
 .hero-choose {
-  margin-top: 8px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px;
+  margin-top: 8px; min-height: 44px; padding: 0 12px; border: 0; border-radius: var(--radius);
   display: inline-flex; align-items: center; gap: 6px; background: var(--hero-soft); color: var(--hero-text);
   font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
 }
 .hero-choose .icon { width: 18px; height: 18px; }
 .hero-rest { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 600; }
-.hero-resume { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--hero-soft); text-decoration: none; }
+.hero-resume { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius); background: var(--hero-soft); text-decoration: none; }
 .hero-resume span { flex: 1; min-width: 0; }
 /* "Did you do it?" inside the hero */
 .hero-missed { border-top: 1px solid var(--hero-line); padding-top: 12px; }
@@ -1356,7 +1344,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .hero-missed-name { flex: 1; min-width: 0; font-weight: 600; line-height: 1.25; }
 .hero-missed-name .small { display: block; font-weight: 400; color: var(--hero-muted); }
 .hero-small-button {
-  flex: none; min-width: 44px; height: 44px; padding: 0 12px; border: 0; border-radius: 12px;
+  flex: none; min-width: 44px; height: 44px; padding: 0 12px; border: 0; border-radius: var(--radius);
   display: grid; place-items: center; background: var(--hero-soft); color: var(--hero-text);
   font: inherit; font-size: 0.9rem; font-weight: 600; text-decoration: none; cursor: pointer;
 }
@@ -1378,7 +1366,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-hero-name { flex: 1; min-width: 0; }
 .race-hero-title { margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
 .race-hero-name .muted { margin: 0; }
-.race-hero-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 4px; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+.race-hero-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 4px; padding: 10px 12px; border-radius: var(--radius); background: var(--bg); }
 .race-hero-facts .num { font-size: 1.35rem; }
 .race-hero-bar { margin-top: 10px; }
 .race-hero-bar p { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 4px; }
@@ -1390,7 +1378,7 @@ p.dash-note { margin-bottom: 16px; }
 
 /* This week: all warnings as one amber line (each one is on its day in the planner) */
 .warning-line {
-  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: var(--radius);
   background: var(--warn-bg); color: var(--warn-text); font-size: 0.88rem; text-decoration: none;
 }
 .warning-line span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1439,12 +1427,12 @@ p.dash-note { margin-bottom: 16px; }
 .race-mode #dash-week { order: 5; }
 .race-mode #dash-load { order: 6; }
 .race-mode .dash-race {
-  margin: -16px -16px 16px; padding: 18px 16px 22px; border: 0; border-radius: 0 0 28px 28px;
+  margin: -16px -16px 16px; padding: 18px 16px 22px; border: 0; border-radius: 0;
   background: var(--race-mode-bg); color: var(--race-mode-text); box-shadow: none;
 }
 .race-mode .dash-race h2 { color: var(--race-mode-accent); }
 .race-mode .dash-race h2 a::after { color: var(--race-mode-accent); }
-.race-mode-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+.race-mode-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-sm);
   font-size: 0.72rem; font-weight: 700; background: var(--race-mode-soft); color: var(--race-mode-text); white-space: nowrap; }
 .race-mode-top { display: flex; align-items: flex-end; gap: 14px; margin: 8px 0 0; }
 .race-mode-days { margin: 0; color: var(--race-mode-accent); }
@@ -1459,11 +1447,11 @@ p.dash-note { margin-bottom: 16px; }
 .race-mode-bar .week-segments span { height: 8px; border-radius: 4px; background: var(--race-mode-empty); }
 .race-mode-bar .week-segments .is-done { background: var(--race-mode-accent); }
 .race-mode-bar .week-segments .is-now { background: var(--race-mode-text); }
-/* Today becomes a white card with a purple button: the hero colours swap */
+/* Today becomes a white card with a violet button: the hero colours swap */
 .race-mode .dash-hero {
   --hero-bg: var(--surface); --hero-text: var(--text); --hero-muted: var(--muted);
   --hero-soft: var(--bg); --hero-line: var(--border);
-  --hero-button-bg: var(--race-mode-button); --hero-button-text: #ffffff;
+  --hero-button-bg: var(--accent); --hero-button-text: var(--accent-text);
   border: 1px solid var(--card-border); box-shadow: var(--shadow);
 }
 .race-mode .hero-badge { color: var(--accent); }
@@ -1480,7 +1468,7 @@ p.dash-note { margin-bottom: 16px; }
   .view:has(.dashboard) { max-width: var(--page-wide); }   /* the page may be wider than the phone layout */
   .dashboard { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; align-items: start; }
   .dash-main, .dash-side { display: block; }
-  .race-mode .dash-race { margin: 0 0 16px; border-radius: 20px; }
+  .race-mode .dash-race { margin: 0 0 16px; border-radius: var(--radius); }
   /* Race mode's status strip repeats the This week card, which sits right
      below on a laptop: only the phone keeps it (28b). */
   .race-mode .dash-strip { display: none; }
@@ -1515,8 +1503,8 @@ p.dash-note { margin-bottom: 16px; }
 /* Planner: Week | Month switch */
 .planner { display: flex; flex-direction: column; }
 .view-switch { display: flex; align-self: center; gap: 4px; padding: 4px; margin-bottom: 12px;
-  background: var(--surface); border-radius: 999px; box-shadow: var(--shadow); border: 1px solid var(--card-border); }
-.view-switch a { padding: 6px 18px; border-radius: 999px; text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+  background: var(--surface); border-radius: var(--radius-sm); box-shadow: var(--shadow); border: 1px solid var(--card-border); }
+.view-switch a { padding: 6px 18px; border-radius: var(--radius-sm); text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
 .view-switch a[aria-selected="true"] { background: var(--accent); color: var(--accent-text); }
 
 /* Planner: month calendar */
@@ -1609,7 +1597,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-idea-item > .race-card { height: 100%; margin-bottom: 0; padding-right: 56px; }
 .race-idea-delete {
   position: absolute; top: 6px; right: 6px; width: 44px; height: 44px; display: grid; place-items: center;
-  border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer;
+  border: 0; border-radius: var(--radius); background: none; color: var(--muted); cursor: pointer;
 }
 .race-idea-delete .icon { width: 18px; height: 18px; }
 @media (hover: hover) { .race-idea-delete:hover { color: var(--error); background: var(--hover-bg); } }
@@ -1635,7 +1623,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-topline .back-link { margin: 0; min-height: 44px; display: inline-flex; align-items: center; }
 .pill-button {
   display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
-  border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text);
   font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
 }
 .section-label { margin: 4px 2px 8px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
@@ -1648,7 +1636,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-sum > * { margin: 0; }
 .race-sum-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 0.85rem; color: var(--muted); }
 .race-pill {
-  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--radius-sm);
   font-size: 0.75rem; font-weight: 700; background: var(--bg); color: var(--text);
 }
 .race-pill.is-ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--surface)); }
@@ -1660,7 +1648,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-sum-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .race-sum-facts .num { display: block; font-size: 1.6rem; }
 .race-sum-label { display: block; font-size: 0.75rem; color: var(--muted); }
-.race-sum-box { background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+.race-sum-box { background: var(--bg); border-radius: var(--radius); padding: 10px 12px; }
 .race-sum-box .num { font-size: 1.4rem; }
 .race-sum-label-top { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
 .race-sum-result { color: var(--accent); margin-top: -6px !important; }
@@ -1676,7 +1664,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-sum.is-dark { background: var(--race-mode-bg); color: var(--race-mode-text); border-color: transparent; box-shadow: none; }
 .race-sum.is-dark .race-sum-meta, .race-sum.is-dark .race-sum-label, .race-sum.is-dark .race-sum-bar p { color: var(--race-mode-muted); }
 .race-sum.is-dark .race-pill { background: var(--race-mode-soft); color: var(--race-mode-text); }
-.race-sum.is-dark .race-pill.is-ok { color: #bbf7d0; background: rgba(34, 197, 94, 0.18); }
+.race-sum.is-dark .race-pill.is-ok { color: var(--ok); background: var(--done-bg); }
 .race-sum.is-dark .race-sum-days { color: var(--race-mode-accent); }
 .race-sum.is-dark a { color: var(--race-mode-text); }
 .race-sum.is-dark .race-sum-bar { margin-top: 6px; }
@@ -1689,7 +1677,7 @@ p.dash-note { margin-bottom: 16px; }
 .race-result-card > * { margin: 0; }
 .race-result-card h3 { margin: 2px 0 0; font-size: 1.25rem; }
 .section-label.is-accent { margin: 0; color: var(--accent); font-weight: 700; }
-.found-run { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px;
+.found-run { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .found-run-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .found-run-text .num { font-size: 1.6rem; }
@@ -1701,7 +1689,7 @@ p.dash-note { margin-bottom: 16px; }
 .result-form label { display: block; margin-bottom: 4px; font-weight: 600; }
 .result-form input { width: 100%; margin: 0; }
 .result-form .button { flex: none; width: auto; margin: 0; min-height: 48px; padding: 0 18px; }
-.pb-offer { padding: 8px 12px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-text); font-size: 0.9rem; }
+.pb-offer { padding: 8px 12px; border-radius: var(--radius); background: var(--warn-bg); color: var(--warn-text); font-size: 0.9rem; }
 .pb-offer[hidden] { display: none; }
 .race-result-card .link-button { align-self: center; }
 
@@ -1820,13 +1808,13 @@ p.dash-note { margin-bottom: 16px; }
 .me-page { display: flex; flex-direction: column; }
 .me-page .dash-tiles { order: 0; }   /* (Home gives its tiles an order) */
 .me-hero {
-  margin: -16px -16px 16px; padding: 18px 16px 22px; border-radius: 0 0 28px 28px;
+  margin: -16px -16px 16px; padding: 18px 16px 22px; border-radius: 0;
   background: var(--race-mode-bg); color: var(--race-mode-text);
   display: flex; flex-direction: column; gap: 18px;
 }
 .me-who { display: flex; align-items: center; gap: 14px; }
 .me-avatar { flex: none; display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%;
-  background: var(--race-mode-soft); color: #ffffff; font-size: 1.6rem; font-weight: 700; }
+  background: var(--accent); color: var(--accent-text); font-size: 1.6rem; font-weight: 600; }
 .me-name { margin: 0; font-size: 1.45rem; line-height: 1.15; overflow-wrap: anywhere; }
 .me-tagline { margin: 2px 0 0; font-size: 0.85rem; color: var(--race-mode-muted); }
 .me-year { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -1846,7 +1834,7 @@ p.dash-note { margin-bottom: 16px; }
 .tile-bar span { display: block; height: 100%; border-radius: 3px; background: var(--done-line); }
 @media (max-width: 359px) { .me-pb-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 720px) {
-  .me-hero { margin: 0 0 16px; border-radius: 20px; }
+  .me-hero { margin: 0 0 16px; border-radius: var(--radius); }
 }
 
 /* ---------- Hover (23b): what the mouse points at reacts ----------
