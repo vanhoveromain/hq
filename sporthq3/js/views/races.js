@@ -7,17 +7,17 @@ import {
   listRaces, getRace, saveRace, deleteRace, listTrainingBlocks, listRaceSessions, listRaceActivities, listPlannedSessions, listRunsOn, linkActivityToRace,
   listPersonalBests, savePersonalBest,
   addChecklistItems, updateChecklistItem, deleteChecklistItem, findLastChecklist,
-} from "../storage.js?v=202611051430";
-import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202611051430";
-import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202611051430";
-import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202611051430";
-import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202611051430";
-import { sportBadge } from "../utils/plan.js?v=202611051430";
-import { blockWeek } from "./blocks.js?v=202611051430";
-import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202611051430";
-import { showToast } from "../utils/toast.js?v=202611051430";
-import { icon } from "../utils/icons.js?v=202611051430";
-import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202611051430";
+} from "../storage.js?v=202611051635";
+import { releaseWorkoutOf } from "../utils/savedWorkout.js?v=202611051635";
+import { RACE_STATUSES, STARTER_CHECKLIST, RACE_ROUTINE, sportIcon, sessionTypeLabel } from "../rules.js?v=202611051635";
+import { todayISO, formatDayLabel, startOfWeek, addDays, parseISODate } from "../utils/dates.js?v=202611051635";
+import { escapeHtml, formatDuration, parseDuration, formatSpeed, formatKm, numHtml } from "../utils/format.js?v=202611051635";
+import { sportBadge } from "../utils/plan.js?v=202611051635";
+import { blockWeek } from "./blocks.js?v=202611051635";
+import { addRaceRoutine, moveRaceRoutine, removeRaceRoutine } from "../utils/raceRoutine.js?v=202611051635";
+import { showToast } from "../utils/toast.js?v=202611051635";
+import { icon } from "../utils/icons.js?v=202611051635";
+import { setTopbarAction, clearTopbarAction, addSummaryEditButton, setPageTitle } from "../utils/topbar.js?v=202611051635";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderRace(container, null);

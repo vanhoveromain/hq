@@ -3,131 +3,153 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>hq</title>
-<meta name="description" content="hq: home of QED HQ and Sport HQ.">
+<title>HQ</title>
+<meta name="description" content="HQ: one home for your own tools. QED HQ and Sport HQ.">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171819" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="hq-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="hq-icon-180.png">
+<link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="hq-tokens.css">
 <style>
-/* hq brand: black letters (#111111) on white (#ffffff). Product colours only live inside each product's tile. */
-:root{
-  --bg:#ffffff; --text:#111111; --muted:#6b6b6b; --line:#e6e6e6; --card:#fafafa; --shadow:rgba(17,17,17,.08);
-  --qed:#2C4D5C; --sport:#3d0079;
-  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){--bg:#111111;--text:#f2f2f2;--muted:#9a9a9a;--line:#2a2a2a;--card:#181818;--shadow:rgba(0,0,0,.4);color-scheme:dark}
-}
-:root[data-theme="dark"]{--bg:#111111;--text:#f2f2f2;--muted:#9a9a9a;--line:#2a2a2a;--card:#181818;--shadow:rgba(0,0,0,.4);color-scheme:dark}
+/* HQ parent site (HQ Brand Guidelines v1.0, brand/guidelines-v1.0/):
+   white background, charcoal HQ mark, a card per HQ with its coloured symbol.
+   The parent brand has no colour of its own: product colours only live in
+   the product symbols. */
+:root{--page:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--page:var(--hq-canvas)}}
+:root[data-theme="dark"]{--page:var(--hq-canvas)}
 
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
-:focus-visible{outline:3px solid var(--text);outline-offset:3px}
-.wrap{width:100%;max-width:760px;margin:0 auto;padding:0 16px}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--page);color:var(--hq-primary-text);font:400 16px/1.5 var(--hq-font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+:focus-visible{outline:2px solid var(--hq-ink);outline-offset:2px}
+.wrap{width:100%;max-width:880px;margin:0 auto;padding:0 16px}
+@media (min-width:640px){.wrap{padding:0 24px}}
 
-header.wrap{padding-top:clamp(48px,10vh,104px);padding-bottom:40px}
-.mark{width:88px;height:auto;display:block;margin-bottom:28px}
-.mark.dark{display:none}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .mark.light{display:none}
-  :root:not([data-theme="light"]) .mark.dark{display:block}
-}
-:root[data-theme="dark"] .mark.light{display:none}
-:root[data-theme="dark"] .mark.dark{display:block}
-h1{font-size:clamp(1.6rem,1.3rem + 1.4vw,2.2rem);font-weight:700;letter-spacing:-.025em;line-height:1.15;margin:0 0 8px}
-header p{margin:0;color:var(--muted);max-width:42ch}
+/* Top bar */
+.top{border-bottom:1px solid var(--hq-border);padding-top:env(safe-area-inset-top)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{display:inline-flex;align-items:center;color:var(--hq-ink);text-decoration:none;border-radius:var(--hq-radius-sm)}
+.brand svg{display:block;width:34px;height:auto}
+.top .domain{font:400 13px/1 var(--hq-font-mono);color:var(--hq-secondary-text)}
 
-main{flex:1;padding-bottom:56px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.card{display:flex;flex-direction:column;gap:18px;padding:24px;border:1px solid var(--line);border-radius:20px;background:var(--card);color:inherit;text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s}
-.card:hover{border-color:var(--text);transform:translateY(-2px);box-shadow:0 10px 30px var(--shadow)}
-.tile{width:72px;height:72px;border-radius:16px;display:grid;place-items:center;flex:none}
-.tile img{display:block}
-.tile.qed{background:var(--qed)}
-.tile.qed img{width:46px;height:auto}
-.tile.sport{background:none}
-.tile.sport img{width:72px;height:72px}
-.card h2{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;margin:0 0 4px}
-.card p{margin:0;color:var(--muted);font-size:.95rem}
-.go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
-.go svg{width:18px;height:18px;flex:none;color:var(--text);transition:transform .15s}
+/* Intro */
+header.intro{padding-top:56px;padding-bottom:32px}
+@media (min-width:640px){header.intro{padding-top:88px;padding-bottom:40px}}
+h1{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.25;margin:0 0 8px}
+@media (min-width:640px){h1{font-size:36px}}
+.intro p{margin:0;color:var(--hq-secondary-text);max-width:46ch}
+
+main{flex:1;padding-bottom:64px}
+
+/* HQ cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:0;padding:0;list-style:none}
+.card{display:flex;flex-direction:column;gap:20px;height:100%;padding:24px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface);color:inherit;text-decoration:none;transition:border-color var(--hq-ease),background-color var(--hq-ease)}
+.card:hover{border-color:var(--hq-border-strong);background:var(--hq-canvas)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .card:hover{background:var(--hq-subtle)}}
+:root[data-theme="dark"] .card:hover{background:var(--hq-subtle)}
+.card img{display:block;width:48px;height:48px}
+.card h2{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.25;margin:0 0 4px}
+.card p{margin:0;color:var(--hq-secondary-text);font-size:14px}
+.go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--hq-border);font:400 12px/1.4 var(--hq-font-mono);color:var(--hq-secondary-text)}
+.go svg{width:18px;height:18px;flex:none;color:var(--hq-primary-text);transition:transform var(--hq-ease)}
 .card:hover .go svg{transform:translateX(3px)}
 
-footer{padding:20px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem}
-@media (prefers-reduced-motion: reduce){.card,.go svg{transition:none}.card:hover{transform:none}.card:hover .go svg{transform:none}}
-/* Login: the page shows nothing until we know if you're logged in. */
+/* Login */
 [data-auth="loading"] .when-in,[data-auth="loading"] .when-out,
 [data-auth="out"] .when-in,[data-auth="in"] .when-out{display:none!important}
-.login{max-width:380px;display:grid;gap:10px}
-.login label{font-size:.85rem;font-weight:600}
-.login input{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
-.login input:focus{border-color:var(--text);outline:none}
-.btn{font:inherit;font-weight:700;border-radius:12px;padding:12px 16px;cursor:pointer;border:1px solid var(--text);background:var(--text);color:var(--bg)}
-.btn.ghost{background:none;color:var(--text);border-color:var(--line)}
-.btn:disabled{opacity:.55;cursor:default}
-.login .btn{margin-top:6px}
-.alt{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);display:grid;gap:10px}
-.alt p{margin:0;color:var(--muted);font-size:.9rem}
-.status{min-height:1.5em;margin:4px 0 0;font-size:.9rem;color:var(--muted)}
-.status.error{color:#c62828}
-.status.ok{color:#2e7d32}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .status.error{color:#ff8a80}:root:not([data-theme="light"]) .status.ok{color:#81c784}}
-:root[data-theme="dark"] .status.error{color:#ff8a80}
-:root[data-theme="dark"] .status.ok{color:#81c784}
+.login{max-width:380px;display:grid;gap:8px}
+.field{display:grid;gap:6px;margin-bottom:8px}
+.login label{font-size:14px;font-weight:500}
+.login input{font:inherit;color:var(--hq-primary-text);background:var(--hq-surface);border:1px solid var(--hq-border-strong);border-radius:var(--hq-radius);padding:0 12px;min-height:44px;width:100%;transition:border-color var(--hq-ease)}
+.login input:hover{border-color:var(--hq-secondary-text)}
+.login input:focus-visible{outline:2px solid var(--hq-ink);outline-offset:0;border-color:var(--hq-ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;font:600 14px/1 var(--hq-font);border-radius:var(--hq-radius);cursor:pointer;border:1px solid var(--hq-ink);background:var(--hq-ink);color:var(--page);transition:background-color var(--hq-ease),border-color var(--hq-ease)}
+.btn:hover{background:var(--hq-accent-dark);border-color:var(--hq-accent-dark)}
+.btn.secondary{background:var(--hq-surface);color:var(--hq-primary-text);border-color:var(--hq-border-strong)}
+.btn.secondary:hover{background:var(--hq-subtle)}
+.btn:disabled{opacity:.5;cursor:default}
+.login .btn{margin-top:4px}
+@media (min-width:640px){.btn,.login input{min-height:40px}}
+.alt{margin-top:24px;padding-top:20px;border-top:1px solid var(--hq-border);display:grid;gap:12px}
+.alt p{margin:0;color:var(--hq-secondary-text);font-size:14px}
+.status{min-height:1.5em;margin:4px 0 0;font-size:14px;color:var(--hq-secondary-text)}
+.status.error{color:var(--hq-danger)}
+.status.error::before{content:"Error: ";font-weight:600}
+.status.ok{color:var(--hq-success)}
+
+footer{padding:20px 0 calc(20px + env(safe-area-inset-bottom));border-top:1px solid var(--hq-border);color:var(--hq-secondary-text);font-size:12px}
 footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.linkbtn{font:inherit;font-size:.8rem;color:var(--muted);background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.linkbtn:hover{color:var(--text)}
+.linkbtn{font:inherit;font-size:14px;color:var(--hq-secondary-text);background:none;border:0;padding:8px 0;min-height:24px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--hq-primary-text)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<header class="wrap">
-  <img class="mark light" src="hq-mark.svg" alt="hq" width="88" height="65">
-  <img class="mark dark" src="hq-mark-white.svg" alt="hq" width="88" height="65">
-  <h1 class="when-in">Everything in one place.</h1>
-  <p class="when-in">Pick a space to get started.</p>
-  <h1 class="when-out">Welcome back.</h1>
-  <p class="when-out">Log in once to open all your hqs.</p>
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="HQ">
+      <!-- HQ mark (provisional redraw of the approved reference: brand/export.mjs) -->
+      <svg viewBox="4.6 10.2 82.5 80" aria-hidden="true" focusable="false"><g fill="currentColor" transform="translate(.6 .7)"><path d="M59 12.42A40 40 0 0 0 20 81.5L20 70.67A32 32 0 0 1 59 21.23Z"/><path d="M68 17.5A40 40 0 0 1 78.95 68.95L73.01 63.01A32 32 0 0 0 68 28.33Z"/><path d="M29 86.58A40 40 0 0 0 73.5 76.5L67.84 70.84A32 32 0 0 1 29 77.77Z"/><path d="M67.84 70.84L86.5 89.5L75.5 89.5L62.34 76.34Z"/><path d="M29 32L37 28L37 85L29 85Z"/><path d="M51 15L59 15L59 67L51 71Z"/><path d="M36.5 46H51.5V53H36.5Z"/></g></svg>
+    </a>
+    <span class="domain">ownhq.app</span>
+  </div>
+</div>
+
+<header class="wrap intro">
+  <h1 class="when-in">Your HQs</h1>
+  <p class="when-in">Open a space.</p>
+  <h1 class="when-out">Log in</h1>
+  <p class="when-out">One login for every HQ.</p>
 </header>
 
 <main class="wrap">
   <section class="when-out" aria-label="Log in">
     <form id="login-form" class="login" novalidate>
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com">
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password">
+      </div>
       <button type="submit" class="btn">Log in</button>
       <p id="login-status" class="status" role="status"></p>
       <div class="alt">
         <p>No password yet, or forgot it?</p>
-        <button id="send-link" type="button" class="btn ghost">Email me a login link instead</button>
+        <button id="send-link" type="button" class="btn secondary">Email me a login link</button>
       </div>
     </form>
   </section>
 
-  <div class="cards when-in">
-    <a class="card" href="https://qed.ownhq.app">
-      <span class="tile qed"><img src="qed-logo-white.png" alt="" width="46" height="23"></span>
-      <div>
-        <h2>QED HQ</h2>
-        <p>QED's internal tools, links and the team onboarding plan.</p>
-      </div>
-      <span class="go">qed.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-    </a>
-    <a class="card" href="https://sport.ownhq.app">
-      <span class="tile sport"><img src="sporthq-icon.svg" alt="" width="72" height="72"></span>
-      <div>
-        <h2>Sport HQ</h2>
-        <p>Training planner, activity log, races, shoes, body and goals.</p>
-      </div>
-      <span class="go">sport.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-    </a>
-  </div>
+  <ul class="cards when-in" aria-label="Your HQs">
+    <li>
+      <a class="card" href="https://qed.ownhq.app">
+        <img src="qed-hq.svg" alt="" width="48" height="48">
+        <div>
+          <h2>QED HQ</h2>
+          <p>QED's internal tools, links and the team onboarding plan.</p>
+        </div>
+        <span class="go">qed.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+      </a>
+    </li>
+    <li>
+      <a class="card" href="https://sport.ownhq.app">
+        <img src="sport-hq.svg" alt="" width="48" height="48">
+        <div>
+          <h2>Sport HQ</h2>
+          <p>Training planner, activity log, races, shoes, body and goals.</p>
+        </div>
+        <span class="go">sport.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+      </a>
+    </li>
+  </ul>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>hq · ownhq.app</span>
+    <span>HQ</span>
     <button id="logout" type="button" class="linkbtn when-in">Log out</button>
   </div>
 </footer>

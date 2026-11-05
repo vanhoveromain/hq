@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "brand": "HQ",
+    "version": "1.0 designer handoff",
+    "status": "approved direction with pending production validation"
+  },
+  "colors": {
+    "neutralLight": {
+      "canvas": "#FAFAF9",
+      "surface": "#FFFFFF",
+      "subtle": "#F2F2F0",
+      "border": "#E5E5E3",
+      "primaryText": "#242424",
+      "secondaryText": "#666666",
+      "white": "#FFFFFF"
+    },
+    "neutralDark_provisional": {
+      "canvas": "#171819",
+      "surface": "#222426",
+      "subtle": "#2B2E30",
+      "border": "#3B3E40",
+      "primaryText": "#F4F4F2",
+      "secondaryText": "#ACB0B2"
+    },
+    "products": {
+      "sport": {
+        "name": "Sport HQ",
+        "primary": "#75638F",
+        "light": "#F1EDF5",
+        "dark": "#594771",
+        "meaning": "Movement / rhythm / consistency"
+      },
+      "work": {
+        "name": "Work HQ",
+        "primary": "#486B94",
+        "light": "#EBF0F6",
+        "dark": "#345173",
+        "meaning": "Structure / progress / organisation"
+      },
+      "qed": {
+        "name": "QED HQ",
+        "primary": "#547B91",
+        "light": "#EBF2F5",
+        "dark": "#3B6075",
+        "meaning": "Connection / coordination / shared resources"
+      },
+      "personal": {
+        "name": "Personal HQ",
+        "primary": "#9F597A",
+        "light": "#F7EDF1",
+        "dark": "#793E5D",
+        "meaning": "Individuality / ownership / personal centre"
+      }
+    }
+  },
+  "typography": {
+    "primary": "Geist Sans",
+    "secondary": "Geist Mono (technical / aligned data only)",
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "scalePx": {
+      "display": 36,
+      "h2": 24,
+      "h3": 18,
+      "body": 16,
+      "ui": 14,
+      "meta": 12
+    },
+    "lineHeight": {
+      "heading": 1.25,
+      "body": 1.5
+    }
+  },
+  "spacingPx": [
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64
+  ],
+  "radiusPx": {
+    "small": 6,
+    "default": 8,
+    "iconRelative": "8%"
+  },
+  "motionMs": {
+    "fast": 150,
+    "standard": 200
+  },
+  "layouts": {
+    "nav": "top bar",
+    "portal": "central space directory + shared switcher",
+    "density": "balanced",
+    "mobile": "equal priority"
+  },
+  "status": {
+    "parentArtwork": "APPROVED raster reference; provisional traced SVG; designer review required",
+    "productArtwork": "APPROVED concepts; vector optical validation required",
+    "lightNeutralTokens": "PROPOSED",
+    "darkMode": "PROPOSED; requires contrast testing",
+    "primaryProductColors": "APPROVED",
+    "productShadeVariants": "PROPOSED"
+  }
+}

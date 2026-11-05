@@ -111,6 +111,8 @@
 35. Adjust one planned session without touching the recipe (2026-10-26, Rom: "one long interval run is not the same
     as another", e.g. 6x3min this week); built 2026-10-26 on the draft
 36. Shared hq login (2026-11-05, Rom: log in on ownhq.app, not in SportHQ3): built 2026-11-05 on the draft
+37. HQ Brand Guidelines v1.0 (2026-11-05, Rom re-worked the HQ brand and asked to re-work the app on it): built
+    2026-11-05 on the draft
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -165,6 +167,20 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-11-05: HQ Brand Guidelines v1.0 (37; no migration). Rom's new brand kit (brand/guidelines-v1.0/) replaces the
+  deep purple (32–34). App name shown = "Sport HQ" (title, manifest, top bar); the folder / backup file keep
+  "sporthq3". css/hq-tokens.css (copy of brand/hq-tokens.css: --hq-* tokens + Geist @font-face, fonts in css/fonts/)
+  loads before style.css; style.css's own tokens now point at it, so every screen kept its classes. Accent = muted
+  violet #75638F (links / lines / buttons; dark mode #B9A9D3 with dark text), page #FAFAF9, flat white cards with a
+  #E5E5E3 border (no shadows), radius 8px (pills 6px, circles stay round). Top bar = white with a border: the
+  <hq-switcher> (Sport HQ symbol + name + menu to the other HQs; phone < 480px: symbol only) loaded by main.js from
+  ownhq.app/switcher.js (localhost: /_hq/switcher.js), back links in violet; laptop tabs = grey, active = violet on
+  pale violet. Saturated blocks are gone (guidelines §07): Today hero, race mode, race page summary and Me header =
+  pale violet panels with dark text (--hero-* / --race-mode-* tokens). Workout strip / bar stay charcoal #242424
+  (new --strip-text). Numbers = Geist Sans 600 with tabular digits (Barlow Condensed removed; fonts/ deleted).
+  Sport and RPE colours muted (still never green / amber / red); amber hex values became --warn-text / --warn-line.
+  Icons: icons/sport-hq.svg (favicon, top bar), sport-hq-icon-180/192/512.png (from brand/export.mjs).
+  Checked on a fake database: Home, planner, log, log form, race page, Me; light / dark; 390px / 1280px.
 - 2026-11-05: shared hq login (36; no migration). Rom: "when you access HQ you log in; then you can go to any
   sub-HQ; open a sub-HQ directly without passing by HQ = log in too". The login page is ownhq.app (hq-home/index.html
   + home.js); hq-home/auth.js owns the ONE Supabase client (same project, same user, same pinned supabase-js) and
