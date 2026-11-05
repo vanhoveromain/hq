@@ -6,9 +6,17 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 
 | Domain | Vercel project root | What |
 |---|---|---|
-| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page (cards to QED HQ and Sport HQ) |
+| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page + the shared hq login (cards to QED HQ and Sport HQ) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`) |
+
+## Shared hq login
+
+One login for every hq site, on `ownhq.app` (`hq-home/auth.js`).
+
+- The Supabase session is stored in cookies for the whole `ownhq.app` domain, so every `*.ownhq.app` site sees the same login. Log out anywhere = logged out everywhere.
+- Other hq sites import `https://ownhq.app/auth.js` and call `requireLogin()`: no login sends you to `ownhq.app/?next=<where you were>` and back after logging in. `next` only accepts `https://*.ownhq.app`.
+- Supabase → Authentication → URL Configuration must allow `https://ownhq.app/**` as a redirect URL (magic link).
 
 ## QED Webinars landing page
 

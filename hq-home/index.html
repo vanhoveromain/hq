@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-auth="loading">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -55,18 +55,57 @@ main{flex:1;padding-bottom:56px}
 
 footer{padding:20px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem}
 @media (prefers-reduced-motion: reduce){.card,.go svg{transition:none}.card:hover{transform:none}.card:hover .go svg{transform:none}}
+/* Login: the page shows nothing until we know if you're logged in. */
+[data-auth="loading"] .when-in,[data-auth="loading"] .when-out,
+[data-auth="out"] .when-in,[data-auth="in"] .when-out{display:none!important}
+.login{max-width:380px;display:grid;gap:10px}
+.login label{font-size:.85rem;font-weight:600}
+.login input{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
+.login input:focus{border-color:var(--text);outline:none}
+.btn{font:inherit;font-weight:700;border-radius:12px;padding:12px 16px;cursor:pointer;border:1px solid var(--text);background:var(--text);color:var(--bg)}
+.btn.ghost{background:none;color:var(--text);border-color:var(--line)}
+.btn:disabled{opacity:.55;cursor:default}
+.login .btn{margin-top:6px}
+.alt{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);display:grid;gap:10px}
+.alt p{margin:0;color:var(--muted);font-size:.9rem}
+.status{min-height:1.5em;margin:4px 0 0;font-size:.9rem;color:var(--muted)}
+.status.error{color:#c62828}
+.status.ok{color:#2e7d32}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .status.error{color:#ff8a80}:root:not([data-theme="light"]) .status.ok{color:#81c784}}
+:root[data-theme="dark"] .status.error{color:#ff8a80}
+:root[data-theme="dark"] .status.ok{color:#81c784}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.linkbtn{font:inherit;font-size:.8rem;color:var(--muted);background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--text)}
 </style>
 </head>
 <body>
 <header class="wrap">
   <img class="mark light" src="hq-mark.svg" alt="hq" width="88" height="65">
   <img class="mark dark" src="hq-mark-white.svg" alt="hq" width="88" height="65">
-  <h1>Everything in one place.</h1>
-  <p>Pick a space to get started.</p>
+  <h1 class="when-in">Everything in one place.</h1>
+  <p class="when-in">Pick a space to get started.</p>
+  <h1 class="when-out">Welcome back.</h1>
+  <p class="when-out">Log in once to open all your hqs.</p>
 </header>
 
 <main class="wrap">
-  <div class="cards">
+  <section class="when-out" aria-label="Log in">
+    <form id="login-form" class="login" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password">
+      <button type="submit" class="btn">Log in</button>
+      <p id="login-status" class="status" role="status"></p>
+      <div class="alt">
+        <p>No password yet, or forgot it?</p>
+        <button id="send-link" type="button" class="btn ghost">Email me a login link instead</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="cards when-in">
     <a class="card" href="https://qed.ownhq.app">
       <span class="tile qed"><img src="qed-logo-white.png" alt="" width="46" height="23"></span>
       <div>
@@ -87,7 +126,11 @@ footer{padding:20px 0;border-top:1px solid var(--line);color:var(--muted);font-s
 </main>
 
 <footer>
-  <div class="wrap">hq · ownhq.app</div>
+  <div class="wrap">
+    <span>hq · ownhq.app</span>
+    <button id="logout" type="button" class="linkbtn when-in">Log out</button>
+  </div>
 </footer>
+<script type="module" src="home.js"></script>
 </body>
 </html>
