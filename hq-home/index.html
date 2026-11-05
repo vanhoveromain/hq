@@ -4,37 +4,90 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>hq</title>
+<meta name="description" content="hq: home of QED HQ and Sport HQ.">
 <link rel="icon" href="hq-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="hq-icon-180.png">
 <style>
-:root{--bg:#ffffff;--text:#111111;--muted:#6b6b6b;--line:#e6e6e6;--card:#fafafa;color-scheme:light}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){--bg:#111111;--text:#f2f2f2;--muted:#9a9a9a;--line:#2a2a2a;--card:#181818;color-scheme:dark}
+/* hq brand: black letters (#111111) on white (#ffffff). Product colours only live inside each product's tile. */
+:root{
+  --bg:#ffffff; --text:#111111; --muted:#6b6b6b; --line:#e6e6e6; --card:#fafafa; --shadow:rgba(17,17,17,.08);
+  --qed:#2C4D5C; --sport:#3d0079;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
 }
-:root[data-theme="dark"]{--bg:#111111;--text:#f2f2f2;--muted:#9a9a9a;--line:#2a2a2a;--card:#181818;color-scheme:dark}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#111111;--text:#f2f2f2;--muted:#9a9a9a;--line:#2a2a2a;--card:#181818;--shadow:rgba(0,0,0,.4);color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#111111;--text:#f2f2f2;--muted:#9a9a9a;--line:#2a2a2a;--card:#181818;--shadow:rgba(0,0,0,.4);color-scheme:dark}
+
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:32px 16px}
-main{width:100%;max-width:520px;text-align:center}
-.mark{width:96px;height:auto;margin:0 auto 32px;display:block}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:3px solid var(--text);outline-offset:3px}
+.wrap{width:100%;max-width:760px;margin:0 auto;padding:0 16px}
+
+header.wrap{padding-top:clamp(48px,10vh,104px);padding-bottom:40px}
+.mark{width:88px;height:auto;display:block;margin-bottom:28px}
 .mark.dark{display:none}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .mark.light{display:none}:root:not([data-theme="light"]) .mark.dark{display:block}}
-p{color:var(--muted);margin:0 0 32px}
-nav{display:grid;gap:12px}
-nav a{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:inherit;text-decoration:none;font-weight:600;transition:border-color .15s}
-nav a:hover{border-color:var(--text)}
-nav a span{font-weight:400;color:var(--muted);font-size:.9rem}
-:focus-visible{outline:3px solid currentColor;outline-offset:2px}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .mark.light{display:none}
+  :root:not([data-theme="light"]) .mark.dark{display:block}
+}
+:root[data-theme="dark"] .mark.light{display:none}
+:root[data-theme="dark"] .mark.dark{display:block}
+h1{font-size:clamp(1.6rem,1.3rem + 1.4vw,2.2rem);font-weight:700;letter-spacing:-.025em;line-height:1.15;margin:0 0 8px}
+header p{margin:0;color:var(--muted);max-width:42ch}
+
+main{flex:1;padding-bottom:56px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:18px;padding:24px;border:1px solid var(--line);border-radius:20px;background:var(--card);color:inherit;text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+.card:hover{border-color:var(--text);transform:translateY(-2px);box-shadow:0 10px 30px var(--shadow)}
+.tile{width:72px;height:72px;border-radius:16px;display:grid;place-items:center;flex:none}
+.tile img{display:block}
+.tile.qed{background:var(--qed)}
+.tile.qed img{width:46px;height:auto}
+.tile.sport{background:none}
+.tile.sport img{width:72px;height:72px}
+.card h2{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;margin:0 0 4px}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+.go svg{width:18px;height:18px;flex:none;color:var(--text);transition:transform .15s}
+.card:hover .go svg{transform:translateX(3px)}
+
+footer{padding:20px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem}
+@media (prefers-reduced-motion: reduce){.card,.go svg{transition:none}.card:hover{transform:none}.card:hover .go svg{transform:none}}
 </style>
 </head>
 <body>
-<main>
-  <img class="mark light" src="hq-mark.svg" alt="hq">
-  <img class="mark dark" src="hq-mark-white.svg" alt="" aria-hidden="true">
-  <p>Landing page coming soon.</p>
-  <nav>
-    <a href="https://sport.ownhq.app">sporthq <span>sport.ownhq.app →</span></a>
-    <a href="https://qed.ownhq.app">QED Tools <span>qed.ownhq.app →</span></a>
-  </nav>
+<header class="wrap">
+  <img class="mark light" src="hq-mark.svg" alt="hq" width="88" height="65">
+  <img class="mark dark" src="hq-mark-white.svg" alt="hq" width="88" height="65">
+  <h1>Everything in one place.</h1>
+  <p>Pick a space to get started.</p>
+</header>
+
+<main class="wrap">
+  <div class="cards">
+    <a class="card" href="https://qed.ownhq.app">
+      <span class="tile qed"><img src="qed-logo-white.png" alt="" width="46" height="23"></span>
+      <div>
+        <h2>QED HQ</h2>
+        <p>QED's internal tools, links and the team onboarding plan.</p>
+      </div>
+      <span class="go">qed.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+    </a>
+    <a class="card" href="https://sport.ownhq.app">
+      <span class="tile sport"><img src="sporthq-icon.svg" alt="" width="72" height="72"></span>
+      <div>
+        <h2>Sport HQ</h2>
+        <p>Training planner, activity log, races, shoes, body and goals.</p>
+      </div>
+      <span class="go">sport.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+    </a>
+  </div>
 </main>
+
+<footer>
+  <div class="wrap">hq · ownhq.app</div>
+</footer>
 </body>
 </html>

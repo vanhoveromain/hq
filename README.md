@@ -6,7 +6,7 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 
 | Domain | Vercel project root | What |
 |---|---|---|
-| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page (placeholder) |
+| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page (cards to QED HQ and Sport HQ) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`) |
 
