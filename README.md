@@ -10,8 +10,6 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`) |
 
-The root `vercel.json` (host rewrites) is only used by the old single-project setup. Delete it once every domain is moved.
-
 ## QED Webinars landing page
 
 `webinar-landing/` — static, responsive landing page for QED's webinar organisation services.
