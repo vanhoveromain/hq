@@ -8,7 +8,7 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 |---|---|---|
 | `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page + the shared hq login (cards to QED HQ and Sport HQ) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
-| `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`) |
+| `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`), behind the hq login |
 
 ## Shared hq login
 
@@ -16,7 +16,11 @@ One login for every hq site, on `ownhq.app` (`hq-home/auth.js`).
 
 - The Supabase session is stored in cookies for the whole `ownhq.app` domain, so every `*.ownhq.app` site sees the same login. Log out anywhere = logged out everywhere.
 - Other hq sites import `https://ownhq.app/auth.js` and call `requireLogin()`: no login sends you to `ownhq.app/?next=<where you were>` and back after logging in. `next` only accepts `https://*.ownhq.app`.
+- Static hq pages (QED HQ) add two lines to `<head>` to sit behind the login (`hq-home/gate.js`):
+  `<style id="hq-gate">html{visibility:hidden}</style>` + `<script type="module" src="https://ownhq.app/gate.js"></script>`.
+  This hides the page, it does not protect the file: anyone fetching the file directly can still read it.
 - Supabase → Authentication → URL Configuration must allow `https://ownhq.app/**` as a redirect URL (magic link).
+- Local testing: SportHQ3's `serve.py` shows `hq-home/` at `localhost:8000/_hq/` (local login page).
 
 ## QED Webinars landing page
 
