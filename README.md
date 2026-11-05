@@ -1,4 +1,17 @@
 # hq
+
+## Domains & Vercel
+
+One Vercel project per app, all from this repo (Settings → Build and Deployment → Root Directory):
+
+| Domain | Vercel project root | What |
+|---|---|---|
+| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | hq landing page (placeholder) |
+| `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
+| `qed.ownhq.app` | `qed/` | QED Tools hub + onboarding plan (`qed/onboarding/`) |
+
+The root `vercel.json` (host rewrites) is only used by the old single-project setup. Delete it once every domain is moved.
+
 ## QED Webinars landing page
 
 `webinar-landing/` — static, responsive landing page for QED's webinar organisation services.
