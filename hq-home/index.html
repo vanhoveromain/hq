@@ -23,42 +23,54 @@
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--page);color:var(--hq-primary-text);font:400 16px/1.5 var(--hq-font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 :focus-visible{outline:2px solid var(--hq-ink);outline-offset:2px}
-.wrap{width:100%;max-width:880px;margin:0 auto;padding:0 16px}
-@media (min-width:640px){.wrap{padding:0 24px}}
+.wrap{width:100%;max-width:960px;margin:0 auto;padding:0 16px}
+@media (min-width:640px){.wrap{padding:0 32px}}
 
-/* Top bar */
-.top{border-bottom:1px solid var(--hq-border);padding-top:env(safe-area-inset-top)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
-.brand{display:inline-flex;align-items:center;color:var(--hq-ink);text-decoration:none;border-radius:var(--hq-radius-sm)}
-.brand svg{display:block;width:34px;height:auto}
-.top .domain{font:400 13px/1 var(--hq-font-mono);color:var(--hq-secondary-text)}
-
-/* Intro */
-header.intro{padding-top:56px;padding-bottom:32px}
-@media (min-width:640px){header.intro{padding-top:88px;padding-bottom:40px}}
-h1{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.25;margin:0 0 8px}
-@media (min-width:640px){h1{font-size:36px}}
-.intro p{margin:0;color:var(--hq-secondary-text);max-width:46ch}
-
-main{flex:1;padding-bottom:64px}
-
-/* HQ cards */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:0;padding:0;list-style:none}
-.card{display:flex;flex-direction:column;gap:20px;height:100%;padding:24px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface);color:inherit;text-decoration:none;transition:border-color var(--hq-ease),background-color var(--hq-ease)}
-.card:hover{border-color:var(--hq-border-strong);background:var(--hq-canvas)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .card:hover{background:var(--hq-subtle)}}
-:root[data-theme="dark"] .card:hover{background:var(--hq-subtle)}
-.card img{display:block;width:48px;height:48px}
-.card h2{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.25;margin:0 0 4px}
-.card p{margin:0;color:var(--hq-secondary-text);font-size:14px}
-.go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--hq-border);font:400 12px/1.4 var(--hq-font-mono);color:var(--hq-secondary-text)}
-.go svg{width:18px;height:18px;flex:none;color:var(--hq-primary-text);transition:transform var(--hq-ease)}
-.card:hover .go svg{transform:translateX(3px)}
-
-/* Login */
 [data-auth="loading"] .when-in,[data-auth="loading"] .when-out,
 [data-auth="out"] .when-in,[data-auth="in"] .when-out{display:none!important}
-.login{max-width:380px;display:grid;gap:8px}
+
+/* Top bar */
+.top{padding-top:env(safe-area-inset-top)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:72px}
+.brand{display:inline-flex;align-items:center;gap:10px;color:var(--hq-ink);text-decoration:none;border-radius:var(--hq-radius-sm);font-weight:600;font-size:17px;letter-spacing:-.01em}
+.brand svg{display:block;width:30px;height:auto}
+.account{display:flex;align-items:center;gap:12px;min-width:0}
+.who{font-size:14px;color:var(--hq-secondary-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32ch}
+@media (max-width:479px){.who{display:none}}
+
+main{flex:1;display:flex;flex-direction:column}
+
+/* Logged in: greeting + HQ cards */
+.home{padding-top:40px;padding-bottom:72px}
+@media (min-width:640px){.home{padding-top:72px;padding-bottom:96px}}
+.eyebrow{margin:0 0 12px;font:500 12px/1.4 var(--hq-font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--hq-secondary-text)}
+h1{font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin:0}
+@media (min-width:640px){h1{font-size:44px}}
+.lede{margin:12px 0 0;color:var(--hq-secondary-text);font-size:17px;max-width:46ch}
+
+.cards{display:grid;grid-template-columns:1fr;gap:16px;margin:40px 0 0;padding:0;list-style:none}
+@media (min-width:720px){.cards{grid-template-columns:1fr 1fr;gap:20px;margin-top:56px}}
+.card{position:relative;display:flex;flex-direction:column;height:100%;padding:24px;border:1px solid var(--hq-border);border-radius:12px;background:var(--hq-surface);color:inherit;text-decoration:none;transition:border-color var(--hq-ease),box-shadow var(--hq-ease),transform var(--hq-ease)}
+@media (min-width:640px){.card{padding:28px}}
+.card:hover{border-color:var(--hq-border-strong);box-shadow:0 1px 2px rgba(36,36,36,.04),0 12px 32px -12px rgba(36,36,36,.16);transform:translateY(-2px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .card:hover{box-shadow:0 12px 32px -12px rgba(0,0,0,.6)}}
+:root[data-theme="dark"] .card:hover{box-shadow:0 12px 32px -12px rgba(0,0,0,.6)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.card img{display:block;width:56px;height:56px}
+.open{display:grid;place-items:center;width:36px;height:36px;flex:none;border:1px solid var(--hq-border);border-radius:999px;color:var(--hq-secondary-text);transition:background-color var(--hq-ease),border-color var(--hq-ease),color var(--hq-ease),transform var(--hq-ease)}
+.open svg{width:18px;height:18px}
+.card:hover .open{background:var(--hq-ink);border-color:var(--hq-ink);color:var(--page);transform:translate(2px,-2px)}
+.card h2{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin:28px 0 6px}
+.card p{margin:0;color:var(--hq-secondary-text);font-size:15px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:auto 0 0;padding:24px 0 0;list-style:none}
+.tags li{font-size:12px;line-height:1;padding:6px 10px;border-radius:999px;background:var(--hq-subtle);color:var(--hq-secondary-text)}
+
+/* Logged out: centred login panel */
+.auth{flex:1;display:flex;align-items:center;justify-content:center;padding-top:32px;padding-bottom:64px}
+.panel{width:100%;max-width:400px}
+.panel h1{font-size:28px}
+.panel .lede{font-size:15px;margin-top:8px}
+.login{display:grid;gap:8px;margin-top:32px;padding:24px;border:1px solid var(--hq-border);border-radius:12px;background:var(--hq-surface)}
 .field{display:grid;gap:6px;margin-bottom:8px}
 .login label{font-size:14px;font-weight:500}
 .login input{font:inherit;color:var(--hq-primary-text);background:var(--hq-surface);border:1px solid var(--hq-border-strong);border-radius:var(--hq-radius);padding:0 12px;min-height:44px;width:100%;transition:border-color var(--hq-ease)}
@@ -68,91 +80,96 @@ main{flex:1;padding-bottom:64px}
 .btn:hover{background:var(--hq-accent-dark);border-color:var(--hq-accent-dark)}
 .btn.secondary{background:var(--hq-surface);color:var(--hq-primary-text);border-color:var(--hq-border-strong)}
 .btn.secondary:hover{background:var(--hq-subtle)}
+.btn.small{min-height:36px;padding:0 12px;font-size:13px}
 .btn:disabled{opacity:.5;cursor:default}
 .login .btn{margin-top:4px}
-@media (min-width:640px){.btn,.login input{min-height:40px}}
-.alt{margin-top:24px;padding-top:20px;border-top:1px solid var(--hq-border);display:grid;gap:12px}
-.alt p{margin:0;color:var(--hq-secondary-text);font-size:14px}
+@media (min-width:640px){.login .btn,.login input{min-height:40px}}
+.divider{display:flex;align-items:center;gap:12px;margin:12px 0 4px;font-size:13px;color:var(--hq-secondary-text)}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--hq-border)}
+.hint{margin:0;font-size:13px;color:var(--hq-secondary-text);text-align:center}
 .status{min-height:1.5em;margin:4px 0 0;font-size:14px;color:var(--hq-secondary-text)}
+.status:empty{display:none}
 .status.error{color:var(--hq-danger)}
 .status.error::before{content:"Error: ";font-weight:600}
 .status.ok{color:var(--hq-success)}
 
-footer{padding:20px 0 calc(20px + env(safe-area-inset-bottom));border-top:1px solid var(--hq-border);color:var(--hq-secondary-text);font-size:12px}
-footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.linkbtn{font:inherit;font-size:14px;color:var(--hq-secondary-text);background:none;border:0;padding:8px 0;min-height:24px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.linkbtn:hover{color:var(--hq-primary-text)}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+main{padding-bottom:env(safe-area-inset-bottom)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}.card:hover,.card:hover .open{transform:none}}
 </style>
 </head>
 <body>
 <div class="top">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="HQ">
+    <a class="brand" href="/" aria-label="HQ home">
       <!-- HQ mark (provisional redraw of the approved reference: brand/export.mjs) -->
-      <svg viewBox="4.6 10.2 82.5 80" aria-hidden="true" focusable="false"><g fill="currentColor" transform="translate(.6 .7)"><path d="M59 12.42A40 40 0 0 0 20 81.5L20 70.67A32 32 0 0 1 59 21.23Z"/><path d="M68 17.5A40 40 0 0 1 78.95 68.95L73.01 63.01A32 32 0 0 0 68 28.33Z"/><path d="M29 86.58A40 40 0 0 0 73.5 76.5L67.84 70.84A32 32 0 0 1 29 77.77Z"/><path d="M67.84 70.84L86.5 89.5L75.5 89.5L62.34 76.34Z"/><path d="M29 32L37 28L37 85L29 85Z"/><path d="M51 15L59 15L59 67L51 71Z"/><path d="M36.5 46H51.5V53H36.5Z"/></g></svg>
+      <svg viewBox="4.6 10.2 82.5 80" aria-hidden="true" focusable="false"><g fill="currentColor" transform="translate(.6 .7)"><path d="M59 12.42A40 40 0 0 0 20 81.5L20 70.67A32 32 0 0 1 59 21.23Z"/><path d="M68 17.5A40 40 0 0 1 78.95 68.95L73.01 63.01A32 32 0 0 0 68 28.33Z"/><path d="M29 86.58A40 40 0 0 0 73.5 76.5L67.84 70.84A32 32 0 0 1 29 77.77Z"/><path d="M67.84 70.84L86.5 89.5L75.5 89.5L62.34 76.34Z"/><path d="M29 32L37 28L37 85L29 85Z"/><path d="M51 15L59 15L59 67L51 71Z"/><path d="M36.5 46H51.5V53H36.5Z"/></g></svg><span aria-hidden="true">HQ</span>
     </a>
-    <span class="domain">ownhq.app</span>
+    <div class="account when-in">
+      <span id="who" class="who"></span>
+      <button id="logout" type="button" class="btn secondary small">Log out</button>
+    </div>
   </div>
 </div>
 
-<header class="wrap intro">
-  <h1 class="when-in">Your HQs</h1>
-  <p class="when-in">Open a space.</p>
-  <h1 class="when-out">Log in</h1>
-  <p class="when-out">One login for every HQ.</p>
-</header>
-
-<main class="wrap">
-  <section class="when-out" aria-label="Log in">
-    <form id="login-form" class="login" novalidate>
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com">
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password">
-      </div>
-      <button type="submit" class="btn">Log in</button>
-      <p id="login-status" class="status" role="status"></p>
-      <div class="alt">
-        <p>No password yet, or forgot it?</p>
+<main>
+  <section class="auth wrap when-out" aria-labelledby="login-title">
+    <div class="panel">
+      <h1 id="login-title">Log in to HQ</h1>
+      <p class="lede">One login for every HQ.</p>
+      <form id="login-form" class="login" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn">Log in</button>
+        <p id="login-status" class="status" role="status"></p>
+        <div class="divider">or</div>
         <button id="send-link" type="button" class="btn secondary">Email me a login link</button>
-      </div>
-    </form>
+        <p class="hint">No password yet, or forgot it? Use the link.</p>
+      </form>
+    </div>
   </section>
 
-  <ul class="cards when-in" aria-label="Your HQs">
-    <li>
-      <a class="card" href="https://qed.ownhq.app">
-        <img src="qed-hq.svg" alt="" width="48" height="48">
-        <div>
+  <section class="home wrap when-in" aria-labelledby="greeting">
+    <p id="today" class="eyebrow"></p>
+    <h1 id="greeting">Welcome back</h1>
+    <p class="lede">Pick up where you left off.</p>
+
+    <ul class="cards" aria-label="Your HQs">
+      <li>
+        <a class="card" href="https://qed.ownhq.app">
+          <div class="card-head">
+            <img src="qed-hq.svg" alt="" width="56" height="56">
+            <span class="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span>
+          </div>
           <h2>QED HQ</h2>
           <p>QED's internal tools, links and the team onboarding plan.</p>
-        </div>
-        <span class="go">qed.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-      </a>
-    </li>
-    <li>
-      <a class="card" href="https://sport.ownhq.app">
-        <img src="sport-hq.svg" alt="" width="48" height="48">
-        <div>
+          <ul class="tags" aria-label="Inside">
+            <li>Tools</li><li>Links</li><li>Onboarding</li>
+          </ul>
+        </a>
+      </li>
+      <li>
+        <a class="card" href="https://sport.ownhq.app">
+          <div class="card-head">
+            <img src="sport-hq.svg" alt="" width="56" height="56">
+            <span class="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span>
+          </div>
           <h2>Sport HQ</h2>
           <p>Training planner, activity log, races, shoes, body and goals.</p>
-        </div>
-        <span class="go">sport.ownhq.app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-      </a>
-    </li>
-  </ul>
+          <ul class="tags" aria-label="Inside">
+            <li>Planner</li><li>Log</li><li>Races</li><li>Shoes</li><li>Body</li><li>Goals</li>
+          </ul>
+        </a>
+      </li>
+    </ul>
+  </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <span>HQ</span>
-    <button id="logout" type="button" class="linkbtn when-in">Log out</button>
-  </div>
-</footer>
 <script type="module" src="home.js"></script>
 </body>
 </html>
