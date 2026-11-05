@@ -48,27 +48,22 @@ h1{font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin:
 @media (min-width:640px){h1{font-size:44px}}
 .lede{margin:12px 0 0;color:var(--hq-secondary-text);font-size:17px;max-width:46ch}
 
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:40px 0 0;padding:0;list-style:none}
-@media (min-width:720px){.cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:56px}}
-.card{display:flex;flex-direction:column;justify-content:space-between;aspect-ratio:1;padding:16px;border:1px solid var(--hq-border);border-radius:12px;background:var(--hq-surface);color:inherit;text-decoration:none;transition:border-color var(--hq-ease),box-shadow var(--hq-ease),transform var(--hq-ease)}
-@media (min-width:640px){.card{padding:20px}}
-a.card:hover{border-color:var(--hq-border-strong);box-shadow:0 1px 2px rgba(36,36,36,.04),0 12px 32px -12px rgba(36,36,36,.16);transform:translateY(-2px)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) a.card:hover{box-shadow:0 12px 32px -12px rgba(0,0,0,.6)}}
-:root[data-theme="dark"] a.card:hover{box-shadow:0 12px 32px -12px rgba(0,0,0,.6)}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.card img{display:block;width:48px;height:48px}
-@media (min-width:640px){.card img{width:56px;height:56px}}
-.card h2{margin:0;font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
-@media (min-width:640px){.card h2{font-size:20px}}
-.card small{display:block;margin-top:4px;font-size:13px;font-weight:400;letter-spacing:0;color:var(--hq-secondary-text)}
-.open{display:grid;place-items:center;width:32px;height:32px;flex:none;border:1px solid var(--hq-border);border-radius:999px;color:var(--hq-secondary-text);transition:background-color var(--hq-ease),border-color var(--hq-ease),color var(--hq-ease),transform var(--hq-ease)}
-.open svg{width:16px;height:16px}
-a.card:hover .open{background:var(--hq-ink);border-color:var(--hq-ink);color:var(--page);transform:translate(2px,-2px)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 8px;margin:40px 0 0;padding:0;list-style:none}
+@media (min-width:640px){.cards{display:flex;flex-wrap:wrap;gap:32px 28px;margin-top:56px}}
+.card{display:flex;flex-direction:column;align-items:center;gap:8px;color:inherit;text-decoration:none;text-align:center;border-radius:var(--hq-radius)}
+@media (min-width:640px){.card{width:96px;gap:10px}}
+.card img{display:block;width:64px;height:64px;border-radius:14px;transition:transform var(--hq-ease),box-shadow var(--hq-ease)}
+@media (min-width:640px){.card img{width:80px;height:80px;border-radius:18px}.card h2{font-size:14px}.card small{font-size:12px}}
+a.card:hover img{transform:translateY(-3px);box-shadow:0 12px 24px -10px rgba(36,36,36,.35)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) a.card:hover img{box-shadow:0 12px 24px -10px rgba(0,0,0,.7)}}
+:root[data-theme="dark"] a.card:hover img{box-shadow:0 12px 24px -10px rgba(0,0,0,.7)}
+.card h2{margin:0;font-size:13px;font-weight:500;line-height:1.3}
+.card small{display:block;margin-top:2px;font-size:11px;font-weight:400;color:var(--hq-secondary-text)}
 
 /* Planned HQs (guidelines: planned, no URL, no features described) */
-.card.planned{background:none;border-style:dashed;border-color:var(--hq-border-strong)}
-.card.planned img{opacity:.55;filter:saturate(.6)}
+.card.planned img{opacity:.45;filter:saturate(.5)}
 .card.planned h2{color:var(--hq-secondary-text)}
+@media (prefers-reduced-motion: reduce){a.card:hover img{transform:none}}
 
 /* Logged out: centred login panel */
 .auth{flex:1;display:flex;align-items:center;justify-content:center;padding-top:32px;padding-bottom:64px}
@@ -99,7 +94,7 @@ a.card:hover .open{background:var(--hq-ink);border-color:var(--hq-ink);color:var
 .status.ok{color:var(--hq-success)}
 
 main{padding-bottom:env(safe-area-inset-bottom)}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}.card:hover,.card:hover .open{transform:none}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -147,25 +142,25 @@ main{padding-bottom:env(safe-area-inset-bottom)}
     <ul class="cards" aria-label="Your HQs">
       <li>
         <a class="card" href="https://qed.ownhq.app">
-          <div class="card-top"><img src="qed-hq.svg" alt="" width="56" height="56"><span class="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></div>
+          <img src="qed-hq.svg" alt="" width="80" height="80">
           <h2>QED HQ</h2>
         </a>
       </li>
       <li>
         <a class="card" href="https://sport.ownhq.app">
-          <div class="card-top"><img src="sport-hq.svg" alt="" width="56" height="56"><span class="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></div>
+          <img src="sport-hq.svg" alt="" width="80" height="80">
           <h2>Sport HQ</h2>
         </a>
       </li>
       <li>
         <div class="card planned">
-          <div class="card-top"><img src="work-hq.svg" alt="" width="56" height="56"></div>
+          <img src="work-hq.svg" alt="" width="80" height="80">
           <h2>Work HQ<small>Coming soon</small></h2>
         </div>
       </li>
       <li>
         <div class="card planned">
-          <div class="card-top"><img src="personal-hq.svg" alt="" width="56" height="56"></div>
+          <img src="personal-hq.svg" alt="" width="80" height="80">
           <h2>Personal HQ<small>Coming soon</small></h2>
         </div>
       </li>
