@@ -65,6 +65,9 @@ Coordination Team HQ, archived / passed projects.
    name. The Meetings list (step 5) groups today's points per meeting
 4c. Tools as small app icons (Romain, 2026-11-08): favicon of the site (origin/favicon.ico, no-referrer) over
    the first letters of the name (fallback when it fails or is < 16 px), name underneath, 4 per row on a phone
+4d. Design round (Romain, 2026-11-08): task title = plain text (still renames on click); set fields = soft tags
+   without borders; empty fields hidden until you hover the row (laptop) or tap "+" (phone); Tools = clean icons
+   (white rounded squares, favicon or a globe, name underneath), picked over link pills
 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 

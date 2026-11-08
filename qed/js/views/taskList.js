@@ -1,9 +1,10 @@
 // taskList.js: task rows you edit in place, and quick add.
 // Shared by the project page and (from step 5) Priorities of the day.
 //
-// Every field shows on the row as a chip (faint when empty). Tap a chip to
-// change it: a menu, a date picker, or a toggle. Click the title to retype it.
-// "⋯" opens the full task sheet (project, notes, delete…).
+// The title is plain text (click it to rename). Fields that are set show as
+// soft tags; tap one to change it (a menu, a date picker or a toggle). Empty
+// fields stay out of sight: they appear when you hover the row (laptop) or tap
+// "+" (phone). "⋯" opens the full task sheet (project, notes, delete…).
 // A change saves straight away and redraws only that row, so the list doesn't
 // jump around while you edit; it re-sorts the next time the list is drawn.
 
@@ -17,13 +18,13 @@ import { showToast } from "../utils/toast.js";
 //   options.today     "YYYY-MM-DD" (Brussels)
 //   options.projects  [{id, name}] -> adds a Project chip (lists across projects)
 //   options.showScore show the priority score badge
-export function taskRowHtml(task, { today, projects = null, showScore = true }) {
+export function taskRowHtml(task, { today, projects = null, showScore = true, expanded = false }) {
   const chips = [];
   chips.push(dateChip(task, today));
   chips.push(selectChip("period", PERIODS, task.period, "AM/PM"));
   chips.push(selectChip("priority", PRIORITIES, task.priority, "Priority", (v) => `prio-${v}`));
   chips.push(selectChip("scope", SCOPES, task.scope, "Scope"));
-  chips.push(selectChip("state", STATES, task.state, null, (v) => (v === "active" ? "is-faint" : `state-${v}`)));
+  chips.push(selectChip("state", STATES, task.state, null, (v) => (v === "active" ? "is-empty" : `state-${v}`)));
   chips.push(selectChip("delegated_to", DELEGATES, task.delegated_to, "Delegate to"));
   chips.push(`<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`);
   if (task.is_meeting) {
@@ -32,10 +33,11 @@ export function taskRowHtml(task, { today, projects = null, showScore = true }) 
   if (projects) {
     chips.push(selectChip("project_id", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, "No project"));
   }
+  chips.push(`<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`);
 
   const score = priorityScore(task, today);
   return `
-    <li class="task${task.done ? " is-done" : ""}" data-task="${task.id}">
+    <li class="task${task.done ? " is-done" : ""}${expanded ? " show-all" : ""}" data-task="${task.id}">
       <input type="checkbox" class="tick" aria-label="Done: ${escapeHtml(task.title)}"${task.done ? " checked" : ""}>
       <div class="task-body">
         <button type="button" class="task-title" data-edit-text="title" title="Click to rename">${escapeHtml(task.title)}</button>
@@ -99,9 +101,12 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     }
   }
 
+  // Rows opened up with "+" stay open while you edit them.
+  const expandedIds = new Set();
+
   function redrawRow(task) {
     const row = listEl.querySelector(`[data-task="${task.id}"]`);
-    if (row) row.outerHTML = taskRowHtml(task, rowOptions);
+    if (row) row.outerHTML = taskRowHtml(task, { ...rowOptions, expanded: expandedIds.has(task.id) });
   }
 
   listEl.addEventListener("change", async (event) => {
@@ -148,6 +153,12 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
 
     if (event.target.closest("[data-open]")) {
       onOpen(task);
+      return;
+    }
+    if (event.target.closest("[data-expand]")) {
+      const open = !row.classList.contains("show-all");
+      row.classList.toggle("show-all", open);
+      if (open) expandedIds.add(task.id); else expandedIds.delete(task.id);
       return;
     }
     // Date chip: open the picker straight away where the browser allows it.

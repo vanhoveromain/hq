@@ -197,32 +197,27 @@ async function drawTools(toolsEl, redraw) {
   });
 }
 
-// Tools as small app icons (Romain, 2026-11-08): the site's own icon
-// (favicon) when it has one, else the first letters of the name; the name
-// underneath.
+// Tools links (Romain, 2026-11-08: small and simple). The site's own icon
+// (favicon) when it has one, else a plain globe; the name underneath.
 function tilesHtml(links) {
   const tiles = links.map((link) => {
     const url = safeUrl(link.url);
     if (!url) return "";
     const origin = new URL(url).origin;
     return `
-      <li><a class="app" href="${escapeHtml(url)}" target="_blank" rel="noopener" title="${escapeHtml(link.label)}">
+      <li><a class="app" href="${escapeHtml(url)}" target="_blank" rel="noopener" title="${escapeHtml(link.label)} (opens in a new tab)">
         <span class="app-icon">
-          <span class="app-letters" aria-hidden="true">${escapeHtml(initials(link.label))}</span>
+          ${icon("globe")}
           <img src="${escapeHtml(origin)}/favicon.ico" alt="" loading="lazy" referrerpolicy="no-referrer">
         </span>
         <span class="app-name">${escapeHtml(link.label)}</span>
       </a></li>`;
   });
-  return `<ul class="apps">${tiles.join("")}</ul>`;
+  return `<ul class="apps ${TOOLS_STYLE}">${tiles.join("")}</ul>`;
 }
 
-// "Registration review" -> "RR", "Dropbox" -> "Dr"
-function initials(label) {
-  const words = label.trim().split(/\s+/).filter(Boolean);
-  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-  return (words[0] || "?").slice(0, 2).replace(/^./, (c) => c.toUpperCase());
-}
+// Romain picked the clean icons (2026-11-08) over a row of link pills.
+const TOOLS_STYLE = "as-icons";
 
 // A site without a favicon (or blocked): drop the broken image, the letters
 // underneath show instead. Tiny icons (< 16 px) are dropped too.
