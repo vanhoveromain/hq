@@ -85,6 +85,51 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 
 
 // ---------------------------------------------------------------------
+// QED HQ's own Supabase project (EU), since 2026-11-08
+//
+// QED client data lives in a separate project, with its own user list. The
+// hq login signs in to it too, with the same email + password, and keeps
+// that second session in its own cookies ("qed-auth"). Log out anywhere =
+// logged out of both.
+//
+// The client is only created when something asks for it (QED HQ, a login,
+// a logout), so the other HQs don't run a second connection for nothing.
+// Both values are PUBLIC by design, like the ones above.
+// ---------------------------------------------------------------------
+const QED_SUPABASE_URL = "https://xcyhpkmlhsaomliujqyr.supabase.co";
+const QED_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_6D8-PhSeWAr2GTsp705i0Q_EjVcOtJA";
+const QED_STORAGE_KEY = "qed-auth";
+
+let qedClient = null;
+
+export function getQedSupabase() {
+  if (!qedClient) {
+    qedClient = createClient(QED_SUPABASE_URL, QED_SUPABASE_PUBLISHABLE_KEY, {
+      auth: { storage: cookieStorage, storageKey: QED_STORAGE_KEY },
+    });
+  }
+  return qedClient;
+}
+
+// Signs in to the QED project only (QED HQ's "Unlock" screen uses it after a
+// magic-link login, which has no password to pass on).
+export async function signInToQed(email, password) {
+  const { error } = await getQedSupabase().auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+// Leaves the QED project. Never fails: the local cookies go in any case.
+async function signOutOfQed() {
+  try {
+    await getQedSupabase().auth.signOut();
+  } catch {
+    // Server unreachable: still clear the local session below.
+  }
+  cookieStorage.removeItem(QED_STORAGE_KEY);
+}
+
+
+// ---------------------------------------------------------------------
 // Login helpers
 // ---------------------------------------------------------------------
 
@@ -133,9 +178,21 @@ export function loginErrorFromUrl() {
   return params.get("error_description") || "";
 }
 
+// Signs in to the hq project AND (same email + password) to QED HQ's project.
+// QED goes FIRST: the hq login triggers onAuthChange, which may send you on
+// to another page straight away, so the QED cookies must already be there.
+// A QED failure never blocks the hq login (QED HQ then asks once to unlock).
 export async function signInWithPassword(email, password) {
+  try {
+    await signInToQed(email, password);
+  } catch {
+    // No QED account, or a different password: QED HQ will ask.
+  }
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
+  if (error) {
+    await signOutOfQed(); // wrong hq password: leave no half login behind
+    throw error;
+  }
 }
 
 // shouldCreateUser: false = only for accounts that already exist.
@@ -151,12 +208,23 @@ export async function sendMagicLink(email) {
   if (error) throw error;
 }
 
+// Changes the hq password. If you're also signed in to QED HQ's project, its
+// password follows, so both keep matching (best effort: if that part fails,
+// QED HQ asks for the new password once).
 export async function setPassword(password) {
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw error;
+  if (cookieStorage.getItem(QED_STORAGE_KEY)) {
+    try {
+      await getQedSupabase().auth.updateUser({ password });
+    } catch {
+      // QED HQ will ask to unlock with the new password.
+    }
+  }
 }
 
 export async function signOut() {
+  await signOutOfQed();
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }

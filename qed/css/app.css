@@ -1,0 +1,78 @@
+/* QED HQ app (HQ Brand Guidelines v1.0, brand/guidelines-v1.0/).
+   Colours, type and radii come from ../assets/hq-tokens.css (--hq-*);
+   data-hq="qed" on <html> gives the steel-blue QED accent. */
+
+*,*::before,*::after{box-sizing:border-box}
+html:not([data-ready]) #view .loading{animation:fade-in .3s .4s both}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+body{margin:0;background:var(--hq-canvas);color:var(--hq-primary-text);font:400 16px/1.5 var(--hq-font);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--hq-accent);outline-offset:2px}
+a{color:var(--hq-accent-text)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px;width:100%}
+@media (min-width:640px){.wrap{padding:0 24px}}
+.muted{color:var(--hq-secondary-text)}
+.error{color:var(--hq-danger)}
+
+/* Top bar: switcher (product identity) + the four tabs on a laptop */
+.top{background:var(--hq-surface);border-bottom:1px solid var(--hq-border);padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:20}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+hq-switcher:not([data-ready]) a{font-weight:600;color:inherit;text-decoration:none}
+.top-nav{display:none;gap:4px}
+.top-nav a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;font-size:14px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none;border-radius:var(--hq-radius-sm)}
+.top-nav a:hover{color:var(--hq-primary-text);background:var(--hq-subtle)}
+.top-nav a.active{color:var(--hq-accent-text);background:var(--hq-accent-light)}
+@media (min-width:720px){.top-nav{display:flex}}
+
+/* Phone: bottom tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);background:var(--hq-surface);border-top:1px solid var(--hq-border);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;font-size:11px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none}
+.tabbar a svg{width:22px;height:22px}
+.tabbar a.active{color:var(--hq-accent-text)}
+@media (min-width:720px){.tabbar{display:none}}
+body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
+
+/* Page */
+.main{flex:1;padding-top:24px;padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+@media (min-width:720px){.main{padding-top:40px;padding-bottom:64px}}
+.page-title{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.25;margin:0 0 24px}
+.page-title:empty{display:none}
+@media (min-width:640px){.page-title{font-size:28px}}
+.section{margin:0 0 32px}
+.section-title{font-size:14px;font-weight:600;color:var(--hq-secondary-text);margin:0 0 12px}
+.placeholder{margin:0;padding:20px;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius);color:var(--hq-primary-text);background:var(--hq-surface)}
+
+/* Tools tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:0;padding:0;list-style:none}
+.tile{display:flex;flex-direction:column;gap:12px;height:100%;padding:16px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);color:inherit;text-decoration:none;transition:border-color var(--hq-ease)}
+.tile:hover{border-color:var(--hq-accent)}
+.tile-icon{width:36px;height:36px;border-radius:var(--hq-radius);background:var(--hq-accent-light);color:var(--hq-accent-text);display:grid;place-items:center}
+.tile-icon svg{width:18px;height:18px}
+.tile-name{font-size:15px;font-weight:600;line-height:1.3}
+.tile-host{margin-top:auto;display:flex;align-items:center;gap:6px;font:400 12px/1.4 var(--hq-font-mono);color:var(--hq-secondary-text);overflow-wrap:anywhere}
+.tile-host svg{width:14px;height:14px;flex:none}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:var(--hq-radius);background:var(--hq-accent);color:var(--hq-on-accent);font:600 14px/1 var(--hq-font);text-decoration:none;cursor:pointer;transition:background-color var(--hq-ease)}
+.btn:hover{background:var(--hq-accent-dark)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn svg{width:18px;height:18px}
+@media (min-width:640px){.btn{min-height:40px}}
+
+/* Unlock screen + forms */
+.unlock{max-width:400px;margin:24px auto 0}
+.unlock h1{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:16px 0 8px}
+.unlock-icon{width:44px;height:44px;border-radius:var(--hq-radius);background:var(--hq-accent-light);color:var(--hq-accent-text);display:grid;place-items:center}
+.unlock-icon svg{width:22px;height:22px}
+.form{display:grid;gap:16px;margin-top:24px}
+.field{display:grid;gap:6px;font-size:14px;font-weight:500}
+.field input{font:inherit;font-weight:400;color:var(--hq-primary-text);background:var(--hq-surface);border:1px solid var(--hq-border-strong);border-radius:var(--hq-radius);padding:0 12px;min-height:44px;width:100%}
+.field input[readonly]{background:var(--hq-subtle);color:var(--hq-secondary-text)}
+.field input:focus-visible{outline:2px solid var(--hq-accent);outline-offset:0;border-color:var(--hq-accent)}
+.status{margin:0;font-size:14px;min-height:1.5em}
+.status.error{color:var(--hq-danger)}
+.status.ok{color:var(--hq-success)}
+
+.footer{padding:20px 0;color:var(--hq-secondary-text);font-size:12px;border-top:1px solid var(--hq-border);margin-bottom:calc(56px + env(safe-area-inset-bottom))}
+.footer a{color:inherit}
+@media (min-width:720px){.footer{margin-bottom:0}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}

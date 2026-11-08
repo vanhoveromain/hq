@@ -38,7 +38,13 @@ Coordination Team HQ, archived / passed projects.
 ## Build steps
 1. Database (migration 20261108000001: tables, RLS, rollover + cron, starter links) — written and tested
    locally 2026-11-08; to run in the QED project (see supabase/README.md)
-2. App shell + login on both projects
+2. App shell + login on both projects — built 2026-11-08: hq-home/auth.js signs in to the QED project too
+   (QED first, so its cookies exist before onAuthChange redirects; failure never blocks hq; wrong hq password
+   clears both; logout and password change cover both). QED HQ: requireLogin() in storage.js checks hq + QED
+   (server-side getUser); no QED session -> Unlock screen (password once, email prefilled). Hash router, four
+   tabs (top bar >= 720px, bottom bar on a phone), Home = Tools links from qed_links + Onboarding, rollover on
+   open. Tested with both projects simulated (the cloud sandbox can't reach Supabase); local: `python3 serve.py`
+   in qed/ -> http://localhost:8001 (login at /_hq/)
 3. Home · 4. Project page + task sheet · 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
