@@ -1,5 +1,5 @@
 // projectForm.js: the "New project" / "Edit project" pop-up.
-// Used by Home now; the project page (step 4) reuses it.
+// Used by Home (+ New) and the project page (Edit).
 
 import { createProject, updateProject, deleteProject } from "../storage.js";
 import {
@@ -11,7 +11,7 @@ import { escapeHtml } from "../utils/html.js";
 
 // project = an existing row (edit) or null (new). defaults = what "+ New"
 // pre-fills. onChange() = redraw the screen after any save.
-export function openProjectForm({ project = null, defaults = {}, onChange }) {
+export function openProjectForm({ project = null, defaults = {}, onChange, onDeleted }) {
   const p = project || { type: "bespoke", status: "coming_up", owner: DEFAULT_OWNER, ...defaults };
   const isNew = !project;
 
@@ -27,7 +27,7 @@ export function openProjectForm({ project = null, defaults = {}, onChange }) {
       onClick: async () => {
         await deleteProject(project.id);
         showToast(`"${project.name}" deleted. Its tasks were kept.`);
-        onChange();
+        (onDeleted || onChange)();
       },
     });
   }

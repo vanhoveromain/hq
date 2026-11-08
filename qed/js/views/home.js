@@ -2,8 +2,7 @@
 //
 //   1. Projects: a gallery with tabs (All, Own-initiated, Bespoke, Non-event,
 //      Followed up). "+ New" pre-fills the type of the tab you're on (it
-//      replaces the Notion templates). Tap a card to edit it; from step 4 a
-//      card opens the project page instead.
+//      replaces the Notion templates). Tap a card to open the project page.
 //   2. Tools: the links panel, editable ("Edit": add, rename, reorder, remove).
 //   3. Team: the onboarding plan.
 //
@@ -81,7 +80,7 @@ export async function render(el, { params }) {
   });
 
   await Promise.all([
-    drawGallery(el.querySelector("#gallery"), tab, redraw),
+    drawGallery(el.querySelector("#gallery"), tab),
     drawTools(el.querySelector("#tools"), redraw),
   ]);
 }
@@ -98,7 +97,7 @@ function ownerChips() {
   ).join("")}</div>`;
 }
 
-async function drawGallery(galleryEl, tab, redraw) {
+async function drawGallery(galleryEl, tab) {
   let projects;
   try {
     projects = await listProjects();
@@ -120,8 +119,7 @@ async function drawGallery(galleryEl, tab, redraw) {
   galleryEl.innerHTML = `<ul class="cards">${shown.map((p) => cardHtml(p, tab)).join("")}</ul>`;
   galleryEl.querySelectorAll("[data-project]").forEach((card) => {
     card.addEventListener("click", () => {
-      const project = shown.find((p) => p.id === card.dataset.project);
-      openProjectForm({ project, onChange: redraw });
+      window.location.hash = `#/project/${card.dataset.project}`;
     });
   });
 }

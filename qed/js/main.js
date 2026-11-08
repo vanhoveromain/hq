@@ -6,6 +6,7 @@
 
 import { requireLogin, loginUrl, onAuthChange, runRollover } from "./storage.js";
 import * as homeView from "./views/home.js";
+import * as projectView from "./views/project.js";
 import * as unlockView from "./views/unlock.js";
 import { make as placeholder } from "./views/placeholder.js";
 
@@ -17,6 +18,8 @@ import(ON_OWNHQ ? "https://ownhq.app/switcher.js" : "/_hq/switcher.js").catch(()
 // The four tabs. Their order here = their order in the bars.
 const routes = {
   home:       { title: "Home", view: homeView },
+  // A project's page: draws its own heading; the Home tab stays lit.
+  project:    { title: "", view: projectView, tab: "home" },
   priorities: { title: "Priorities of the day",
                 view: placeholder("Today's tasks, the 1-3-5 counter and the bulk buttons.", "5") },
   planner:    { title: "Task planner",
@@ -57,7 +60,7 @@ function render() {
   titleEl.textContent = routes[name].title;
   document.title = name === DEFAULT_ROUTE ? "QED HQ" : `${routes[name].title} · QED HQ`;
   for (const link of navLinks) {
-    const active = link.dataset.route === name;
+    const active = link.dataset.route === (routes[name].tab || name);
     link.classList.toggle("active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");

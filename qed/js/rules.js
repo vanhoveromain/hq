@@ -111,3 +111,69 @@ function statusRank(status) {
   const i = PROJECT_STATUSES.findIndex((s) => s.value === status);
   return i === -1 ? PROJECT_STATUSES.length : i;
 }
+
+
+// ---------------------------------------------------------------------
+// Tasks
+// ---------------------------------------------------------------------
+
+export const PRIORITIES = [
+  { value: "critical", label: "Critical", score: 6 },
+  { value: "high", label: "High", score: 5 },
+  { value: "medium", label: "Medium", score: 4 },
+  { value: "low", label: "Low", score: 3 },
+  { value: "nice_to_do", label: "Nice to do", score: 2 },
+];
+
+// Active = a normal task. The others take a task out of the normal flow.
+export const STATES = [
+  { value: "active", label: "Active" },
+  { value: "pending", label: "Pending" },
+  { value: "pending_today", label: "Pending today" },
+  { value: "to_delegate", label: "To delegate" },
+  { value: "delegated", label: "Delegated" },
+];
+
+// The 1-3-5 rule: per day, 1 Major, 3 Medium, 5 Small.
+export const SCOPES = [
+  { value: "major", label: "Major", perDay: 1 },
+  { value: "medium", label: "Medium", perDay: 3 },
+  { value: "small", label: "Small", perDay: 5 },
+];
+
+export const PERIODS = [
+  { value: "am", label: "AM" },
+  { value: "pm", label: "PM" },
+];
+
+// Who a task can be handed to (no database check: add names here freely).
+export const DELEGATES = [
+  "Alina", "Adriana", "Cristina", "Emma", "Flavio",
+  "Gabriella", "Paula", "Kevin", "Martin", "Design",
+].map((name) => ({ value: name, label: name }));
+
+// Priority score (decided 2026-11-08, from the Notion formula). Higher = do
+// first. First match wins:
+//   7  open and due before today (should not happen: the rollover moves them)
+//   0  Pending, Delegated, or a meeting
+//   1  Pending today
+//   6…2  Critical, High, Medium, Low, Nice to do
+//   0  no priority
+// "To delegate" keeps its normal score (its list is sorted by it).
+export function priorityScore(task, today) {
+  if (!task.done && task.due_date && task.due_date < today) return 7;
+  if (task.is_meeting || task.state === "pending" || task.state === "delegated") return 0;
+  if (task.state === "pending_today") return 1;
+  const priority = PRIORITIES.find((p) => p.value === task.priority);
+  return priority ? priority.score : 0;
+}
+
+// Open tasks on a project page: by due date (no date last), then score.
+export function compareByDueThenScore(a, b, today) {
+  if (a.due_date !== b.due_date) {
+    if (!a.due_date) return 1;
+    if (!b.due_date) return -1;
+    return a.due_date < b.due_date ? -1 : 1;
+  }
+  return priorityScore(b, today) - priorityScore(a, today);
+}

@@ -65,6 +65,46 @@ function sameEmail(a, b) {
 // Tasks
 // ---------------------------------------------------------------------
 
+const TASK_COLUMNS = [
+  "title", "project_id", "done", "due_date", "period", "scope", "priority",
+  "state", "is_meeting", "delegated_to", "notes",
+];
+const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, delegated_to, notes, created_at";
+
+// Tasks of one project (open and done). The page splits them itself.
+export async function listProjectTasks(projectId) {
+  const { data, error } = await db.from("qed_tasks").select(TASK_FIELDS).eq("project_id", projectId);
+  if (error) throw error;
+  return data;
+}
+
+export async function createTask(task) {
+  const { data, error } = await db
+    .from("qed_tasks")
+    .insert(pick(task, TASK_COLUMNS))
+    .select(TASK_FIELDS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// done_at is filled in / cleared by the database when `done` changes.
+export async function updateTask(id, changes) {
+  const { data, error } = await db
+    .from("qed_tasks")
+    .update(pick(changes, TASK_COLUMNS))
+    .eq("id", id)
+    .select(TASK_FIELDS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTask(id) {
+  const { error } = await db.from("qed_tasks").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // Safety net for the nightly rollover: moves every open task due before today
 // (Brussels time) to today. The database also does it every hour; running it
 // twice moves nothing. Returns how many tasks moved.
@@ -103,6 +143,12 @@ export async function listProjects() {
   const { data, error } = await db.from("qed_projects").select(PROJECT_FIELDS);
   if (error) throw error;
   return data;
+}
+
+export async function getProject(id) {
+  const { data, error } = await db.from("qed_projects").select(PROJECT_FIELDS).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data; // null if it doesn't exist (or isn't yours)
 }
 
 export async function createProject(project) {

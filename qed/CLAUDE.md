@@ -50,7 +50,14 @@ Coordination Team HQ, archived / passed projects.
    pre-fills type + status (+ owner on Followed up), card -> edit pop-up (until the project page in step 4), Archive
    with Undo, Delete with a second click (tasks kept). Tools panel: Edit mode (add, rename, reorder, remove + Undo,
    https only). Lists and gallery tabs live in js/rules.js
-4. Project page + task sheet · 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
+4. Project page + task sheet — built 2026-11-08: #/project/<id> (cards on Home open it). Header (status, type,
+   owner, dates, Notion link, Edit -> project form; delete -> back Home), open tasks by due date then score +
+   quick add (title + due date, default today), Done folded, notes saved by themselves (1 s after typing, and on
+   leaving the field; redraws wait for a save on its way). Task rows (js/views/taskList.js, reused by Priorities):
+   tick with Undo, score badge, overdue in red. Task sheet: every field, picking "Delegated to" sets State =
+   Delegated, Push to tomorrow (saves the form with due = tomorrow), Delete (second click). Score: priorityScore()
+   in rules.js
+5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## How we work
