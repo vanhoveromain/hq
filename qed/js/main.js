@@ -4,6 +4,7 @@
 // (#/priorities, #/sales…). Changing it doesn't reload the page: we just draw
 // another screen inside <main>. This is a "hash router", like Sport HQ.
 
+import { HQ_BASE, IS_PREVIEW } from "./hqBase.js";
 import { requireLogin, loginUrl, onAuthChange, runRollover } from "./storage.js";
 import * as homeView from "./views/home.js";
 import * as projectView from "./views/project.js";
@@ -12,8 +13,7 @@ import { make as placeholder } from "./views/placeholder.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "QED HQ" stays a link.
-const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
-import(ON_OWNHQ ? "https://ownhq.app/switcher.js" : "/_hq/switcher.js").catch(() => {});
+import(HQ_BASE + "switcher.js").catch(() => {});
 
 // The four tabs. Their order here = their order in the bars.
 const routes = {
@@ -101,6 +101,9 @@ async function start() {
     }
     currentUser = user;
   });
+
+  // Test address: say so in the top bar, so it's never mistaken for live.
+  if (IS_PREVIEW) document.body.classList.add("is-preview");
 
   if (!locked) await rollover();
   document.documentElement.dataset.ready = "true";

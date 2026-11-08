@@ -24,6 +24,11 @@ hq-switcher:not([data-ready]) a{font-weight:600;color:inherit;text-decoration:no
 .top-nav a.active{color:var(--hq-accent-text);background:var(--hq-accent-light)}
 @media (min-width:720px){.top-nav{display:flex}}
 
+/* Test address (qed-preview.ownhq.app): a thin amber band + label */
+body.is-preview .top{box-shadow:inset 0 3px 0 var(--hq-warning)}
+body.is-preview .top-row::after{content:"Test version";order:1;padding:2px 8px;border-radius:var(--hq-radius-sm);background:var(--hq-warning-light);color:var(--hq-warning);font-size:12px;font-weight:600}
+body.is-preview hq-switcher{margin-right:auto}
+
 /* Phone: bottom tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);background:var(--hq-surface);border-top:1px solid var(--hq-border);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;font-size:11px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none}

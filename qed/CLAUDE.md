@@ -68,6 +68,13 @@ Coordination Team HQ, archived / passed projects.
 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
+## Test address (since 2026-11-08)
+- Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed
+  project) and https://hq-preview.ownhq.app (hq-home project), both domains assigned to the branch, previews not
+  behind Vercel Authentication. js/hqBase.js: on qed-preview, QED HQ loads auth.js / switcher.js from hq-preview;
+  login still happens on live ownhq.app (shared cookies), then Unlock once. Amber "Test version" label on top.
+  Live sites untouched until a merge to main.
+
 ## How we work
 - Plan first, one step at a time; Romain tests each step before the next.
 - Database migrations are not drafts: always flagged, backward-compatible.

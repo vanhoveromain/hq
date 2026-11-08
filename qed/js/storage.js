@@ -10,10 +10,10 @@
 // Both clients live in auth.js, loaded from ownhq.app (localhost: serve.py's
 // /_hq/), so every hq site shares one login.
 
-const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
-const AUTH_URL = ON_OWNHQ ? "https://ownhq.app/auth.js" : "/_hq/auth.js";
+// ownhq.app (live), hq-preview.ownhq.app (test address) or /_hq/ (localhost).
+import { HQ_BASE } from "./hqBase.js";
 
-const hq = await import(AUTH_URL);
+const hq = await import(HQ_BASE + "auth.js");
 const db = hq.getQedSupabase();
 
 
