@@ -13,13 +13,13 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202611051635";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202611051635";
-import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202611051635";
-import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202611051635";
-import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202611051635";
-import { icon } from "../utils/icons.js?v=202611051635";
-import { withCircuits, inCircuit, circuitCount } from "../utils/circuits.js?v=202611051635";
+} from "../storage.js?v=202611081505";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202611081505";
+import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202611081505";
+import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202611081505";
+import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202611081505";
+import { icon } from "../utils/icons.js?v=202611081505";
+import { withCircuits, inCircuit, circuitCount } from "../utils/circuits.js?v=202611081505";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);

@@ -21,7 +21,7 @@
 // round, `rounds` times (see utils/circuits.js). An old session-wide
 // `rounds` is turned into one circuit when the workout starts.
 
-import { withCircuits, inCircuit } from "./circuits.js?v=202611051635";
+import { withCircuits, inCircuit } from "./circuits.js?v=202611081505";
 
 const WORKOUT_KEY = "sporthq3.workout";
 const REST_KEY = "sporthq3.restSeconds"; // the rest timer choice (0 = off)
