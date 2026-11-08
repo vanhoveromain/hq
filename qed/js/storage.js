@@ -76,6 +76,64 @@ export async function runRollover() {
 
 
 // ---------------------------------------------------------------------
+// Projects (events, non-event projects, sales leads)
+//
+// Rows travel through the app with their database column names (date_start,
+// sales_status…), so the code matches the table in Supabase.
+// ---------------------------------------------------------------------
+
+// The columns the app may write. Anything else on the object (id, user_id,
+// created_at…) is ignored when saving.
+const PROJECT_COLUMNS = [
+  "name", "type", "status", "sales_status", "owner",
+  "date_start", "date_end", "notes", "notion_url",
+];
+const PROJECT_FIELDS = "id, name, type, status, sales_status, owner, date_start, date_end, notes, notion_url, created_at";
+
+function pick(object, keys) {
+  const result = {};
+  for (const key of keys) {
+    if (key in object) result[key] = object[key];
+  }
+  return result;
+}
+
+// All projects (a few hundred at most: Home filters and sorts them itself).
+export async function listProjects() {
+  const { data, error } = await db.from("qed_projects").select(PROJECT_FIELDS);
+  if (error) throw error;
+  return data;
+}
+
+export async function createProject(project) {
+  const { data, error } = await db
+    .from("qed_projects")
+    .insert(pick(project, PROJECT_COLUMNS))
+    .select(PROJECT_FIELDS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateProject(id, changes) {
+  const { data, error } = await db
+    .from("qed_projects")
+    .update(pick(changes, PROJECT_COLUMNS))
+    .eq("id", id)
+    .select(PROJECT_FIELDS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Its tasks stay (they just lose the link to the project).
+export async function deleteProject(id) {
+  const { error } = await db.from("qed_projects").delete().eq("id", id);
+  if (error) throw error;
+}
+
+
+// ---------------------------------------------------------------------
 // Tools links (Home)
 // ---------------------------------------------------------------------
 
@@ -87,4 +145,33 @@ export async function listLinks() {
     .order("label");
   if (error) throw error;
   return data;
+}
+
+export async function createLink({ label, url, sort_order }) {
+  const { data, error } = await db
+    .from("qed_links")
+    .insert({ label, url, sort_order })
+    .select("id, label, url, sort_order")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateLink(id, { label, url }) {
+  const { error } = await db.from("qed_links").update({ label, url }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteLink(id) {
+  const { error } = await db.from("qed_links").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Saves a new order: `ids` = every link, top to bottom.
+export async function reorderLinks(ids) {
+  const results = await Promise.all(
+    ids.map((id, i) => db.from("qed_links").update({ sort_order: i + 1 }).eq("id", id)),
+  );
+  const failed = results.find((r) => r.error);
+  if (failed) throw failed.error;
 }

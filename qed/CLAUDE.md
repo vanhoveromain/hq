@@ -45,7 +45,12 @@ Coordination Team HQ, archived / passed projects.
    tabs (top bar >= 720px, bottom bar on a phone), Home = Tools links from qed_links + Onboarding, rollover on
    open. Tested with both projects simulated (the cloud sandbox can't reach Supabase); local: `python3 serve.py`
    in qed/ -> http://localhost:8001 (login at /_hq/)
-3. Home · 4. Project page + task sheet · 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
+3. Home — built 2026-11-08: project gallery (tabs All / Own-initiated / Bespoke / Non-event / Followed up with
+   owner chips; archived hidden on every tab unless "Show archived"; tab in the address #/home/<tab>), "+ New"
+   pre-fills type + status (+ owner on Followed up), card -> edit pop-up (until the project page in step 4), Archive
+   with Undo, Delete with a second click (tasks kept). Tools panel: Edit mode (add, rename, reorder, remove + Undo,
+   https only). Lists and gallery tabs live in js/rules.js
+4. Project page + task sheet · 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## How we work
