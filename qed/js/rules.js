@@ -177,3 +177,58 @@ export function compareByDueThenScore(a, b, today) {
   }
   return priorityScore(b, today) - priorityScore(a, today);
 }
+
+
+// ---------------------------------------------------------------------
+// Priorities of the day: which open task goes in which list
+// (decided 2026-11-08, see the Build spec). `today` / `tomorrow` are
+// "YYYY-MM-DD" in Brussels. A task can sit in only one of the "my work"
+// lists; meetings, To delegate, Delegated and Pending have their own.
+// ---------------------------------------------------------------------
+
+const DOING = (t) => (t.state === "active" || t.state === "pending_today") && !t.is_meeting;
+
+export const PRIORITY_LISTS = {
+  // To do today and To do tomorrow: your own work (no meetings, nothing parked).
+  today:      (t, d) => !t.done && t.due_date === d.today && DOING(t),
+  // Safety net (the nightly rollover should leave nothing here): your own
+  // work or a task to hand off, due before today.
+  overdue:    (t, d) => !t.done && t.due_date && t.due_date < d.today && (DOING(t) || t.state === "to_delegate"),
+  tomorrow:   (t, d) => !t.done && t.due_date === d.tomorrow && DOING(t),
+  toDelegate: (t, d) => !t.done && t.due_date === d.today && t.state === "to_delegate" && !t.is_meeting,
+  meetings:   (t, d) => !t.done && t.due_date === d.today && t.is_meeting,
+  delegated:  (t, d) => !t.done && t.due_date && t.due_date <= d.today && t.state === "delegated" && !t.is_meeting,
+  pending:    (t, d) => !t.done && t.due_date && t.due_date <= d.today && t.state === "pending" && !t.is_meeting,
+};
+
+const PERIOD_RANK = { am: 0, pm: 1 };
+const SCOPE_RANK = { major: 0, medium: 1, small: 2 };
+const rank = (table, value) => (value in table ? table[value] : Object.keys(table).length);
+
+// To do today / tomorrow: AM, then PM, then no period; then score (high
+// first); then Major, Medium, Small; then project name.
+export function compareDayTasks(a, b, today, projectName) {
+  return rank(PERIOD_RANK, a.period) - rank(PERIOD_RANK, b.period)
+    || priorityScore(b, today) - priorityScore(a, today)
+    || rank(SCOPE_RANK, a.scope) - rank(SCOPE_RANK, b.scope)
+    || projectName(a).localeCompare(projectName(b), "en", { sensitivity: "base" });
+}
+
+// Achieved lists: Major, Medium, Small; then period; then score; then project.
+export function compareAchieved(a, b, today, projectName) {
+  return rank(SCOPE_RANK, a.scope) - rank(SCOPE_RANK, b.scope)
+    || rank(PERIOD_RANK, a.period) - rank(PERIOD_RANK, b.period)
+    || priorityScore(b, today) - priorityScore(a, today)
+    || projectName(a).localeCompare(projectName(b), "en", { sensitivity: "base" });
+}
+
+// The 1-3-5 counter for To do today: how many tasks per scope, against
+// the room for each (1 Major, 3 Medium, 5 Small). It warns, never blocks.
+export function countOneThreeFive(tasks) {
+  const counts = SCOPES.map((s) => ({
+    ...s,
+    count: tasks.filter((t) => t.scope === s.value).length,
+  })).map((s) => ({ ...s, over: s.count > s.perDay }));
+  const noScope = tasks.filter((t) => !t.scope).length;
+  return { scopes: counts, noScope };
+}

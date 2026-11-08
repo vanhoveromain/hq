@@ -53,3 +53,24 @@ export function friendlyDay(day, today) {
   if (y === Number(today.slice(0, 4))) return `${weekday} ${d} ${MONTHS[m - 1]}`;
   return formatDay(day);
 }
+
+// The Brussels calendar day of a moment (e.g. a task's done_at timestamp).
+export function brusselsDayOf(timestamp) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date(timestamp));
+}
+
+// Monday of the week that holds `day` (weeks start on Monday).
+export function mondayOf(day) {
+  const [y, m, d] = day.split("-").map(Number);
+  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 = Sunday
+  return addDays(day, weekday === 0 ? -6 : 1 - weekday);
+}
+
+// "Monday 9 November"
+export function longDay(day) {
+  const [y, m, d] = day.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getUTCDay()];
+  const month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m - 1];
+  return `${weekday} ${d} ${month}`;
+}

@@ -8,6 +8,7 @@ import { HQ_BASE, IS_PREVIEW } from "./hqBase.js";
 import { requireLogin, loginUrl, onAuthChange, runRollover } from "./storage.js";
 import * as homeView from "./views/home.js";
 import * as projectView from "./views/project.js";
+import * as prioritiesView from "./views/priorities.js";
 import * as unlockView from "./views/unlock.js";
 import { make as placeholder } from "./views/placeholder.js";
 
@@ -20,8 +21,7 @@ const routes = {
   home:       { title: "Home", view: homeView },
   // A project's page: draws its own heading; the Home tab stays lit.
   project:    { title: "", view: projectView, tab: "home" },
-  priorities: { title: "Priorities of the day",
-                view: placeholder("Today's tasks, the 1-3-5 counter and the bulk buttons.", "5") },
+  priorities: { title: "Priorities of the day", view: prioritiesView },
   planner:    { title: "Task planner",
                 view: placeholder("This week's boards, with drag and drop.", "7") },
   sales:      { title: "Sales",

@@ -11,14 +11,15 @@
 import { createTask, updateTask } from "../storage.js";
 import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, priorityScore } from "../rules.js";
 import { escapeHtml, icon } from "../utils/html.js";
-import { friendlyDay } from "../utils/dates.js";
+import { friendlyDay, brusselsToday, addDays } from "../utils/dates.js";
 import { showToast } from "../utils/toast.js";
 
 // One row.
 //   options.today     "YYYY-MM-DD" (Brussels)
 //   options.projects  [{id, name}] -> adds a Project chip (lists across projects)
 //   options.showScore show the priority score badge
-export function taskRowHtml(task, { today, projects = null, showScore = true, expanded = false }) {
+//   options.showPush  show a "Push to tomorrow" button on the row
+export function taskRowHtml(task, { today, projects = null, showScore = true, showPush = false, expanded = false }) {
   const chips = [];
   chips.push(dateChip(task, today));
   chips.push(selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" }));
@@ -48,6 +49,7 @@ export function taskRowHtml(task, { today, projects = null, showScore = true, ex
         <button type="button" class="task-title" data-edit-text="title" title="Click to rename">${escapeHtml(task.title)}</button>
         <div class="task-chips">${chips.join("")}</div>
       </div>
+      ${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}
       ${showScore && !task.done ? `<span class="score" title="Priority score">${score}</span>` : ""}
       <button type="button" class="icon-btn task-more" data-open aria-label="Open ${escapeHtml(task.title)}">${icon("more")}</button>
     </li>`;
@@ -97,7 +99,8 @@ function dateChip(task, today) {
 //   onChange()     full redraw (after a tick: the task moves to Done)
 //   rowOptions     the options taskRowHtml was called with
 //   meetingNames   suggestions for "Which meeting?"
-export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [] }) {
+//   onSaved(task)  after a field changed in place (e.g. update a counter)
+export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [], onSaved = () => {} }) {
   markEmptySelects(listEl);
   const byId = (row) => tasks.find((t) => t.id === row.dataset.task);
   const rowOf = (el) => el.closest("[data-task]");
@@ -110,11 +113,13 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     for (const key of Object.keys(changes)) before[key] = task[key];
     Object.assign(task, changes);
     redrawRow(task);
+    onSaved(task);
     try {
       await updateTask(task.id, changes);
     } catch (error) {
       Object.assign(task, before);
       redrawRow(task);
+      onSaved(task);
       showToast("Could not save: " + error.message);
     }
   }
@@ -175,6 +180,10 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
       onOpen(task);
       return;
     }
+    if (event.target.closest("[data-push]")) {
+      pushToTomorrow(task);
+      return;
+    }
     if (event.target.closest("[data-expand]")) {
       const open = !row.classList.contains("show-all");
       row.classList.toggle("show-all", open);
@@ -197,6 +206,26 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     const textButton = event.target.closest("[data-edit-text]");
     if (textButton) editText(textButton, task, textButton.dataset.editText);
   });
+
+  // Push to tomorrow: the task leaves today's lists, so the whole screen
+  // redraws; Undo puts the old date back.
+  async function pushToTomorrow(task) {
+    const before = task.due_date;
+    try {
+      await updateTask(task.id, { due_date: addDays(brusselsToday(), 1) });
+    } catch (error) {
+      showToast("Could not save: " + error.message);
+      return;
+    }
+    showToast(`Pushed to tomorrow: "${task.title}"`, {
+      actionLabel: "Undo",
+      onAction: async () => {
+        await updateTask(task.id, { due_date: before });
+        onChange();
+      },
+    });
+    onChange();
+  }
 
   // Title / meeting name: the button turns into a text box. Enter or leaving
   // the box saves; Esc cancels.

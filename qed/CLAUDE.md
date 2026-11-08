@@ -68,7 +68,15 @@ Coordination Team HQ, archived / passed projects.
 4d. Design round (Romain, 2026-11-08): task title = plain text (still renames on click); set fields = soft tags
    without borders; empty fields hidden until you hover the row (laptop) or tap "+" (phone); Tools = clean icons
    (white rounded squares, favicon or a globe, name underneath), picked over link pills
-5. Priorities of the day · 6. Focus mode · 7. Task planner ·
+5. Priorities of the day — built 2026-11-09: #/priorities. Lists (PRIORITY_LISTS in rules.js): To do today (due
+   today, Active / Pending today, no meeting; AM, PM, none, then score, scope, project), Overdue (own work + to
+   delegate due before today; shown only when not empty), To do tomorrow, [bulk buttons], To delegate (due today),
+   To settle in meetings today (grouped by meeting_name, unnamed last), Delegated + Pending (due today or earlier),
+   Achieved today / this week (by done_at, Brussels day, folded). 1-3-5 counter (amber + note when over, live while
+   editing). Row Push-to-tomorrow arrow on today / overdue / to delegate. Bulk buttons ask first (with the count) and
+   undo per task: Reset the period / scope (all open tasks), Reset the Priority (+ Pending today -> Active), Push
+   all to tomorrow (To do today + To delegate). Changes made in place re-sort on Refresh or the next redraw
+6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

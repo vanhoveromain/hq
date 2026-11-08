@@ -100,6 +100,50 @@ export async function updateTask(id, changes) {
   return data;
 }
 
+// Priorities of the day: every open task due up to `tomorrow`, plus the tasks
+// ticked since `doneSince` (an ISO moment; the page keeps the ones ticked
+// this week, Brussels time).
+export async function listDayTasks(tomorrow, doneSince) {
+  const [open, done] = await Promise.all([
+    db.from("qed_tasks").select(TASK_FIELDS).eq("done", false).lte("due_date", tomorrow),
+    db.from("qed_tasks").select(TASK_FIELDS).eq("done", true).gte("done_at", doneSince),
+  ]);
+  if (open.error) throw open.error;
+  if (done.error) throw done.error;
+  return [...open.data, ...done.data];
+}
+
+// Bulk buttons. Open tasks (any date) where `field` is set, with its value,
+// so a reset can be undone.
+export async function listOpenTasksWith(field) {
+  const { data, error } = await db
+    .from("qed_tasks")
+    .select(`id, ${field}`)
+    .eq("done", false)
+    .not(field, "is", null);
+  if (error) throw error;
+  return data.map((row) => ({ id: row.id, value: row[field] }));
+}
+
+// Same changes on many tasks at once.
+export async function updateTasks(ids, changes) {
+  if (!ids.length) return;
+  const { error } = await db.from("qed_tasks").update(pick(changes, TASK_COLUMNS)).in("id", ids);
+  if (error) throw error;
+}
+
+// Undo of a bulk change: puts back each task's old value of `field`
+// (one update per distinct value).
+export async function restoreTaskValues(field, rows) {
+  const byValue = new Map();
+  for (const row of rows) {
+    const key = row.value === null ? "\u0000null" : row.value;
+    if (!byValue.has(key)) byValue.set(key, { value: row.value, ids: [] });
+    byValue.get(key).ids.push(row.id);
+  }
+  await Promise.all([...byValue.values()].map((group) => updateTasks(group.ids, { [field]: group.value })));
+}
+
 // Meeting names already used, for suggestions ("Weekly team meeting"…),
 // most recent first.
 export async function listMeetingNames() {
