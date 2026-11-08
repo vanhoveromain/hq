@@ -80,6 +80,11 @@ Coordination Team HQ, archived / passed projects.
    (>= 1100 px): task lists are tables, one row per task, fields in aligned columns with titles (Task, Due, AM/PM,
    Priority, Scope, Status, Project, Score); cells in taskRowHtml + taskListInnerHtml (header row); push / score
    slots always present so columns line up. Below 1100 px: stacked rows with "+". Page width 1160 px
+5c. Romain's feedback (2026-11-09): lists re-sort by themselves 0.5 s after the last in-place change (not while a
+   title / meeting name is being typed; Refresh button removed; "+"-opened rows stay open across redraws). The
+   priority score is never shown (it only sorts). Today / Tomorrow switch on Priorities (#/priorities/tomorrow):
+   same lists for tomorrow (To do, counter, to delegate, meetings, delegated, pending); no overdue, achieved, bulk
+   buttons or push arrows there; quick add defaults to tomorrow
 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 

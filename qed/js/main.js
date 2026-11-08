@@ -21,7 +21,7 @@ const routes = {
   home:       { title: "Home", view: homeView },
   // A project's page: draws its own heading; the Home tab stays lit.
   project:    { title: "", view: projectView, tab: "home" },
-  priorities: { title: "Priorities of the day", view: prioritiesView },
+  priorities: { title: (p) => (p[0] === "tomorrow" ? "Priorities for tomorrow" : "Priorities of the day"), view: prioritiesView },
   planner:    { title: "Task planner",
                 view: placeholder("This week's boards, with drag and drop.", "7") },
   sales:      { title: "Sales",
@@ -57,8 +57,9 @@ function render() {
     history.replaceState(null, "", "#/" + DEFAULT_ROUTE);
     return render();
   }
-  titleEl.textContent = routes[name].title;
-  document.title = name === DEFAULT_ROUTE ? "QED HQ" : `${routes[name].title} · QED HQ`;
+  const title = typeof routes[name].title === "function" ? routes[name].title(params) : routes[name].title;
+  titleEl.textContent = title;
+  document.title = name === DEFAULT_ROUTE ? "QED HQ" : `${title} · QED HQ`;
   for (const link of navLinks) {
     const active = link.dataset.route === (routes[name].tab || name);
     link.classList.toggle("active", active);

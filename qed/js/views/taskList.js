@@ -5,11 +5,12 @@
 // soft tags; tap one to change it (a menu, a date picker or a toggle). Empty
 // fields stay out of sight: they appear when you hover the row (laptop) or tap
 // "+" (phone). "⋯" opens the full task sheet (project, notes, delete…).
-// A change saves straight away and redraws only that row, so the list doesn't
-// jump around while you edit; it re-sorts the next time the list is drawn.
+// A change saves straight away and shows on the row at once; half a second
+// after your last change the whole list redraws, so it re-sorts (Romain,
+// 2026-11-09). The priority score only decides the order: it isn't shown.
 
 import { createTask, updateTask } from "../storage.js";
-import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, priorityScore } from "../rules.js";
+import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES } from "../rules.js";
 import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay, brusselsToday, addDays } from "../utils/dates.js";
 import { showToast } from "../utils/toast.js";
@@ -17,9 +18,8 @@ import { showToast } from "../utils/toast.js";
 // One row.
 //   options.today     "YYYY-MM-DD" (Brussels)
 //   options.projects  [{id, name}] -> adds a Project chip (lists across projects)
-//   options.showScore show the priority score badge
 //   options.showPush  show a "Push to tomorrow" button on the row
-export function taskRowHtml(task, { today, projects = null, showScore = true, showPush = false, expanded = false }) {
+export function taskRowHtml(task, { today, projects = null, showPush = false, expanded = false }) {
   // Fields grouped in cells. On a phone the cells simply flow under the
   // title; on a laptop each cell is a column, aligned from row to row.
   const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
@@ -48,9 +48,8 @@ export function taskRowHtml(task, { today, projects = null, showScore = true, sh
   }
   cells.push(cell("add", `<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`));
 
-  const score = priorityScore(task, today);
-  // The push / score slots are always there (empty if not used), so the
-  // columns line up in every list.
+  // The push slot is always there (empty if not used), so the columns line
+  // up in every list.
   return `
     <li class="task${task.done ? " is-done" : ""}${expanded ? " show-all" : ""}" data-task="${task.id}">
       <input type="checkbox" class="tick" aria-label="Done: ${escapeHtml(task.title)}"${task.done ? " checked" : ""}>
@@ -59,7 +58,6 @@ export function taskRowHtml(task, { today, projects = null, showScore = true, sh
         <div class="task-chips">${cells.join("")}</div>
       </div>
       <span class="slot-push">${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}</span>
-      <span class="slot-score">${showScore && !task.done ? `<span class="score" title="Priority score">${score}</span>` : ""}</span>
       <button type="button" class="icon-btn task-more" data-open aria-label="Open ${escapeHtml(task.title)}">${icon("more")}</button>
     </li>`;
 }
@@ -71,7 +69,7 @@ export function taskListInnerHtml(tasks, rowOptions) {
   const head = `
     <li class="task-head" aria-hidden="true">
       <span></span><span>Task</span><span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
-      ${rowOptions.projects ? "<span>Project</span>" : ""}<span></span><span>Score</span><span></span>
+      ${rowOptions.projects ? "<span>Project</span>" : ""}<span></span><span></span>
     </li>`;
   return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");
 }
@@ -123,18 +121,25 @@ function dateChip(task, today) {
 //   onSaved(task)  after a field changed in place (e.g. update a counter)
 export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [], onSaved = () => {} }) {
   markEmptySelects(listEl);
+  listEl.querySelectorAll("[data-task]").forEach((row) => {
+    if (expandedIds.has(row.dataset.task)) row.classList.add("show-all");
+  });
   const byId = (row) => tasks.find((t) => t.id === row.dataset.task);
   const rowOf = (el) => el.closest("[data-task]");
 
-  // Shows the change at once, saves it, and redraws only that row. The
-  // database's answer is not copied back: with two quick changes in a row,
-  // the first answer would otherwise undo the second one on screen.
+  // Shows the change on the row at once and saves it. Half a second after
+  // the LAST save has finished, the whole list redraws (and so re-sorts):
+  // a few quick changes in a row don't make the list jump between each one.
+  let saving = 0;
+  let resortTimer = null;
   async function save(task, changes) {
     const before = {};
     for (const key of Object.keys(changes)) before[key] = task[key];
     Object.assign(task, changes);
     redrawRow(task);
     onSaved(task);
+    clearTimeout(resortTimer);
+    saving += 1;
     try {
       await updateTask(task.id, changes);
     } catch (error) {
@@ -143,10 +148,20 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
       onSaved(task);
       showToast("Could not save: " + error.message);
     }
+    saving -= 1;
+    if (!saving) resortTimer = setTimeout(resortUnlessTyping, 500);
   }
 
-  // Rows opened up with "+" stay open while you edit them.
-  const expandedIds = new Set();
+  // Not while you're typing a title or a meeting name: try again after.
+  function resortUnlessTyping() {
+    const typing = listEl.querySelector(".task-title-input, .tchip-input");
+    if (typing) {
+      typing.addEventListener("blur", () => { resortTimer = setTimeout(resortUnlessTyping, 500); }, { once: true });
+      return;
+    }
+    onChange();
+  }
+
 
   function redrawRow(task) {
     const row = listEl.querySelector(`[data-task="${task.id}"]`);
@@ -282,6 +297,10 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     input.addEventListener("blur", () => finish(true));
   }
 }
+
+// Rows opened up with "+" stay open while you edit them, also after the
+// list redraws to re-sort.
+const expandedIds = new Set();
 
 // Suggestions for meeting names, shared by every box that asks for one.
 function ensureMeetingList(names) {

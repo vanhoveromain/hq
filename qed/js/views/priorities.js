@@ -7,8 +7,12 @@
 //   To delegate · Meetings (grouped by meeting) · Delegated · Pending
 //   Achieved today · Achieved this week (folded)
 // Which task goes where: PRIORITY_LISTS in rules.js. Every row is edited in
-// place (taskList.js); a change that moves a task to another list shows the
-// next time the page is drawn (after a tick, a push, a bulk button, or Refresh).
+// place (taskList.js); the page redraws itself half a second after your last
+// change, so a task lands in its new list / place by itself.
+//
+// Today / Tomorrow switch (#/priorities/tomorrow, Romain 2026-11-09): the same
+// page for tomorrow (its To do list, counter, meetings, delegated, pending),
+// to plan the next day. No Overdue, Achieved or bulk buttons there.
 
 import {
   listDayTasks, listProjects, listMeetingNames,
@@ -25,9 +29,12 @@ import { brusselsToday, addDays, mondayOf, brusselsDayOf, longDay } from "../uti
 // Remembered while the app is open: which folded lists are open.
 const unfolded = new Set();
 
-export async function render(el) {
+export async function render(el, { params = [] } = {}) {
   const today = brusselsToday();
   const tomorrow = addDays(today, 1);
+  const isTomorrow = params[0] === "tomorrow";
+  // The day this page is about.
+  const day = isTomorrow ? tomorrow : today;
   const monday = mondayOf(today);
   const sunday = addDays(monday, 6);
   // A day early in UTC, so nothing ticked on Monday morning (Brussels) is
@@ -49,8 +56,9 @@ export async function render(el) {
     return;
   }
 
-  const redraw = () => render(el);
-  const d = { today, tomorrow };
+  const redraw = () => render(el, { params });
+  // The lists' rules look at "the day" (d.today) and the day after.
+  const d = { today: day, tomorrow: addDays(day, 1) };
   const names = Object.fromEntries(projects.map((p) => [p.id, p.name]));
   const projectName = (t) => names[t.project_id] || "";
   // Project menu on each row: active projects, plus any a task points to.
@@ -60,6 +68,7 @@ export async function render(el) {
     .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
 
   const pick = (rule, sort) => tasks.filter((t) => rule(t, d)).sort(sort);
+  // (Sorting keeps using the real today: "overdue" means before today.)
   const byDay = (a, b) => compareDayTasks(a, b, today, projectName);
   const byScore = (a, b) => priorityScore(b, today) - priorityScore(a, today);
   const lists = {
@@ -78,38 +87,44 @@ export async function render(el) {
     }).sort((a, b) => compareAchieved(a, b, today, projectName)),
   };
 
-  document.title = "Priorities of the day · QED HQ";
+  document.title = `Priorities ${isTomorrow ? "for tomorrow" : "of the day"} · QED HQ`;
   el.innerHTML = `
     <div class="day-head">
-      <p class="day-line">${escapeHtml(longDay(today))}</p>
-      <button type="button" class="btn secondary small" id="refresh" title="Re-sort the lists after your changes">Refresh</button>
+      <p class="day-line">${escapeHtml(longDay(day))}</p>
+      <nav class="day-switch" aria-label="Day">
+        <a href="#/priorities"${isTomorrow ? "" : ' class="active" aria-current="page"'}>Today</a>
+        <a href="#/priorities/tomorrow"${isTomorrow ? ' class="active" aria-current="page"' : ""}>Tomorrow</a>
+      </nav>
     </div>
     <div class="counter" id="counter" aria-live="polite"></div>
-    ${quickAddHtml({ today, placeholder: "Add a task for today…" })}
+    ${quickAddHtml({ today: day, placeholder: isTomorrow ? "Add a task for tomorrow…" : "Add a task for today…" })}
 
-    ${listSection("today", "To do today", lists.today, "Nothing planned for today. Add a task above.")}
-    ${lists.overdue.length ? listSection("overdue", "Overdue", lists.overdue, "", "is-warning") : ""}
+    ${listSection("today", isTomorrow ? "To do tomorrow" : "To do today", lists.today,
+      isTomorrow ? "Nothing planned for tomorrow yet." : "Nothing planned for today. Add a task above.")}
+    ${!isTomorrow && lists.overdue.length ? listSection("overdue", "Overdue", lists.overdue, "", "is-warning") : ""}
 
+    ${isTomorrow ? "" : `
     <section class="section bulk" aria-label="Day tools">
       <button type="button" class="btn secondary small" data-bulk="period">Reset the period</button>
       <button type="button" class="btn secondary small" data-bulk="scope">Reset the scope</button>
       <button type="button" class="btn secondary small" data-bulk="priority">Reset the Priority</button>
       <button type="button" class="btn secondary small" data-bulk="push">${icon("forward")} Push all to tomorrow</button>
-    </section>
+    </section>`}
 
     ${listSection("toDelegate", "To delegate", lists.toDelegate, "Nothing to hand off.")}
-    ${meetingsSection(lists.meetings)}
+    ${meetingsSection(lists.meetings, isTomorrow)}
     ${listSection("delegated", "Delegated", lists.delegated, "Nothing delegated right now.")}
     ${listSection("pending", "Pending", lists.pending, "Nothing pending.")}
 
-    ${foldedSection("achievedToday", "Achieved today", lists.achievedToday)}
-    ${foldedSection("achievedWeek", "Achieved this week", lists.achievedWeek)}
+    ${isTomorrow ? "" : foldedSection("achievedToday", "Achieved today", lists.achievedToday)}
+    ${isTomorrow ? "" : foldedSection("achievedWeek", "Achieved this week", lists.achievedWeek)}
   `;
 
   // Rows: each list gets the same behaviour; To do today, Overdue and To
   // delegate also get a "Push to tomorrow" button.
   const onOpen = (task) => openTaskSheet(task, { onChange: redraw, meetingNames });
-  const withPush = new Set(["today", "overdue", "toDelegate"]);
+  // On the Tomorrow page "push to tomorrow" would change nothing: no button.
+  const withPush = new Set(isTomorrow ? [] : ["today", "overdue", "toDelegate"]);
   el.querySelectorAll("[data-list]").forEach((ul) => {
     const key = ul.dataset.list;
     const group = ul.dataset.group;
@@ -131,7 +146,6 @@ export async function render(el) {
 
   drawCounter(el.querySelector("#counter"), lists.today, d);
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });
-  el.querySelector("#refresh").addEventListener("click", redraw);
   el.querySelectorAll("[data-bulk]").forEach((button) => {
     button.addEventListener("click", () => runBulk(button.dataset.bulk, lists, tomorrow, redraw));
   });
@@ -152,16 +166,16 @@ function listSection(key, title, tasks, emptyText, extraClass = "") {
 
 // Meetings: one small group per meeting ("Weekly team meeting"…), points
 // without a meeting name last.
-function meetingsSection(tasks) {
+function meetingsSection(tasks, isTomorrow) {
   const groups = [...new Set(tasks.map((t) => t.meeting_name || ""))]
     .sort((a, b) => (a === "") - (b === "") || a.localeCompare(b, "en", { sensitivity: "base" }));
   return `
     <section class="section day-list">
-      <div class="section-head"><h2 class="section-title">To settle in meetings today <span class="count">${tasks.length}</span></h2></div>
+      <div class="section-head"><h2 class="section-title">To settle in meetings ${isTomorrow ? "tomorrow" : "today"} <span class="count">${tasks.length}</span></h2></div>
       ${tasks.length ? groups.map((name) => `
         <h3 class="group-title">${icon("meeting")} ${escapeHtml(name || "No meeting named")}</h3>
         <ul class="task-list" data-list="meetings" data-group="${escapeHtml(name)}"></ul>`).join("")
-        : `<p class="list-empty">No meeting points for today.</p>`}
+        : `<p class="list-empty">No meeting points for ${isTomorrow ? "tomorrow" : "today"}.</p>`}
     </section>`;
 }
 

@@ -224,15 +224,15 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 @media (hover:hover){.tchip-add{opacity:0}.task:hover .tchip-add,.task:focus-within .tchip-add{opacity:1}}
 /* Cells: on a phone they flow under the title like the tags themselves. */
 .cell{display:contents}
-.slot-push:empty,.slot-score:empty{display:none}
+.slot-push:empty{display:none}
 .task-head{display:none}
 
 /* Laptop (1100 px and wider, so every column fits): one row per task, the
    fields in aligned columns with titles. Narrower: the stacked rows above. */
 @media (min-width:1100px){
-  /* tick | task | due | AM/PM | priority | scope | status | (project) | push | score | ⋯ */
-  .task-list{--task-cols:32px minmax(200px,1fr) 100px 68px 96px 84px minmax(150px,.9fr) 32px 32px 36px}
-  .task-list.with-project{--task-cols:32px minmax(180px,1fr) 100px 68px 96px 84px minmax(140px,.8fr) minmax(120px,.7fr) 32px 32px 36px}
+  /* tick | task | due | AM/PM | priority | scope | status | (project) | push | ⋯ */
+  .task-list{--task-cols:32px minmax(220px,1fr) 100px 68px 96px 84px minmax(160px,.9fr) 32px 36px}
+  .task-list.with-project{--task-cols:32px minmax(200px,1fr) 100px 68px 96px 84px minmax(150px,.8fr) minmax(130px,.7fr) 32px 36px}
   .task,.task-head{display:grid;grid-template-columns:var(--task-cols);align-items:center;column-gap:6px}
   .task{min-height:48px;padding:4px 4px 4px 0}
   .task-body,.task-chips{display:contents}
@@ -240,12 +240,11 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
   .cell{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
   .cell .tchip{max-width:100%}
   .cell .tchip>span[aria-hidden]{overflow:hidden;text-overflow:ellipsis}
-  .slot-push,.slot-score,.slot-push:empty,.slot-score:empty{display:flex;justify-content:center}
+  .slot-push,.slot-push:empty{display:flex;justify-content:center}
   .task-push,.task-more,.score{margin-top:0}
   .cell-add{display:none}
   .task-head{padding:0 4px 0 0;min-height:34px;border-bottom:1px solid var(--hq-border);font-size:12px;font-weight:500;color:var(--hq-secondary-text)}
   .task-head+.task{border-top:0}
-  .task-head span:nth-last-child(2){justify-self:center}
 }
 
 /* The real menu sits invisibly on top of the tag: a tap opens it. 16px
@@ -269,6 +268,11 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .check-field input{width:18px;height:18px;margin:0;accent-color:var(--hq-accent)}
 
 /* Priorities of the day */
+.day-head .day-switch{margin:0}
+.day-switch{display:inline-flex;padding:3px;margin:0 0 16px;background:var(--hq-subtle);border-radius:var(--hq-radius)}
+.day-switch a{display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border-radius:var(--hq-radius-sm);font-size:14px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none}
+.day-switch a:hover{color:var(--hq-primary-text)}
+.day-switch a.active{background:var(--hq-surface);color:var(--hq-primary-text);box-shadow:0 1px 2px rgba(23,24,25,.08)}
 .day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-16px 0 16px}
 .day-line{margin:0;font-size:15px;color:var(--hq-secondary-text)}
 .counter{margin:0 0 20px;padding:14px 16px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius)}
