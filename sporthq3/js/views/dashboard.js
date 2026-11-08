@@ -10,6 +10,7 @@ import {
 import { checkTrainingRules, sportIcon, shoeStatus, LOAD_RULES, isRaceMode } from "../rules.js?v=202611051635";
 import { todayISO, addDays, startOfWeek, formatDayLabel } from "../utils/dates.js?v=202611051635";
 import { escapeHtml, formatDuration, formatHours, formatSpeed, numHtml } from "../utils/format.js?v=202611051635";
+import { circuitCount } from "../utils/circuits.js?v=202611051635";
 import { overview } from "../utils/stats.js?v=202611051635";
 import { sessionName, sessionDetails, isPlainSession, calendarItems, daySummary, sportBadge, plannedSeconds } from "../utils/plan.js?v=202611051635";
 import { weekLoadNotes } from "../utils/load.js?v=202611051635";
@@ -206,7 +207,8 @@ function heroSessionHtml(s, canChoose = false, inProgress = false) {
   const details = sessionDetails(s);
   const facts = [];
   if (details && details.exercises && details.exercises.length) facts.push(numHtml(details.exercises.length, "exercises"));
-  if (details && details.rounds) facts.push(numHtml(details.rounds, "rounds"));
+  const circuits = details ? circuitCount(details) : 0;
+  if (circuits) facts.push(numHtml(circuits, circuits === 1 ? "circuit" : "circuits"));
   if (details && details.target_duration_s) facts.push(numHtml(Math.round(details.target_duration_s / 60), "min"));
   if (details && details.target_distance_km) facts.push(numHtml(Number(details.target_distance_km), "km"));
   const withRecipe = !isPlainSession(s);
