@@ -21,17 +21,22 @@ import { showToast } from "../utils/toast.js";
 export function taskRowHtml(task, { today, projects = null, showScore = true, expanded = false }) {
   const chips = [];
   chips.push(dateChip(task, today));
-  chips.push(selectChip("period", PERIODS, task.period, "AM/PM"));
-  chips.push(selectChip("priority", PRIORITIES, task.priority, "Priority", (v) => `prio-${v}`));
-  chips.push(selectChip("scope", SCOPES, task.scope, "Scope"));
-  chips.push(selectChip("state", STATES, task.state, null, (v) => (v === "active" ? "is-empty" : `state-${v}`)));
-  chips.push(selectChip("delegated_to", DELEGATES, task.delegated_to, "Delegate to"));
+  chips.push(selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" }));
+  chips.push(selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` }));
+  chips.push(selectChip("scope", "Scope", SCOPES, task.scope));
+  chips.push(selectChip("state", "State", STATES, task.state, {
+    clearable: false,
+    classFor: (v) => (v === "active" ? "is-empty" : `state-${v}`),
+  }));
+  chips.push(selectChip("delegated_to", "Delegate to", DELEGATES, task.delegated_to));
   chips.push(`<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`);
   if (task.is_meeting) {
     chips.push(`<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`);
   }
   if (projects) {
-    chips.push(selectChip("project_id", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, "No project"));
+    chips.push(selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
+      emptyLabel: "No project", clearLabel: "No project",
+    }));
   }
   chips.push(`<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`);
 
@@ -48,21 +53,33 @@ export function taskRowHtml(task, { today, projects = null, showScore = true, ex
     </li>`;
 }
 
-// A <select> dressed as a chip. emptyLabel = what it says when nothing is set
-// (null = no empty option, e.g. State always has a value).
-function selectChip(field, list, value, emptyLabel, classFor = () => "") {
+// A <select> dressed as a chip. The menu shows the field's name as a heading
+// (a group label you can't pick), then the choices, then "Clear" when the
+// field is set. An empty field has NO option ticked: the select is left on
+// "nothing chosen" (selectedIndex -1, set by markEmptySelects), so picking any
+// choice, even the first one, counts as a change.
+//   title       heading in the menu ("Priority")
+//   emptyLabel  what the chip says when empty (default: the title)
+//   clearable   offer "Clear" (State always has a value: false)
+//   classFor    extra class for a set value (colours)
+function selectChip(field, title, list, value, options = {}) {
+  const { emptyLabel = title, clearable = true, clearLabel = "Clear", classFor = () => "" } = options;
   const selected = list.find((o) => o.value === value);
   const cls = selected ? classFor(value) : "is-empty";
-  const label = selected ? selected.label : emptyLabel;
-  const empty = emptyLabel !== null
-    ? `<option value=""${value ? "" : " selected"}>${escapeHtml(selected ? "— none —" : emptyLabel)}</option>` : "";
+  const choices = list.map((o) =>
+    `<option value="${escapeHtml(o.value)}"${o.value === value ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
+  const clear = selected && clearable ? `<option value="">${escapeHtml(clearLabel)}</option>` : "";
   return `
     <label class="tchip tchip-select ${cls}">
-      <span class="sr-only">${escapeHtml(emptyLabel || field)}</span>
-      <span aria-hidden="true">${escapeHtml(label || "")}</span>
-      <select data-field="${field}">${empty}${list.map((o) =>
-        `<option value="${escapeHtml(o.value)}"${o.value === value ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("")}</select>
+      <span class="sr-only">${escapeHtml(title)}</span>
+      <span aria-hidden="true">${escapeHtml(selected ? selected.label : emptyLabel)}</span>
+      <select data-field="${field}"${selected ? "" : " data-empty"}><optgroup label="${escapeHtml(title)}">${choices}</optgroup>${clear}</select>
     </label>`;
+}
+
+// Empty fields: no choice ticked (see selectChip).
+function markEmptySelects(rootEl) {
+  rootEl.querySelectorAll("select[data-empty]").forEach((select) => { select.selectedIndex = -1; });
 }
 
 function dateChip(task, today) {
@@ -81,6 +98,7 @@ function dateChip(task, today) {
 //   rowOptions     the options taskRowHtml was called with
 //   meetingNames   suggestions for "Which meeting?"
 export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [] }) {
+  markEmptySelects(listEl);
   const byId = (row) => tasks.find((t) => t.id === row.dataset.task);
   const rowOf = (el) => el.closest("[data-task]");
 
@@ -106,7 +124,9 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
 
   function redrawRow(task) {
     const row = listEl.querySelector(`[data-task="${task.id}"]`);
-    if (row) row.outerHTML = taskRowHtml(task, { ...rowOptions, expanded: expandedIds.has(task.id) });
+    if (!row) return;
+    row.outerHTML = taskRowHtml(task, { ...rowOptions, expanded: expandedIds.has(task.id) });
+    markEmptySelects(listEl.querySelector(`[data-task="${task.id}"]`));
   }
 
   listEl.addEventListener("change", async (event) => {
