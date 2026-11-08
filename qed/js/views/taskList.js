@@ -1,56 +1,115 @@
-// taskList.js: how a task looks in a list, and quick add.
-// Shared by the project page (step 4) and Priorities of the day (step 5).
+// taskList.js: task rows you edit in place, and quick add.
+// Shared by the project page and (from step 5) Priorities of the day.
+//
+// Every field shows on the row as a chip (faint when empty). Tap a chip to
+// change it: a menu, a date picker, or a toggle. Click the title to retype it.
+// "⋯" opens the full task sheet (project, notes, delete…).
+// A change saves straight away and redraws only that row, so the list doesn't
+// jump around while you edit; it re-sorts the next time the list is drawn.
 
 import { createTask, updateTask } from "../storage.js";
-import { PRIORITIES, STATES, SCOPES, labelOf, priorityScore } from "../rules.js";
-import { escapeHtml } from "../utils/html.js";
+import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, priorityScore } from "../rules.js";
+import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay } from "../utils/dates.js";
 import { showToast } from "../utils/toast.js";
 
-// One row: tick, title + details, score.
-//   options.today         "YYYY-MM-DD" (Brussels)
-//   options.projectNames  { id: name } to show the project (lists across projects)
-//   options.showScore     show the priority score badge
-export function taskRowHtml(task, { today, projectNames = null, showScore = true }) {
-  const meta = [];
-  if (task.due_date && !task.done) {
-    const overdue = task.due_date < today;
-    meta.push(`<span class="${overdue ? "overdue" : ""}">${escapeHtml(friendlyDay(task.due_date, today))}</span>`);
+// One row.
+//   options.today     "YYYY-MM-DD" (Brussels)
+//   options.projects  [{id, name}] -> adds a Project chip (lists across projects)
+//   options.showScore show the priority score badge
+export function taskRowHtml(task, { today, projects = null, showScore = true }) {
+  const chips = [];
+  chips.push(dateChip(task, today));
+  chips.push(selectChip("period", PERIODS, task.period, "AM/PM"));
+  chips.push(selectChip("priority", PRIORITIES, task.priority, "Priority", (v) => `prio-${v}`));
+  chips.push(selectChip("scope", SCOPES, task.scope, "Scope"));
+  chips.push(selectChip("state", STATES, task.state, null, (v) => (v === "active" ? "is-faint" : `state-${v}`)));
+  chips.push(selectChip("delegated_to", DELEGATES, task.delegated_to, "Delegate to"));
+  chips.push(`<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`);
+  if (task.is_meeting) {
+    chips.push(`<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`);
   }
-  if (projectNames && task.project_id && projectNames[task.project_id]) {
-    meta.push(`<span>${escapeHtml(projectNames[task.project_id])}</span>`);
+  if (projects) {
+    chips.push(selectChip("project_id", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, "No project"));
   }
-  const tags = [];
-  if (task.is_meeting) tags.push(`<span class="pill">Meeting</span>`);
-  if (task.state !== "active") {
-    const label = task.state === "delegated" && task.delegated_to
-      ? `Delegated to ${task.delegated_to}` : labelOf(STATES, task.state);
-    tags.push(`<span class="pill state-${task.state}">${escapeHtml(label)}</span>`);
-  }
-  if (task.priority) tags.push(`<span class="pill prio-${task.priority}">${escapeHtml(labelOf(PRIORITIES, task.priority))}</span>`);
-  if (task.scope) tags.push(`<span class="pill">${escapeHtml(labelOf(SCOPES, task.scope))}</span>`);
-  if (task.period) tags.push(`<span class="pill">${task.period.toUpperCase()}</span>`);
 
   const score = priorityScore(task, today);
   return `
     <li class="task${task.done ? " is-done" : ""}" data-task="${task.id}">
       <input type="checkbox" class="tick" aria-label="Done: ${escapeHtml(task.title)}"${task.done ? " checked" : ""}>
-      <button type="button" class="task-main" data-open>
-        <span class="task-title">${escapeHtml(task.title)}</span>
-        ${meta.length || tags.length ? `<span class="task-meta">${meta.join('<span aria-hidden="true">·</span>')}${tags.join("")}</span>` : ""}
-      </button>
+      <div class="task-body">
+        <button type="button" class="task-title" data-edit-text="title" title="Click to rename">${escapeHtml(task.title)}</button>
+        <div class="task-chips">${chips.join("")}</div>
+      </div>
       ${showScore && !task.done ? `<span class="score" title="Priority score">${score}</span>` : ""}
+      <button type="button" class="icon-btn task-more" data-open aria-label="Open ${escapeHtml(task.title)}">${icon("more")}</button>
     </li>`;
 }
 
-// Wires the ticks and the "open" buttons of a list drawn with taskRowHtml.
+// A <select> dressed as a chip. emptyLabel = what it says when nothing is set
+// (null = no empty option, e.g. State always has a value).
+function selectChip(field, list, value, emptyLabel, classFor = () => "") {
+  const selected = list.find((o) => o.value === value);
+  const cls = selected ? classFor(value) : "is-empty";
+  const label = selected ? selected.label : emptyLabel;
+  const empty = emptyLabel !== null
+    ? `<option value=""${value ? "" : " selected"}>${escapeHtml(selected ? "— none —" : emptyLabel)}</option>` : "";
+  return `
+    <label class="tchip tchip-select ${cls}">
+      <span class="sr-only">${escapeHtml(emptyLabel || field)}</span>
+      <span aria-hidden="true">${escapeHtml(label || "")}</span>
+      <select data-field="${field}">${empty}${list.map((o) =>
+        `<option value="${escapeHtml(o.value)}"${o.value === value ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("")}</select>
+    </label>`;
+}
+
+function dateChip(task, today) {
+  const overdue = !task.done && task.due_date && task.due_date < today;
+  return `
+    <label class="tchip tchip-date${task.due_date ? "" : " is-empty"}${overdue ? " is-overdue" : ""}">
+      ${icon("calendar")}<span>${escapeHtml(task.due_date ? friendlyDay(task.due_date, today) : "Due date")}</span>
+      <input type="date" data-field="due_date" value="${escapeHtml(task.due_date || "")}" aria-label="Due date">
+    </label>`;
+}
+
+// Wires a list drawn with taskRowHtml. Listeners sit on the list itself, so
+// rows can be redrawn freely.
 //   onOpen(task)   open the task sheet
-//   onChange()     redraw after a change
-export function wireTaskList(listEl, tasks, { onOpen, onChange }) {
-  listEl.querySelectorAll("[data-task]").forEach((row) => {
-    const task = tasks.find((t) => t.id === row.dataset.task);
-    row.querySelector("[data-open]").addEventListener("click", () => onOpen(task));
-    row.querySelector(".tick").addEventListener("change", async (event) => {
+//   onChange()     full redraw (after a tick: the task moves to Done)
+//   rowOptions     the options taskRowHtml was called with
+//   meetingNames   suggestions for "Which meeting?"
+export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [] }) {
+  const byId = (row) => tasks.find((t) => t.id === row.dataset.task);
+  const rowOf = (el) => el.closest("[data-task]");
+
+  // Shows the change at once, saves it, and redraws only that row. The
+  // database's answer is not copied back: with two quick changes in a row,
+  // the first answer would otherwise undo the second one on screen.
+  async function save(task, changes) {
+    const before = {};
+    for (const key of Object.keys(changes)) before[key] = task[key];
+    Object.assign(task, changes);
+    redrawRow(task);
+    try {
+      await updateTask(task.id, changes);
+    } catch (error) {
+      Object.assign(task, before);
+      redrawRow(task);
+      showToast("Could not save: " + error.message);
+    }
+  }
+
+  function redrawRow(task) {
+    const row = listEl.querySelector(`[data-task="${task.id}"]`);
+    if (row) row.outerHTML = taskRowHtml(task, rowOptions);
+  }
+
+  listEl.addEventListener("change", async (event) => {
+    const row = rowOf(event.target);
+    if (!row) return;
+    const task = byId(row);
+
+    if (event.target.classList.contains("tick")) {
       const done = event.target.checked;
       row.classList.toggle("is-done", done);
       try {
@@ -69,8 +128,89 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange }) {
         },
       });
       onChange();
-    });
+      return;
+    }
+
+    const field = event.target.dataset.field;
+    if (!field) return;
+    const value = event.target.value || null;
+    const changes = { [field]: value };
+    // Picking someone to delegate to marks the task as Delegated.
+    if (field === "delegated_to" && value) changes.state = "delegated";
+    if (field === "state" && !value) changes.state = "active";
+    save(task, changes);
   });
+
+  listEl.addEventListener("click", (event) => {
+    const row = rowOf(event.target);
+    if (!row) return;
+    const task = byId(row);
+
+    if (event.target.closest("[data-open]")) {
+      onOpen(task);
+      return;
+    }
+    // Date chip: open the picker straight away where the browser allows it.
+    const dateInput = event.target.closest(".tchip-date")?.querySelector("input");
+    if (dateInput && event.target !== dateInput) {
+      event.preventDefault();
+      try { dateInput.showPicker(); } catch { dateInput.focus(); }
+      return;
+    }
+    const toggle = event.target.closest("[data-toggle]");
+    if (toggle) {
+      const on = !task.is_meeting;
+      save(task, on ? { is_meeting: true } : { is_meeting: false, meeting_name: null });
+      return;
+    }
+    const textButton = event.target.closest("[data-edit-text]");
+    if (textButton) editText(textButton, task, textButton.dataset.editText);
+  });
+
+  // Title / meeting name: the button turns into a text box. Enter or leaving
+  // the box saves; Esc cancels.
+  function editText(button, task, field) {
+    const input = document.createElement("input");
+    input.className = field === "title" ? "task-title-input" : "tchip-input";
+    input.value = task[field] || "";
+    input.maxLength = field === "title" ? 300 : 120;
+    if (field === "meeting_name") {
+      input.placeholder = "Which meeting?";
+      input.setAttribute("list", "meeting-names");
+      ensureMeetingList(meetingNames);
+    }
+    button.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let finished = false;
+    const finish = (keep) => {
+      if (finished) return;
+      finished = true;
+      const value = input.value.trim();
+      if (!keep || value === (task[field] || "") || (field === "title" && !value)) {
+        redrawRow(task);
+        return;
+      }
+      save(task, { [field]: value || null });
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); finish(true); }
+      if (e.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", () => finish(true));
+  }
+}
+
+// Suggestions for meeting names, shared by every box that asks for one.
+function ensureMeetingList(names) {
+  let list = document.getElementById("meeting-names");
+  if (!list) {
+    list = document.createElement("datalist");
+    list.id = "meeting-names";
+    document.body.append(list);
+  }
+  list.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
 }
 
 // Quick add: a title + a due date (default today). Enter adds it.

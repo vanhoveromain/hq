@@ -57,6 +57,12 @@ Coordination Team HQ, archived / passed projects.
    tick with Undo, score badge, overdue in red. Task sheet: every field, picking "Delegated to" sets State =
    Delegated, Push to tomorrow (saves the form with due = tomorrow), Delete (second click). Score: priorityScore()
    in rules.js
+4b. Inline editing + meetings (Romain's feedback, 2026-11-08): every field on a task row is a chip you tap (a
+   <select> laid invisibly over the chip; date chip opens the picker; title = click to rename, Enter saves, Esc
+   cancels; "⋯" opens the sheet). Saves at once, redraws only that row (no jumping; the database's answer is not
+   copied back, so two quick changes can't undo each other). is_meeting now means "to settle in a meeting today"
+   (not a meeting itself) + optional meeting_name (migration 20261108000002, add-only); turning it off clears the
+   name. The Meetings list (step 5) groups today's points per meeting
 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 

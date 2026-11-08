@@ -3,6 +3,7 @@
    data-hq="qed" on <html> gives the steel-blue QED accent. */
 
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
 html:not([data-ready]) #view .loading{animation:fade-in .3s .4s both}
 @keyframes fade-in{from{opacity:0}to{opacity:1}}
 body{margin:0;background:var(--hq-canvas);color:var(--hq-primary-text);font:400 16px/1.5 var(--hq-font);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
@@ -179,22 +180,38 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .quick-add input[type="date"]{flex:0 0 auto;padding:0 8px}
 .quick-add input:focus-visible{outline:2px solid var(--hq-accent);outline-offset:0;border-color:var(--hq-accent)}
 
-/* Task rows */
+/* Task rows: tick, title + chips, score, "⋯" */
 .task-list{margin:0;padding:0;list-style:none;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius)}
-.task{display:flex;align-items:center;gap:4px;padding:2px 12px 2px 4px}
+.task{display:flex;align-items:flex-start;gap:4px;padding:6px 4px 8px 4px}
 .task+.task{border-top:1px solid var(--hq-border)}
-.tick{flex:none;width:20px;height:20px;margin:12px;accent-color:var(--hq-accent);cursor:pointer}
-.task-main{flex:1;min-width:0;display:grid;gap:4px;padding:10px 0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
-.task-main:hover .task-title{color:var(--hq-accent-text)}
-.task-title{font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.tick{flex:none;width:20px;height:20px;margin:10px 10px 10px 8px;accent-color:var(--hq-accent);cursor:pointer}
+.task-body{flex:1;min-width:0;display:grid;gap:6px;padding-top:4px}
+.task-title{justify-self:start;max-width:100%;padding:2px 4px;margin:0 0 0 -4px;border:0;border-radius:var(--hq-radius-sm);background:none;color:inherit;font:inherit;font-size:15px;line-height:1.35;text-align:left;overflow-wrap:anywhere;cursor:text}
+.task-title:hover{background:var(--hq-subtle)}
+.task-title-input{font:inherit;font-size:15px;line-height:1.35;width:100%;padding:2px 6px;margin:0 0 0 -6px;border:1px solid var(--hq-accent);border-radius:var(--hq-radius-sm);color:var(--hq-primary-text);background:var(--hq-surface)}
 .task.is-done .task-title{color:var(--hq-secondary-text);text-decoration:line-through}
-.task-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12px;color:var(--hq-secondary-text)}
-.task-meta .pill{min-height:20px;font-size:11px}
-.overdue{color:var(--hq-danger);font-weight:600}
-.score{flex:none;min-width:28px;height:24px;display:grid;place-items:center;padding:0 6px;border-radius:var(--hq-radius-sm);background:var(--hq-subtle);color:var(--hq-secondary-text);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
-.pill.prio-critical{background:var(--hq-danger-light);color:var(--hq-danger)}
-.pill.prio-high{background:var(--hq-warning-light);color:var(--hq-warning)}
-.pill.state-pending,.pill.state-pending_today,.pill.state-to_delegate,.pill.state-delegated{background:none;border:1px dashed var(--hq-border-strong);color:var(--hq-primary-text)}
+.task-chips{display:flex;flex-wrap:wrap;gap:6px}
+.score{flex:none;min-width:28px;height:24px;margin-top:8px;display:grid;place-items:center;padding:0 6px;border-radius:var(--hq-radius-sm);background:var(--hq-subtle);color:var(--hq-secondary-text);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.task-more{flex:none;margin-top:0}
+
+/* Chips: each one a field you tap to change */
+.tchip{position:relative;display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 9px;border:1px solid var(--hq-border-strong);border-radius:var(--hq-radius-sm);background:var(--hq-surface);color:var(--hq-primary-text);font:500 12px/1 var(--hq-font);white-space:nowrap;cursor:pointer}
+.tchip:hover{border-color:var(--hq-secondary-text)}
+.tchip:focus-within,.tchip:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
+.tchip svg{width:13px;height:13px;flex:none}
+.tchip.is-empty,.tchip.is-faint{border-style:dashed;color:var(--hq-secondary-text);font-weight:400}
+.tchip.is-on{background:var(--hq-accent-light);border-color:var(--hq-accent);color:var(--hq-accent-text)}
+.tchip.is-overdue{color:var(--hq-danger);border-color:var(--hq-danger)}
+.tchip.prio-critical{background:var(--hq-danger-light);border-color:transparent;color:var(--hq-danger)}
+.tchip.prio-high{background:var(--hq-warning-light);border-color:transparent;color:var(--hq-warning)}
+.tchip.state-pending,.tchip.state-pending_today,.tchip.state-to_delegate,.tchip.state-delegated{background:var(--hq-subtle)}
+/* The real menu sits invisibly on top of the chip: a tap opens it. 16px
+   text stops iPhones from zooming in. */
+.tchip-select select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+/* The date box stays out of the way: the chip opens its picker. */
+.tchip-date input{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none}
+.tchip-input{font:inherit;font-size:13px;min-height:28px;width:180px;max-width:100%;padding:0 8px;border:1px solid var(--hq-accent);border-radius:var(--hq-radius-sm);color:var(--hq-primary-text);background:var(--hq-surface)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .done-list{margin-top:12px}
 .done-list summary{cursor:pointer;min-height:40px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--hq-secondary-text);list-style:none}
 .done-list summary::-webkit-details-marker{display:none}

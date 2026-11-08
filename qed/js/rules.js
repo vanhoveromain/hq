@@ -155,7 +155,7 @@ export const DELEGATES = [
 // Priority score (decided 2026-11-08, from the Notion formula). Higher = do
 // first. First match wins:
 //   7  open and due before today (should not happen: the rollover moves them)
-//   0  Pending, Delegated, or a meeting
+//   0  Pending, Delegated, or to settle in a meeting (is_meeting)
 //   1  Pending today
 //   6…2  Critical, High, Medium, Low, Nice to do
 //   0  no priority

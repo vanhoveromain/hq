@@ -5,7 +5,7 @@
 //   - done tasks, folded
 //   - notes: free text, saved by itself while you type
 
-import { getProject, updateProject, listProjectTasks } from "../storage.js";
+import { getProject, updateProject, listProjectTasks, listMeetingNames } from "../storage.js";
 import { PROJECT_TYPES, PROJECT_STATUSES, SALES_STATUSES, OWNERS, DEFAULT_OWNER, labelOf, compareByDueThenScore } from "../rules.js";
 import { openProjectForm } from "./projectForm.js";
 import { openTaskSheet } from "./taskSheet.js";
@@ -26,8 +26,11 @@ export async function render(el, { params }) {
 
   let project;
   let tasks;
+  let meetingNames = [];
   try {
-    [project, tasks] = await Promise.all([getProject(id), listProjectTasks(id)]);
+    [project, tasks, meetingNames] = await Promise.all([
+      getProject(id), listProjectTasks(id), listMeetingNames().catch(() => []),
+    ]);
   } catch (error) {
     el.innerHTML = `<p class="error">Could not load the project: ${escapeHtml(error.message)}</p>`;
     return;
@@ -83,11 +86,12 @@ export async function render(el, { params }) {
     </section>
   `;
 
-  const onOpen = (task) => openTaskSheet(task, { onChange: redraw });
+  const onOpen = (task) => openTaskSheet(task, { onChange: redraw, meetingNames });
+  const listOptions = { onOpen, onChange: redraw, rowOptions: { today }, meetingNames };
   const openEl = el.querySelector("#open-tasks");
-  if (openEl) wireTaskList(openEl, open, { onOpen, onChange: redraw });
+  if (openEl) wireTaskList(openEl, open, listOptions);
   const doneEl = el.querySelector("#done-tasks");
-  if (doneEl) wireTaskList(doneEl, done, { onOpen, onChange: redraw });
+  if (doneEl) wireTaskList(doneEl, done, listOptions);
   const details = el.querySelector(".done-list");
   if (details) details.addEventListener("toggle", () => { showDone = details.open; });
 

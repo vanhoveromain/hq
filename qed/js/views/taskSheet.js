@@ -9,7 +9,7 @@ import { escapeHtml } from "../utils/html.js";
 import { brusselsToday, addDays } from "../utils/dates.js";
 
 // onChange() = redraw the screen after a save / delete.
-export async function openTaskSheet(task, { onChange }) {
+export async function openTaskSheet(task, { onChange, meetingNames = [] }) {
   // Projects for the "Project" menu: active ones, plus the task's own.
   let projects = [];
   try {
@@ -53,6 +53,7 @@ export async function openTaskSheet(task, { onChange }) {
       priority: f.priority.value || null,
       state: f.state.value,
       is_meeting: f.is_meeting.checked,
+      meeting_name: f.is_meeting.checked ? (f.meeting_name.value.trim() || null) : null,
       delegated_to: f.delegated_to.value || null,
       notes: f.notes.value.trim() || null,
       done: f.done.checked,
@@ -88,10 +89,19 @@ export async function openTaskSheet(task, { onChange }) {
         <label class="field"><span>Delegated to</span>
           <select name="delegated_to">${options(DELEGATES, task.delegated_to, "—")}</select></label>
       </div>
-      <label class="check-field"><input type="checkbox" name="is_meeting"${task.is_meeting ? " checked" : ""}> This is a meeting</label>
+      <label class="check-field"><input type="checkbox" name="is_meeting"${task.is_meeting ? " checked" : ""}> To settle in a meeting</label>
+      <label class="field" data-meeting-name><span>Which meeting <em>(optional)</em></span>
+        <input name="meeting_name" maxlength="120" list="sheet-meeting-names" placeholder="e.g. Weekly team meeting" value="${escapeHtml(task.meeting_name || "")}">
+        <datalist id="sheet-meeting-names">${meetingNames.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("")}</datalist></label>
       <label class="field"><span>Notes</span>
         <textarea name="notes" rows="5" maxlength="20000">${escapeHtml(task.notes || "")}</textarea></label>`,
     onOpen(form) {
+      // "Which meeting" only shows for points to settle in a meeting.
+      const meetingBox = form.elements.is_meeting;
+      const nameField = form.querySelector("[data-meeting-name]");
+      const syncMeeting = () => { nameField.hidden = !meetingBox.checked; };
+      meetingBox.addEventListener("change", syncMeeting);
+      syncMeeting();
       // Picking someone in "Delegated to" marks the task as Delegated.
       form.elements.delegated_to.addEventListener("change", () => {
         if (form.elements.delegated_to.value) form.elements.state.value = "delegated";

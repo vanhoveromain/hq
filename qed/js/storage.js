@@ -67,9 +67,9 @@ function sameEmail(a, b) {
 
 const TASK_COLUMNS = [
   "title", "project_id", "done", "due_date", "period", "scope", "priority",
-  "state", "is_meeting", "delegated_to", "notes",
+  "state", "is_meeting", "meeting_name", "delegated_to", "notes",
 ];
-const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, delegated_to, notes, created_at";
+const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, meeting_name, delegated_to, notes, created_at";
 
 // Tasks of one project (open and done). The page splits them itself.
 export async function listProjectTasks(projectId) {
@@ -98,6 +98,19 @@ export async function updateTask(id, changes) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Meeting names already used, for suggestions ("Weekly team meeting"…),
+// most recent first.
+export async function listMeetingNames() {
+  const { data, error } = await db
+    .from("qed_tasks")
+    .select("meeting_name")
+    .not("meeting_name", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  return [...new Set(data.map((row) => row.meeting_name))];
 }
 
 export async function deleteTask(id) {
