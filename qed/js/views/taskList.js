@@ -20,39 +20,60 @@ import { showToast } from "../utils/toast.js";
 //   options.showScore show the priority score badge
 //   options.showPush  show a "Push to tomorrow" button on the row
 export function taskRowHtml(task, { today, projects = null, showScore = true, showPush = false, expanded = false }) {
-  const chips = [];
-  chips.push(dateChip(task, today));
-  chips.push(selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" }));
-  chips.push(selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` }));
-  chips.push(selectChip("scope", "Scope", SCOPES, task.scope));
-  chips.push(selectChip("state", "State", STATES, task.state, {
-    clearable: false,
-    classFor: (v) => (v === "active" ? "is-empty" : `state-${v}`),
-  }));
-  chips.push(selectChip("delegated_to", "Delegate to", DELEGATES, task.delegated_to));
-  chips.push(`<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`);
-  if (task.is_meeting) {
-    chips.push(`<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`);
-  }
+  // Fields grouped in cells. On a phone the cells simply flow under the
+  // title; on a laptop each cell is a column, aligned from row to row.
+  const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
+  const status = [
+    selectChip("state", "State", STATES, task.state, {
+      clearable: false,
+      classFor: (v) => (v === "active" ? "is-empty" : `state-${v}`),
+    }),
+    selectChip("delegated_to", "Delegate to", DELEGATES, task.delegated_to),
+    `<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`,
+    task.is_meeting
+      ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`
+      : "",
+  ].join("");
+  const cells = [
+    cell("due", dateChip(task, today)),
+    cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
+    cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
+    cell("scope", selectChip("scope", "Scope", SCOPES, task.scope)),
+    cell("status", status),
+  ];
   if (projects) {
-    chips.push(selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
+    cells.push(cell("project", selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
       emptyLabel: "No project", clearLabel: "No project",
-    }));
+    })));
   }
-  chips.push(`<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`);
+  cells.push(cell("add", `<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`));
 
   const score = priorityScore(task, today);
+  // The push / score slots are always there (empty if not used), so the
+  // columns line up in every list.
   return `
     <li class="task${task.done ? " is-done" : ""}${expanded ? " show-all" : ""}" data-task="${task.id}">
       <input type="checkbox" class="tick" aria-label="Done: ${escapeHtml(task.title)}"${task.done ? " checked" : ""}>
       <div class="task-body">
         <button type="button" class="task-title" data-edit-text="title" title="Click to rename">${escapeHtml(task.title)}</button>
-        <div class="task-chips">${chips.join("")}</div>
+        <div class="task-chips">${cells.join("")}</div>
       </div>
-      ${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}
-      ${showScore && !task.done ? `<span class="score" title="Priority score">${score}</span>` : ""}
+      <span class="slot-push">${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}</span>
+      <span class="slot-score">${showScore && !task.done ? `<span class="score" title="Priority score">${score}</span>` : ""}</span>
       <button type="button" class="icon-btn task-more" data-open aria-label="Open ${escapeHtml(task.title)}">${icon("more")}</button>
     </li>`;
+}
+
+// A whole list: the column titles (shown on a laptop only), then the rows.
+// Put it inside <ul class="task-list"> (add "with-project" when rowOptions
+// has projects, for the extra column).
+export function taskListInnerHtml(tasks, rowOptions) {
+  const head = `
+    <li class="task-head" aria-hidden="true">
+      <span></span><span>Task</span><span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
+      ${rowOptions.projects ? "<span>Project</span>" : ""}<span></span><span>Score</span><span></span>
+    </li>`;
+  return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");
 }
 
 // A <select> dressed as a chip. The menu shows the field's name as a heading

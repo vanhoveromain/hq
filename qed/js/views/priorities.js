@@ -1,8 +1,9 @@
 // priorities.js: Priorities of the day (#/priorities).
 //
 // Top: today's date, the 1-3-5 counter and quick add. Then the lists:
-//   To do today · Overdue (only when not empty) · To do tomorrow
+//   To do today · Overdue (only when not empty)
 //   [the four bulk buttons]
+// (To do tomorrow lives in the Task planner: Romain, 2026-11-09.)
 //   To delegate · Meetings (grouped by meeting) · Delegated · Pending
 //   Achieved today · Achieved this week (folded)
 // Which task goes where: PRIORITY_LISTS in rules.js. Every row is edited in
@@ -15,7 +16,7 @@ import {
 } from "../storage.js";
 import { PRIORITY_LISTS, compareDayTasks, compareAchieved, countOneThreeFive, priorityScore } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
-import { taskRowHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
+import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, icon } from "../utils/html.js";
@@ -64,7 +65,6 @@ export async function render(el) {
   const lists = {
     today: pick(PRIORITY_LISTS.today, byDay),
     overdue: pick(PRIORITY_LISTS.overdue, byScore),
-    tomorrow: pick(PRIORITY_LISTS.tomorrow, byDay),
     toDelegate: pick(PRIORITY_LISTS.toDelegate, byScore),
     meetings: pick(PRIORITY_LISTS.meetings, byDay),
     delegated: pick(PRIORITY_LISTS.delegated, (a, b) => (a.delegated_to || "~").localeCompare(b.delegated_to || "~")),
@@ -87,9 +87,8 @@ export async function render(el) {
     <div class="counter" id="counter" aria-live="polite"></div>
     ${quickAddHtml({ today, placeholder: "Add a task for today…" })}
 
-    ${listSection("today", "To do today", lists.today, "Nothing planned for today. Add a task above, or pick one from tomorrow.")}
+    ${listSection("today", "To do today", lists.today, "Nothing planned for today. Add a task above.")}
     ${lists.overdue.length ? listSection("overdue", "Overdue", lists.overdue, "", "is-warning") : ""}
-    ${listSection("tomorrow", "To do tomorrow", lists.tomorrow, "Nothing planned for tomorrow yet.")}
 
     <section class="section bulk" aria-label="Day tools">
       <button type="button" class="btn secondary small" data-bulk="period">Reset the period</button>
@@ -117,7 +116,8 @@ export async function render(el) {
     let listTasks = lists[key];
     if (group !== undefined) listTasks = listTasks.filter((t) => (t.meeting_name || "") === group);
     const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key) };
-    ul.innerHTML = listTasks.map((t) => taskRowHtml(t, rowOptions)).join("");
+    ul.classList.add("with-project");
+    ul.innerHTML = taskListInnerHtml(listTasks, rowOptions);
     wireTaskList(ul, listTasks, {
       onOpen, onChange: redraw, rowOptions, meetingNames,
       onSaved: () => drawCounter(el.querySelector("#counter"), lists.today, d),

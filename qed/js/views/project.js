@@ -9,7 +9,7 @@ import { getProject, updateProject, listProjectTasks, listMeetingNames } from ".
 import { PROJECT_TYPES, PROJECT_STATUSES, SALES_STATUSES, OWNERS, DEFAULT_OWNER, labelOf, compareByDueThenScore } from "../rules.js";
 import { openProjectForm } from "./projectForm.js";
 import { openTaskSheet } from "./taskSheet.js";
-import { taskRowHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
+import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { escapeHtml, safeUrl, icon } from "../utils/html.js";
 import { formatRange, brusselsToday } from "../utils/dates.js";
 
@@ -68,12 +68,12 @@ export async function render(el, { params }) {
       <div class="section-head"><h2 class="section-title">Tasks <span class="count">${open.length} open</span></h2></div>
       ${quickAddHtml({ today })}
       ${open.length
-        ? `<ul class="task-list" id="open-tasks">${open.map((t) => taskRowHtml(t, { today })).join("")}</ul>`
+        ? `<ul class="task-list" id="open-tasks">${taskListInnerHtml(open, { today })}</ul>`
         : `<p class="empty">No open tasks. Add one above.</p>`}
       ${done.length ? `
         <details class="done-list"${showDone ? " open" : ""}>
           <summary>Done (${done.length})</summary>
-          <ul class="task-list" id="done-tasks">${done.map((t) => taskRowHtml(t, { today })).join("")}</ul>
+          <ul class="task-list" id="done-tasks">${taskListInnerHtml(done, { today })}</ul>
         </details>` : ""}
     </section>
 

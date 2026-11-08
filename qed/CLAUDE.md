@@ -76,6 +76,10 @@ Coordination Team HQ, archived / passed projects.
    editing). Row Push-to-tomorrow arrow on today / overdue / to delegate. Bulk buttons ask first (with the count) and
    undo per task: Reset the period / scope (all open tasks), Reset the Priority (+ Pending today -> Active), Push
    all to tomorrow (To do today + To delegate). Changes made in place re-sort on Refresh or the next redraw
+5b. Romain's feedback (2026-11-09): To do tomorrow removed from Priorities (it goes to the Task planner). Laptop
+   (>= 1100 px): task lists are tables, one row per task, fields in aligned columns with titles (Task, Due, AM/PM,
+   Priority, Scope, Status, Project, Score); cells in taskRowHtml + taskListInnerHtml (header row); push / score
+   slots always present so columns line up. Below 1100 px: stacked rows with "+". Page width 1160 px
 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
