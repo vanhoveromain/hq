@@ -63,6 +63,8 @@ Coordination Team HQ, archived / passed projects.
    copied back, so two quick changes can't undo each other). is_meeting now means "to settle in a meeting today"
    (not a meeting itself) + optional meeting_name (migration 20261108000002, add-only); turning it off clears the
    name. The Meetings list (step 5) groups today's points per meeting
+4c. Tools as small app icons (Romain, 2026-11-08): favicon of the site (origin/favicon.ico, no-referrer) over
+   the first letters of the name (fallback when it fails or is < 16 px), name underneath, 4 per row on a phone
 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 

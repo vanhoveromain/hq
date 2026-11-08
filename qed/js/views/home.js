@@ -154,6 +154,7 @@ async function drawTools(toolsEl, redraw) {
 
   if (!editingTools) {
     toolsEl.innerHTML = links.length ? tilesHtml(links) : `<p class="empty">No links yet. Use <strong>Edit</strong> to add one.</p>`;
+    wireAppIcons(toolsEl);
     return;
   }
 
@@ -196,19 +197,41 @@ async function drawTools(toolsEl, redraw) {
   });
 }
 
+// Tools as small app icons (Romain, 2026-11-08): the site's own icon
+// (favicon) when it has one, else the first letters of the name; the name
+// underneath.
 function tilesHtml(links) {
   const tiles = links.map((link) => {
     const url = safeUrl(link.url);
     if (!url) return "";
-    const host = new URL(url).host.replace(/^www\./, "");
+    const origin = new URL(url).origin;
     return `
-      <li><a class="tile" href="${escapeHtml(url)}" target="_blank" rel="noopener">
-        <span class="tile-icon">${icon("link")}</span>
-        <span class="tile-name">${escapeHtml(link.label)}</span>
-        <span class="tile-host">${icon("external")}${escapeHtml(host)}</span>
+      <li><a class="app" href="${escapeHtml(url)}" target="_blank" rel="noopener" title="${escapeHtml(link.label)}">
+        <span class="app-icon">
+          <span class="app-letters" aria-hidden="true">${escapeHtml(initials(link.label))}</span>
+          <img src="${escapeHtml(origin)}/favicon.ico" alt="" loading="lazy" referrerpolicy="no-referrer">
+        </span>
+        <span class="app-name">${escapeHtml(link.label)}</span>
       </a></li>`;
   });
-  return `<ul class="tiles">${tiles.join("")}</ul>`;
+  return `<ul class="apps">${tiles.join("")}</ul>`;
+}
+
+// "Registration review" -> "RR", "Dropbox" -> "Dr"
+function initials(label) {
+  const words = label.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return (words[0] || "?").slice(0, 2).replace(/^./, (c) => c.toUpperCase());
+}
+
+// A site without a favicon (or blocked): drop the broken image, the letters
+// underneath show instead. Tiny icons (< 16 px) are dropped too.
+function wireAppIcons(rootEl) {
+  rootEl.querySelectorAll(".app-icon img").forEach((img) => {
+    const drop = () => img.remove();
+    img.addEventListener("error", drop);
+    img.addEventListener("load", () => { if (img.naturalWidth < 16) drop(); });
+  });
 }
 
 function openLinkForm({ link, nextOrder, onChange }) {
