@@ -1,0 +1,48 @@
+# QED HQ — work planner (v1)
+
+## Context
+- Owner: Romain, Account Manager & Team Leader at QED (event agency, Brussels).
+- Replaces Romain's Notion "QED HQ" planner. Full inventory + build spec: the Claude Doc
+  "QED HQ — Notion inventory" (tabs "Notion inventory" and "Build spec"), decisions of 2026-11-05 → 11-08.
+- v1 is single-user (Romain). Every row has `user_id` so the team can join later without redesign.
+- QED data is client-confidential: never commit real data (import files stay gitignored), never log it.
+- Notion "QED HQ" is read-only for this project: never create, edit or delete anything there.
+
+## Stack (same as Sport HQ, see sporthq3/CLAUDE.md)
+- Vanilla HTML, CSS, JS (ES modules). No framework, no build step.
+- Supabase: QED HQ's OWN project (EU), separate from the shared hq project. All access through
+  `js/storage.js`; screens never import supabase-js.
+- Login: the shared hq login on ownhq.app, extended to sign in to the QED project too (same email +
+  password; magic link only covers the main hq project). `requireLogin()` replaces `gate.js`.
+- RLS on every table (`user_id = auth.uid()`); sign-ups closed in the QED project.
+- Schema changes only via `supabase/migrations/`, flagged before running (one database for local + live).
+- Rules (score, 1-3-5, rollover, people lists) live in `js/rules.js`, never in screen code.
+- HQ Brand Guidelines v1.0 tokens (`assets/hq-tokens.css`) + `<hq-switcher current="qed">`.
+- Brussels time decides "today"; weeks start Monday; calendar days are Postgres `date`.
+
+## v1 modules
+Home (project gallery, Tools links, Onboarding) · Project page · Task sheet · Priorities of the day
+(1-3-5 counter, bulk buttons) · Focus mode (timer) · Task planner (boards, drag and drop) · Sales.
+Stays in Notion: QED Projects, Mobile HQ, Meeting notes, Bucket, Event teams, Van log book, OnsiteHQ,
+Coordination Team HQ, archived / passed projects.
+
+## Key rules (details in the Build spec)
+- Priority score (first match wins): overdue 7 · Pending, Delegated or Meeting 0 · Pending today 1 ·
+  Critical 6, High 5, Medium 4, Low 3, Nice to do 2 · none 0. To delegate keeps its normal score.
+- Rollover: open tasks due before today → today, every night, weekends included (`qed_rollover_tasks()`,
+  hourly cron + on app open).
+- 1-3-5: To do today holds 1 Major, 3 Medium, 5 Small; warns, never blocks; meetings not counted.
+- Reset the Priority clears Priority and sets Pending today back to Active. Push all to tomorrow moves
+  To do today + To delegate only. Achieved lists use the day the task was ticked (`done_at`).
+
+## Build steps
+1. Database (migration 20261108000001: tables, RLS, rollover + cron, starter links) — written and tested
+   locally 2026-11-08; to run in the QED project (see supabase/README.md)
+2. App shell + login on both projects
+3. Home · 4. Project page + task sheet · 5. Priorities of the day · 6. Focus mode · 7. Task planner ·
+8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
+
+## How we work
+- Plan first, one step at a time; Romain tests each step before the next.
+- Database migrations are not drafts: always flagged, backward-compatible.
+- Explain simply; ask instead of assuming; point out flaws proactively.
