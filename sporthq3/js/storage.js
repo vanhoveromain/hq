@@ -262,7 +262,9 @@ export async function getShoeDistances() {
 // ---------------------------------------------------------------------
 // Session catalogue ("recipe book")
 // A recipe: { id, name, sport, session_type, description, rounds,
-//             exercises: [{ name, sets, reps, weight_kg, note }],
+//             exercises: [{ name, sets, reps, weight_kg, note, block, rounds }],
+//             (block + rounds = the line is part of a circuit, see utils/circuits.js;
+//              the recipe's own `rounds` is only found on old recipes)
 //             target_duration_s, target_distance_km, archived }
 // ---------------------------------------------------------------------
 

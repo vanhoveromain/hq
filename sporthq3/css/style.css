@@ -693,7 +693,23 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .exercise-row input { background: var(--surface); }
 .exercise-row .row-3 label { font-size: 0.8rem; font-weight: 600; margin: 0; }
 .exercise-row .row-3 input { margin: 4px 0 12px; }
+.exercise-row .row-2 label { font-size: 0.8rem; font-weight: 600; margin: 0; }
+.exercise-row .row-2 input { margin: 4px 0 12px; }
 .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+/* Circuits (step 38): the lines of one circuit hang together, with a violet
+   bar on the left; the first one carries the "Circuit · Rounds" head. */
+.exercise-row.in-circuit { border-left: 4px solid var(--accent); }
+.exercise-row.in-circuit + .exercise-row.in-circuit:not(.circuit-start) {
+  margin-top: -13px; border-top-left-radius: 0; border-top-right-radius: 0;
+}
+.exercise-row.in-circuit:has(+ .exercise-row.in-circuit:not(.circuit-start)) {
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+.circuit-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.circuit-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--accent-deep); }
+.circuit-head label { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; margin: 0; }
+.circuit-head input { width: 72px; margin: 0; }
+.circuit-link { font-size: 0.85rem; margin: 0 0 8px; }
 .small-button { min-height: 36px; min-width: 44px; padding: 4px 10px; }
 
 /* ---------- Planner: week ---------- */
@@ -932,6 +948,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .chip-button:disabled { opacity: 0.4; cursor: default; }
 .exercise-list { margin: 0 0 8px; padding-left: 20px; }
 .exercise-list li { margin-bottom: 4px; }
+.exercise-list .exercise-list { margin: 4px 0 0; }
+.circuit-item { list-style: none; margin-left: -20px; padding-left: 10px; border-left: 3px solid var(--accent); }
 .pre-line { white-space: pre-line; }
 @media (min-width: 700px) {
   .sheet { margin: auto; border-radius: var(--radius); }
@@ -1038,7 +1056,9 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
 .now-hint { margin: -6px 0 0; text-align: center; font-size: 0.85rem; color: var(--muted); }
 .workout-now.is-all-done { border-color: var(--ok); }
 .workout-now.is-all-done .now-label { color: var(--ok); display: flex; align-items: center; gap: 6px; }
-.workout-rounds { margin: 0 4px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.9rem; }
+.now-circuit { display: flex; align-items: center; gap: 8px; margin: -4px 0 8px; font-size: 0.9rem; color: var(--muted); }
+.now-circuit > span { flex: 1; min-width: 0; }
+.now-circuit strong { color: var(--accent-deep); }
 
 /* Set circles: done = filled + check, next = ring in the accent */
 .tick-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
@@ -1069,6 +1089,7 @@ legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
   font: inherit; color: inherit; text-align: left; cursor: pointer;
 }
 .ex-row:first-child { border-top: 0; }
+.ex-row.in-circuit { box-shadow: inset 4px 0 0 var(--accent); }
 .ex-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ex-row-name { font-weight: 600; }
 .ex-row-meta { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }

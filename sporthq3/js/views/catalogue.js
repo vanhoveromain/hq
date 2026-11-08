@@ -13,12 +13,13 @@
 import {
   listSessionTemplates, getSessionTemplate, saveSessionTemplate, deleteSessionTemplate,
   getPlannedSession, listPlannedSessions, createPlannedSession, updatePlannedSession,
-} from "../storage.js?v=202611051635";
-import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202611051635";
-import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202611051635";
-import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202611051635";
-import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202611051635";
-import { icon } from "../utils/icons.js?v=202611051635";
+} from "../storage.js?v=202611081505";
+import { SPORTS, getSport, sportIcon, sessionTypeLabel } from "../rules.js?v=202611081505";
+import { escapeHtml, formatDuration, parseDuration, parseDecimal } from "../utils/format.js?v=202611081505";
+import { startOfWeek, formatDayLabel } from "../utils/dates.js?v=202611081505";
+import { isCustomSession, isPlainSession, canAdjustSession, snapshotOf, sessionName, sportBadge } from "../utils/plan.js?v=202611081505";
+import { icon } from "../utils/icons.js?v=202611081505";
+import { withCircuits, inCircuit, circuitCount } from "../utils/circuits.js?v=202611081505";
 
 export function render(container, { params = [] } = {}) {
   if (params[0] === "new") return renderEditor(container, null);
@@ -69,12 +70,18 @@ async function renderList(container) {
   }
 }
 
+// "1 circuit", "2 circuits" (an old session-wide rounds counts as one).
+function circuitText(t) {
+  const count = circuitCount(t);
+  return count ? `${count} circuit${count === 1 ? "" : "s"}` : "";
+}
+
 function templateItemHtml(t) {
   const summary = [
     // the type, unless it just repeats the name ("Long run" / "Long run")
     t.session_type && sessionTypeLabel(t.sport, t.session_type) !== t.name ? sessionTypeLabel(t.sport, t.session_type) : "",
     t.exercises.length ? `${t.exercises.length} exercise${t.exercises.length === 1 ? "" : "s"}` : "",
-    t.rounds ? `${t.rounds} rounds` : "",
+    circuitText(t),
     t.target_duration_s ? formatDuration(t.target_duration_s) : "",
     t.target_distance_km ? `${Number(t.target_distance_km)} km` : "",
   ].filter(Boolean).join(" · ");
@@ -204,7 +211,15 @@ function drawEditor(container, t, options) {
 
   // The exercise lines live in this list while you edit; the boxes on screen
   // write into it as you type, and buttons (↑ ↓ remove +) change it and redraw.
-  const exercises = t.exercises.map((e) => ({ ...e }));
+  // Circuits (step 38): `linked` = "in a circuit with the line above"; the
+  // circuit's rounds are kept on its first line. (An old session-wide rounds
+  // becomes one circuit here, and is saved that way.)
+  const lines = withCircuits(t);
+  const exercises = lines.map((e, i) => {
+    const { block, ...rest } = e;
+    const prev = lines[i - 1];
+    return { ...rest, linked: i > 0 && inCircuit(e) && inCircuit(prev) && prev.block === block };
+  });
 
   container.innerHTML = `
     <form id="template-form" class="card form" novalidate>
@@ -243,9 +258,8 @@ function drawEditor(container, t, options) {
 
       <fieldset class="exercises">
         <legend>Exercises <span class="muted">(optional)</span></legend>
-        <label for="t-rounds">Rounds <span class="muted">(for a circuit: the whole list is repeated)</span></label>
-        <input id="t-rounds" name="rounds" type="number" inputmode="numeric" min="1" max="50"
-               placeholder="—" value="${t.rounds ?? ""}">
+        <p class="hint">Circuit (e.g. 3 × push-ups + gainage): tick "Circuit with the exercise above" on the
+          second exercise, then give the circuit its rounds.</p>
         <div id="exercise-rows"></div>
         <button type="button" id="add-exercise" class="button">+ Add exercise</button>
       </fieldset>
@@ -284,23 +298,37 @@ function drawEditor(container, t, options) {
 
   // ----- exercise lines -----
   function drawRows() {
-    rowsEl.innerHTML = exercises.map((e, i) => `
-      <div class="exercise-row" data-index="${i}">
+    rowsEl.innerHTML = exercises.map((e, i) => {
+      const starts = startsCircuit(exercises, i);
+      const inGroup = starts || e.linked;
+      return `
+      <div class="exercise-row${inGroup ? " in-circuit" : ""}${starts ? " circuit-start" : ""}" data-index="${i}">
+        ${starts ? `
+        <div class="circuit-head">
+          <span class="circuit-title">${icon("repeat")} Circuit</span>
+          <label>Rounds<input type="number" data-key="rounds" inputmode="numeric" min="1" max="50" placeholder="3"
+                 value="${escapeHtml(e.rounds ?? "")}"></label>
+        </div>` : ""}
         <input type="text" data-key="name" placeholder="Exercise (e.g. Leg extension)"
                autocomplete="off" value="${escapeHtml(e.name || "")}" aria-label="Exercise name">
-        <div class="row-3">
-          <label>Sets<input type="number" data-key="sets" inputmode="numeric" min="1" max="50" value="${e.sets ?? ""}"></label>
+        <div class="${inGroup ? "row-2" : "row-3"}">
+          ${inGroup ? "" : `<label>Sets<input type="number" data-key="sets" inputmode="numeric" min="1" max="50" value="${e.sets ?? ""}"></label>`}
           <label>Reps / time<input type="text" data-key="reps" autocomplete="off" placeholder="10 or 45s" value="${escapeHtml(e.reps ?? "")}"></label>
           <label>kg<input type="text" data-key="weight_kg" inputmode="decimal" autocomplete="off" value="${e.weight_kg ?? ""}"></label>
         </div>
         <input type="text" data-key="note" placeholder="Note (optional)" autocomplete="off"
                value="${escapeHtml(e.note || "")}" aria-label="Note">
+        ${i > 0 ? `
+        <label class="checkbox circuit-link">
+          <input type="checkbox" data-link ${e.linked ? "checked" : ""}> Circuit with the exercise above
+        </label>` : ""}
         <div class="row-actions">
           <button type="button" class="button small-button" data-move="-1" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
           <button type="button" class="button small-button" data-move="1" ${i === exercises.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
           <button type="button" class="button small-button danger" data-remove aria-label="Remove">${icon("x")}</button>
         </div>
-      </div>`).join("");
+      </div>`;
+    }).join("");
   }
   drawRows();
 
@@ -310,20 +338,47 @@ function drawEditor(container, t, options) {
     if (!row || !event.target.dataset.key) return;
     exercises[Number(row.dataset.index)][event.target.dataset.key] = event.target.value;
   });
+  // "Circuit with the exercise above" ticked / unticked.
+  rowsEl.addEventListener("change", (event) => {
+    if (!("link" in event.target.dataset)) return;
+    const i = Number(event.target.closest(".exercise-row").dataset.index);
+    exercises[i].linked = event.target.checked;
+    if (exercises[i].linked) {
+      // A new circuit: suggest the first exercise's sets as its rounds.
+      let start = i - 1;
+      while (start > 0 && exercises[start].linked) start--;
+      const first = exercises[start];
+      if (first.rounds == null || first.rounds === "") first.rounds = first.sets ?? "";
+    }
+    drawRows();
+  });
   rowsEl.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     const row = event.target.closest(".exercise-row");
     if (!button || !row) return;
     const i = Number(row.dataset.index);
-    if ("remove" in button.dataset) exercises.splice(i, 1);
+    if ("remove" in button.dataset) {
+      // Removing the first line of a circuit: the next line leads it now.
+      const next = exercises[i + 1];
+      if (!exercises[i].linked && next && next.linked) {
+        next.linked = false;
+        next.rounds = exercises[i].rounds;
+      }
+      exercises.splice(i, 1);
+    }
     if (button.dataset.move) {
+      // Swap the two exercises; the circuits stay where they are (the
+      // "linked" ticks and the rounds belong to the position, not the exercise).
       const j = i + Number(button.dataset.move);
-      [exercises[i], exercises[j]] = [exercises[j], exercises[i]]; // swap the two lines
+      const a = exercises[i];
+      const b = exercises[j];
+      exercises[i] = { ...b, linked: a.linked, rounds: a.rounds };
+      exercises[j] = { ...a, linked: b.linked, rounds: b.rounds };
     }
     drawRows();
   });
   form.querySelector("#add-exercise").addEventListener("click", () => {
-    exercises.push({ name: "" });
+    exercises.push({ name: "", linked: false });
     drawRows();
     rowsEl.querySelector(".exercise-row:last-child input").focus();
   });
@@ -372,6 +427,11 @@ function updateDistanceBox(form) {
   form.querySelector('[data-field="distance"]').hidden = !sport.fields.includes("distance");
 }
 
+// Does line i start a circuit? (not linked itself, the next one is)
+function startsCircuit(exercises, i) {
+  return !exercises[i].linked && Boolean(exercises[i + 1] && exercises[i + 1].linked);
+}
+
 // Reads the form into { template } or { error }. Empty exercise lines are dropped.
 function readTemplate(form, exercises) {
   const f = form.elements;
@@ -386,27 +446,49 @@ function readTemplate(form, exercises) {
   const distance = sport.fields.includes("distance") ? parseDecimal(f.distance.value) : null;
   if (distance !== null && !(distance > 0)) return { error: "Target distance must be more than 0." };
 
-  const rounds = f.rounds.value === "" ? null : Number(f.rounds.value);
-  if (rounds !== null && !(Number.isInteger(rounds) && rounds >= 1 && rounds <= 50)) {
-    return { error: "Rounds must be a whole number between 1 and 50." };
-  }
-
   const lines = [];
-  for (const e of exercises) {
+  let circuit = null; // { block, rounds } while we're inside a circuit
+  let blockCount = 0;
+  for (const [i, e] of exercises.entries()) {
+    if (startsCircuit(exercises, i)) {
+      const rounds = Number(e.rounds);
+      if (!(String(e.rounds ?? "").trim() && Number.isInteger(rounds) && rounds >= 1 && rounds <= 50)) {
+        const label = (e.name || "").trim() || (exercises[i + 1].name || "").trim() || "a circuit";
+        return { error: `Circuit starting with "${label}": rounds must be a whole number between 1 and 50.` };
+      }
+      blockCount++;
+      circuit = { block: blockCount, rounds };
+    } else if (!e.linked) {
+      circuit = null;
+    }
     const exerciseName = (e.name || "").trim();
     if (!exerciseName) continue;
-    const sets = e.sets === "" || e.sets == null ? null : Number(e.sets);
+    const sets = circuit || e.sets === "" || e.sets == null ? null : Number(e.sets);
     const weight = parseDecimal(e.weight_kg); // "27,5" works too
     if (sets !== null && !(Number.isInteger(sets) && sets >= 1 && sets <= 50)) {
       return { error: `"${exerciseName}": sets must be a whole number between 1 and 50.` };
     }
     if (weight !== null && !(weight >= 0)) return { error: `"${exerciseName}": weight must be 0 or more.` };
     const line = { name: exerciseName };
-    if (sets !== null) line.sets = sets;
+    if (circuit) {
+      line.block = circuit.block; // in a circuit, rounds decide (no sets)
+      line.rounds = circuit.rounds;
+    } else if (sets !== null) {
+      line.sets = sets;
+    }
     if ((e.reps ?? "").toString().trim()) line.reps = e.reps.toString().trim();
     if (weight !== null) line.weight_kg = weight;
     if ((e.note || "").trim()) line.note = e.note.trim();
     lines.push(line);
+  }
+  // A "circuit" left with one exercise (the other lines were empty) is just
+  // that exercise, with its rounds as sets.
+  for (const line of lines) {
+    if (line.block != null && lines.filter((l) => l.block === line.block).length < 2) {
+      line.sets = line.rounds;
+      delete line.block;
+      delete line.rounds;
+    }
   }
 
   return {
@@ -417,7 +499,7 @@ function readTemplate(form, exercises) {
       description: f.description.value.trim() || null,
       target_duration_s: duration,
       target_distance_km: distance,
-      rounds,
+      rounds: null, // circuits now live on the exercise lines (step 38)
       exercises: lines,
       archived: Boolean(f.archived && f.archived.checked),
     },
