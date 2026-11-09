@@ -8,7 +8,7 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 |---|---|---|
 | `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (cards to QED HQ and Sport HQ) + the shared HQ switcher (`switcher.js`) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
-| `qed.ownhq.app` | `qed/` | QED HQ: tools hub + onboarding plan (`qed/onboarding/`), behind the HQ login |
+| `qed.ownhq.app` | `qed/` | QED HQ: tools hub (behind the HQ login) + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
 
 ## Shared hq login
 
