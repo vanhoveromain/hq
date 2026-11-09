@@ -16,7 +16,7 @@ import {
 import { openProjectForm } from "./projectForm.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, safeUrl, icon } from "../utils/html.js";
+import { escapeHtml, safeUrl, icon, showActiveTab } from "../utils/html.js";
 import { formatRange } from "../utils/dates.js";
 
 // Remembered while the app is open (not saved): switches on Home.
@@ -57,6 +57,7 @@ export async function render(el, { params }) {
     </section>
   `;
 
+  showActiveTab(el);
   const redraw = () => render(el, { params });
 
   el.querySelector("#new-project").addEventListener("click", () => {

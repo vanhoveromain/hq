@@ -91,7 +91,14 @@ Coordination Team HQ, archived / passed projects.
    Pause/Resume, +10 min, Stop; counts against an end time (right even in a background tab); tab title shows the
    time left; at the end a soft Web Audio chime + Done / +10 min / Stop; Screen Wake Lock while running; main.js
    calls view.leave() on navigation, so leaving stops the timer. Done -> Priorities with Undo
-7. Task planner ·
+7. Task planner — built 2026-11-09: #/planner/<board> (js/views/planner.js, boards in PLANNER_BOARDS in rules.js):
+   This week (Mon-Sun columns, opens first, today marked), This week's scope, Today's scope (1-3-5 room per column,
+   Pending / Delegated left out), Today's priority, Tomorrow's priority. Open tasks only. Drag a card to another
+   column = that field takes the column's value (day / scope / priority; 'No …' column clears it), with Undo.
+   js/utils/drag.js: pointer events; mouse drags after 5 px, a finger after a 0.35 s hold (a quick swipe still
+   scrolls; touchmove prevented only while dragging); ghost card + column highlight + edge auto-scroll; tap = task
+   sheet; listeners removed on redraw / leave. Tick on a card = done. Active tab scrolled into view on phones
+8. Sales ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

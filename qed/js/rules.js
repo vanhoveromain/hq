@@ -232,3 +232,56 @@ export function countOneThreeFive(tasks) {
   const noScope = tasks.filter((t) => !t.scope).length;
   return { scopes: counts, noScope };
 }
+
+
+// ---------------------------------------------------------------------
+// Task planner boards (Build spec, step 7). Each board shows open tasks
+// in columns; dragging a card to another column sets `field` to that
+// column's value. `d` = { today, tomorrow, monday, sunday } (Brussels).
+// ---------------------------------------------------------------------
+
+const NOT_PARKED = (t) => t.state !== "pending" && t.state !== "delegated";
+const scopeColumns = () => [...SCOPES.map((s) => ({ value: s.value, label: s.label, limit: s.perDay })), { value: null, label: "No scope" }];
+const priorityColumns = () => [...PRIORITIES.map((p) => ({ value: p.value, label: p.label })), { value: null, label: "No priority" }];
+
+export const PLANNER_BOARDS = [
+  {
+    id: "week", label: "This week", field: "due_date",
+    filter: (t, d) => t.due_date >= d.monday && t.due_date <= d.sunday,
+    columns: (d) => weekDays(d.monday).map((day) => ({ value: day, label: day, isToday: day === d.today })),
+    sort: "project",
+  },
+  {
+    id: "week-scope", label: "This week's scope", field: "scope",
+    filter: (t, d) => t.due_date >= d.monday && t.due_date <= d.sunday,
+    columns: () => scopeColumns().map((c) => ({ ...c, limit: undefined })),
+    sort: "score",
+  },
+  {
+    id: "today-scope", label: "Today's scope", field: "scope",
+    filter: (t, d) => t.due_date === d.today && NOT_PARKED(t),
+    columns: scopeColumns, // with the 1-3-5 room per column
+    sort: "score",
+  },
+  {
+    id: "today-priority", label: "Today's priority", field: "priority",
+    filter: (t, d) => t.due_date === d.today,
+    columns: priorityColumns,
+    sort: "score-project",
+  },
+  {
+    id: "tomorrow-priority", label: "Tomorrow's priority", field: "priority",
+    filter: (t, d) => t.due_date === d.tomorrow,
+    columns: priorityColumns,
+    sort: "score",
+  },
+];
+
+function weekDays(monday) {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const [y, m, dd] = monday.split("-").map(Number);
+    days.push(new Date(Date.UTC(y, m - 1, dd + i)).toISOString().slice(0, 10));
+  }
+  return days;
+}

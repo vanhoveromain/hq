@@ -120,6 +120,18 @@ export async function listDayTasks(tomorrow, doneSince) {
   return [...open.data, ...done.data];
 }
 
+// Task planner: open tasks due between two days (included).
+export async function listOpenTasksBetween(from, to) {
+  const { data, error } = await db
+    .from("qed_tasks")
+    .select(TASK_FIELDS)
+    .eq("done", false)
+    .gte("due_date", from)
+    .lte("due_date", to);
+  if (error) throw error;
+  return data;
+}
+
 // Bulk buttons. Open tasks (any date) where `field` is set, with its value,
 // so a reset can be undone.
 export async function listOpenTasksWith(field) {

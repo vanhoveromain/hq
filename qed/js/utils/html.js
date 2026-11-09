@@ -51,3 +51,11 @@ const ICON_PATHS = {
 export function icon(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[name] || ""}</svg>`;
 }
+
+// Tabs that scroll sideways (phone): bring the active one into view.
+export function showActiveTab(rootEl) {
+  const active = rootEl.querySelector(".tabs a.active");
+  const bar = active && active.closest(".tabs");
+  if (!bar || bar.scrollWidth <= bar.clientWidth) return;
+  bar.scrollLeft = active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2;
+}

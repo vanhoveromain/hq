@@ -339,6 +339,36 @@ body.is-focus .main{padding-bottom:48px}
 .focus-notes-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
 .focus-done{width:100%;margin-top:24px}
 
+/* Task planner: boards */
+.board-hint{margin:-4px 0 12px;font-size:13px}
+.board{margin:0 -16px;padding:0 16px}
+@media (min-width:640px){.board{margin:0;padding:0}}
+.board-columns{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:10px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x proximity}
+@media (min-width:1100px){.board-columns{grid-auto-columns:minmax(0,1fr)}}
+.board-col{display:flex;flex-direction:column;min-height:240px;padding:8px;background:var(--hq-subtle);border:2px solid transparent;border-radius:var(--hq-radius);scroll-snap-align:start;transition:border-color var(--hq-ease),background-color var(--hq-ease)}
+.board-col.is-today{background:var(--hq-accent-light)}
+.board-col.is-over{border-color:var(--hq-accent);border-style:dashed}
+.board-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 8px}
+.board-col-head h2{margin:0;font-size:13px;font-weight:600}
+.board-today{margin-left:4px;padding:1px 6px;border-radius:999px;background:var(--hq-accent);color:var(--hq-on-accent);font-size:11px;font-weight:600}
+.board-count{font-size:12px;font-weight:600;color:var(--hq-secondary-text);font-variant-numeric:tabular-nums}
+.board-count.is-over{color:var(--hq-warning)}
+.board-cards{display:grid;gap:6px;align-content:start;flex:1}
+.board-empty{margin:0;padding:16px 8px;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius-sm);font-size:12px;color:var(--hq-secondary-text);text-align:center}
+.kcard{display:grid;gap:6px;padding:10px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius-sm);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x pan-y}
+.kcard:hover{border-color:var(--hq-border-strong)}
+.kcard:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
+.kcard.is-pressing{transform:scale(.98);transition:transform .3s}
+.kcard.is-dragging{opacity:.35}
+.kcard-top{display:flex;align-items:flex-start;gap:8px}
+.kcard .tick{margin:1px 0 0;width:16px;height:16px}
+.kcard-title{font-size:14px;font-weight:500;line-height:1.35;overflow-wrap:anywhere}
+.kcard-project{margin:0;font-size:12px;color:var(--hq-secondary-text);overflow-wrap:anywhere}
+.kcard-tags{display:flex;flex-wrap:wrap;gap:4px}
+.kcard-tags .pill{min-height:20px;font-size:11px;padding:0 6px}
+.kcard-tags .pill svg{width:11px;height:11px;margin-right:3px}
+.drag-ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;box-shadow:var(--hq-shadow-pop);cursor:grabbing}
+
 /* Toast (bottom message, with Undo) */
 .toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:16px;max-width:calc(100% - 32px);padding:10px 12px 10px 16px;border-radius:var(--hq-radius);background:var(--hq-ink);color:var(--hq-white);font-size:14px;box-shadow:var(--hq-shadow-pop)}
 .toast button{flex:none;border:0;background:none;color:inherit;font:600 14px/1 var(--hq-font);text-decoration:underline;cursor:pointer;min-height:32px}

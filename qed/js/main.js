@@ -10,6 +10,7 @@ import * as homeView from "./views/home.js";
 import * as projectView from "./views/project.js";
 import * as prioritiesView from "./views/priorities.js";
 import * as focusView from "./views/focus.js";
+import * as plannerView from "./views/planner.js";
 import * as unlockView from "./views/unlock.js";
 import { make as placeholder } from "./views/placeholder.js";
 
@@ -25,8 +26,7 @@ const routes = {
   // Focus mode: one task full screen (no tabs, no footer), from To do today.
   focus:      { title: "", view: focusView, tab: "priorities" },
   priorities: { title: (p) => (p[0] === "tomorrow" ? "Priorities for tomorrow" : "Priorities of the day"), view: prioritiesView },
-  planner:    { title: "Task planner",
-                view: placeholder("This week's boards, with drag and drop.", "7") },
+  planner:    { title: "Task planner", view: plannerView },
   sales:      { title: "Sales",
                 view: placeholder("Your sales leads and reach-out dates.", "8") },
 };
