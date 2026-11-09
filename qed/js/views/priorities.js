@@ -244,7 +244,7 @@ async function resetField(field, redraw) {
   const { label, title } = RESETS[field];
   const rows = await listOpenTasksWith(field);
   if (!rows.length) {
-    showToast(`No open task has a ${label} set.`);
+    showToast(`No open task has ${field === "period" ? "an AM/PM" : "a scope"} set.`);
     return;
   }
   confirm({

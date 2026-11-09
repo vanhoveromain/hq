@@ -370,7 +370,7 @@ body.is-focus .main{padding-bottom:48px}
 .drag-ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;box-shadow:var(--hq-shadow-pop);cursor:grabbing}
 
 /* Toast (bottom message, with Undo) */
-.toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:16px;max-width:calc(100% - 32px);padding:10px 12px 10px 16px;border-radius:var(--hq-radius);background:var(--hq-ink);color:var(--hq-white);font-size:14px;box-shadow:var(--hq-shadow-pop)}
+.toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:16px;max-width:calc(100% - 32px);padding:10px 12px 10px 16px;border-radius:var(--hq-radius);background:var(--hq-ink);color:var(--hq-canvas);font-size:14px;box-shadow:var(--hq-shadow-pop)}
 .toast button{flex:none;border:0;background:none;color:inherit;font:600 14px/1 var(--hq-font);text-decoration:underline;cursor:pointer;min-height:32px}
 @media (min-width:720px){.toast{bottom:24px}}
 
