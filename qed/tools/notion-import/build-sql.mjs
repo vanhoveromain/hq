@@ -53,7 +53,14 @@ function notionId(url) {
   if (!m) throw new Error("No page id in " + url);
   return m[1].toLowerCase();
 }
-const day = (v) => (v ? String(v).slice(0, 10) : null);
+// A Notion date: a plain day ("2026-11-12"), or a moment in UTC
+// ("2026-11-12 23:00:00Z") that we read in Brussels time (= 13 November).
+const day = (v) => {
+  if (!v) return null;
+  const s = String(v);
+  if (s.length <= 10) return s;
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date(s.replace(" ", "T")));
+};
 const iso = (v) => (v ? new Date(String(v).replace(" ", "T")).toISOString() : null);
 
 // Notion's "Priority" held four things: split them.
