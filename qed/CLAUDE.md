@@ -98,7 +98,6 @@ Coordination Team HQ, archived / passed projects.
    js/utils/drag.js: pointer events; mouse drags after 5 px, a finger after a 0.35 s hold (a quick swipe still
    scrolls; touchmove prevented only while dragging); ghost card + column highlight + edge auto-scroll; tap = task
    sheet; listeners removed on redraw / leave. Tick on a card = done. Active tab scrolled into view on phones
-8. Sales ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
