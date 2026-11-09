@@ -46,6 +46,12 @@ export async function render(el, { params }) {
   const redraw = () => render(el, { params });
   const isSales = project.type === "sales";
   const backHref = isSales ? "#/sales" : "#/home";
+  // A lead's page belongs to Sales: light that tab instead of Home.
+  document.querySelectorAll("[data-route]").forEach((link) => {
+    const active = link.dataset.route === (isSales ? "sales" : "home");
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+  });
 
   document.title = `${project.name} · QED HQ`;
   el.innerHTML = `

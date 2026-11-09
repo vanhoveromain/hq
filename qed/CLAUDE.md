@@ -104,6 +104,10 @@ Coordination Team HQ, archived / passed projects.
    status, Created, Reach out), stacked rows on a phone. Sales status changes in place (Undo); name opens the lead
    page (its back link goes to Sales); New lead = type sales, sales_status lead, no project status. Reach out =
    created day (Brussels) + 1 year (reachOutDate in rules.js), bell + amber once passed.
+   8b. Reach-out list you fill yourself (Romain, 2026-11-09; migration 20261109000001, add-only): qed_projects.reach_out_on
+   (date) overrides the automatic created + 1 year; tap the date on a row to change it, clear it = automatic again;
+   "+ Add to list" (To reach out tab) gives an existing lead (name match, any case) the date or creates a new lead;
+   "Reached out" = next reach-out one year from today (Undo). Lead pages light the Sales tab.
    IMPORT NOTE (step 9): copy Notion's Created time into created_at, or every lead's reach-out date resets to
    the import day + 1 year
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish

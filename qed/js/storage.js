@@ -202,9 +202,9 @@ export async function runRollover() {
 // created_at…) is ignored when saving.
 const PROJECT_COLUMNS = [
   "name", "type", "status", "sales_status", "owner",
-  "date_start", "date_end", "notes", "notion_url",
+  "date_start", "date_end", "notes", "notion_url", "reach_out_on",
 ];
-const PROJECT_FIELDS = "id, name, type, status, sales_status, owner, date_start, date_end, notes, notion_url, created_at";
+const PROJECT_FIELDS = "id, name, type, status, sales_status, owner, date_start, date_end, notes, notion_url, reach_out_on, created_at";
 
 function pick(object, keys) {
   const result = {};

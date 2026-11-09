@@ -55,6 +55,8 @@ export function openProjectForm({ project = null, defaults = {}, onChange, onDel
         <label class="field"><span>End date <em>(optional)</em></span>
           <input name="date_end" type="date" value="${escapeHtml(p.date_end || "")}"></label>
       </div>
+      <label class="field" data-show="sales"><span>Reach out on <em>(empty = automatic: created + 1 year)</em></span>
+        <input name="reach_out_on" type="date" value="${escapeHtml(p.reach_out_on || "")}"></label>
       <label class="field"><span>Notion link <em>(optional)</em></span>
         <input name="notion_url" type="url" inputmode="url" placeholder="https://www.notion.so/…" value="${escapeHtml(p.notion_url || "")}"></label>`,
     onOpen(form) {
@@ -62,7 +64,7 @@ export function openProjectForm({ project = null, defaults = {}, onChange, onDel
       const typeSelect = form.elements.type;
       const sync = () => {
         const sales = typeSelect.value === "sales";
-        form.querySelector('[data-show="sales"]').hidden = !sales;
+        form.querySelectorAll('[data-show="sales"]').forEach((el) => { el.hidden = !sales; });
         if (sales && !form.elements.sales_status.value) form.elements.sales_status.value = "lead";
         if (!sales && !form.elements.status.value) form.elements.status.value = "coming_up";
       };
@@ -110,6 +112,7 @@ function readForm(form) {
     type,
     status: f.status.value || null,
     sales_status: type === "sales" ? (f.sales_status.value || null) : null,
+    reach_out_on: type === "sales" ? (f.reach_out_on.value || null) : null,
     owner: f.owner.value,
     date_start: dateStart,
     date_end: dateEnd,

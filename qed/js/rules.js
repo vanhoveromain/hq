@@ -292,10 +292,15 @@ function weekDays(monday) {
 // ---------------------------------------------------------------------
 
 // Reach out date (Notion formula, confirmed 2026-11-08): the day the lead
-// was created + 1 year. `createdDay` = "YYYY-MM-DD" (Brussels). A lead made
-// on 29 February comes back on 1 March.
-export function reachOutDate(createdDay) {
-  const [y, m, d] = createdDay.split("-").map(Number);
+// was created + 1 year, unless the lead has its own date (reach_out_on,
+// 2026-11-09: Romain adds names to the list himself). Days are "YYYY-MM-DD"
+// (Brussels). A lead made on 29 February comes back on 1 March.
+export function reachOutDate(createdDay, ownDate = null) {
+  return ownDate || oneYearAfter(createdDay);
+}
+
+export function oneYearAfter(day) {
+  const [y, m, d] = day.split("-").map(Number);
   return new Date(Date.UTC(y + 1, m - 1, d)).toISOString().slice(0, 10);
 }
 
