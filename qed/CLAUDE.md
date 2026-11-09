@@ -85,7 +85,13 @@ Coordination Team HQ, archived / passed projects.
    priority score is never shown (it only sorts). Today / Tomorrow switch on Priorities (#/priorities/tomorrow):
    same lists for tomorrow (To do, counter, to delegate, meetings, delegated, pending); no overdue, achieved, bulk
    buttons or push arrows there; quick add defaults to tomorrow
-6. Focus mode · 7. Task planner ·
+6. Focus mode — built 2026-11-09: #/focus/<task id> (js/views/focus.js), opened by the target button on To do
+   today rows (not on Tomorrow). Full screen (body.is-focus hides tabs + footer): project, title, tags, timer, notes
+   (auto-save), Mark as done, Details (task sheet; timer keeps running). Timer: presets 25/50/90 + own minutes,
+   Pause/Resume, +10 min, Stop; counts against an end time (right even in a background tab); tab title shows the
+   time left; at the end a soft Web Audio chime + Done / +10 min / Stop; Screen Wake Lock while running; main.js
+   calls view.leave() on navigation, so leaving stops the timer. Done -> Priorities with Undo
+7. Task planner ·
 8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

@@ -71,6 +71,13 @@ const TASK_COLUMNS = [
 ];
 const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, meeting_name, delegated_to, notes, created_at";
 
+// One task (Focus mode). null if it doesn't exist (or isn't yours).
+export async function getTask(id) {
+  const { data, error } = await db.from("qed_tasks").select(TASK_FIELDS).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 // Tasks of one project (open and done). The page splits them itself.
 export async function listProjectTasks(projectId) {
   const { data, error } = await db.from("qed_tasks").select(TASK_FIELDS).eq("project_id", projectId);

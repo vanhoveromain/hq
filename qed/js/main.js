@@ -9,6 +9,7 @@ import { requireLogin, loginUrl, onAuthChange, runRollover } from "./storage.js"
 import * as homeView from "./views/home.js";
 import * as projectView from "./views/project.js";
 import * as prioritiesView from "./views/priorities.js";
+import * as focusView from "./views/focus.js";
 import * as unlockView from "./views/unlock.js";
 import { make as placeholder } from "./views/placeholder.js";
 
@@ -21,6 +22,8 @@ const routes = {
   home:       { title: "Home", view: homeView },
   // A project's page: draws its own heading; the Home tab stays lit.
   project:    { title: "", view: projectView, tab: "home" },
+  // Focus mode: one task full screen (no tabs, no footer), from To do today.
+  focus:      { title: "", view: focusView, tab: "priorities" },
   priorities: { title: (p) => (p[0] === "tomorrow" ? "Priorities for tomorrow" : "Priorities of the day"), view: prioritiesView },
   planner:    { title: "Task planner",
                 view: placeholder("This week's boards, with drag and drop.", "7") },
@@ -34,6 +37,7 @@ const titleEl = document.getElementById("page-title");
 const navLinks = document.querySelectorAll("[data-route]");
 
 let currentUser = null;
+let current = null; // the screen on show
 let locked = true;
 
 function currentRoute() {
@@ -67,6 +71,10 @@ function render() {
     else link.removeAttribute("aria-current");
   }
   window.scrollTo(0, 0);
+  // Leaving a screen: let it clean up (Focus mode stops its timer).
+  if (current && current.view.leave) current.view.leave();
+  current = routes[name];
+  document.body.classList.toggle("is-focus", name === "focus");
   routes[name].view.render(viewEl, { user: currentUser, params });
 }
 

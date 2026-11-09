@@ -19,7 +19,8 @@ import { showToast } from "../utils/toast.js";
 //   options.today     "YYYY-MM-DD" (Brussels)
 //   options.projects  [{id, name}] -> adds a Project chip (lists across projects)
 //   options.showPush  show a "Push to tomorrow" button on the row
-export function taskRowHtml(task, { today, projects = null, showPush = false, expanded = false }) {
+//   options.showFocus show a "Focus" button (To do today only, decided 2026-11-08)
+export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false }) {
   // Fields grouped in cells. On a phone the cells simply flow under the
   // title; on a laptop each cell is a column, aligned from row to row.
   const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
@@ -57,7 +58,7 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, ex
         <button type="button" class="task-title" data-edit-text="title" title="Click to rename">${escapeHtml(task.title)}</button>
         <div class="task-chips">${cells.join("")}</div>
       </div>
-      <span class="slot-push">${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}</span>
+      <span class="slot-push">${showFocus && !task.done ? `<a class="icon-btn task-focus" href="#/focus/${task.id}" aria-label="Focus on ${escapeHtml(task.title)}" title="Focus on this task">${icon("target")}</a>` : ""}${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}</span>
       <button type="button" class="icon-btn task-more" data-open aria-label="Open ${escapeHtml(task.title)}">${icon("more")}</button>
     </li>`;
 }
