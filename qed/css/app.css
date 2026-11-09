@@ -369,6 +369,31 @@ body.is-focus .main{padding-bottom:48px}
 .kcard-tags .pill svg{width:11px;height:11px;margin-right:3px}
 .drag-ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;box-shadow:var(--hq-shadow-pop);cursor:grabbing}
 
+/* Sales */
+.sales .section-head{align-items:flex-end;gap:12px}
+.sales-tabs{flex:1;margin-bottom:0;min-width:0}
+@media (max-width:639px){.sales .section-head{flex-wrap:wrap}.sales .section-head .btn{order:-1;margin-left:auto}.sales-tabs{flex-basis:100%}}
+.lead-list{margin:0;padding:0;list-style:none;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius)}
+.lead{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px 14px}
+.lead+.lead,.lead-head+.lead{border-top:1px solid var(--hq-border)}
+.lead-name{grid-column:1 / -1;font-size:15px;font-weight:500;color:var(--hq-primary-text);text-decoration:none;overflow-wrap:anywhere}
+.lead-name:hover{color:var(--hq-accent-text);text-decoration:underline}
+.lead-cell{display:flex;align-items:center;gap:6px;font-size:13px}
+.lead-cell::before{content:attr(data-label) ": ";color:var(--hq-secondary-text);font-size:12px}
+.lead-head{display:none}
+.reach-due{color:var(--hq-warning);font-weight:600}
+.reach-due svg{width:14px;height:14px}
+.tchip.sales-confirmed{background:var(--hq-success-light);color:var(--hq-success)}
+.tchip.sales-declined{color:var(--hq-secondary-text)}
+.tchip.sales-lead,.tchip.sales-improvements{background:var(--hq-accent-light);color:var(--hq-accent-text)}
+@media (min-width:900px){
+  .lead,.lead-head{grid-template-columns:minmax(220px,2fr) minmax(130px,1fr) 150px 120px 140px;align-items:center;gap:12px}
+  .lead-name{grid-column:auto}
+  .lead-cell::before{content:none}
+  .lead-head{display:grid;padding:10px 14px;font-size:12px;font-weight:500;color:var(--hq-secondary-text);border-bottom:1px solid var(--hq-border)}
+  .lead-head+.lead{border-top:0}
+}
+
 /* Toast (bottom message, with Undo) */
 .toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:16px;max-width:calc(100% - 32px);padding:10px 12px 10px 16px;border-radius:var(--hq-radius);background:var(--hq-ink);color:var(--hq-canvas);font-size:14px;box-shadow:var(--hq-shadow-pop)}
 .toast button{flex:none;border:0;background:none;color:inherit;font:600 14px/1 var(--hq-font);text-decoration:underline;cursor:pointer;min-height:32px}

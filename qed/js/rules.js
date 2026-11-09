@@ -285,3 +285,25 @@ function weekDays(monday) {
   }
   return days;
 }
+
+
+// ---------------------------------------------------------------------
+// Sales
+// ---------------------------------------------------------------------
+
+// Reach out date (Notion formula, confirmed 2026-11-08): the day the lead
+// was created + 1 year. `createdDay` = "YYYY-MM-DD" (Brussels). A lead made
+// on 29 February comes back on 1 March.
+export function reachOutDate(createdDay) {
+  const [y, m, d] = createdDay.split("-").map(Number);
+  return new Date(Date.UTC(y + 1, m - 1, d)).toISOString().slice(0, 10);
+}
+
+// The Sales tabs. Open = still in play (Lead, Improvements).
+export const SALES_TABS = [
+  { id: "open", label: "Open", filter: (l) => l.sales_status === "lead" || l.sales_status === "improvements" || !l.sales_status },
+  { id: "reach-out", label: "To reach out", filter: (l, today) => l.reach_out <= today },
+  { id: "confirmed", label: "Confirmed", filter: (l) => l.sales_status === "confirmed" },
+  { id: "declined", label: "Declined", filter: (l) => l.sales_status === "declined" },
+  { id: "all", label: "All", filter: () => true },
+];

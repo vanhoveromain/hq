@@ -98,7 +98,15 @@ Coordination Team HQ, archived / passed projects.
    js/utils/drag.js: pointer events; mouse drags after 5 px, a finger after a 0.35 s hold (a quick swipe still
    scrolls; touchmove prevented only while dragging); ghost card + column highlight + edge auto-scroll; tap = task
    sheet; listeners removed on redraw / leave. Tick on a card = done. Active tab scrolled into view on phones
-8. Sales · 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
+8. Sales — built 2026-11-09: #/sales/<tab> (js/views/sales.js). Leads = qed_projects with type 'sales'. Tabs
+   (SALES_TABS in rules.js): Open (Lead, Improvements, or no status), To reach out (reach-out date passed;
+   Romain's addition to check), Confirmed, Declined, All, with counts. Table on a laptop (Lead, Event date, Sales
+   status, Created, Reach out), stacked rows on a phone. Sales status changes in place (Undo); name opens the lead
+   page (its back link goes to Sales); New lead = type sales, sales_status lead, no project status. Reach out =
+   created day (Brussels) + 1 year (reachOutDate in rules.js), bell + amber once passed.
+   IMPORT NOTE (step 9): copy Notion's Created time into created_at, or every lead's reach-out date resets to
+   the import day + 1 year
+9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

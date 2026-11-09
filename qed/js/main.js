@@ -11,8 +11,8 @@ import * as projectView from "./views/project.js";
 import * as prioritiesView from "./views/priorities.js";
 import * as focusView from "./views/focus.js";
 import * as plannerView from "./views/planner.js";
+import * as salesView from "./views/sales.js";
 import * as unlockView from "./views/unlock.js";
-import { make as placeholder } from "./views/placeholder.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "QED HQ" stays a link.
@@ -27,8 +27,7 @@ const routes = {
   focus:      { title: "", view: focusView, tab: "priorities" },
   priorities: { title: (p) => (p[0] === "tomorrow" ? "Priorities for tomorrow" : "Priorities of the day"), view: prioritiesView },
   planner:    { title: "Task planner", view: plannerView },
-  sales:      { title: "Sales",
-                view: placeholder("Your sales leads and reach-out dates.", "8") },
+  sales:      { title: "Sales", view: salesView },
 };
 const DEFAULT_ROUTE = "home";
 
