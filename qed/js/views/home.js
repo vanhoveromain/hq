@@ -53,7 +53,7 @@ export async function render(el, { params }) {
 
     <section class="section">
       <h2 class="section-title">Team</h2>
-      <a class="btn secondary" href="onboarding/">${icon("calendar")} Open the onboarding plan</a>
+      <a class="btn secondary" href="onboarding/g5achjswbr/">${icon("calendar")} Open the onboarding plan</a>
     </section>
   `;
 

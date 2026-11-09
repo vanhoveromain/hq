@@ -6,17 +6,17 @@ import {
   getActivity, saveActivity, deleteActivity, listShoes, getPlannedSession, findOpenPlannedSessions,
   getSessionTemplate, saveSessionTemplate, listRecentShoeIds, findSessionsLinkedTo, listPlannedSessions,
   updatePlannedSession,
-} from "../storage.js?v=202611051635";
-import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202611051635";
-import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202611051635";
-import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202611051635";
-import { openSheet } from "../utils/sheet.js?v=202611051635";
-import { showToast } from "../utils/toast.js?v=202611051635";
-import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202611051635";
-import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202611051635";
-import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202611051635";
-import { icon } from "../utils/icons.js?v=202611051635";
-import { suggestedShoe } from "../utils/quickLog.js?v=202611051635";
+} from "../storage.js?v=202611081505";
+import { SPORTS, RPE_LABELS, getSport, getSessionType, shoeSurfaceFor, sportIcon } from "../rules.js?v=202611081505";
+import { todayISO, toISODate, startOfWeek, formatDayLabel, addDays } from "../utils/dates.js?v=202611081505";
+import { sessionName, sessionDetails, completeSession, reopenSession, addToCatalogue } from "../utils/plan.js?v=202611081505";
+import { openSheet } from "../utils/sheet.js?v=202611081505";
+import { showToast } from "../utils/toast.js?v=202611081505";
+import { loadWorkout, clearWorkout, workoutSnapshot, recipeChanges, recipeFromWorkout, ticksDone, ticksTotal } from "../utils/workout.js?v=202611081505";
+import { parseDuration, parseDecimal, formatDuration, formatSpeed, escapeHtml, rpeLevel } from "../utils/format.js?v=202611081505";
+import { setTopbarBack, previousScreen } from "../utils/topbar.js?v=202611081505";
+import { icon } from "../utils/icons.js?v=202611081505";
+import { suggestedShoe } from "../utils/quickLog.js?v=202611081505";
 
 const LAST_SPORT_KEY = "sporthq3.lastSport"; // pre-select the sport you used last
 

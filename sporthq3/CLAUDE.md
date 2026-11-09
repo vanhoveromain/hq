@@ -113,6 +113,10 @@
 36. Shared hq login (2026-11-05, Rom: log in on ownhq.app, not in SportHQ3): built 2026-11-05 on the draft
 37. HQ Brand Guidelines v1.0 (2026-11-05, Rom re-worked the HQ brand and asked to re-work the app on it): built
     2026-11-05 on the draft
+38. Circuits inside a session (2026-11-08, Rom: "plan a set of multiple exercises, e.g. 3x (10 push ups / 60s
+    gainage)"): 38a editor ("Circuit with the exercise above" + rounds per circuit), 38b workout mode (round by round,
+    rest only at the end of a round), 38c planner / Home / catalogue display + recipe changes, 38d docs. Built
+    2026-11-08 on the draft
 
 ## Training rules (live in `js/rules.js`, never hardcoded in UI)
 Rules are data + small pure functions so future users can define their own.
@@ -167,6 +171,24 @@ Multi-user, social, payments, Strava/Garmin sync, nutrition, life organisation.
 - Notion "Sport HQ2" is read-only for this project: never create, edit or delete anything there.
 
 ## Decisions log
+- 2026-11-08: circuits inside a session (38; NO migration: exercises is already jsonb). A circuit = consecutive
+  exercise lines with the same `block` number + the circuit's `rounds` on each line ({ name, reps, block: 1,
+  rounds: 3 }; no `sets` in a circuit). Lines without `block` are normal exercises. utils/circuits.js: groupLines,
+  groupOf, inCircuit, withCircuits (an OLD session-wide `rounds` = one circuit of the whole list; one exercise with
+  rounds = that many sets), totalSets, circuitCount. Editor (catalogue.js): the session-wide "Rounds" box is gone;
+  each line (but the first) has "Circuit with the exercise above"; the first line of a circuit gets a "Circuit ·
+  Rounds" head (pre-filled with its sets), lines of a circuit hang together with a violet bar and hide Sets; ↑ ↓
+  swap exercises but the circuits stay in place (linked ticks + rounds belong to the position); saving writes
+  `rounds: null` + block/rounds per line (an old recipe is converted the first time it is saved); a circuit left with
+  one exercise becomes sets. Workout mode (workout.js): newWorkout / loadWorkout turn an old session-wide rounds into
+  one circuit (workout.rounds is always null now); inside a circuit it goes round by round (exercise with the fewest
+  ticks), then on to the next exercise; REST ONLY AT THE END OF A ROUND (Rom chose this, 2026-11-08), hint "No rest:
+  straight on to the next exercise of the round"; the Now card shows "Circuit · 3 rounds: Push-ups → Gainage" + ✎
+  for that circuit's rounds; Up next rows of a circuit have a violet bar. recipeChanges lists "Push-ups: 3 → 4
+  rounds"; recipeFromWorkout / workoutSnapshot keep block + rounds. Planner card "· 1 circuit", sheet facts
+  "N sets · 1 circuit", sheet list shows a circuit as "3 rounds:" with its exercises inside; Home hero and catalogue
+  list say circuits instead of rounds. Old done photos with a session-wide rounds still show right (withCircuits).
+  Checked on a fake database at 390px: editor, workout (rest / no rest / rounds change), planner sheet.
 - 2026-11-05: HQ Brand Guidelines v1.0 (37; no migration). Rom's new brand kit (brand/guidelines-v1.0/) replaces the
   deep purple (32–34). App name shown = "Sport HQ" (title, manifest, top bar); the folder / backup file keep
   "sporthq3". css/hq-tokens.css (copy of brand/hq-tokens.css: --hq-* tokens + Geist @font-face, fonts in css/fonts/)

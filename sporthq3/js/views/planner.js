@@ -10,29 +10,30 @@ import {
   createPlannedSession, updatePlannedSession, deletePlannedSession, copyWeek,
   listWeekTemplates, saveWeekTemplate, applyWeekTemplate, findBlockOn,
   listRacesBetween, getMutedWarnings, saveMutedWarnings,
-} from "../storage.js?v=202611051635";
-import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202611051635";
-import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202611051635";
-import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202611051635";
+} from "../storage.js?v=202611081505";
+import { SPORTS, sportIcon, sportLabel, sessionTypeLabel, getSport, checkTrainingRules, LOAD_RULES, dayLoadTag } from "../rules.js?v=202611081505";
+import { todayISO, startOfWeek, addDays, parseISODate, formatDayLabel, formatWeekLabel } from "../utils/dates.js?v=202611081505";
+import { escapeHtml, formatDuration, formatHours, formatKm, formatExercise, numHtml } from "../utils/format.js?v=202611081505";
+import { withCircuits, groupLines, totalSets, circuitCount } from "../utils/circuits.js?v=202611081505";
 import {
   sessionName, sessionDetails, reopenSession, calendarItems, daySummary,
   isCustomSession, isPlainSession, canAdjustSession, addToCatalogue, sportBadge, racesNotPlanned, plannedSeconds,
-} from "../utils/plan.js?v=202611051635";
-import { overview } from "../utils/stats.js?v=202611051635";
-import { weekLoadNotes } from "../utils/load.js?v=202611051635";
-import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202611051635";
-import { doneInOneTap } from "../utils/quickLog.js?v=202611051635";
+} from "../utils/plan.js?v=202611081505";
+import { overview } from "../utils/stats.js?v=202611081505";
+import { weekLoadNotes } from "../utils/load.js?v=202611081505";
+import { openSheet, sheetRowHtml } from "../utils/sheet.js?v=202611081505";
+import { doneInOneTap } from "../utils/quickLog.js?v=202611081505";
 import {
   pickSport, pickFromSport, activeTemplates, canChooseFromCatalogue, canClearSession,
   chooseFromCatalogue, clearSession, catalogueCountLabel,
-} from "../utils/changeSession.js?v=202611051635";
-import { setTopbarAction } from "../utils/topbar.js?v=202611051635";
-import { showToast } from "../utils/toast.js?v=202611051635";
-import { loadWorkout } from "../utils/workout.js?v=202611051635";
-import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202611051635";
-import { blockWeek } from "./blocks.js?v=202611051635";
-import { enableDragToDay } from "../utils/dragDrop.js?v=202611051635";
-import { icon } from "../utils/icons.js?v=202611051635";
+} from "../utils/changeSession.js?v=202611081505";
+import { setTopbarAction } from "../utils/topbar.js?v=202611081505";
+import { showToast } from "../utils/toast.js?v=202611081505";
+import { loadWorkout } from "../utils/workout.js?v=202611081505";
+import { workoutState, unfinishedRowHtml, handleUnfinishedClick, releaseWorkoutOf } from "../utils/savedWorkout.js?v=202611081505";
+import { blockWeek } from "./blocks.js?v=202611081505";
+import { enableDragToDay } from "../utils/dragDrop.js?v=202611081505";
+import { icon } from "../utils/icons.js?v=202611081505";
 
 // Week or month view; the last one you used is remembered on this device.
 //   #/planner                -> your last view (week by default)
@@ -842,7 +843,8 @@ function sessionCardHtml(session, today) {
   const details = sessionDetails(session);
   const bits = [];
   if (details && details.exercises && details.exercises.length) {
-    bits.push(`${details.exercises.length} exercises${details.rounds ? ` · ${details.rounds} rounds` : ""}`);
+    const circuits = circuitCount(details);
+    bits.push(`${details.exercises.length} exercises${circuits ? ` · ${circuits} circuit${circuits === 1 ? "" : "s"}` : ""}`);
   }
   if (details && details.target_duration_s) bits.push(formatDuration(details.target_duration_s));
   if (details && details.target_distance_km) bits.push(`${Number(details.target_distance_km)} km`);
@@ -904,10 +906,11 @@ function factsHtml(session, details) {
     if (a.rpe) facts.push(numHtml(a.rpe, "RPE"));
   } else if (details) {
     const exercises = details.exercises || [];
-    const sets = exercises.reduce((sum, e) => sum + (Number(e.sets) || 0), 0) * (details.rounds || 1);
+    const sets = totalSets(details);
+    const circuits = circuitCount(details);
     if (exercises.length) facts.push(numHtml(exercises.length, exercises.length === 1 ? "exercise" : "exercises"));
     if (sets) facts.push(numHtml(sets, "sets"));
-    if (details.rounds) facts.push(numHtml(details.rounds, "rounds"));
+    if (circuits) facts.push(numHtml(circuits, circuits === 1 ? "circuit" : "circuits"));
     if (details.target_duration_s) facts.push(numHtml(Math.round(details.target_duration_s / 60), "min"));
     if (details.target_distance_km) facts.push(numHtml(Number(details.target_distance_km), "km"));
   }
@@ -921,11 +924,22 @@ function detailsHtml(session, details) {
   const lines = [];
   if (details.description) lines.push(`<p class="pre-line">${escapeHtml(details.description)}</p>`);
   if (details.exercises && details.exercises.length) {
-    lines.push(`<details class="sheet-exercises"><summary>${details.rounds ? `${details.rounds} rounds of ` : ""}${details.exercises.length} exercise${details.exercises.length === 1 ? "" : "s"}</summary>
-      <ul class="exercise-list">${details.exercises.map((e) => `
-        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">${icon("check")} ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`).join("")}</ul></details>`);
+    // A circuit = one item "3 rounds:" with its exercises inside (step 38).
+    const all = withCircuits(details);
+    const items = groupLines(all).map((g) => g.circuit
+      ? `<li class="circuit-item"><span class="circuit-title">${icon("repeat")} ${g.rounds} rounds:</span>
+          <ul class="exercise-list">${g.indexes.map((i) => exerciseItemHtml(all[i])).join("")}</ul></li>`
+      : exerciseItemHtml(all[g.indexes[0]]));
+    lines.push(`<details class="sheet-exercises"><summary>${details.exercises.length} exercise${details.exercises.length === 1 ? "" : "s"}</summary>
+      <ul class="exercise-list">${items.join("")}</ul></details>`);
   }
   return lines.join("");
+}
+
+// One exercise in the sheet: "Squat — 3 × 10 @ 25 kg (note) ✓ 3/3".
+function exerciseItemHtml(e) {
+  return `
+        <li>${escapeHtml(formatExercise(e))}${e.note ? ` <span class="muted small">(${escapeHtml(e.note)})</span>` : ""}${e.total_sets ? ` <span class="muted small">${icon("check")} ${e.done_sets}/${e.total_sets}</span>` : ""}</li>`;
 }
 
 // Mon … Sun buttons for "move to" / "swap with".

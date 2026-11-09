@@ -8,17 +8,18 @@
 // saving it marks the session done, freezes what you really did and offers
 // to update the recipe.
 
-import { getPlannedSession } from "../storage.js?v=202611051635";
-import { escapeHtml, formatDuration, numHtml } from "../utils/format.js?v=202611051635";
-import { startOfWeek } from "../utils/dates.js?v=202611051635";
-import { sessionName, sessionDetails } from "../utils/plan.js?v=202611051635";
-import { openSheet } from "../utils/sheet.js?v=202611051635";
-import { icon } from "../utils/icons.js?v=202611051635";
+import { getPlannedSession } from "../storage.js?v=202611081505";
+import { escapeHtml, formatDuration, numHtml } from "../utils/format.js?v=202611081505";
+import { startOfWeek } from "../utils/dates.js?v=202611081505";
+import { sessionName, sessionDetails } from "../utils/plan.js?v=202611081505";
+import { openSheet } from "../utils/sheet.js?v=202611081505";
+import { icon } from "../utils/icons.js?v=202611081505";
 import {
   loadWorkout, saveWorkout, clearWorkout, newWorkout, readRestSeconds, saveRestSeconds,
   REST_CHOICES, parseRest, ticksDone, ticksTotal, resizeTicks, parseExerciseTime, amountText,
-} from "../utils/workout.js?v=202611051635";
-import { LOG_ANYWAY_HREF } from "../utils/savedWorkout.js?v=202611051635";
+} from "../utils/workout.js?v=202611081505";
+import { LOG_ANYWAY_HREF } from "../utils/savedWorkout.js?v=202611081505";
+import { groupLines, groupOf, inCircuit } from "../utils/circuits.js?v=202611081505";
 
 export async function render(container, { params = [] } = {}) {
   const plannedId = params[0];
@@ -104,8 +105,10 @@ function drawWorkout(container, session, workout, backToPlan) {
   let restSeconds = readRestSeconds();
   let justTicked = null; // "exercise:set" of the circle you just ticked (for the little animation)
   if (workout.keepAwake === undefined) workout.keepAwake = true; // screen stays on by default
-  const setWord = workout.rounds ? "round" : "set";
-  const SetWord = workout.rounds ? "Round" : "Set";
+  // In a circuit you tick rounds, elsewhere sets.
+  const setWord = (e) => (inCircuit(e) ? "round" : "set");
+  const SetWord = (e) => (inCircuit(e) ? "Round" : "Set");
+  const allCircuit = () => workout.exercises.length > 0 && workout.exercises.every(inCircuit);
 
   container.innerHTML = `
     <section class="workout-strip">
@@ -173,31 +176,63 @@ function drawWorkout(container, session, workout, backToPlan) {
     return nextOpenIndex(-1);
   }
 
-  // The next exercise with a set (or round) left, looking after `after`.
-  // A circuit goes round by round: the first exercise with the fewest ticks.
+  // Inside a circuit (round by round): the exercise with the fewest ticks
+  // that still has one left (the first one on a tie). null = circuit done.
+  function nextInGroup(group) {
+    let best = null;
+    let bestDone = Infinity;
+    group.indexes.forEach((i) => {
+      const e = workout.exercises[i];
+      const done = e.ticks.filter(Boolean).length;
+      if (e.ticks.includes(false) && done < bestDone) { best = i; bestDone = done; }
+    });
+    return best;
+  }
+
+  // The next exercise with a set (or round) left, after the group (exercise
+  // or circuit) that holds `after`; -1 = from the top. Landing on a circuit
+  // = its exercise with the fewest ticks.
   function nextOpenIndex(after) {
-    const list = workout.exercises;
-    if (workout.rounds) {
-      let best = null;
-      let bestDone = Infinity;
-      list.forEach((e, i) => {
-        const done = e.ticks.filter(Boolean).length;
-        if (e.ticks.includes(false) && done < bestDone) { best = i; bestDone = done; }
-      });
-      return best;
-    }
-    for (let step = 1; step <= list.length; step++) {
-      const i = (after + step + list.length) % list.length;
-      if (list[i].ticks.includes(false)) return i;
+    const groups = groupLines(workout.exercises);
+    if (!groups.length) return null;
+    const from = groups.findIndex((g) => g.indexes.includes(after));
+    for (let step = 1; step <= groups.length; step++) {
+      const next = nextInGroup(groups[(from + step + groups.length) % groups.length]);
+      if (next != null) return next;
     }
     return null;
   }
 
   // After a tick: stay on this exercise while it has sets left, else move on.
+  // In a circuit: on to the next exercise of the round, and out of the
+  // circuit once every round is done.
   function moveOnIfDone(index) {
     const e = workout.exercises[index];
-    if (workout.rounds) workout.currentIndex = null; // circuits pick the next one themselves
-    else if (e && !e.ticks.includes(false)) workout.currentIndex = nextOpenIndex(index);
+    if (!e) return;
+    if (inCircuit(e)) {
+      const inGroup = nextInGroup(groupOf(workout.exercises, index));
+      workout.currentIndex = inGroup != null ? inGroup : nextOpenIndex(index);
+    } else if (!e.ticks.includes(false)) {
+      workout.currentIndex = nextOpenIndex(index);
+    }
+  }
+
+  // In a circuit, rest only comes at the end of a round (Rom chose this,
+  // 2026-11-08): true when every exercise of the circuit has the same
+  // number of ticks (= a round just ended).
+  function roundJustEnded(index) {
+    const group = groupOf(workout.exercises, index);
+    if (!group || !group.circuit) return true;
+    const counts = group.indexes.map((i) => workout.exercises[i].ticks.filter(Boolean).length);
+    return counts.every((c) => c === counts[0]);
+  }
+
+  // Would ticking the next box of exercise `index` end a round? (for the hint)
+  function tickWouldEndRound(index) {
+    const group = groupOf(workout.exercises, index);
+    if (!group || !group.circuit) return true;
+    const mine = workout.exercises[index].ticks.filter(Boolean).length + 1;
+    return group.indexes.every((i) => i === index || workout.exercises[i].ticks.filter(Boolean).length === mine);
   }
 
   // ---- Drawing ----
@@ -207,10 +242,6 @@ function drawWorkout(container, session, workout, backToPlan) {
     const resting = Boolean(workout.rest);
     let html = cur == null ? doneCardHtml() : nowCardHtml(cur, resting);
 
-    if (workout.rounds) {
-      html += `<p class="workout-rounds"><strong>${workout.rounds} rounds</strong> · tick each exercise once per round
-        <button type="button" class="button small-button" id="edit-rounds" aria-label="Change the rounds">${icon("pencil")}</button></p>`;
-    }
     const others = workout.exercises.map((e, i) => i).filter((i) => i !== cur);
     const upNext = others.filter((i) => workout.exercises[i].ticks.includes(false));
     const done = others.filter((i) => !workout.exercises[i].ticks.includes(false));
@@ -228,7 +259,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     const total = ticksTotal(workout);
     const doneCount = ticksDone(workout);
     progressEl.innerHTML = total
-      ? `<span class="strip-count"><span class="num">${doneCount}</span><span class="strip-of">/ ${total}</span></span><span class="strip-unit">${workout.rounds ? "ticks" : "sets"}</span>`
+      ? `<span class="strip-count"><span class="num">${doneCount}</span><span class="strip-of">/ ${total}</span></span><span class="strip-unit">${allCircuit() ? "ticks" : "sets"}</span>`
       : "";
     // All done: the big card has the Finish button, so the one at the bottom steps aside.
     finishButton.hidden = cur == null;
@@ -242,7 +273,8 @@ function drawWorkout(container, session, workout, backToPlan) {
     const next = e.ticks.indexOf(false);
     const running = workout.setTimer && workout.setTimer.index === i;
     const doneCount = e.ticks.filter(Boolean).length;
-    const label = workout.rounds
+    const circuit = inCircuit(e);
+    const label = circuit
       ? `Now · round ${Math.min(doneCount + 1, e.ticks.length)} of ${e.ticks.length} · exercise ${i + 1} of ${workout.exercises.length}`
       : `Now · exercise ${i + 1} of ${workout.exercises.length}`;
 
@@ -253,15 +285,16 @@ function drawWorkout(container, session, workout, backToPlan) {
         ${icon("chevron-right")} Next: ${escapeHtml(workout.exercises[later].name)}</button>`;
     } else if (timed) {
       button = `<button type="button" class="button now-button" data-timer="${i}" ${running ? "disabled" : ""}>
-        ${running ? `${icon("timer")} Running…` : `${icon("play")} Start ${escapeHtml(formatRest(timed))} · ${setWord} ${next + 1}`}</button>`;
+        ${running ? `${icon("timer")} Running…` : `${icon("play")} Start ${escapeHtml(formatRest(timed))} · ${setWord(e)} ${next + 1}`}</button>`;
     } else {
       button = `<button type="button" class="button now-button ${resting ? "is-outline" : ""}" data-tick="${i}:${next}">
-        ${icon("check")} ${SetWord} ${next + 1} done</button>`;
+        ${icon("check")} ${SetWord(e)} ${next + 1} done</button>`;
     }
     let hint = "";
     if (next >= 0 && resting) hint = "Resting · you can still tap early";
-    else if (next >= 0 && restSeconds && !running) hint = `Rest ${formatRest(restSeconds)} starts when you ${timed ? "finish" : "tap"}`;
-    else if (next < 0) hint = `All ${e.ticks.length} ${setWord}s done`;
+    else if (next >= 0 && circuit && !tickWouldEndRound(i)) hint = "No rest: straight on to the next exercise of the round";
+    else if (next >= 0 && restSeconds && !running) hint = `Rest ${formatRest(restSeconds)} starts when you ${timed ? "finish" : "tap"}${circuit ? " (end of the round)" : ""}`;
+    else if (next < 0) hint = `All ${e.ticks.length} ${setWord(e)}s done`;
 
     return `
       <section class="card workout-now">
@@ -270,15 +303,25 @@ function drawWorkout(container, session, workout, backToPlan) {
           <button type="button" class="now-edit" data-edit="${i}" aria-label="Change ${escapeHtml(e.name)}">${icon("pencil")}</button>
         </div>
         <h2 class="now-name">${escapeHtml(e.name)}${e.origIndex == null ? ` <span class="muted small">(added)</span>` : ""}</h2>
+        ${circuit ? circuitLineHtml(i) : ""}
         ${factsHtml(e, timed)}
         ${e.note ? `<p class="now-note">${escapeHtml(e.note)}</p>` : ""}
         <div class="tick-row">${e.ticks.map((ticked, t) => `
           <button type="button" class="tick ${ticked ? "is-ticked" : t === next ? "is-next" : ""} ${justTicked === `${i}:${t}` ? "just-ticked" : ""}"
-            data-tick="${i}:${t}" aria-pressed="${ticked}" aria-label="${SetWord} ${t + 1}${ticked ? ", done" : ""}">
+            data-tick="${i}:${t}" aria-pressed="${ticked}" aria-label="${SetWord(e)} ${t + 1}${ticked ? ", done" : ""}">
             ${ticked ? icon("check") : `<span class="num">${t + 1}</span>`}</button>`).join("")}</div>
         ${button}
         ${hint ? `<p class="now-hint">${escapeHtml(hint)}</p>` : ""}
       </section>`;
+  }
+
+  // On the Now card of a circuit exercise: the circuit in one line + ✎ for its rounds.
+  //   "Circuit · 3 rounds: Push-ups → Gainage ✎"
+  function circuitLineHtml(i) {
+    const group = groupOf(workout.exercises, i);
+    const names = group.indexes.map((j) => workout.exercises[j].name).join(" → ");
+    return `<p class="now-circuit">${icon("repeat")} <span><strong>Circuit · ${group.rounds} rounds</strong>: ${escapeHtml(names)}</span>
+      <button type="button" class="button small-button" data-edit-rounds="${i}" aria-label="Change the circuit's rounds">${icon("pencil")}</button></p>`;
   }
 
   // Reps (or time) and weight in big numbers.
@@ -297,7 +340,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     return `
       <section class="card workout-now is-all-done">
         <p class="now-label">${icon("check", { className: "is-ok" })} All done</p>
-        <h2 class="now-name">${total ? `All ${total} ${workout.rounds ? "ticks" : "sets"} done` : "No exercises yet"}</h2>
+        <h2 class="now-name">${total ? `All ${total} ${allCircuit() ? "ticks" : "sets"} done` : "No exercises yet"}</h2>
         <p class="now-hint">${total ? "Nice one. Finish to log it." : "Add an exercise below, or finish to log the session."}</p>
         <button type="button" class="button now-button" data-finish>${icon("flag")} Finish workout</button>
       </section>`;
@@ -307,11 +350,12 @@ function drawWorkout(container, session, workout, backToPlan) {
   function rowHtml(i, isDone) {
     const e = workout.exercises[i];
     const timed = parseExerciseTime(e.reps);
-    const meta = [amountText(e, workout.rounds), e.weight_kg != null ? `${Number(e.weight_kg)} kg` : ""].filter(Boolean).join(" · ");
+    const circuit = inCircuit(e);
+    const meta = [circuit ? `circuit · ${e.rounds} rounds` : "", amountText(e), e.weight_kg != null ? `${Number(e.weight_kg)} kg` : ""].filter(Boolean).join(" · ");
     const doneCount = e.ticks.filter(Boolean).length;
     const dots = e.ticks.map((ticked) => `<span class="ex-dot ${ticked ? "is-ticked" : ""}"></span>`).join("");
     return `
-      <button type="button" class="ex-row" data-pick="${i}" aria-label="${escapeHtml(e.name)}, ${doneCount} of ${e.ticks.length} ${setWord}s done. Make it the current exercise">
+      <button type="button" class="ex-row${circuit ? " in-circuit" : ""}" data-pick="${i}" aria-label="${escapeHtml(e.name)}, ${doneCount} of ${e.ticks.length} ${setWord(e)}s done. Make it the current exercise">
         ${isDone ? `<span class="ex-done-badge">${icon("check")}</span>` : ""}
         <span class="ex-row-main">
           <span class="ex-row-name">${escapeHtml(e.name)}${timed ? " " + icon("timer", { className: "is-muted" }) : ""}${e.origIndex == null ? ` <span class="muted small">(added)</span>` : ""}</span>
@@ -372,7 +416,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     }
     workout.setTimer = null;
     beep();
-    startRest();
+    if (!e || roundJustEnded(index)) startRest();
     saveWorkout(workout);
     draw();
   }
@@ -398,7 +442,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     if (cur == null) return "All done: finish when you're ready";
     const e = workout.exercises[cur];
     const next = e.ticks.indexOf(false);
-    return next < 0 ? e.name : `${e.name} · ${setWord} ${next + 1}`;
+    return next < 0 ? e.name : `${e.name} · ${setWord(e)} ${next + 1}`;
   }
 
   // The bar pinned at the bottom: the rest countdown or a timed set.
@@ -449,7 +493,7 @@ function drawWorkout(container, session, workout, backToPlan) {
       }
       const total = (timer.endsAt - timer.readyEndsAt) / 1000;
       drawBar("set",
-        ready ? `Get ready · ${e.name}` : `${e.name} · ${setWord} ${timer.tick + 1}`,
+        ready ? `Get ready · ${e.name}` : `${e.name} · ${setWord(e)} ${timer.tick + 1}`,
         Math.ceil(((ready ? timer.readyEndsAt : timer.endsAt) - now) / 1000),
         ready ? 0 : 1 - (timer.endsAt - now) / 1000 / total);
       return;
@@ -486,7 +530,8 @@ function drawWorkout(container, session, workout, backToPlan) {
         workout.currentIndex = i;
         moveOnIfDone(i);
         // A set just done -> start the rest countdown (if the rest timer is on).
-        if (!workout.setTimer) startRest();
+        // In a circuit: only at the end of a round.
+        if (!workout.setTimer && roundJustEnded(i)) startRest();
       }
       saveWorkout(workout);
       draw();
@@ -511,11 +556,15 @@ function drawWorkout(container, session, workout, backToPlan) {
       finish();
       return;
     }
-    if (event.target.closest("#edit-rounds")) {
-      const rounds = await askRounds(workout.rounds);
+    const roundsButton = event.target.closest("[data-edit-rounds]");
+    if (roundsButton) {
+      const group = groupOf(workout.exercises, Number(roundsButton.dataset.editRounds));
+      const rounds = await askRounds(group.rounds);
       if (!rounds) return;
-      workout.rounds = rounds;
-      workout.exercises.forEach((e) => resizeTicks(e, rounds));
+      group.indexes.forEach((j) => {
+        workout.exercises[j].rounds = rounds;
+        resizeTicks(workout.exercises[j]);
+      });
       saveWorkout(workout);
       draw();
       return;
@@ -524,7 +573,7 @@ function drawWorkout(container, session, workout, backToPlan) {
     if (editButton) {
       const index = Number(editButton.dataset.edit);
       const exercise = workout.exercises[index];
-      const result = await askExercise(exercise, workout.rounds);
+      const result = await askExercise(exercise, inCircuit(exercise));
       if (!result) return;
       // Its countdown (if running) belongs to the old version: stop it.
       if (workout.setTimer && (result.remove || workout.setTimer.index === index)) workout.setTimer = null;
@@ -536,7 +585,7 @@ function drawWorkout(container, session, workout, backToPlan) {
         else if (workout.currentIndex > index) workout.currentIndex--;
       } else {
         Object.assign(exercise, result.values);
-        resizeTicks(exercise, workout.rounds);
+        resizeTicks(exercise);
       }
       saveWorkout(workout);
       draw();
@@ -545,10 +594,10 @@ function drawWorkout(container, session, workout, backToPlan) {
   });
 
   container.querySelector("#add-exercise").addEventListener("click", async () => {
-    const result = await askExercise(null, workout.rounds);
+    const result = await askExercise(null, false);
     if (!result || result.remove) return;
     const exercise = { name: "", sets: null, reps: null, weight_kg: null, note: null, origIndex: null, ticks: [], ...result.values };
-    resizeTicks(exercise, workout.rounds);
+    resizeTicks(exercise);
     workout.exercises.push(exercise);
     saveWorkout(workout);
     draw();
@@ -588,7 +637,8 @@ function drawWorkout(container, session, workout, backToPlan) {
 
   function finish() {
     const open = ticksTotal(workout) - ticksDone(workout);
-    if (open && !window.confirm(`${open} ${setWord}${open === 1 ? "" : "s"} not ticked. Finish anyway?`)) return;
+    const word = allCircuit() ? "tick" : "set";
+    if (open && !window.confirm(`${open} ${word}${open === 1 ? "" : "s"} not ticked. Finish anyway?`)) return;
     workout.finishedAt = Date.now();
     workout.durationS = Math.round((workout.finishedAt - workout.startedAt) / 1000);
     workout.rest = null;
@@ -681,7 +731,7 @@ function askRest(current) {
 // Pop-up to change an exercise (or add one when `exercise` is null):
 // name, sets (not in a circuit: rounds decide), reps or time, weight.
 // Resolves to { values }, { remove: true } or null (closed).
-async function askExercise(exercise, rounds) {
+async function askExercise(exercise, rounds) { // rounds = true when it's in a circuit
   const e = exercise || {};
   const value = await openSheet({
     title: exercise ? exercise.name : "Add an exercise",

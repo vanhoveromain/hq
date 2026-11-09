@@ -1,0 +1,15 @@
+{
+  "name": "HQ",
+  "short_name": "HQ",
+  "description": "One home for your own tools. QED HQ and Sport HQ.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "hq-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "hq-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "hq-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
