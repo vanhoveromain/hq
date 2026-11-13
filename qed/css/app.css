@@ -449,3 +449,19 @@ body.is-focus .main{padding-bottom:48px}
 .keys-table td{padding:6px 0;border-bottom:1px solid var(--hq-border);vertical-align:top}
 .keys-table td:first-child{width:120px;white-space:nowrap}
 kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--hq-border-strong);border-bottom-width:2px;border-radius:4px;background:var(--hq-subtle);font:500 12px/1.2 var(--hq-font);text-align:center}
+
+/* Home: Today strip (UX review #8) */
+.today-strip{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 24px}
+@media (min-width:720px){.today-strip{grid-template-columns:2fr 1fr 1fr 1fr}}
+.today-strip:empty{display:none}
+.today-item{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);color:var(--hq-primary-text);text-decoration:none;transition:border-color var(--hq-ease)}
+.today-item:first-child{grid-column:1/-1}
+@media (min-width:720px){.today-item:first-child{grid-column:auto}}
+.today-item:hover{border-color:var(--hq-accent)}
+.today-num{font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.today-of{font-size:14px;font-weight:500;color:var(--hq-secondary-text)}
+.today-sep{margin:0 6px;color:var(--hq-secondary-text);font-weight:400}
+.today-label{font-size:12px;color:var(--hq-secondary-text)}
+.today-item.is-zero .today-num{color:var(--hq-secondary-text)}
+.today-item.is-warning{background:var(--hq-warning-light);border-color:transparent}
+.today-item.is-warning .today-num{color:var(--hq-warning)}

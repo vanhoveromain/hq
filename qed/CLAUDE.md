@@ -129,6 +129,10 @@ Coordination Team HQ, archived / passed projects.
    card to the previous / next column, Esc clears. keys.js sends "qed:task-key" {action, value} to the row / card;
    taskList.js + planner.js do the work (same Undo). Planner: mouse click selects, double-click opens; a finger tap
    still opens. Off while typing, with a dialog open, on Unlock and in Focus mode
+7f. Home (UX review #8, 2026-11-13): Today strip on top (1-3-5 of To do today, Overdue, Meeting points today ->
+   #/priorities; Leads to reach out to -> #/sales/reach-out; amber when over / > 0; same rules as PRIORITY_LISTS +
+   reachOutDate; removed silently if it can't load). Team section gone: the onboarding plan is a fixed last icon in
+   Tools (not a qed_links row, not editable). Order: Today, Projects, Tools
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

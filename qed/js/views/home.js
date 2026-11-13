@@ -4,20 +4,23 @@
 //      Followed up). "+ New" pre-fills the type of the tab you're on (it
 //      replaces the Notion templates). Tap a card to open the project page.
 //   2. Tools: the links panel, editable ("Edit": add, rename, reorder, remove).
-//   3. Team: the onboarding plan.
+//   0. Today strip (UX review #8, 2026-11-13): 1-3-5, overdue, meeting points,
+//      leads to reach out to; each one opens its list.
+//   (The onboarding plan is a fixed icon at the end of Tools.)
 //
 // The tab lives in the address (#/home/bespoke), so Back and bookmarks work.
 
-import { listProjects, listLinks, createLink, updateLink, deleteLink, reorderLinks } from "../storage.js";
+import { listDayTasks, listProjects, listLinks, createLink, updateLink, deleteLink, reorderLinks } from "../storage.js";
 import {
   HOME_TABS, PROJECT_TYPES, PROJECT_STATUSES, OWNERS, DEFAULT_OWNER,
   labelOf, isVisible, compareProjects,
+  PRIORITY_LISTS, countOneThreeFive, reachOutDate,
 } from "../rules.js";
 import { openProjectForm } from "./projectForm.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, safeUrl, icon, showActiveTab } from "../utils/html.js";
-import { formatRange } from "../utils/dates.js";
+import { formatRange, brusselsToday, brusselsDayOf, addDays } from "../utils/dates.js";
 
 // Remembered while the app is open (not saved): switches on Home.
 let showArchived = false;
@@ -28,6 +31,7 @@ export async function render(el, { params }) {
   const tab = HOME_TABS.find((t) => t.id === params[0]) || HOME_TABS[0];
 
   el.innerHTML = `
+    <nav class="today-strip" id="today-strip" aria-label="Today"></nav>
     <section class="section">
       <div class="section-head">
         <h2 class="section-title">Projects</h2>
@@ -51,10 +55,6 @@ export async function render(el, { params }) {
       <div id="tools"><p class="muted">Loading…</p></div>
     </section>
 
-    <section class="section">
-      <h2 class="section-title">Team</h2>
-      <a class="btn secondary" href="onboarding/g5achjswbr/">${icon("calendar")} Open the onboarding plan</a>
-    </section>
   `;
 
   showActiveTab(el);
@@ -80,12 +80,56 @@ export async function render(el, { params }) {
     redraw();
   });
 
+  // Projects are loaded once, for the gallery and the Today strip.
+  const projectsLoad = listProjects();
   await Promise.all([
-    drawGallery(el.querySelector("#gallery"), tab),
+    drawToday(el.querySelector("#today-strip"), projectsLoad),
+    drawGallery(el.querySelector("#gallery"), tab, projectsLoad),
     drawTools(el.querySelector("#tools"), redraw),
   ]);
 }
 
+
+// ---------------------------------------------------------------------
+// Today strip: four figures, each a link to its list. Silent if it can't
+// load (the rest of Home still works).
+// ---------------------------------------------------------------------
+
+async function drawToday(stripEl, projectsLoad) {
+  const today = brusselsToday();
+  const d = { today, tomorrow: addDays(today, 1) };
+  let tasks;
+  let projects;
+  try {
+    // Open tasks due up to tomorrow; no done tasks needed here.
+    [tasks, projects] = await Promise.all([listDayTasks(d.tomorrow, "9999-01-01T00:00:00Z"), projectsLoad]);
+  } catch {
+    stripEl.remove();
+    return;
+  }
+  const toDo = tasks.filter((t) => PRIORITY_LISTS.today(t, d));
+  const { scopes } = countOneThreeFive(toDo);
+  const overdue = tasks.filter((t) => PRIORITY_LISTS.overdue(t, d)).length;
+  const meetings = tasks.filter((t) => PRIORITY_LISTS.meetings(t, d)).length;
+  const leads = projects.filter((p) => p.type === "sales"
+    && reachOutDate(brusselsDayOf(p.created_at), p.reach_out_on) <= today).length;
+  const over = scopes.some((s) => s.over);
+
+  stripEl.innerHTML = `
+    <a class="today-item${over ? " is-warning" : ""}" href="#/priorities">
+      <span class="today-num">${scopes.map((s) => `${s.count}<span class="today-of">/${s.perDay}</span>`).join('<span class="today-sep">·</span>')}</span>
+      <span class="today-label">To do today (1-3-5)${toDo.length ? ` · ${toDo.length} tasks` : ""}</span>
+    </a>
+    <a class="today-item${overdue ? " is-warning" : " is-zero"}" href="#/priorities">
+      <span class="today-num">${overdue}</span><span class="today-label">Overdue</span>
+    </a>
+    <a class="today-item${meetings ? "" : " is-zero"}" href="#/priorities">
+      <span class="today-num">${meetings}</span><span class="today-label">Meeting points today</span>
+    </a>
+    <a class="today-item${leads ? " is-warning" : " is-zero"}" href="#/sales/reach-out">
+      <span class="today-num">${leads}</span><span class="today-label">Leads to reach out to</span>
+    </a>`;
+}
 
 // ---------------------------------------------------------------------
 // Projects gallery
@@ -98,10 +142,10 @@ function ownerChips() {
   ).join("")}</div>`;
 }
 
-async function drawGallery(galleryEl, tab) {
+async function drawGallery(galleryEl, tab, projectsLoad) {
   let projects;
   try {
-    projects = await listProjects();
+    projects = await projectsLoad;
   } catch (error) {
     galleryEl.innerHTML = `<p class="error">Could not load the projects: ${escapeHtml(error.message)}</p>`;
     return;
@@ -154,7 +198,7 @@ async function drawTools(toolsEl, redraw) {
   }
 
   if (!editingTools) {
-    toolsEl.innerHTML = links.length ? tilesHtml(links) : `<p class="empty">No links yet. Use <strong>Edit</strong> to add one.</p>`;
+    toolsEl.innerHTML = tilesHtml(links);
     wireAppIcons(toolsEl);
     return;
   }
@@ -214,6 +258,12 @@ function tilesHtml(links) {
         <span class="app-name">${escapeHtml(link.label)}</span>
       </a></li>`;
   });
+  // The onboarding plan (was the Team section): a fixed icon, always last.
+  tiles.push(`
+      <li><a class="app" href="onboarding/g5achjswbr/" target="_blank" rel="noopener" title="Onboarding plan (opens in a new tab)">
+        <span class="app-icon">${icon("calendar")}</span>
+        <span class="app-name">Onboarding</span>
+      </a></li>`);
   return `<ul class="apps ${TOOLS_STYLE}">${tiles.join("")}</ul>`;
 }
 
