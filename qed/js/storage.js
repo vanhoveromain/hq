@@ -147,6 +147,18 @@ export async function searchTasks(text, limit = 20) {
   return data;
 }
 
+// Sales: the open tasks of some projects (a lead's next step = its first one).
+export async function listOpenTasksOf(projectIds) {
+  if (!projectIds.length) return [];
+  const { data, error } = await db
+    .from("qed_tasks")
+    .select(TASK_FIELDS)
+    .eq("done", false)
+    .in("project_id", projectIds);
+  if (error) throw error;
+  return data;
+}
+
 // Task planner (This week): open tasks without a due date.
 export async function listOpenTasksWithoutDate() {
   const { data, error } = await db
@@ -234,9 +246,9 @@ export async function runRollover() {
 // created_at…) is ignored when saving.
 const PROJECT_COLUMNS = [
   "name", "type", "status", "sales_status", "owner",
-  "date_start", "date_end", "notes", "notion_url", "reach_out_on",
+  "date_start", "date_end", "notes", "notion_url", "reach_out_on", "contact_name", "contact_email",
 ];
-const PROJECT_FIELDS = "id, name, type, status, sales_status, owner, date_start, date_end, notes, notion_url, reach_out_on, created_at";
+const PROJECT_FIELDS = "id, name, type, status, sales_status, owner, date_start, date_end, notes, notion_url, reach_out_on, contact_name, contact_email, created_at";
 
 function pick(object, keys) {
   const result = {};

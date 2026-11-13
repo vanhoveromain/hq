@@ -160,6 +160,12 @@ Coordination Team HQ, archived / passed projects.
    https links bare or [text](url); escaped first, https only) shown formatted outside the field; click (not on a
    link, not while selecting text) or Enter = edit (textarea sized to the text); leaving the field = saved + formatted.
    Task notes (sheet, Focus) stay plain text. (#14 "Move to…" on Planner cards: declined by Romain)
+7m. Sales (UX review #16, 2026-11-13; migration 20261113000002, add-only, MUST run before testing): leads get
+   contact_name + contact_email (project form, Sales type only; email checked; GDPR: name + work email only, clear on
+   declined leads). Lead page shows them (mailto). Next step = the lead's first open task (earliest due, undated
+   last; listOpenTasksOf), NOT a column: shown in a "Next step" column (amber when due today or before, ↻), tap =
+   task sheet; none = "+ Next step" (task on the lead, tomorrow by default) -> it shows in Priorities too. "New
+   lead" is always the main button; "Add to list" = secondary next to it on To reach out. Table from 1100 px
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

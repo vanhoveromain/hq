@@ -10,13 +10,15 @@
 // next reach-out to a year later.
 // Sales status changes in place (a menu on the row); the name opens the lead.
 
-import { listProjects, updateProject, createProject } from "../storage.js";
+import { listProjects, updateProject, createProject, listOpenTasksOf, createTask, listMeetingNames } from "../storage.js";
+import { openTaskSheet } from "./taskSheet.js";
+import { rolledHtml } from "./taskList.js";
 import { SALES_TABS, SALES_STATUSES, labelOf, reachOutDate, oneYearAfter } from "../rules.js";
 import { openDialog } from "../utils/dialog.js";
 import { openProjectForm } from "./projectForm.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, icon, showActiveTab } from "../utils/html.js";
-import { brusselsToday, brusselsDayOf, formatDay, formatRange } from "../utils/dates.js";
+import { brusselsToday, brusselsDayOf, formatDay, formatRange, friendlyDay, addDays } from "../utils/dates.js";
 
 export async function render(el, { params = [] } = {}) {
   const tab = SALES_TABS.find((t) => t.id === params[0]) || SALES_TABS[0];
@@ -24,8 +26,14 @@ export async function render(el, { params = [] } = {}) {
   if (!el.querySelector(".sales")) el.innerHTML = `<p class="muted">Loading…</p>`;
 
   let leads;
+  let openTasks;
+  let meetingNames = [];
   try {
     leads = (await listProjects()).filter((p) => p.type === "sales");
+    [openTasks, meetingNames] = await Promise.all([
+      listOpenTasksOf(leads.map((l) => l.id)),
+      listMeetingNames().catch(() => []),
+    ]);
   } catch (error) {
     el.innerHTML = `<p class="error">Could not load your leads: ${escapeHtml(error.message)}</p>`;
     return;
@@ -33,6 +41,11 @@ export async function render(el, { params = [] } = {}) {
   for (const lead of leads) {
     lead.created_day = brusselsDayOf(lead.created_at);
     lead.reach_out = reachOutDate(lead.created_day, lead.reach_out_on);
+    // Next step (UX review #16) = the lead's first open task: earliest due
+    // date, undated last. It's a normal task, so it's in Priorities too.
+    lead.next = openTasks
+      .filter((t) => t.project_id === lead.id)
+      .sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999"))[0] || null;
   }
   const redraw = () => render(el, { params });
   const counts = Object.fromEntries(SALES_TABS.map((t) => [t.id, leads.filter((l) => t.filter(l, today)).length]));
@@ -49,13 +62,14 @@ export async function render(el, { params = [] } = {}) {
         <nav class="tabs sales-tabs" aria-label="Lead tabs">
           ${SALES_TABS.map((t) => `<a href="#/sales/${t.id}" class="${t === tab ? "active" : ""}"${t === tab ? ' aria-current="page"' : ""}>${escapeHtml(t.label)} <span class="count">${counts[t.id]}</span></a>`).join("")}
         </nav>
-        ${tab.id === "reach-out"
-          ? `<button type="button" class="btn small" id="add-reach">${icon("plus")} Add to list</button>`
-          : `<button type="button" class="btn small" id="new-lead">${icon("plus")} New lead</button>`}
+        <span class="sales-actions">
+          ${tab.id === "reach-out" ? `<button type="button" class="btn secondary small" id="add-reach">${icon("plus")} Add to list</button>` : ""}
+          <button type="button" class="btn small" id="new-lead">${icon("plus")} New lead</button>
+        </span>
       </div>
       ${shown.length ? `
         <ul class="lead-list">
-          <li class="lead-head" aria-hidden="true"><span>Lead</span><span>Event date</span><span>Sales status</span><span>Created</span><span>Reach out</span></li>
+          <li class="lead-head" aria-hidden="true"><span>Lead</span><span>Next step</span><span>Event date</span><span>Sales status</span><span>Created</span><span>Reach out</span></li>
           ${shown.map((l) => leadRowHtml(l, today, tab.id === "reach-out")).join("")}
         </ul>` : `<p class="empty">${tab.id === "reach-out" ? "No lead to reach out to again yet." : "No leads here."}</p>`}
     </div>`;
@@ -69,6 +83,15 @@ export async function render(el, { params = [] } = {}) {
   }
   const addReach = el.querySelector("#add-reach");
   if (addReach) addReach.addEventListener("click", () => openAddToList(leads, today, redraw));
+
+  // Next step: tap it to open the task; "+ Next step" adds one.
+  el.querySelectorAll("[data-next]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const lead = leads.find((l) => l.id === button.closest("[data-lead]").dataset.lead);
+      if (lead.next) openTaskSheet(lead.next, { onChange: redraw, meetingNames });
+      else openNextStep(lead, today, redraw);
+    });
+  });
 
   // Reach out date: tap it to pick another day; empty = automatic again.
   el.querySelectorAll("[data-lead] .reach-chip").forEach((chip) => {
@@ -158,11 +181,48 @@ function openAddToList(leads, today, redraw) {
   });
 }
 
+// "+ Next step": a task on the lead (title + date, tomorrow by default).
+function openNextStep(lead, today, redraw) {
+  openDialog({
+    title: `Next step: ${lead.name}`,
+    submitLabel: "Add",
+    body: `
+      <label class="field"><span>What's next?</span>
+        <input name="title" required maxlength="300" placeholder="e.g. Send the proposal"></label>
+      <label class="field"><span>When</span>
+        <input name="day" type="date" value="${addDays(today, 1)}"></label>
+      <p class="muted field-note">It becomes a task on this lead, so it also shows in Priorities on that day.</p>`,
+    async onSubmit(form) {
+      const title = form.elements.title.value.trim();
+      if (!title) throw new Error("Please say what the next step is.");
+      await createTask({ title, project_id: lead.id, due_date: form.elements.day.value || null });
+      showToast(`Next step for "${lead.name}" added.`);
+      redraw();
+    },
+  });
+}
+
+function nextStepHtml(l, today) {
+  if (!l.next) {
+    return `<button type="button" class="next-step is-empty" data-next>${icon("plus")} Next step</button>`;
+  }
+  const t = l.next;
+  const late = t.due_date && t.due_date <= today;
+  return `<button type="button" class="next-step${late ? " is-due" : ""}" data-next title="Open the task">
+      <span class="next-title">${escapeHtml(t.title)}</span>
+      <span class="next-day">${t.due_date ? escapeHtml(friendlyDay(t.due_date, today)) : "No date"}${rolledHtml(t)}</span>
+    </button>`;
+}
+
 function leadRowHtml(l, today, reachTab) {
   const due = l.reach_out <= today;
   return `
     <li class="lead" data-lead="${l.id}">
-      <a class="lead-name" href="#/project/${l.id}">${escapeHtml(l.name)}</a>
+      <span class="lead-main">
+        <a class="lead-name" href="#/project/${l.id}">${escapeHtml(l.name)}</a>
+        ${l.contact_name ? `<span class="lead-contact">${escapeHtml(l.contact_name)}</span>` : ""}
+      </span>
+      <span class="lead-cell lead-next" data-label="Next step">${nextStepHtml(l, today)}</span>
       <span class="lead-cell" data-label="Event date">${escapeHtml(formatRange(l.date_start, l.date_end)) || '<span class="muted">—</span>'}</span>
       <span class="lead-cell" data-label="Sales status">
         <label class="tchip tchip-select sales-${l.sales_status || "none"}">

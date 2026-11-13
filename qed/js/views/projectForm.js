@@ -55,6 +55,12 @@ export function openProjectForm({ project = null, defaults = {}, onChange, onDel
         <label class="field"><span>End date <em>(optional)</em></span>
           <input name="date_end" type="date" value="${escapeHtml(p.date_end || "")}"></label>
       </div>
+      <div class="field-row" data-show="sales">
+        <label class="field"><span>Contact person</span>
+          <input name="contact_name" maxlength="200" autocomplete="off" value="${escapeHtml(p.contact_name || "")}"></label>
+        <label class="field"><span>Contact email</span>
+          <input name="contact_email" type="email" inputmode="email" maxlength="320" autocomplete="off" value="${escapeHtml(p.contact_email || "")}"></label>
+      </div>
       <label class="field" data-show="sales"><span>Reach out on <em>(empty = automatic: created + 1 year)</em></span>
         <input name="reach_out_on" type="date" value="${escapeHtml(p.reach_out_on || "")}"></label>
       <label class="field"><span>Notion link <em>(optional)</em></span>
@@ -103,6 +109,10 @@ function readForm(form) {
   if (dateStart && dateEnd && dateEnd < dateStart) {
     throw new Error("The end date is before the start date.");
   }
+  const email = f.contact_email.value.trim();
+  if (type === "sales" && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("The contact email doesn't look right.");
+  }
   const notionUrl = f.notion_url.value.trim() || null;
   if (notionUrl && !/^https:\/\//i.test(notionUrl)) {
     throw new Error("The Notion link must start with https://");
@@ -113,6 +123,8 @@ function readForm(form) {
     status: f.status.value || null,
     sales_status: type === "sales" ? (f.sales_status.value || null) : null,
     reach_out_on: type === "sales" ? (f.reach_out_on.value || null) : null,
+    contact_name: type === "sales" ? (f.contact_name.value.trim() || null) : null,
+    contact_email: type === "sales" ? (f.contact_email.value.trim() || null) : null,
     owner: f.owner.value,
     date_start: dateStart,
     date_end: dateEnd,

@@ -66,6 +66,7 @@ export async function render(el, { params }) {
           ${headerTags(project)}
           <span class="muted">${escapeHtml(formatRange(project.date_start, project.date_end) || "No date yet")}</span>
         </p>
+        ${isSales ? contactLine(project) : ""}
         ${progressLine(open, done, today)}
       </div>
       <div class="project-actions">
@@ -113,6 +114,14 @@ export async function render(el, { params }) {
   });
 
   wireNotes(el.querySelector("#notes"), el.querySelector("#notes-state"), project, el.querySelector("#notes-view"));
+}
+
+// A lead's contact person (UX review #16): name, email as a mail link.
+function contactLine(p) {
+  if (!p.contact_name && !p.contact_email) return "";
+  const mail = p.contact_email
+    ? `<a href="mailto:${escapeHtml(p.contact_email)}">${escapeHtml(p.contact_email)}</a>` : "";
+  return `<p class="project-contact">${icon("meeting")} ${[escapeHtml(p.contact_name || ""), mail].filter(Boolean).join(" · ")}</p>`;
 }
 
 // "12 open · 3 overdue · next due Thu 20 Nov · 28 done" (UX review #15).
