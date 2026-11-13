@@ -123,6 +123,12 @@ Coordination Team HQ, archived / passed projects.
    titles (searchTasks: ilike, open first, max 20). Arrows + Enter. Project/lead -> its page; task -> task sheet over
    the current screen (redraw via the "qedhq:refresh" event in main.js). Empty box = last 5 opened (project page +
    task sheet call rememberOpened; localStorage "qedhq.recent", this device only)
+7e. Keyboard shortcuts (UX review #7, 2026-11-13; js/utils/keys.js, help with "?"): N = quick add, G+H/P/L/S =
+   go to. Selected task (task-list row or Planner card; ↓↑/J K or a click on an empty part, never hover; accent bar):
+   Enter / double-click = open (title keeps one-click rename), X done, T push to tomorrow, 1-5 priority, ← → Planner
+   card to the previous / next column, Esc clears. keys.js sends "qed:task-key" {action, value} to the row / card;
+   taskList.js + planner.js do the work (same Undo). Planner: mouse click selects, double-click opens; a finger tap
+   still opens. Off while typing, with a dialog open, on Unlock and in Focus mode
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

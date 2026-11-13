@@ -71,7 +71,7 @@ export async function render(el, { params = [] } = {}) {
     </nav>
     ${board.weekly ? weekNavHtml(board, offset, d) : ""}
     ${quickAddHtml({ today: board.id === "tomorrow-priority" ? d.tomorrow : offset ? d.monday : today, projects })}
-    <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it.</p>
+    <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it (laptop: double-click, or select it and use ← →).</p>
     <div class="board" data-board="${board.id}">
       <div class="board-columns" style="--cols:${columns.length}">
         ${columns.map((col) => columnHtml(col, shown.filter((t) => (t[board.field] || null) === col.value).sort(sorter), board, d, projectName)).join("")}
@@ -102,27 +102,64 @@ export async function render(el, { params = [] } = {}) {
 
   // Drag a card to another column: that field takes the column's value.
   if (disposeDrag) disposeDrag();
+  const openCard = (id) => openTaskSheet(findTask(id), { onChange: redraw, meetingNames });
+
+  // A card's field changes (drag, ← →, T, 1-5), with Undo.
+  async function setField(task, field, value, message) {
+    const before = task[field];
+    if (before === value) return;
+    try {
+      await updateTask(task.id, { [field]: value });
+    } catch (error) {
+      showToast("Could not save: " + error.message);
+      return;
+    }
+    showToast(message, {
+      actionLabel: "Undo",
+      onAction: async () => { await updateTask(task.id, { [field]: before }); redraw(); },
+    });
+    redraw();
+  }
+
+  // Dropped on a column: the board's field takes the column's value. A due
+  // date dropped on today counts as "do it today", so Pending / Delegated stay
+  // as they are: only the field moves.
+  const dropOn = (id, columnEl) => {
+    const task = findTask(id);
+    const value = columnEl.dataset.column || null;
+    return setField(task, board.field, value, `"${task.title}" → ${columnLabel(board, value, d)}`);
+  };
+
   disposeDrag = makeBoardDraggable(boardEl, {
-    onTap: (id) => openTaskSheet(findTask(id), { onChange: redraw, meetingNames }),
-    onDrop: async (id, columnEl) => {
-      const task = findTask(id);
-      const value = columnEl.dataset.column || null;
-      const before = task[board.field];
-      const changes = { [board.field]: value };
-      // A due date dropped on today counts as "do it today", so Pending /
-      // Delegated stay as they are: only the field moves.
-      try {
-        await updateTask(task.id, changes);
-      } catch (error) {
-        showToast("Could not move it: " + error.message);
-        return;
-      }
-      showToast(`"${task.title}" → ${columnLabel(board, value, d)}`, {
-        actionLabel: "Undo",
-        onAction: async () => { await updateTask(task.id, { [board.field]: before }); redraw(); },
-      });
-      redraw();
-    },
+    // A mouse click selects the card (utils/keys.js); a double-click opens it.
+    // A finger opens it with one tap (no double tap on a phone).
+    onTap: (id, type) => { if (type !== "mouse") openCard(id); },
+    onDrop: dropOn,
+  });
+  boardEl.addEventListener("dblclick", (event) => {
+    const card = event.target.closest("[data-card]");
+    if (card && !event.target.closest("input, button, a, select, label")) openCard(card.dataset.card);
+  });
+
+  // Keyboard shortcuts on the selected card (utils/keys.js).
+  boardEl.addEventListener("qed:task-key", (event) => {
+    const card = event.target.closest("[data-card]");
+    if (!card) return;
+    const task = findTask(card.dataset.card);
+    const { action, value } = event.detail;
+    if (action === "open") openCard(task.id);
+    if (action === "done") {
+      const tick = card.querySelector(".tick");
+      tick.checked = true;
+      tick.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (action === "move") {
+      const columns = [...boardEl.querySelectorAll("[data-column]")];
+      const next = columns[columns.indexOf(card.closest("[data-column]")) + value];
+      if (next) dropOn(task.id, next);
+    }
+    if (action === "push") setField(task, "due_date", d.tomorrow, `Pushed to tomorrow: "${task.title}"`);
+    if (action === "priority") setField(task, "priority", value, `"${task.title}": ${labelOf(PRIORITIES, value)}`);
   });
 
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });

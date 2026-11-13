@@ -14,6 +14,7 @@ import * as plannerView from "./views/planner.js";
 import * as salesView from "./views/sales.js";
 import * as unlockView from "./views/unlock.js";
 import { openSearch } from "./views/search.js";
+import { wireShortcuts } from "./utils/keys.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "QED HQ" stays a link.
@@ -119,6 +120,8 @@ async function start() {
   render();
   window.addEventListener("hashchange", render);
   wireSearch();
+  // Keyboard shortcuts (UX review #7): not on the Unlock screen or in Focus mode.
+  wireShortcuts(viewEl, () => !locked && !document.body.classList.contains("is-focus"));
 }
 
 // Search (UX review #6): Cmd/Ctrl + K anywhere, "/" when you're not typing,

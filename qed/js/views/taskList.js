@@ -171,6 +171,29 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     markEmptySelects(listEl.querySelector(`[data-task="${task.id}"]`));
   }
 
+  // Double-click a row (not its title: one click renames) = open the sheet.
+  listEl.addEventListener("dblclick", (event) => {
+    const row = rowOf(event.target);
+    if (!row || event.target.closest("button, a, input, select, label")) return;
+    onOpen(byId(row));
+  });
+
+  // Keyboard shortcuts on the selected row (utils/keys.js).
+  listEl.addEventListener("qed:task-key", (event) => {
+    const row = rowOf(event.target);
+    if (!row) return;
+    const task = byId(row);
+    const { action, value } = event.detail;
+    if (action === "open") onOpen(task);
+    if (action === "done") {
+      const tick = row.querySelector(".tick");
+      tick.checked = !tick.checked;
+      tick.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (action === "push" && !task.done) pushToTomorrow(task);
+    if (action === "priority" && task.priority !== value) save(task, { priority: value });
+  });
+
   listEl.addEventListener("change", async (event) => {
     const row = rowOf(event.target);
     if (!row) return;

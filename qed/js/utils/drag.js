@@ -1,6 +1,6 @@
 // drag.js: drag cards between columns (Task planner).
 //
-//   makeBoardDraggable(boardEl, { onDrop(cardId, columnEl), onTap(cardId) })
+//   makeBoardDraggable(boardEl, { onDrop(cardId, columnEl), onTap(cardId, pointerType) })
 //
 // Cards carry data-card="<id>", columns data-column. Works with:
 //   - a mouse: press and move (5 px) to drag;
@@ -56,8 +56,9 @@ export function makeBoardDraggable(boardEl, { onDrop, onTap }) {
     }
     if (!press || event.pointerId !== press.pointerId) return;
     const card = press.card;
+    const type = press.type;
     cancelPress();
-    if (onTap) onTap(card.dataset.card);
+    if (onTap) onTap(card.dataset.card, type);
   }, opts);
 
   document.addEventListener("pointercancel", () => {

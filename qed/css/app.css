@@ -441,3 +441,11 @@ body.is-focus .main{padding-bottom:48px}
 .footer a{color:inherit}
 @media (min-width:720px){.footer{margin-bottom:0}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* Keyboard shortcuts (utils/keys.js): the selected task row / Planner card */
+.task.is-selected,.kcard.is-selected{box-shadow:inset 3px 0 0 var(--hq-accent);background:var(--hq-accent-light)}
+.kcard.is-selected{outline:2px solid var(--hq-accent);outline-offset:-1px}
+.keys-table{width:100%;border-collapse:collapse;font-size:14px}
+.keys-table td{padding:6px 0;border-bottom:1px solid var(--hq-border);vertical-align:top}
+.keys-table td:first-child{width:120px;white-space:nowrap}
+kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--hq-border-strong);border-bottom-width:2px;border-radius:4px;background:var(--hq-subtle);font:500 12px/1.2 var(--hq-font);text-align:center}
