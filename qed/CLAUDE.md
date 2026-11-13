@@ -137,7 +137,7 @@ Coordination Team HQ, archived / passed projects.
    "Reset: Period · Scope · Priority" left, "Push all to tomorrow" right (same confirm + Undo). Empty To delegate /
    meetings / Delegated / Pending = one grey line ("To delegate · 0"). Laptop (>= 720 px): a thin 1-3-5 bar stays
    under the top bar once the big counter scrolls away (IntersectionObserver; priorities.leave() disconnects it)
-7h. Put-off count (UX review #10, 2026-11-13; migration 20261113000001, add-only, MUST run before testing):
+7h. Put-off count (UX review #10, 2026-11-13; migration 20261113000001, add-only, run in the QED project 2026-11-13):
    qed_tasks.rolled_over (int, default 0). +1 by the nightly rollover and by every Push to tomorrow (row arrow, T,
    Push all, task sheet button, Planner T); = 0 when you pick a date (date chip, task sheet date, Planner drag /
    ← →). Helpers pushChanges / pickedDateChanges in rules.js. Shown as "↻ n" on the date chip and Planner cards
@@ -160,7 +160,7 @@ Coordination Team HQ, archived / passed projects.
    https links bare or [text](url); escaped first, https only) shown formatted outside the field; click (not on a
    link, not while selecting text) or Enter = edit (textarea sized to the text); leaving the field = saved + formatted.
    Task notes (sheet, Focus) stay plain text. (#14 "Move to…" on Planner cards: declined by Romain)
-7m. Sales (UX review #16, 2026-11-13; migration 20261113000002, add-only, MUST run before testing): leads get
+7m. Sales (UX review #16, 2026-11-13; migration 20261113000002, add-only, run in the QED project 2026-11-13): leads get
    contact_name + contact_email (project form, Sales type only; email checked; GDPR: name + work email only, clear on
    declined leads). Lead page shows them (mailto). Next step = the lead's first open task (earliest due, undated
    last; listOpenTasksOf), NOT a column: shown in a "Next step" column (amber when due today or before, ↻), tap =
