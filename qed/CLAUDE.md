@@ -110,6 +110,10 @@ Coordination Team HQ, archived / passed projects.
    "Reached out" = next reach-out one year from today (Undo). Lead pages light the Sales tab.
    IMPORT NOTE (step 9): copy Notion's Created time into created_at, or every lead's reach-out date resets to
    the import day + 1 year
+7b. No date column (Romain, 2026-11-13, UX review #1): This week board starts with a "No date" column (open
+   tasks without a due date, listOpenTasksWithoutDate in storage.js; dashed outline). Drag onto a day = that date;
+   drag a dated card onto No date = date cleared (Undo either way). Before this, undated tasks only showed on their
+   project page
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

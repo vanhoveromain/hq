@@ -7,7 +7,7 @@
 // (the day, the scope or the priority), with Undo. Tap a card to open it;
 // tick it to mark it done. On a phone: press and hold a card, then drag.
 
-import { listOpenTasksBetween, listProjects, updateTask, listMeetingNames } from "../storage.js";
+import { listOpenTasksBetween, listOpenTasksWithoutDate, listProjects, updateTask, listMeetingNames } from "../storage.js";
 import { PLANNER_BOARDS, PRIORITIES, SCOPES, labelOf, priorityScore } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { quickAddHtml, wireQuickAdd } from "./taskList.js";
@@ -37,11 +37,14 @@ export async function render(el, { params = [] } = {}) {
   try {
     // The week, plus tomorrow when tomorrow is next Monday.
     const to = d.tomorrow > d.sunday ? d.tomorrow : d.sunday;
-    [tasks, projects, meetingNames] = await Promise.all([
+    let undated;
+    [tasks, undated, projects, meetingNames] = await Promise.all([
       listOpenTasksBetween(monday, to),
+      board.withUndated ? listOpenTasksWithoutDate() : [],
       listProjects(),
       listMeetingNames().catch(() => []),
     ]);
+    tasks = [...tasks, ...undated];
   } catch (error) {
     el.innerHTML = `<p class="error">Could not load your tasks: ${escapeHtml(error.message)}</p>`;
     return;
@@ -64,7 +67,7 @@ export async function render(el, { params = [] } = {}) {
       ${PLANNER_BOARDS.map((b) => `<a href="#/planner/${b.id}" class="${b === board ? "active" : ""}"${b === board ? ' aria-current="page"' : ""}>${escapeHtml(b.label)}</a>`).join("")}
     </nav>
     ${quickAddHtml({ today: board.id === "tomorrow-priority" ? d.tomorrow : today })}
-    <p class="board-hint muted">Drag a card to another column to change its ${board.field === "due_date" ? "day" : board.field}. On a phone: press and hold, then drag. Tap a card to open it.</p>
+    <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it.</p>
     <div class="board" data-board="${board.id}">
       <div class="board-columns" style="--cols:${columns.length}">
         ${columns.map((col) => columnHtml(col, shown.filter((t) => (t[board.field] || null) === col.value).sort(sorter), board, d, projectName)).join("")}
@@ -122,30 +125,31 @@ export async function render(el, { params = [] } = {}) {
 }
 
 function columnLabel(board, value, d) {
-  if (board.field === "due_date") return friendlyDay(value, d.today);
+  if (board.field === "due_date") return value ? friendlyDay(value, d.today) : "No date";
   if (board.field === "scope") return value ? labelOf(SCOPES, value) : "No scope";
   return value ? labelOf(PRIORITIES, value) : "No priority";
 }
 
 function columnHtml(col, tasks, board, d, projectName) {
   let title = escapeHtml(col.label);
-  if (board.field === "due_date") {
+  if (board.field === "due_date" && col.value) {
     const [y, m, dd] = col.value.split("-").map(Number);
     const weekday = WEEKDAYS[(new Date(Date.UTC(y, m - 1, dd)).getUTCDay() + 6) % 7]; // Monday = 0
     title = `${weekday} <span class="muted">${dd}/${m}</span>${col.isToday ? ' <span class="board-today">Today</span>' : ""}`;
   }
+  const undated = board.field === "due_date" && !col.value;
   // Today's scope: the 1-3-5 room per column (amber when over).
   const room = col.limit !== undefined && board.id === "today-scope" ? col.limit : null;
   const count = room !== null ? `${tasks.length}/${room}` : String(tasks.length);
   const over = room !== null && tasks.length > room;
   return `
-    <section class="board-col${col.isToday ? " is-today" : ""}" data-column="${escapeHtml(col.value || "")}" aria-label="${escapeHtml(col.label)}">
+    <section class="board-col${col.isToday ? " is-today" : ""}${undated ? " is-undated" : ""}" data-column="${escapeHtml(col.value || "")}" aria-label="${escapeHtml(col.label)}">
       <header class="board-col-head">
         <h2>${title}</h2>
         <span class="board-count${over ? " is-over" : ""}">${count}</span>
       </header>
       <div class="board-cards">
-        ${tasks.map((t) => cardHtml(t, board, d, projectName)).join("") || `<p class="board-empty">Drop here</p>`}
+        ${tasks.map((t) => cardHtml(t, board, d, projectName)).join("") || `<p class="board-empty">${undated ? "Every task has a date" : "Drop here"}</p>`}
       </div>
     </section>`;
 }

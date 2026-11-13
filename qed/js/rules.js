@@ -247,9 +247,15 @@ const priorityColumns = () => [...PRIORITIES.map((p) => ({ value: p.value, label
 export const PLANNER_BOARDS = [
   {
     id: "week", label: "This week", field: "due_date",
-    filter: (t, d) => t.due_date >= d.monday && t.due_date <= d.sunday,
-    columns: (d) => weekDays(d.monday).map((day) => ({ value: day, label: day, isToday: day === d.today })),
+    // Tasks without a due date get their own column first (Romain,
+    // 2026-11-13): drag one onto a day to give it that date.
+    filter: (t, d) => !t.due_date || (t.due_date >= d.monday && t.due_date <= d.sunday),
+    columns: (d) => [
+      { value: null, label: "No date" },
+      ...weekDays(d.monday).map((day) => ({ value: day, label: day, isToday: day === d.today })),
+    ],
     sort: "project",
+    withUndated: true, // the planner also loads open tasks without a date
   },
   {
     id: "week-scope", label: "This week's scope", field: "scope",

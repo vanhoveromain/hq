@@ -132,6 +132,17 @@ export async function listOpenTasksBetween(from, to) {
   return data;
 }
 
+// Task planner (This week): open tasks without a due date.
+export async function listOpenTasksWithoutDate() {
+  const { data, error } = await db
+    .from("qed_tasks")
+    .select(TASK_FIELDS)
+    .eq("done", false)
+    .is("due_date", null);
+  if (error) throw error;
+  return data;
+}
+
 // Bulk buttons. Open tasks (any date) where `field` is set, with its value,
 // so a reset can be undone.
 export async function listOpenTasksWith(field) {

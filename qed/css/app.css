@@ -347,6 +347,7 @@ body.is-focus .main{padding-bottom:48px}
 @media (min-width:1100px){.board-columns{grid-auto-columns:minmax(0,1fr)}}
 .board-col{display:flex;flex-direction:column;min-height:240px;padding:8px;background:var(--hq-subtle);border:2px solid transparent;border-radius:var(--hq-radius);scroll-snap-align:start;transition:border-color var(--hq-ease),background-color var(--hq-ease)}
 .board-col.is-today{background:var(--hq-accent-light)}
+.board-col.is-undated{background:none;border:2px dashed var(--hq-border-strong)}
 .board-col.is-over{border-color:var(--hq-accent);border-style:dashed}
 .board-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 8px}
 .board-col-head h2{margin:0;font-size:13px;font-weight:600}
