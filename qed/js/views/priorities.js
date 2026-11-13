@@ -20,6 +20,7 @@ import {
 } from "../storage.js";
 import { PRIORITY_LISTS, compareDayTasks, compareAchieved, countOneThreeFive, priorityScore, pushChanges } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
+import { routineDoneToday } from "./routine.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
@@ -108,6 +109,10 @@ export async function render(el, { params = [] } = {}) {
     <div class="counter-mini" id="counter-mini" aria-hidden="true"></div>
     ${isTomorrow ? "" : `
     <div class="day-tools" role="group" aria-label="Day tools">
+      <span class="day-tools-group">
+        <a class="btn small${routineDoneToday("plan") ? " secondary" : ""}" href="#/routine/plan">☀ Plan my day</a>
+        <a class="btn small${routineDoneToday("close") || !routineDoneToday("plan") ? " secondary" : ""}" href="#/routine/close">☾ Close the day</a>
+      </span>
       <span class="day-tools-group">
         <span class="day-tools-label">Reset:</span>
         <button type="button" class="btn secondary small" data-bulk="period" title="Clear AM/PM on every open task">Period</button>

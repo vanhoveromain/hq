@@ -17,6 +17,7 @@ import {
   PRIORITY_LISTS, countOneThreeFive, reachOutDate,
 } from "../rules.js";
 import { openProjectForm } from "./projectForm.js";
+import { routineDoneToday } from "./routine.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, safeUrl, icon, showActiveTab } from "../utils/html.js";
@@ -115,8 +116,15 @@ async function drawToday(stripEl, projectsLoad) {
     && reachOutDate(brusselsDayOf(p.created_at), p.reach_out_on) <= today).length;
   const over = scopes.some((s) => s.over);
 
-  stripEl.innerHTML = `
-    <a class="today-item${over ? " is-warning" : ""}" href="#/priorities">
+  // Reminder (UX review #11): Plan my day before 1 pm, Close the day from
+  // 4 pm (Brussels), until done today on this device.
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Brussels", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
+  let reminder = "";
+  if (hour < 13 && !routineDoneToday("plan")) reminder = `<a class="today-reminder" href="#/routine/plan">☀ Plan my day →</a>`;
+  if (hour >= 16 && !routineDoneToday("close")) reminder = `<a class="today-reminder" href="#/routine/close">☾ Close the day →</a>`;
+
+  stripEl.innerHTML = `${reminder}
+    <a class="today-item today-135${over ? " is-warning" : ""}" href="#/priorities">
       <span class="today-num">${scopes.map((s) => `${s.count}<span class="today-of">/${s.perDay}</span>`).join('<span class="today-sep">·</span>')}</span>
       <span class="today-label">To do today (1-3-5)${toDo.length ? ` · ${toDo.length} tasks` : ""}</span>
     </a>

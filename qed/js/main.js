@@ -13,6 +13,7 @@ import * as focusView from "./views/focus.js";
 import * as plannerView from "./views/planner.js";
 import * as salesView from "./views/sales.js";
 import * as unlockView from "./views/unlock.js";
+import * as routineView from "./views/routine.js";
 import { openSearch } from "./views/search.js";
 import { wireShortcuts } from "./utils/keys.js";
 
@@ -27,6 +28,8 @@ const routes = {
   project:    { title: "", view: projectView, tab: "home" },
   // Focus mode: one task full screen (no tabs, no footer), from To do today.
   focus:      { title: "", view: focusView, tab: "priorities" },
+  // Plan my day / Close the day: full screen like Focus mode (UX review #11).
+  routine:    { title: "", view: routineView, tab: "priorities" },
   priorities: { title: (p) => (p[0] === "tomorrow" ? "Priorities for tomorrow" : "Priorities of the day"), view: prioritiesView },
   planner:    { title: "Task planner", view: plannerView },
   sales:      { title: "Sales", view: salesView },
@@ -75,7 +78,7 @@ function render() {
   // Leaving a screen: let it clean up (Focus mode stops its timer).
   if (current && current.view.leave) current.view.leave();
   current = routes[name];
-  document.body.classList.toggle("is-focus", name === "focus");
+  document.body.classList.toggle("is-focus", name === "focus" || name === "routine");
   routes[name].view.render(viewEl, { user: currentUser, params });
 }
 

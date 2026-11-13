@@ -142,6 +142,13 @@ Coordination Team HQ, archived / passed projects.
    Push all, task sheet button, Planner T); = 0 when you pick a date (date chip, task sheet date, Planner drag /
    ← →). Helpers pushChanges / pickedDateChanges in rules.js. Shown as "↻ n" on the date chip and Planner cards
    from 2, amber from 5 (ROLLED_SHOW / ROLLED_WARN). Undo puts back date + count
+7i. Routines (UX review #11, 2026-11-13; js/views/routine.js, full screen like Focus): #/routine/plan/<step> =
+   Plan my day (Catch up: overdue + due today with ↻ >= 2 · No date yet · Your 1-3-5 (counter + quick add, always) ·
+   Meeting points); #/routine/close/<step> = Close the day (Achieved today · What's left: To do + To delegate, push
+   one or all · A look at tomorrow (counter + quick add, always)). Empty steps skipped, decided at start. Same rows /
+   chips / Undo (taskList.js). Back / Skip / Next; last step marks it done today (localStorage qedhq.routine.<kind>).
+   Started from the Priorities toolbar; Home reminder above the Today strip: Plan before 13:00, Close from 16:00
+   (Brussels), until done today on this device
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
