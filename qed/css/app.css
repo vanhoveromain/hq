@@ -504,3 +504,19 @@ kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--h
 .routine-push-all{margin:0 0 12px}
 .routine-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:28px;padding-top:16px;border-top:1px solid var(--hq-border)}
 .routine-nav-right{display:flex;gap:8px}
+
+/* Phone: bigger tap targets (UX review #12, 2026-11-13). A touch screen
+   (no hover) gets 36 px chips with more room between them, 44 px buttons and
+   a bigger tick box. The laptop doesn't change. */
+@media (hover:none) and (pointer:coarse){
+  .task-chips{gap:8px}
+  .tchip{min-height:36px;padding:0 12px;font-size:13px}
+  .tchip svg{width:14px;height:14px}
+  .tchip-add{width:36px;height:36px}
+  .tchip-add svg{width:16px;height:16px}
+  .tchip-input{min-height:36px;font-size:16px}
+  .task-more,.task-push,.task-focus{width:44px;height:44px;margin-top:-10px}
+  .tick{width:22px;height:22px;margin:2px 10px 0 8px}
+  .kcard .tick{width:22px;height:22px}
+  .task-title{min-height:32px}
+}

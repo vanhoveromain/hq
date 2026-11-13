@@ -149,6 +149,8 @@ Coordination Team HQ, archived / passed projects.
    chips / Undo (taskList.js). Back / Skip / Next; last step marks it done today (localStorage qedhq.routine.<kind>).
    Started from the Priorities toolbar; Home reminder above the Today strip: Plan before 13:00, Close from 16:00
    (Brussels), until done today on this device
+7j. Tap targets (UX review #12, 2026-11-13): touch screens only (@media (hover:none) and (pointer:coarse)): chips
+   36 px + 8 px gaps, "+" 36 px, ⋯ / push / focus 44 px, tick 22 px. Laptop unchanged
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
