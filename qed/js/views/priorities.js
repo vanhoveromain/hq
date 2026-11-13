@@ -1,8 +1,8 @@
 // priorities.js: Priorities of the day (#/priorities).
 //
-// Top: today's date, the 1-3-5 counter and quick add. Then the lists:
+// Top: today's date, the 1-3-5 counter, the day tools (Reset: Period / Scope /
+// Priority · Push all to tomorrow; UX review #9) and quick add. Then the lists:
 //   To do today · Overdue (only when not empty)
-//   [the four bulk buttons]
 // (To do tomorrow lives in the Task planner: Romain, 2026-11-09.)
 //   To delegate · Meetings (grouped by meeting) · Delegated · Pending
 //   Achieved today · Achieved this week (folded)
@@ -28,6 +28,14 @@ import { brusselsToday, addDays, mondayOf, brusselsDayOf, longDay } from "../uti
 
 // Remembered while the app is open: which folded lists are open.
 const unfolded = new Set();
+
+// Laptop: a thin copy of the 1-3-5 counter stays under the top bar once the
+// big one has scrolled away (UX review #9, 2026-11-13).
+let counterWatch = null;
+export function leave() {
+  if (counterWatch) counterWatch.disconnect();
+  counterWatch = null;
+}
 
 export async function render(el, { params = [] } = {}) {
   const today = brusselsToday();
@@ -97,24 +105,28 @@ export async function render(el, { params = [] } = {}) {
       </nav>
     </div>
     <div class="counter" id="counter" aria-live="polite"></div>
+    <div class="counter-mini" id="counter-mini" aria-hidden="true"></div>
+    ${isTomorrow ? "" : `
+    <div class="day-tools" role="group" aria-label="Day tools">
+      <span class="day-tools-group">
+        <span class="day-tools-label">Reset:</span>
+        <button type="button" class="btn secondary small" data-bulk="period" title="Clear AM/PM on every open task">Period</button>
+        <button type="button" class="btn secondary small" data-bulk="scope" title="Clear the scope on every open task">Scope</button>
+        <button type="button" class="btn secondary small" data-bulk="priority" title="Clear the priority on every open task; Pending today back to Active">Priority</button>
+      </span>
+      <button type="button" class="btn secondary small" data-bulk="push">${icon("forward")} Push all to tomorrow</button>
+    </div>`}
     ${quickAddHtml({ today: day, placeholder: isTomorrow ? "Add a task for tomorrow…" : "Add a task for today…", projects })}
 
     ${listSection("today", isTomorrow ? "To do tomorrow" : "To do today", lists.today,
       isTomorrow ? "Nothing planned for tomorrow yet." : "Nothing planned for today. Add a task above.")}
     ${!isTomorrow && lists.overdue.length ? listSection("overdue", "Overdue", lists.overdue, "", "is-warning") : ""}
 
-    ${isTomorrow ? "" : `
-    <section class="section bulk" aria-label="Day tools">
-      <button type="button" class="btn secondary small" data-bulk="period">Reset the period</button>
-      <button type="button" class="btn secondary small" data-bulk="scope">Reset the scope</button>
-      <button type="button" class="btn secondary small" data-bulk="priority">Reset the Priority</button>
-      <button type="button" class="btn secondary small" data-bulk="push">${icon("forward")} Push all to tomorrow</button>
-    </section>`}
 
-    ${listSection("toDelegate", "To delegate", lists.toDelegate, "Nothing to hand off.")}
+    ${listSection("toDelegate", "To delegate", lists.toDelegate, "")}
     ${meetingsSection(lists.meetings, isTomorrow)}
-    ${listSection("delegated", "Delegated", lists.delegated, "Nothing delegated right now.")}
-    ${listSection("pending", "Pending", lists.pending, "Nothing pending.")}
+    ${listSection("delegated", "Delegated", lists.delegated, "")}
+    ${listSection("pending", "Pending", lists.pending, "")}
 
     ${isTomorrow ? "" : foldedSection("achievedToday", "Achieved today", lists.achievedToday)}
     ${isTomorrow ? "" : foldedSection("achievedWeek", "Achieved this week", lists.achievedWeek)}
@@ -145,6 +157,7 @@ export async function render(el, { params = [] } = {}) {
   });
 
   drawCounter(el.querySelector("#counter"), lists.today, d);
+  watchCounter(el.querySelector("#counter"), el.querySelector("#counter-mini"));
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });
   el.querySelectorAll("[data-bulk]").forEach((button) => {
     button.addEventListener("click", () => runBulk(button.dataset.bulk, lists, tomorrow, redraw));
@@ -156,7 +169,9 @@ export async function render(el, { params = [] } = {}) {
 // Sections
 // ---------------------------------------------------------------------
 
+// An empty list with no emptyText: one grey line ("To delegate · 0").
 function listSection(key, title, tasks, emptyText, extraClass = "") {
+  if (!tasks.length && !emptyText) return emptyLine(title);
   return `
     <section class="section day-list ${extraClass}">
       <div class="section-head"><h2 class="section-title">${escapeHtml(title)} <span class="count">${tasks.length}</span></h2></div>
@@ -166,7 +181,12 @@ function listSection(key, title, tasks, emptyText, extraClass = "") {
 
 // Meetings: one small group per meeting ("Weekly team meeting"…), points
 // without a meeting name last.
+function emptyLine(title) {
+  return `<p class="list-none">${escapeHtml(title)} · 0</p>`;
+}
+
 function meetingsSection(tasks, isTomorrow) {
+  if (!tasks.length) return emptyLine(`To settle in meetings ${isTomorrow ? "tomorrow" : "today"}`);
   const groups = [...new Set(tasks.map((t) => t.meeting_name || ""))]
     .sort((a, b) => (a === "") - (b === "") || a.localeCompare(b, "en", { sensitivity: "base" }));
   return `
@@ -195,6 +215,11 @@ function drawCounter(counterEl, todayTasks, d) {
   // leaves the count straight away, even before the lists re-sort).
   const { scopes, noScope } = countOneThreeFive(todayTasks.filter((t) => PRIORITY_LISTS.today(t, d)));
   const over = scopes.filter((s) => s.over);
+  const mini = counterEl.parentElement?.querySelector("#counter-mini");
+  if (mini) {
+    mini.innerHTML = `<span class="counter-mini-in">${scopes.map((s) =>
+      `<span class="${s.over ? "is-over" : ""}">${escapeHtml(s.label)} <strong>${s.count}/${s.perDay}</strong></span>`).join("")}</span>`;
+  }
   counterEl.innerHTML = `
     <div class="counter-boxes">
       ${scopes.map((s) => `
@@ -208,6 +233,16 @@ function drawCounter(counterEl, todayTasks, d) {
       : "1-3-5 rule: 1 major, 3 medium, 5 small a day."}${noScope ? ` (${noScope} without a scope)` : ""}</p>`;
 }
 
+
+// Shows the thin counter while the big one is out of sight (laptop only, CSS).
+function watchCounter(counterEl, miniEl) {
+  leave();
+  if (!counterEl || !miniEl || !("IntersectionObserver" in window)) return;
+  counterWatch = new IntersectionObserver(([entry]) => {
+    miniEl.classList.toggle("is-shown", !entry.isIntersecting && entry.boundingClientRect.top < 0);
+  }, { rootMargin: "-64px 0px 0px 0px" });
+  counterWatch.observe(counterEl);
+}
 
 // ---------------------------------------------------------------------
 // The four bulk buttons (each asks first, each can be undone)

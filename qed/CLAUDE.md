@@ -133,6 +133,10 @@ Coordination Team HQ, archived / passed projects.
    #/priorities; Leads to reach out to -> #/sales/reach-out; amber when over / > 0; same rules as PRIORITY_LISTS +
    reachOutDate; removed silently if it can't load). Team section gone: the onboarding plan is a fixed last icon in
    Tools (not a qed_links row, not editable). Order: Today, Projects, Tools
+7g. Priorities layout (UX review #9, 2026-11-13): bulk buttons = one toolbar under the counter (Today only):
+   "Reset: Period · Scope · Priority" left, "Push all to tomorrow" right (same confirm + Undo). Empty To delegate /
+   meetings / Delegated / Pending = one grey line ("To delegate · 0"). Laptop (>= 720 px): a thin 1-3-5 bar stays
+   under the top bar once the big counter scrolls away (IntersectionObserver; priorities.leave() disconnects it)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

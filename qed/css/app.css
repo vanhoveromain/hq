@@ -319,8 +319,19 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .group-title{display:flex;align-items:center;gap:6px;margin:12px 0 6px;font-size:13px;font-weight:600}
 .group-title:first-of-type{margin-top:0}
 .group-title svg{width:14px;height:14px;color:var(--hq-secondary-text)}
-.bulk{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;border-top:1px solid var(--hq-border);border-bottom:1px solid var(--hq-border)}
-.bulk .btn{flex:1 1 auto}
+/* Priorities: day tools under the counter (UX review #9) */
+.day-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:-8px 0 16px}
+.day-tools-group{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.day-tools-label{font-size:13px;color:var(--hq-secondary-text);margin-right:2px}
+.list-none{margin:0 0 12px;padding:8px 2px;font-size:13px;color:var(--hq-secondary-text);border-top:1px solid var(--hq-border)}
+.counter-mini{display:none}
+@media (min-width:720px){
+  .counter-mini{position:fixed;left:0;right:0;top:calc(64px + env(safe-area-inset-top));z-index:15;display:block;pointer-events:none;opacity:0;transform:translateY(-6px);transition:opacity var(--hq-ease),transform var(--hq-ease);background:var(--hq-surface);border-bottom:1px solid var(--hq-border)}
+  .counter-mini.is-shown{opacity:1;transform:none}
+  .counter-mini-in{display:flex;justify-content:center;gap:20px;max-width:1160px;margin:0 auto;padding:6px 16px;font-size:13px;color:var(--hq-secondary-text)}
+  .counter-mini strong{color:var(--hq-primary-text);font-variant-numeric:tabular-nums}
+  .counter-mini .is-over strong{color:var(--hq-warning)}
+}
 .fold-title{cursor:pointer;min-height:36px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--hq-secondary-text);list-style:none;margin-bottom:8px}
 .fold-title::-webkit-details-marker{display:none}
 .fold-title::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);margin-right:4px;transition:transform var(--hq-ease)}
