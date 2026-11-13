@@ -11,7 +11,8 @@ import { openProjectForm } from "./projectForm.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { escapeHtml, safeUrl, icon } from "../utils/html.js";
-import { formatRange, brusselsToday } from "../utils/dates.js";
+import { formatRange, brusselsToday, friendlyDay } from "../utils/dates.js";
+import { renderMarkdown } from "../utils/markdown.js";
 import { rememberOpened } from "./search.js";
 
 // Remembered while the app is open: is the Done list unfolded?
@@ -65,6 +66,7 @@ export async function render(el, { params }) {
           ${headerTags(project)}
           <span class="muted">${escapeHtml(formatRange(project.date_start, project.date_end) || "No date yet")}</span>
         </p>
+        ${progressLine(open, done, today)}
       </div>
       <div class="project-actions">
         ${notionLink(project)}
@@ -90,7 +92,8 @@ export async function render(el, { params }) {
         <h2 class="section-title">Notes</h2>
         <span class="save-state muted" id="notes-state" aria-live="polite"></span>
       </div>
-      <textarea class="notes" id="notes" rows="10" maxlength="100000" placeholder="Meeting notes, contacts, decisions…">${escapeHtml(project.notes || "")}</textarea>
+      <div class="notes-view md" id="notes-view" tabindex="0" role="button" aria-label="Edit the notes"></div>
+      <textarea class="notes" id="notes" rows="10" maxlength="100000" hidden placeholder="Meeting notes, contacts, decisions…&#10;# Title · - list · **bold** · https://links">${escapeHtml(project.notes || "")}</textarea>
     </section>
   `;
 
@@ -109,7 +112,19 @@ export async function render(el, { params }) {
     openProjectForm({ project, onChange: redraw, onDeleted: () => { window.location.hash = "#/home"; } });
   });
 
-  wireNotes(el.querySelector("#notes"), el.querySelector("#notes-state"), project);
+  wireNotes(el.querySelector("#notes"), el.querySelector("#notes-state"), project, el.querySelector("#notes-view"));
+}
+
+// "12 open · 3 overdue · next due Thu 20 Nov · 28 done" (UX review #15).
+function progressLine(open, done, today) {
+  if (!open.length && !done.length) return "";
+  const overdue = open.filter((t) => t.due_date && t.due_date < today).length;
+  const next = open.map((t) => t.due_date).filter((d) => d && d >= today).sort()[0];
+  const parts = [`${open.length} open`];
+  if (overdue) parts.push(`<span class="is-overdue">${overdue} overdue</span>`);
+  if (next) parts.push(`next due ${escapeHtml(friendlyDay(next, today))}`);
+  parts.push(`${done.length} done`);
+  return `<p class="project-progress">${parts.join(" · ")}</p>`;
 }
 
 function headerTags(p) {
@@ -128,9 +143,35 @@ function notionLink(p) {
 
 // Notes save by themselves: 1 second after you stop typing, and when you
 // leave the field. "Saving… / Saved" shows next to the title.
-function wireNotes(textarea, stateEl, project) {
+// Outside the field they show formatted (# titles, - lists, **bold**, links:
+// utils/markdown.js); a click on them (not on a link) edits them again.
+function wireNotes(textarea, stateEl, project, viewEl) {
   let timer = null;
   let lastSaved = project.notes || "";
+  const showView = () => {
+    viewEl.innerHTML = textarea.value.trim()
+      ? renderMarkdown(textarea.value)
+      : `<p class="muted">Add notes: meeting notes, contacts, decisions… (# title, - list, **bold**, links)</p>`;
+    viewEl.hidden = false;
+    textarea.hidden = true;
+  };
+  const edit = () => {
+    viewEl.hidden = true;
+    textarea.hidden = false;
+    textarea.style.height = "";
+    textarea.style.height = Math.max(textarea.scrollHeight + 2, 200) + "px";
+    textarea.focus();
+  };
+  viewEl.addEventListener("click", (event) => {
+    if (event.target.closest("a")) return; // a link opens, it doesn't edit
+    if (window.getSelection && String(window.getSelection()).length) return; // copying text
+    edit();
+  });
+  viewEl.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && event.target === viewEl) { event.preventDefault(); edit(); }
+  });
+  textarea.addEventListener("blur", () => showView());
+  showView();
 
   function save() {
     clearTimeout(timer);

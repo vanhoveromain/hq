@@ -543,3 +543,19 @@ body.is-locked .tabbar-add{visibility:hidden}
 .capture-added svg{width:14px;height:14px;flex:none;color:var(--hq-success)}
 /* Phone: the capture sheet sits at the top, so the iPhone keyboard never covers it */
 @media (max-width:719px){.dialog.capture{margin:calc(8px + env(safe-area-inset-top)) auto auto;width:calc(100% - 16px);border-radius:var(--hq-radius)}}
+
+/* Project page: progress line + formatted notes (UX review #15) */
+.project-progress{margin:6px 0 0;font-size:13px;color:var(--hq-secondary-text)}
+.project-progress .is-overdue{color:var(--hq-danger);font-weight:500}
+.notes-view{min-height:120px;padding:12px 14px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface);cursor:text;font-size:15px;line-height:1.55;overflow-wrap:anywhere}
+.notes-view:hover{border-color:var(--hq-border-strong)}
+.notes-view:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
+.md>:first-child{margin-top:0}
+.md>:last-child{margin-bottom:0}
+.md p{margin:0 0 10px}
+.md h3{margin:18px 0 8px;font-size:18px;font-weight:600}
+.md h4{margin:16px 0 6px;font-size:16px;font-weight:600}
+.md h5{margin:14px 0 4px;font-size:14px;font-weight:600;color:var(--hq-secondary-text)}
+.md ul,.md ol{margin:0 0 10px;padding-left:22px}
+.md li{margin:2px 0}
+.md a{color:var(--hq-accent-text);text-decoration:underline;text-underline-offset:2px}

@@ -155,6 +155,11 @@ Coordination Team HQ, archived / passed projects.
    manifest shortcut "Add task" (#/capture -> Home + sheet; Android only, iOS has no web-app shortcuts). Sheet: title,
    project (last used, localStorage qedhq.captureProject), No date (default) / Today / Tomorrow. Stays open after Add
    (list of what was added), "Done" closes and redraws the screen underneath. Phone: sheet at the top (keyboard)
+7l. Project page (UX review #15, 2026-11-13): progress line under the header ("12 open · 3 overdue · next due Thu
+   20 Nov · 28 done"). Notes: light format (js/utils/markdown.js: # ## ### titles, - / 1. lists, **bold**, *italic*,
+   https links bare or [text](url); escaped first, https only) shown formatted outside the field; click (not on a
+   link, not while selecting text) or Enter = edit (textarea sized to the text); leaving the field = saved + formatted.
+   Task notes (sheet, Focus) stay plain text. (#14 "Move to…" on Planner cards: declined by Romain)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
