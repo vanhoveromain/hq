@@ -151,6 +151,10 @@ Coordination Team HQ, archived / passed projects.
    (Brussels), until done today on this device
 7j. Tap targets (UX review #12, 2026-11-13): touch screens only (@media (hover:none) and (pointer:coarse)): chips
    36 px + 8 px gaps, "+" 36 px, ⋯ / push / focus 44 px, tick 22 px. Laptop unchanged
+7k. Quick capture (UX review #13, 2026-11-13; js/views/capture.js): round "＋" in the middle of the phone bottom bar +
+   manifest shortcut "Add task" (#/capture -> Home + sheet; Android only, iOS has no web-app shortcuts). Sheet: title,
+   project (last used, localStorage qedhq.captureProject), No date (default) / Today / Tomorrow. Stays open after Add
+   (list of what was added), "Done" closes and redraws the screen underneath. Phone: sheet at the top (keyboard)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

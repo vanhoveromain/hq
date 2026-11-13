@@ -16,6 +16,7 @@ import * as unlockView from "./views/unlock.js";
 import * as routineView from "./views/routine.js";
 import { openSearch } from "./views/search.js";
 import { wireShortcuts } from "./utils/keys.js";
+import { openCapture } from "./views/capture.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "QED HQ" stays a link.
@@ -60,6 +61,14 @@ function render() {
   }
   document.body.classList.remove("is-locked");
 
+  // Quick capture from the app icon's shortcut (#/capture): Home underneath,
+  // the capture sheet on top (UX review #13).
+  if (window.location.hash.startsWith("#/capture")) {
+    history.replaceState(null, "", "#/" + DEFAULT_ROUTE);
+    render();
+    openCapture({ onAdded: refreshCurrent });
+    return;
+  }
   const { name, params } = currentRoute();
   if (!name) {
     history.replaceState(null, "", "#/" + DEFAULT_ROUTE);
@@ -145,10 +154,16 @@ function wireSearch() {
   });
   // A task changed from search's task sheet: redraw the screen you're on,
   // where you are (no scroll to the top, no leave()).
-  window.addEventListener("qedhq:refresh", () => {
-    if (!current || locked) return;
-    current.view.render(viewEl, { user: currentUser, params: currentRoute().params });
+  window.addEventListener("qedhq:refresh", refreshCurrent);
+  // Phone: the "＋" in the bottom bar (UX review #13).
+  document.getElementById("open-capture").addEventListener("click", () => {
+    if (!locked) openCapture({ onAdded: refreshCurrent });
   });
+}
+
+function refreshCurrent() {
+  if (!current || locked) return;
+  current.view.render(viewEl, { user: currentUser, params: currentRoute().params });
 }
 
 start().catch((error) => {
