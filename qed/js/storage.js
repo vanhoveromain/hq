@@ -67,9 +67,9 @@ function sameEmail(a, b) {
 
 const TASK_COLUMNS = [
   "title", "project_id", "done", "due_date", "period", "scope", "priority",
-  "state", "is_meeting", "meeting_name", "delegated_to", "notes",
+  "state", "is_meeting", "meeting_name", "delegated_to", "notes", "rolled_over",
 ];
-const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, meeting_name, delegated_to, notes, created_at";
+const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, meeting_name, delegated_to, notes, rolled_over, created_at";
 
 // One task (Focus mode). null if it doesn't exist (or isn't yours).
 export async function getTask(id) {
@@ -175,6 +175,12 @@ export async function updateTasks(ids, changes) {
   if (!ids.length) return;
   const { error } = await db.from("qed_tasks").update(pick(changes, TASK_COLUMNS)).in("id", ids);
   if (error) throw error;
+}
+
+// Different changes per task ([{ id, changes }]), e.g. Push all to tomorrow
+// (each task's own count) and its Undo.
+export async function updateTasksEach(rows) {
+  await Promise.all(rows.map((row) => updateTask(row.id, row.changes)));
 }
 
 // Undo of a bulk change: puts back each task's old value of `field`

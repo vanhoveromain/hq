@@ -137,6 +137,11 @@ Coordination Team HQ, archived / passed projects.
    "Reset: Period · Scope · Priority" left, "Push all to tomorrow" right (same confirm + Undo). Empty To delegate /
    meetings / Delegated / Pending = one grey line ("To delegate · 0"). Laptop (>= 720 px): a thin 1-3-5 bar stays
    under the top bar once the big counter scrolls away (IntersectionObserver; priorities.leave() disconnects it)
+7h. Put-off count (UX review #10, 2026-11-13; migration 20261113000001, add-only, MUST run before testing):
+   qed_tasks.rolled_over (int, default 0). +1 by the nightly rollover and by every Push to tomorrow (row arrow, T,
+   Push all, task sheet button, Planner T); = 0 when you pick a date (date chip, task sheet date, Planner drag /
+   ← →). Helpers pushChanges / pickedDateChanges in rules.js. Shown as "↻ n" on the date chip and Planner cards
+   from 2, amber from 5 (ROLLED_SHOW / ROLLED_WARN). Undo puts back date + count
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

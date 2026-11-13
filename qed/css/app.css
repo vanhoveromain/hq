@@ -476,3 +476,8 @@ kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--h
 .today-item.is-zero .today-num{color:var(--hq-secondary-text)}
 .today-item.is-warning{background:var(--hq-warning-light);border-color:transparent}
 .today-item.is-warning .today-num{color:var(--hq-warning)}
+
+/* "↻ 3": put off 3 times (UX review #10) */
+.rolled{display:inline-flex;align-items:center;margin-left:6px;padding:0 5px;border-radius:999px;background:var(--hq-subtle);color:var(--hq-secondary-text);font:600 11px/18px var(--hq-font);font-variant-numeric:tabular-nums}
+.rolled.is-warn{background:var(--hq-warning-light);color:var(--hq-warning)}
+.kcard-tags .rolled{margin-left:0}

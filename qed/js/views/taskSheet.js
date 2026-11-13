@@ -2,7 +2,7 @@
 // (a full sheet on a phone). Also "Push to tomorrow" and "Delete".
 
 import { listProjects, updateTask, deleteTask } from "../storage.js";
-import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES } from "../rules.js";
+import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, pushChanges, pickedDateChanges } from "../rules.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml } from "../utils/html.js";
@@ -31,7 +31,7 @@ export async function openTaskSheet(task, { onChange, meetingNames = [] }) {
       // Saves what's in the form, with tomorrow as the due date.
       onClick: (form) => {
         form.elements.due_date.value = addDays(brusselsToday(), 1);
-        return save(form, "Pushed to tomorrow.");
+        return save(form, "Pushed to tomorrow.", { pushed: true });
       },
     });
   }
@@ -44,14 +44,18 @@ export async function openTaskSheet(task, { onChange, meetingNames = [] }) {
     },
   });
 
-  async function save(form, message) {
+  async function save(form, message, { pushed = false } = {}) {
     const f = form.elements;
     const title = f.title.value.trim();
     if (!title) throw new Error("Please give the task a title.");
+    const day = f.due_date.value || null;
+    // Pushed: the "put off" count goes up; a date you changed: back to 0.
+    const dateChanges = pushed ? pushChanges(task, day) : pickedDateChanges(task, day);
     await updateTask(task.id, {
       title,
       project_id: f.project_id.value || null,
-      due_date: f.due_date.value || null,
+      due_date: day,
+      ...dateChanges,
       period: f.period.value || null,
       scope: f.scope.value || null,
       priority: f.priority.value || null,

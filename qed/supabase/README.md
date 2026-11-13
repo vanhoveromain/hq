@@ -32,7 +32,8 @@ One database serves local testing and the live app, so every migration is flagge
 | `qed_tasks` | Tasks, linked or not to a project |
 | `qed_links` | The Tools panel links on Home |
 
-- `qed_rollover_tasks()`: moves every open task due before today (Brussels time) to today. Run by the
+- `qed_rollover_tasks()`: moves every open task due before today (Brussels time) to today, and adds 1 to its
+  `rolled_over` count (since migration 20261113000001). Run by the
   scheduler at 5 past every hour, and by the app when it opens. Safe to run any number of times.
 - Every table: Row Level Security, one policy "you only see and change your own rows"; no access for
   visitors who are not logged in.

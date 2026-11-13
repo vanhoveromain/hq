@@ -8,7 +8,8 @@
 // tick it to mark it done. On a phone: press and hold a card, then drag.
 
 import { listOpenTasksBetween, listOpenTasksWithoutDate, listProjects, updateTask, listMeetingNames } from "../storage.js";
-import { PLANNER_BOARDS, PRIORITIES, SCOPES, labelOf, priorityScore } from "../rules.js";
+import { PLANNER_BOARDS, PRIORITIES, SCOPES, labelOf, priorityScore, pushChanges, pickedDateChanges } from "../rules.js";
+import { rolledHtml } from "./taskList.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { makeBoardDraggable } from "../utils/drag.js";
@@ -104,22 +105,26 @@ export async function render(el, { params = [] } = {}) {
   if (disposeDrag) disposeDrag();
   const openCard = (id) => openTaskSheet(findTask(id), { onChange: redraw, meetingNames });
 
-  // A card's field changes (drag, ← →, T, 1-5), with Undo.
-  async function setField(task, field, value, message) {
-    const before = task[field];
-    if (before === value) return;
+  // A card changes (drag, ← →, T, 1-5), with Undo (puts back every field
+  // that changed).
+  async function change(task, changes, message) {
+    const keys = Object.keys(changes).filter((k) => (task[k] ?? null) !== (changes[k] ?? null));
+    if (!keys.length) return;
+    const before = Object.fromEntries(keys.map((k) => [k, task[k] ?? (k === "rolled_over" ? 0 : null)]));
     try {
-      await updateTask(task.id, { [field]: value });
+      await updateTask(task.id, changes);
     } catch (error) {
       showToast("Could not save: " + error.message);
       return;
     }
     showToast(message, {
       actionLabel: "Undo",
-      onAction: async () => { await updateTask(task.id, { [field]: before }); redraw(); },
+      onAction: async () => { await updateTask(task.id, before); redraw(); },
     });
     redraw();
   }
+  const setField = (task, field, value, message) =>
+    change(task, field === "due_date" ? pickedDateChanges(task, value) : { [field]: value }, message);
 
   // Dropped on a column: the board's field takes the column's value. A due
   // date dropped on today counts as "do it today", so Pending / Delegated stay
@@ -158,7 +163,7 @@ export async function render(el, { params = [] } = {}) {
       const next = columns[columns.indexOf(card.closest("[data-column]")) + value];
       if (next) dropOn(task.id, next);
     }
-    if (action === "push") setField(task, "due_date", d.tomorrow, `Pushed to tomorrow: "${task.title}"`);
+    if (action === "push" && task.due_date !== d.tomorrow) change(task, pushChanges(task, d.tomorrow), `Pushed to tomorrow: "${task.title}"`);
     if (action === "priority") setField(task, "priority", value, `"${task.title}": ${labelOf(PRIORITIES, value)}`);
   });
 
@@ -220,6 +225,8 @@ function cardHtml(t, board, d, projectName) {
   if (t.period) tags.push(`<span class="pill">${t.period.toUpperCase()}</span>`);
   if (t.state === "pending" || t.state === "delegated") tags.push(`<span class="pill">${t.state === "delegated" ? `Delegated${t.delegated_to ? " · " + escapeHtml(t.delegated_to) : ""}` : "Pending"}</span>`);
   if (t.is_meeting) tags.push(`<span class="pill">${icon("meeting")} Meeting</span>`);
+  const rolled = rolledHtml(t);
+  if (rolled) tags.push(rolled);
   return `
     <article class="kcard" data-card="${t.id}" tabindex="0" aria-label="${escapeHtml(t.title)}">
       <div class="kcard-top">

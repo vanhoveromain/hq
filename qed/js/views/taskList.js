@@ -10,7 +10,7 @@
 // 2026-11-09). The priority score only decides the order: it isn't shown.
 
 import { createTask, updateTask } from "../storage.js";
-import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES } from "../rules.js";
+import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, ROLLED_SHOW, ROLLED_WARN, pushChanges } from "../rules.js";
 import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay, brusselsToday, addDays } from "../utils/dates.js";
 import { showToast } from "../utils/toast.js";
@@ -104,11 +104,18 @@ function markEmptySelects(rootEl) {
   rootEl.querySelectorAll("select[data-empty]").forEach((select) => { select.selectedIndex = -1; });
 }
 
+// "↻ 3": put off 3 times (UX review #10). Open tasks only, from ROLLED_SHOW.
+export function rolledHtml(task) {
+  const n = task.rolled_over || 0;
+  if (task.done || n < ROLLED_SHOW) return "";
+  return `<span class="rolled${n >= ROLLED_WARN ? " is-warn" : ""}" title="Put off ${n} times (moved on by the night, or pushed to tomorrow)">↻ ${n}</span>`;
+}
+
 function dateChip(task, today) {
   const overdue = !task.done && task.due_date && task.due_date < today;
   return `
     <label class="tchip tchip-date${task.due_date ? "" : " is-empty"}${overdue ? " is-overdue" : ""}">
-      ${icon("calendar")}<span>${escapeHtml(task.due_date ? friendlyDay(task.due_date, today) : "Due date")}</span>
+      ${icon("calendar")}<span>${escapeHtml(task.due_date ? friendlyDay(task.due_date, today) : "Due date")}</span>${rolledHtml(task)}
       <input type="date" data-field="due_date" value="${escapeHtml(task.due_date || "")}" aria-label="Due date">
     </label>`;
 }
@@ -228,6 +235,8 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     // Picking someone to delegate to marks the task as Delegated.
     if (field === "delegated_to" && value) changes.state = "delegated";
     if (field === "state" && !value) changes.state = "active";
+    // A date you pick yourself: the "put off" count starts again.
+    if (field === "due_date") changes.rolled_over = 0;
     save(task, changes);
   });
 
@@ -270,9 +279,9 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
   // Push to tomorrow: the task leaves today's lists, so the whole screen
   // redraws; Undo puts the old date back.
   async function pushToTomorrow(task) {
-    const before = task.due_date;
+    const before = { due_date: task.due_date, rolled_over: task.rolled_over || 0 };
     try {
-      await updateTask(task.id, { due_date: addDays(brusselsToday(), 1) });
+      await updateTask(task.id, pushChanges(task, addDays(brusselsToday(), 1)));
     } catch (error) {
       showToast("Could not save: " + error.message);
       return;
@@ -280,7 +289,7 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     showToast(`Pushed to tomorrow: "${task.title}"`, {
       actionLabel: "Undo",
       onAction: async () => {
-        await updateTask(task.id, { due_date: before });
+        await updateTask(task.id, before);
         onChange();
       },
     });

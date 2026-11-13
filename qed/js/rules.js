@@ -168,6 +168,23 @@ export function priorityScore(task, today) {
   return priority ? priority.score : 0;
 }
 
+// How many times a task was put off (UX review #10, 2026-11-13; migration
+// 20261113000001). The nightly rollover and "Push to tomorrow" add 1; a date
+// you pick yourself puts it back to 0. Shown from 2 ("↻ 2"), amber from 5.
+export const ROLLED_SHOW = 2;
+export const ROLLED_WARN = 5;
+
+// The changes for "Push to tomorrow" (or any push to `day`).
+export function pushChanges(task, day) {
+  return { due_date: day, rolled_over: (task.rolled_over || 0) + 1 };
+}
+
+// The changes for a date you picked yourself (no change = nothing to save).
+export function pickedDateChanges(task, day) {
+  if ((task.due_date || null) === (day || null)) return {};
+  return { due_date: day || null, rolled_over: 0 };
+}
+
 // Open tasks on a project page: by due date (no date last), then score.
 export function compareByDueThenScore(a, b, today) {
   if (a.due_date !== b.due_date) {

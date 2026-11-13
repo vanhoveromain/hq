@@ -16,9 +16,9 @@
 
 import {
   listDayTasks, listProjects, listMeetingNames,
-  listOpenTasksWith, updateTasks, restoreTaskValues,
+  listOpenTasksWith, updateTasks, restoreTaskValues, updateTasksEach,
 } from "../storage.js";
-import { PRIORITY_LISTS, compareDayTasks, compareAchieved, countOneThreeFive, priorityScore } from "../rules.js";
+import { PRIORITY_LISTS, compareDayTasks, compareAchieved, countOneThreeFive, priorityScore, pushChanges } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { openDialog } from "../utils/dialog.js";
@@ -340,17 +340,23 @@ function pushAll(lists, tomorrow, redraw) {
     showToast("Nothing in To do today or To delegate to push.");
     return;
   }
-  const rows = moving.map((t) => ({ id: t.id, value: t.due_date }));
+  // Each task's own "put off" count goes up by 1 (UX review #10); Undo puts
+  // back both its date and its count.
+  const rows = moving.map((t) => ({
+    id: t.id,
+    changes: pushChanges(t, tomorrow),
+    before: { due_date: t.due_date, rolled_over: t.rolled_over || 0 },
+  }));
   confirm({
     title: "Push all to tomorrow",
     text: `Move ${tasksWord(rows.length)} from <strong>To do today</strong> and <strong>To delegate</strong> to tomorrow?`,
     submitLabel: "Push to tomorrow",
     async onConfirm() {
-      await updateTasks(rows.map((r) => r.id), { due_date: tomorrow });
+      await updateTasksEach(rows.map((r) => ({ id: r.id, changes: r.changes })));
       showToast(`${tasksWord(rows.length)} pushed to tomorrow.`, {
         actionLabel: "Undo",
         onAction: async () => {
-          await restoreTaskValues("due_date", rows);
+          await updateTasksEach(rows.map((r) => ({ id: r.id, changes: r.before })));
           redraw();
         },
       });
