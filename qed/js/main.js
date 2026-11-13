@@ -155,6 +155,10 @@ function wireSearch() {
   // A task changed from search's task sheet: redraw the screen you're on,
   // where you are (no scroll to the top, no leave()).
   window.addEventListener("qedhq:refresh", refreshCurrent);
+  // "Try again" on a loading error (UX review #18): redraw the screen.
+  viewEl.addEventListener("click", (event) => {
+    if (event.target.closest("[data-retry]")) refreshCurrent();
+  });
   // Phone: the "＋" in the bottom bar (UX review #13).
   document.getElementById("open-capture").addEventListener("click", () => {
     if (!locked) openCapture({ onAdded: refreshCurrent });

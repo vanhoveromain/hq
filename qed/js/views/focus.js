@@ -14,7 +14,7 @@ import { getTask, getProject, updateTask } from "../storage.js";
 import { PRIORITIES, SCOPES, STATES, labelOf } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, icon } from "../utils/html.js";
+import { escapeHtml, icon, errorHtml } from "../utils/html.js";
 
 const PRESETS = [25, 50, 90];
 
@@ -41,7 +41,7 @@ export async function render(el, { params }) {
   try {
     task = await getTask(params[0]);
   } catch (error) {
-    el.innerHTML = `<p class="error">Could not load the task: ${escapeHtml(error.message)}</p>`;
+    el.innerHTML = errorHtml("Could not load the task: " + error.message);
     return;
   }
   if (!task) {

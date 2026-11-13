@@ -29,7 +29,7 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
       clearable: false,
       classFor: (v) => (v === "active" ? "is-empty" : `state-${v}`),
     }),
-    selectChip("delegated_to", "Delegate to", DELEGATES, task.delegated_to),
+    selectChip("delegated_to", "Delegated to", DELEGATES, task.delegated_to),
     `<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`,
     task.is_meeting
       ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`

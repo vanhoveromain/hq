@@ -61,3 +61,10 @@ export function showActiveTab(rootEl) {
   if (!bar || bar.scrollWidth <= bar.clientWidth) return;
   bar.scrollLeft = active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2;
 }
+
+// A loading error with a "Try again" button (UX review #18): main.js redraws
+// the screen you're on when it's clicked. `message` is plain text.
+export function errorHtml(message) {
+  return `<div class="error-box" role="alert"><p class="error">${escapeHtml(message)}</p>`
+    + `<button type="button" class="btn secondary small" data-retry>Try again</button></div>`;
+}

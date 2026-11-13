@@ -10,7 +10,7 @@ import { PROJECT_TYPES, PROJECT_STATUSES, SALES_STATUSES, OWNERS, DEFAULT_OWNER,
 import { openProjectForm } from "./projectForm.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
-import { escapeHtml, safeUrl, icon } from "../utils/html.js";
+import { escapeHtml, safeUrl, icon, errorHtml } from "../utils/html.js";
 import { formatRange, brusselsToday, friendlyDay } from "../utils/dates.js";
 import { renderMarkdown } from "../utils/markdown.js";
 import { rememberOpened } from "./search.js";
@@ -34,7 +34,7 @@ export async function render(el, { params }) {
       getProject(id), listProjectTasks(id), listMeetingNames().catch(() => []),
     ]);
   } catch (error) {
-    el.innerHTML = `<p class="error">Could not load the project: ${escapeHtml(error.message)}</p>`;
+    el.innerHTML = errorHtml("Could not load the project: " + error.message);
     return;
   }
   if (!project) {

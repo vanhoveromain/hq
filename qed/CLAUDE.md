@@ -166,6 +166,9 @@ Coordination Team HQ, archived / passed projects.
    last; listOpenTasksOf), NOT a column: shown in a "Next step" column (amber when due today or before, ↻), tap =
    task sheet; none = "+ Next step" (task on the lead, tomorrow by default) -> it shows in Priorities too. "New
    lead" is always the main button; "Add to list" = secondary next to it on To reach out. Table from 1100 px
+7n. Polish (UX review #17-#18, 2026-11-13): row chip "Delegated to" (same as the sheet). Loading errors use
+   errorHtml() (utils/html.js) with a "Try again" button; main.js redraws the current screen on [data-retry].
+   #19 (faint "—" in empty table columns): declined, empty fields stay hidden until hover
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

@@ -17,7 +17,7 @@ import { SALES_TABS, SALES_STATUSES, labelOf, reachOutDate, oneYearAfter } from 
 import { openDialog } from "../utils/dialog.js";
 import { openProjectForm } from "./projectForm.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, icon, showActiveTab } from "../utils/html.js";
+import { escapeHtml, icon, showActiveTab, errorHtml } from "../utils/html.js";
 import { brusselsToday, brusselsDayOf, formatDay, formatRange, friendlyDay, addDays } from "../utils/dates.js";
 
 export async function render(el, { params = [] } = {}) {
@@ -35,7 +35,7 @@ export async function render(el, { params = [] } = {}) {
       listMeetingNames().catch(() => []),
     ]);
   } catch (error) {
-    el.innerHTML = `<p class="error">Could not load your leads: ${escapeHtml(error.message)}</p>`;
+    el.innerHTML = errorHtml("Could not load your leads: " + error.message);
     return;
   }
   for (const lead of leads) {

@@ -24,7 +24,7 @@ import { routineDoneToday } from "./routine.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, icon } from "../utils/html.js";
+import { escapeHtml, icon, errorHtml } from "../utils/html.js";
 import { brusselsToday, addDays, mondayOf, brusselsDayOf, longDay } from "../utils/dates.js";
 
 // Remembered while the app is open: which folded lists are open.
@@ -61,7 +61,7 @@ export async function render(el, { params = [] } = {}) {
       listMeetingNames().catch(() => []),
     ]);
   } catch (error) {
-    el.innerHTML = `<p class="error">Could not load your tasks: ${escapeHtml(error.message)}</p>`;
+    el.innerHTML = errorHtml("Could not load your tasks: " + error.message);
     return;
   }
 

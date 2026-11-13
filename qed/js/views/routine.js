@@ -24,7 +24,7 @@ import { PRIORITY_LISTS, compareDayTasks, countOneThreeFive, priorityScore, push
 import { openTaskSheet } from "./taskSheet.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, icon } from "../utils/html.js";
+import { escapeHtml, icon, errorHtml } from "../utils/html.js";
 import { brusselsToday, addDays, brusselsDayOf, longDay } from "../utils/dates.js";
 
 // ---------------------------------------------------------------------
@@ -146,7 +146,7 @@ export async function render(el, { params = [] } = {}) {
       listMeetingNames().catch(() => []),
     ]);
   } catch (error) {
-    el.innerHTML = `<p class="error">Could not load your tasks: ${escapeHtml(error.message)}</p>`;
+    el.innerHTML = errorHtml("Could not load your tasks: " + error.message);
     return;
   }
   const names = Object.fromEntries(projects.map((p) => [p.id, p.name]));

@@ -20,7 +20,7 @@ import { openProjectForm } from "./projectForm.js";
 import { routineDoneToday } from "./routine.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, safeUrl, icon, showActiveTab } from "../utils/html.js";
+import { escapeHtml, safeUrl, icon, showActiveTab, errorHtml } from "../utils/html.js";
 import { formatRange, brusselsToday, brusselsDayOf, addDays } from "../utils/dates.js";
 
 // Remembered while the app is open (not saved): switches on Home.
@@ -155,7 +155,7 @@ async function drawGallery(galleryEl, tab, projectsLoad) {
   try {
     projects = await projectsLoad;
   } catch (error) {
-    galleryEl.innerHTML = `<p class="error">Could not load the projects: ${escapeHtml(error.message)}</p>`;
+    galleryEl.innerHTML = errorHtml("Could not load the projects: " + error.message);
     return;
   }
 
@@ -201,7 +201,7 @@ async function drawTools(toolsEl, redraw) {
   try {
     links = await listLinks();
   } catch (error) {
-    toolsEl.innerHTML = `<p class="error">Could not load the links: ${escapeHtml(error.message)}</p>`;
+    toolsEl.innerHTML = errorHtml("Could not load the links: " + error.message);
     return;
   }
 

@@ -14,7 +14,7 @@ import { openTaskSheet } from "./taskSheet.js";
 import { quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { makeBoardDraggable } from "../utils/drag.js";
 import { showToast } from "../utils/toast.js";
-import { escapeHtml, icon, showActiveTab } from "../utils/html.js";
+import { escapeHtml, icon, showActiveTab, errorHtml } from "../utils/html.js";
 import { brusselsToday, addDays, mondayOf, friendlyDay } from "../utils/dates.js";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -50,7 +50,7 @@ export async function render(el, { params = [] } = {}) {
     ]);
     tasks = [...tasks, ...undated];
   } catch (error) {
-    el.innerHTML = `<p class="error">Could not load your tasks: ${escapeHtml(error.message)}</p>`;
+    el.innerHTML = errorHtml("Could not load your tasks: " + error.message);
     return;
   }
 

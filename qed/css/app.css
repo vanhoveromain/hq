@@ -570,3 +570,7 @@ body.is-locked .tabbar-add{visibility:hidden}
 .md ul,.md ol{margin:0 0 10px;padding-left:22px}
 .md li{margin:2px 0}
 .md a{color:var(--hq-accent-text);text-decoration:underline;text-underline-offset:2px}
+
+/* Loading error + Try again (UX review #18) */
+.error-box{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border-radius:var(--hq-radius);background:var(--hq-danger-light)}
+.error-box .error{margin:0}
