@@ -114,6 +114,10 @@ Coordination Team HQ, archived / passed projects.
    tasks without a due date, listOpenTasksWithoutDate in storage.js; dashed outline). Drag onto a day = that date;
    drag a dated card onto No date = date cleared (Undo either way). Before this, undated tasks only showed on their
    project page
+7c. UX review #2-#5 (2026-11-13): toasts stack (3 max, each its own Undo + timer, utils/toast.js) · every dialog
+   warns once before closing with unsaved changes (Cancel turns into Discard; Esc, cross, outside click too) ·
+   week boards have ‹ › to later weeks (#/planner/week/1 = next week; not before this week; quick add defaults to
+   that Monday) · quick add on Priorities + Planner has a project menu (non-archived; last pick remembered while open)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

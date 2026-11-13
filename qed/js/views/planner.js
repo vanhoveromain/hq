@@ -27,7 +27,10 @@ export function leave() {
 export async function render(el, { params = [] } = {}) {
   const board = PLANNER_BOARDS.find((b) => b.id === params[0]) || PLANNER_BOARDS[0];
   const today = brusselsToday();
-  const monday = mondayOf(today);
+  // Week boards: which week (0 = this week, 1 = next week…; never in the
+  // past: the rollover leaves nothing open there). UX review #4, 2026-11-13.
+  const offset = board.weekly ? Math.max(0, parseInt(params[1], 10) || 0) : 0;
+  const monday = addDays(mondayOf(today), 7 * offset);
   const d = { today, tomorrow: addDays(today, 1), monday, sunday: addDays(monday, 6) };
 
   if (!el.querySelector(".board")) el.innerHTML = `<p class="muted">Loading…</p>`;
@@ -36,7 +39,7 @@ export async function render(el, { params = [] } = {}) {
   let meetingNames;
   try {
     // The week, plus tomorrow when tomorrow is next Monday.
-    const to = d.tomorrow > d.sunday ? d.tomorrow : d.sunday;
+    const to = !offset && d.tomorrow > d.sunday ? d.tomorrow : d.sunday;
     let undated;
     [tasks, undated, projects, meetingNames] = await Promise.all([
       listOpenTasksBetween(monday, to),
@@ -64,9 +67,10 @@ export async function render(el, { params = [] } = {}) {
   document.title = `${board.label} · Task planner · QED HQ`;
   el.innerHTML = `
     <nav class="tabs" aria-label="Boards">
-      ${PLANNER_BOARDS.map((b) => `<a href="#/planner/${b.id}" class="${b === board ? "active" : ""}"${b === board ? ' aria-current="page"' : ""}>${escapeHtml(b.label)}</a>`).join("")}
+      ${PLANNER_BOARDS.map((b) => `<a href="#/planner/${b.id}${b.weekly && offset ? "/" + offset : ""}" class="${b === board ? "active" : ""}"${b === board ? ' aria-current="page"' : ""}>${escapeHtml(b.label)}</a>`).join("")}
     </nav>
-    ${quickAddHtml({ today: board.id === "tomorrow-priority" ? d.tomorrow : today })}
+    ${board.weekly ? weekNavHtml(board, offset, d) : ""}
+    ${quickAddHtml({ today: board.id === "tomorrow-priority" ? d.tomorrow : offset ? d.monday : today, projects })}
     <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it.</p>
     <div class="board" data-board="${board.id}">
       <div class="board-columns" style="--cols:${columns.length}">
@@ -122,6 +126,23 @@ export async function render(el, { params = [] } = {}) {
   });
 
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });
+}
+
+// ‹ This week › (week boards): the week on show, arrows to move.
+function weekNavHtml(board, offset, d) {
+  const name = offset === 0 ? "This week" : offset === 1 ? "Next week" : `In ${offset} weeks`;
+  const [, m1, d1] = d.monday.split("-").map(Number);
+  const [, m2, d2] = d.sunday.split("-").map(Number);
+  const href = (n) => `#/planner/${board.id}${n ? "/" + n : ""}`;
+  return `
+    <nav class="week-nav" aria-label="Week">
+      ${offset > 0
+        ? `<a class="icon-btn" href="${href(offset - 1)}" aria-label="Previous week" title="Previous week">${icon("back")}</a>`
+        : `<span class="icon-btn" aria-hidden="true"></span>`}
+      <span class="week-name"><strong>${name}</strong> <span class="muted">${d1}/${m1} – ${d2}/${m2}</span></span>
+      <a class="icon-btn week-next" href="${href(offset + 1)}" aria-label="Next week" title="Next week">${icon("back")}</a>
+      ${offset > 0 ? `<a class="week-today" href="${href(0)}">Back to this week</a>` : ""}
+    </nav>`;
 }
 
 function columnLabel(board, value, d) {

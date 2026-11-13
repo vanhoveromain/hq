@@ -1,7 +1,9 @@
 // dialog.js: one pop-up form, reused by every "add / edit" in QED HQ.
 //
 // A laptop gets a centred box; a phone gets a sheet from the bottom (CSS).
-// Esc or "Cancel" closes it without saving.
+// Esc or "Cancel" closes it without saving. Once something was changed, the
+// first close only warns ("Unsaved changes…"), the second one discards
+// (UX review #3, 2026-11-13).
 //
 //   openDialog({
 //     title: "New project",
@@ -41,14 +43,37 @@ export function openDialog({ title, body, submitLabel = "Save", actions = [], on
   const status = dialog.querySelector(".status");
   const buttons = () => dialog.querySelectorAll("button");
 
+  // Unsaved changes: anything typed or picked in the form since it opened.
+  let dirty = false;
+  let warned = false;
+  form.addEventListener("input", () => { dirty = true; });
+  form.addEventListener("change", () => { dirty = true; });
+  const cancelButton = dialog.querySelector(".dialog-foot [data-close]");
+
   function close() {
     dialog.close();
   }
+  // Cancel, the cross, Esc and a click outside: warn once if something changed.
+  function tryClose() {
+    if (dirty && !warned) {
+      warned = true;
+      status.textContent = "Unsaved changes. Close again to discard them, or save.";
+      status.className = "status warning";
+      cancelButton.textContent = "Discard";
+      return;
+    }
+    close();
+  }
   dialog.addEventListener("close", () => dialog.remove());
-  for (const button of dialog.querySelectorAll("[data-close]")) button.addEventListener("click", close);
+  for (const button of dialog.querySelectorAll("[data-close]")) button.addEventListener("click", tryClose);
   // A click on the dimmed background (outside the box) closes too.
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) close();
+    if (event.target === dialog) tryClose();
+  });
+  // Esc
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    tryClose();
   });
 
   function showError(error) {

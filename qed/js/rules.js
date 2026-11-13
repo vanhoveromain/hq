@@ -256,9 +256,11 @@ export const PLANNER_BOARDS = [
     ],
     sort: "project",
     withUndated: true, // the planner also loads open tasks without a date
+    weekly: true, // ‹ › to other weeks (#/planner/week/1 = next week)
   },
   {
     id: "week-scope", label: "This week's scope", field: "scope",
+    weekly: true, // ‹ › to other weeks
     filter: (t, d) => t.due_date >= d.monday && t.due_date <= d.sunday,
     columns: () => scopeColumns().map((c) => ({ ...c, limit: undefined })),
     sort: "score",

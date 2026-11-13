@@ -97,7 +97,7 @@ export async function render(el, { params = [] } = {}) {
       </nav>
     </div>
     <div class="counter" id="counter" aria-live="polite"></div>
-    ${quickAddHtml({ today: day, placeholder: isTomorrow ? "Add a task for tomorrow…" : "Add a task for today…" })}
+    ${quickAddHtml({ today: day, placeholder: isTomorrow ? "Add a task for tomorrow…" : "Add a task for today…", projects })}
 
     ${listSection("today", isTomorrow ? "To do tomorrow" : "To do today", lists.today,
       isTomorrow ? "Nothing planned for tomorrow yet." : "Nothing planned for today. Add a task above.")}

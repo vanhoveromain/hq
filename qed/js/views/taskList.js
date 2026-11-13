@@ -315,10 +315,27 @@ function ensureMeetingList(names) {
 }
 
 // Quick add: a title + a due date (default today). Enter adds it.
-export function quickAddHtml({ today, placeholder = "Add a task…" }) {
+// With `projects` (Priorities, Planner: lists across projects), a project menu
+// too, so a new task isn't left without one (UX review #5, 2026-11-13). The
+// last project picked stays picked while the app is open.
+let lastQuickProject = "";
+
+export function quickAddHtml({ today, placeholder = "Add a task…", projects = null }) {
+  const choices = projects
+    ? projects
+      .filter((p) => p.status !== "archived")
+      .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }))
+    : null;
+  if (choices && !choices.some((p) => p.id === lastQuickProject)) lastQuickProject = "";
+  const projectMenu = choices ? `
+      <select name="project_id" class="quick-project" aria-label="Project">
+        <option value="">No project</option>
+        ${choices.map((p) => `<option value="${escapeHtml(p.id)}"${p.id === lastQuickProject ? " selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+      </select>` : "";
   return `
     <form class="quick-add" novalidate>
       <input name="title" class="quick-title" placeholder="${escapeHtml(placeholder)}" maxlength="300" aria-label="New task">
+      ${projectMenu}
       <input name="due_date" type="date" value="${today}" aria-label="Due date">
       <button type="submit" class="btn small">Add</button>
     </form>`;
@@ -326,6 +343,8 @@ export function quickAddHtml({ today, placeholder = "Add a task…" }) {
 
 // defaults = fields every new task gets (e.g. { project_id }).
 export function wireQuickAdd(formEl, { defaults = {}, onAdded }) {
+  const projectMenu = formEl.elements.project_id || null;
+  if (projectMenu) projectMenu.addEventListener("change", () => { lastQuickProject = projectMenu.value; });
   formEl.addEventListener("submit", async (event) => {
     event.preventDefault();
     const title = formEl.elements.title.value.trim();
@@ -335,8 +354,10 @@ export function wireQuickAdd(formEl, { defaults = {}, onAdded }) {
     }
     const button = formEl.querySelector("button");
     button.disabled = true;
+    const fields = { ...defaults, title, due_date: formEl.elements.due_date.value || null };
+    if (projectMenu) fields.project_id = projectMenu.value || null;
     try {
-      await createTask({ ...defaults, title, due_date: formEl.elements.due_date.value || null });
+      await createTask(fields);
       formEl.elements.title.value = "";
       onAdded();
     } catch (error) {
