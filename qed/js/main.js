@@ -13,6 +13,7 @@ import * as focusView from "./views/focus.js";
 import * as plannerView from "./views/planner.js";
 import * as salesView from "./views/sales.js";
 import * as unlockView from "./views/unlock.js";
+import { openSearch } from "./views/search.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "QED HQ" stays a link.
@@ -117,6 +118,31 @@ async function start() {
   document.documentElement.dataset.ready = "true";
   render();
   window.addEventListener("hashchange", render);
+  wireSearch();
+}
+
+// Search (UX review #6): Cmd/Ctrl + K anywhere, "/" when you're not typing,
+// or the magnifier in the top bar. Not on the Unlock screen or in Focus mode.
+function wireSearch() {
+  const allowed = () => !locked && !document.body.classList.contains("is-focus");
+  document.getElementById("open-search").addEventListener("click", () => { if (allowed()) openSearch(); });
+  document.addEventListener("keydown", (event) => {
+    if (!allowed()) return;
+    const typing = event.target.closest?.("input, textarea, select, [contenteditable]");
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      openSearch();
+    } else if (event.key === "/" && !typing && !event.metaKey && !event.ctrlKey && !document.querySelector("dialog[open]")) {
+      event.preventDefault();
+      openSearch();
+    }
+  });
+  // A task changed from search's task sheet: redraw the screen you're on,
+  // where you are (no scroll to the top, no leave()).
+  window.addEventListener("qedhq:refresh", () => {
+    if (!current || locked) return;
+    current.view.render(viewEl, { user: currentUser, params: currentRoute().params });
+  });
 }
 
 start().catch((error) => {

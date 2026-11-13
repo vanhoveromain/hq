@@ -12,6 +12,7 @@ import { openTaskSheet } from "./taskSheet.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { escapeHtml, safeUrl, icon } from "../utils/html.js";
 import { formatRange, brusselsToday } from "../utils/dates.js";
+import { rememberOpened } from "./search.js";
 
 // Remembered while the app is open: is the Done list unfolded?
 let showDone = false;
@@ -54,6 +55,7 @@ export async function render(el, { params }) {
   });
 
   document.title = `${project.name} · QED HQ`;
+  rememberOpened({ kind: "project", id: project.id, label: project.name, sub: isSales ? "Lead" : labelOf(PROJECT_STATUSES, project.status) });
   el.innerHTML = `
     <a class="back" href="${backHref}">${icon("back")} ${isSales ? "Sales" : "Projects"}</a>
     <header class="project-head">

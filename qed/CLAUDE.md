@@ -118,6 +118,11 @@ Coordination Team HQ, archived / passed projects.
    warns once before closing with unsaved changes (Cancel turns into Discard; Esc, cross, outside click too) ·
    week boards have ‹ › to later weeks (#/planner/week/1 = next week; not before this week; quick add defaults to
    that Monday) · quick add on Priorities + Planner has a project menu (non-archived; last pick remembered while open)
+7d. Search (UX review #6, 2026-11-13; js/views/search.js): Cmd/Ctrl + K, "/" (not while typing) or the magnifier
+   in the top bar (all sizes; hidden on Unlock + Focus). Finds project names, sales leads (client-side) and task
+   titles (searchTasks: ilike, open first, max 20). Arrows + Enter. Project/lead -> its page; task -> task sheet over
+   the current screen (redraw via the "qedhq:refresh" event in main.js). Empty box = last 5 opened (project page +
+   task sheet call rememberOpened; localStorage "qedhq.recent", this device only)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

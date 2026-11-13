@@ -7,18 +7,22 @@ import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml } from "../utils/html.js";
 import { brusselsToday, addDays } from "../utils/dates.js";
+import { rememberOpened } from "./search.js";
 
 // onChange() = redraw the screen after a save / delete.
 export async function openTaskSheet(task, { onChange, meetingNames = [] }) {
   // Projects for the "Project" menu: active ones, plus the task's own.
   let projects = [];
+  let projectName = "";
   try {
     projects = (await listProjects())
       .filter((p) => p.status !== "archived" || p.id === task.project_id)
       .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    projectName = projects.find((p) => p.id === task.project_id)?.name || "";
   } catch {
     // The sheet still opens; the project menu just shows the current link.
   }
+  rememberOpened({ kind: "task", id: task.id, label: task.title, sub: projectName || "Task" });
 
   const actions = [];
   if (!task.done) {

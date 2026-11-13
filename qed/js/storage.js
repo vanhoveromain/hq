@@ -132,6 +132,21 @@ export async function listOpenTasksBetween(from, to) {
   return data;
 }
 
+// Search (UX review #6): tasks whose title contains `text` (any case), open
+// ones first, then the most recently done. At most `limit`.
+export async function searchTasks(text, limit = 20) {
+  const pattern = "%" + text.replace(/[\\%_]/g, (c) => "\\" + c) + "%";
+  const { data, error } = await db
+    .from("qed_tasks")
+    .select(TASK_FIELDS)
+    .ilike("title", pattern)
+    .order("done")
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
 // Task planner (This week): open tasks without a due date.
 export async function listOpenTasksWithoutDate() {
   const { data, error } = await db
