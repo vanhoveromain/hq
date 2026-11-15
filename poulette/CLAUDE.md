@@ -161,7 +161,9 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     sites chargés avant qu'il prenne la main (sinon la 1re ouverture hors-ligne échoue). Changer les règles du SW =
     monter VERSION. Hors-ligne : login enregistré sur l'appareil accepté si le serveur est injoignable
     (storage.requireLogin, cookies hq-auth.*) ; foyer : dernière réponse gardée (localStorage poulette.home.<id>) ;
-    badge « Hors ligne » en haut. Testé (Playwright) : 1re visite en ligne puis hors-ligne → l'app s'ouvre
+    badge « Hors ligne » en haut. Testé (Playwright) : 1re visite en ligne puis hors-ligne → l'app s'ouvre. Testé par Rom
+    sur téléphone 2026-11-15 : installation, ouverture depuis l'icône, mode avion → OK. Ignored Build Step (main) mis
+    sur poulette-hq
   - 0.5d Projet Vercel `poulette-hq` — fait 2026-11-15 : Root Directory `poulette` tapé à la main (Settings → Build and
     Deployment ; le sélecteur ne montre que les dossiers de main), `poulette-preview.ownhq.app` sur la branche de
     travail, testé (Bienvenue + Version de test + sélecteur). **Vercel Authentication désactivée** sur les projets
