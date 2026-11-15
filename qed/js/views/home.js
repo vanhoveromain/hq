@@ -169,26 +169,23 @@ async function drawGallery(galleryEl, tab, projectsLoad) {
     return;
   }
 
-  galleryEl.innerHTML = `<ul class="cards">${shown.map((p) => cardHtml(p, tab)).join("")}</ul>`;
-  galleryEl.querySelectorAll("[data-project]").forEach((card) => {
-    card.addEventListener("click", () => {
-      window.location.hash = `#/project/${card.dataset.project}`;
-    });
-  });
+  // A compact list, one thin line per project (Romain, 2026-11-15: the big
+  // cards were too much). Each line is a link to the project page.
+  galleryEl.innerHTML = `<ul class="plist">${shown.map((p) => rowHtml(p, tab)).join("")}</ul>`;
 }
 
-function cardHtml(p, tab) {
+function rowHtml(p, tab) {
   const dates = hasDates(p.type) ? formatRange(p.date_start, p.date_end) : "";
   const tags = [];
   if (p.status) tags.push(`<span class="pill status-${p.status}">${escapeHtml(projectStatusLabel(p))}</span>`);
   if (tab.id === "all") tags.push(`<span class="pill">${escapeHtml(labelOf(PROJECT_TYPES, p.type))}</span>`);
   if (p.owner !== DEFAULT_OWNER) tags.push(`<span class="pill owner">${escapeHtml(labelOf(OWNERS, p.owner) || p.owner)}</span>`);
   return `
-    <li><button type="button" class="card${p.status === "archived" ? " is-archived" : ""}" data-project="${p.id}">
-      <span class="card-name">${escapeHtml(p.name)}</span>
-      ${hasDates(p.type) ? `<span class="card-date">${dates ? escapeHtml(dates) : "No date yet"}</span>` : ""}
-      <span class="card-tags">${tags.join("")}</span>
-    </button></li>`;
+    <li><a class="prow${p.status === "archived" ? " is-archived" : ""}" href="#/project/${escapeHtml(p.id)}" data-project="${escapeHtml(p.id)}">
+      <span class="prow-name">${escapeHtml(p.name)}</span>
+      <span class="prow-date">${hasDates(p.type) ? escapeHtml(dates || "No date yet") : ""}</span>
+      <span class="prow-tags">${tags.join("")}</span>
+    </a></li>`;
 }
 
 
