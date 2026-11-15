@@ -124,8 +124,13 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
   (migration 20261115000001 ; RLS testée : Léa voit tout, un compte hors foyer ne voit et n'écrit rien, anon
   rien). Ajouts : `updated_at` sur toutes les tables modifiables, ids fournis par l'app (renvoi hors-ligne
   sans doublon), fonctions `poulette_create_household` / `poulette_add_member` (par email). À lancer dans own-hq
-  (voir supabase/README.md)
+  (voir supabase/README.md) — lancée dans own-hq 2026-11-15 (Success)
 - 0.4 Accès par personne : portail + switcher selon les HQ accessibles ; compte Léa
+  - 0.4a table `hq_access` (own-hq, `hq-home/supabase/migrations/20261115000002`) — écrite et testée en local
+    2026-11-15. Une ligne = une personne voit un HQ ; lecture de ses lignes seulement, gestion au SQL Editor. Remplit
+    Rom avec tous les HQ ; s'arrête sans rien créer si own-hq a plus d'un compte (→ à lancer avant le compte de Léa)
+  - 0.4b portail + sélecteur filtrés, un seul HQ → redirection ; cache local si réseau KO ; carte Poulette à la 0.5
+  - 0.4c compte Léa (Supabase → Add user) + `hq_access` poulette, vérification
 - 0.5 Coquille de l'app : login, PWA (manifest, service worker, sombre), projet Vercel + domaines
 - 0.6 Household + profil bébé + ajout de Léa comme membre
 
