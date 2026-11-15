@@ -25,7 +25,7 @@ It replaces the old hq / sporthq logos and the SportHQ brand book (removed; stil
 
 | File | Use |
 |---|---|
-| `hq-tokens.css` | The shared design tokens (`--hq-*`) + Geist @font-face. Copied into each app: `hq-home/hq-tokens.css`, `qed/assets/hq-tokens.css`, `sporthq3/css/hq-tokens.css`. Edit here, then copy. |
+| `hq-tokens.css` | The shared design tokens (`--hq-*`) + Geist @font-face. Copied into each app: `hq-home/hq-tokens.css`, `qed/assets/hq-tokens.css`, `sporthq3/css/hq-tokens.css`, `poulette/assets/hq-tokens.css`. Edit here, then copy. |
 | `fonts/` | Geist Sans + Geist Mono variable woff2 (SIL OFL, `fonts/OFL.txt`, from the official `geist` npm package 1.9.1). Copied next to each app's tokens file. |
 | `logos/hq-mark.svg`, `hq-mark-white.svg` | Parent HQ mark for light / dark backgrounds |
 | `logos/hq-icon.svg`, `hq-icon-*.png` | Parent app icon (white tile, 0.25× clear space) |

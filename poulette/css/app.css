@@ -1,0 +1,66 @@
+/* Poulette HQ (HQ Brand Guidelines v1.0, brand/guidelines-v1.0/).
+   Colours, type and radii come from ../assets/hq-tokens.css (--hq-*);
+   data-hq="poulette" on <html> gives the teal accent. Dark by default.
+   Used at night, one-handed: big targets (>= 48 px), big text. */
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html:not([data-ready]) #view .loading{animation:fade-in .3s .4s both}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--hq-canvas);color:var(--hq-primary-text);font:400 17px/1.5 var(--hq-font);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--hq-accent-text);outline-offset:2px}
+a{color:var(--hq-accent-text)}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px;width:100%}
+.muted{color:var(--hq-secondary-text)}
+.error{color:var(--hq-danger)}
+
+/* Top bar: product identity + HQ switcher */
+.top{background:var(--hq-surface);border-bottom:1px solid var(--hq-border);padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:20}
+.top-row{display:flex;align-items:center;gap:12px;min-height:56px}
+hq-switcher{margin-right:auto}
+hq-switcher:not([data-ready]) a{font-weight:600;color:inherit;text-decoration:none}
+
+/* Test address (poulette-preview.ownhq.app): amber band + label */
+body.is-preview .top{box-shadow:inset 0 3px 0 var(--hq-warning)}
+body.is-preview .top-row::after{content:"Version de test";padding:2px 8px;border-radius:var(--hq-radius-sm);background:var(--hq-warning-light);color:var(--hq-warning);font-size:12px;font-weight:600}
+
+/* Bottom tab bar, every screen size */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);background:var(--hq-surface);border-top:1px solid var(--hq-border);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;font-size:12px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none}
+.tabbar a svg{width:24px;height:24px}
+.tabbar a.active{color:var(--hq-accent-text)}
+@media (min-width:720px){.tabbar{left:50%;right:auto;width:640px;transform:translateX(-50%);border:1px solid var(--hq-border);border-bottom:0;border-radius:var(--hq-radius) var(--hq-radius) 0 0}}
+body.no-household .tabbar a:not([data-route="reglages"]){visibility:hidden}
+
+/* Page */
+.main{flex:1;padding-top:20px;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.page-title{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.25;margin:0 0 20px}
+.page-title:empty{display:none}
+.section{margin:0 0 28px}
+.section-title{font-size:14px;font-weight:600;color:var(--hq-secondary-text);margin:0 0 10px}
+.placeholder{margin:0;padding:20px;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius);background:var(--hq-surface)}
+.placeholder strong{display:block;margin-bottom:4px}
+.card{padding:16px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px}
+.row + .row{border-top:1px solid var(--hq-border)}
+
+/* Buttons: >= 48 px tall (one thumb, in the dark) */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:0;border-radius:var(--hq-radius);background:var(--hq-accent);color:var(--hq-on-accent);font:600 16px/1 var(--hq-font);text-decoration:none;cursor:pointer;transition:background-color var(--hq-ease)}
+.btn:hover{background:var(--hq-accent-dark)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.secondary{background:var(--hq-surface);color:var(--hq-primary-text);border:1px solid var(--hq-border-strong)}
+.btn.secondary:hover{background:var(--hq-subtle)}
+.btn.danger{background:var(--hq-surface);color:var(--hq-danger);border:1px solid var(--hq-border-strong)}
+.btn.danger:hover{background:var(--hq-danger-light)}
+.btn.block{width:100%}
+
+/* Segmented choice (theme) */
+.segmented{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:var(--hq-radius);background:var(--hq-subtle)}
+.segmented button{min-height:44px;border:0;border-radius:var(--hq-radius-sm);background:none;color:var(--hq-secondary-text);font:500 15px/1 var(--hq-font);cursor:pointer}
+.segmented button[aria-pressed="true"]{background:var(--hq-surface);color:var(--hq-primary-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+
+.error-box{display:grid;gap:12px;justify-items:start;padding:16px;border-radius:var(--hq-radius);background:var(--hq-danger-light)}
+.error-box p{margin:0}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}

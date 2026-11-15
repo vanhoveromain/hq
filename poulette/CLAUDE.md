@@ -147,7 +147,13 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
   - 0.5a Identité — faite 2026-11-15 : symbole + icônes (`brand/export.mjs` → `poulette/icons/`, `hq-home/`), tokens
     (copiés dans les 4 apps), carte sur le portail + entrée dans le sélecteur (lien vers poulette.ownhq.app, vivant à
     la 0.5d). Léa est désormais redirigée vers Poulette HQ par le portail
-  - 0.5b Coquille (login, barre + sélecteur, navigation, Réglages + Se déconnecter, FR, sombre forcé)
+  - 0.5b Coquille — construite 2026-11-15 : index.html (FR, `data-theme="dark"` + petit script dans <head> : thème
+    choisi dans Réglages, `localStorage poulette.theme` = dark / light / auto, cet appareil), css/app.css (cibles
+    >= 48 px, texte 17 px, largeur 640 px), js/hqBase.js (preview → hq-preview), js/storage.js (client own-hq
+    d'auth.js ; `getMyHousehold()` = membre + foyer + bébés, null si aucun foyer), js/main.js (hash router, 5 onglets
+    en bas : Accueil, Journal, Suivi, Pédiatre, Réglages ; sans foyer → écran Bienvenue, seul Réglages reste ; erreur
+    de chargement → Réessayer), views/placeholders.js (écrans Phase 1/2 annoncés), views/reglages.js (compte, thème,
+    Se déconnecter → login hq). serve.py port 8002. Testé avec un faux Supabase (Playwright, iPhone 13)
   - 0.5c PWA (manifest, icônes, service worker : l'app s'ouvre sans réseau)
   - 0.5d Projet Vercel `poulette` + domaines poulette / poulette-preview
 - 0.6 Household + profil bébé + ajout de Léa comme membre
