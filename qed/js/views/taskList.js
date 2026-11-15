@@ -25,7 +25,9 @@ import { handleHtml } from "../utils/colResize.js";
 //                     about, e.g. Today on Priorities): calendar icon only
 //   options.inMeeting the meeting group the row sits in: its name tag is left
 //                     out (the group heading says it already)
-export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null, inMeeting = null }) {
+//   options.dueLast   the Due column last, just before the push / focus icons
+//                     (Priorities, Romain 2026-11-15); add class "due-last" to the list
+export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null, inMeeting = null, dueLast = false }) {
   // Fields grouped in cells. On a phone the cells simply flow under the
   // title; on a laptop each cell is a column, aligned from row to row.
   const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
@@ -47,12 +49,14 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
       emptyLabel: "No project", clearLabel: "No project",
     })));
   }
+  const due = cell("due", dateChip(task, today, hideDay));
   cells.push(
-    cell("due", dateChip(task, today, hideDay)),
+    ...(dueLast ? [] : [due]),
     cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
     cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
     cell("scope", scopeButtons(task)),
     cell("status", status),
+    ...(dueLast ? [due] : []),
   );
   cells.push(cell("add", `<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`));
 
@@ -82,7 +86,7 @@ const th = (col, label) => `<span class="th">${label}${handleHtml(col)}</span>`;
 export function taskListInnerHtml(tasks, rowOptions) {
   const head = rowOptions.noHead ? "" : `
     <li class="task-head" aria-hidden="true">
-      <span></span>${th("task", "Task")}${rowOptions.projects ? th("project", "Project") : ""}${th("due", "Due")}${th("period", "AM/PM")}${th("priority", "Priority")}${th("scope", "Scope")}${th("status", "Status")}
+      <span></span>${th("task", "Task")}${rowOptions.projects ? th("project", "Project") : ""}${rowOptions.dueLast ? "" : th("due", "Due")}${th("period", "AM/PM")}${th("priority", "Priority")}${th("scope", "Scope")}${th("status", "Status")}${rowOptions.dueLast ? th("due", "Due") : ""}
       <span></span><span></span><span></span>
     </li>`;
   return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");

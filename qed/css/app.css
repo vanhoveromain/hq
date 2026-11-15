@@ -312,6 +312,8 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
   .task-list{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-due,100px) var(--w-period,68px) var(--w-priority,96px) var(--w-scope,164px) var(--w-status,minmax(150px,.9fr)) 32px 32px 36px}
   /* with a project: tick | task | project | due | … */
   .task-list.with-project{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-project,minmax(160px,.9fr)) var(--w-due,100px) var(--w-period,64px) var(--w-priority,92px) var(--w-scope,164px) var(--w-status,minmax(120px,.7fr)) 68px 32px 36px}
+  /* Priorities: Due last, just before the push / focus icons. */
+  .task-list.with-project.due-last{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-project,minmax(160px,.9fr)) var(--w-period,64px) var(--w-priority,92px) var(--w-scope,164px) var(--w-status,minmax(120px,.7fr)) var(--w-due,100px) 68px 32px 36px}
   /* Column titles: a thin handle on the right edge to resize. */
   .task-head .th{position:relative;align-self:stretch;display:flex;align-items:center;min-width:0}
   /* Always-visible divider between column titles (like a spreadsheet); a

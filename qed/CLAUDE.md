@@ -208,7 +208,10 @@ Coordination Team HQ, archived / passed projects.
    new Non-event project + Reopen of a non-event = Continuous. Task-list columns resizable on a laptop
    (utils/colResize.js): handle on each column title's right edge, drag = width, double-click = normal width;
    widths in localStorage qedhq.cols (this device), as --w-<col> on <html>, used in --task-cols with the normal
-   width as fallback; .task-list scrolls sideways if columns get wider than the page · 11. Phone / laptop check + polish
+   width as fallback; .task-list scrolls sideways if columns get wider than the page. Fit (Romain, 2026-11-15): a chosen width
+   is a maximum (minmax(smallest, chosen)), so columns give way in a narrower window; while dragging, a column
+   stops growing at what really fits (no column ever leaves the frame). Priorities: Due column last, just before
+   the push / focus icons (rowOptions.dueLast + list class due-last); other lists keep Due after Project · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

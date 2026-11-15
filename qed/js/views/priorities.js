@@ -153,9 +153,9 @@ export async function render(el, { params = [] } = {}) {
     const group = ul.dataset.group;
     let listTasks = lists[key];
     if (group !== undefined) listTasks = listTasks.filter((t) => (t.meeting_name || "") === group);
-    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day, inMeeting: group, noHead: !first };
+    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day, inMeeting: group, noHead: !first, dueLast: true };
     first = false;
-    ul.classList.add("with-project");
+    ul.classList.add("with-project", "due-last");
     ul.innerHTML = taskListInnerHtml(listTasks, rowOptions);
     wireTaskList(ul, listTasks, {
       onOpen, onChange: redraw, rowOptions, meetingNames,

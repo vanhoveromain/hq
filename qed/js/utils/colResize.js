@@ -18,10 +18,14 @@ function load() {
 function save(widths) {
   try { localStorage.setItem(KEY, JSON.stringify(widths)); } catch { /* private mode: this visit only */ }
 }
+// A chosen width is a maximum, not a fixed size: minmax(smallest, chosen).
+// When the window is narrower than all the chosen widths together, columns
+// give up width (down to their smallest) instead of pushing the last
+// column out of the frame (Romain, 2026-11-15).
 function apply(widths) {
   const root = document.documentElement.style;
   for (const col of Object.keys(RESIZABLE)) {
-    if (widths[col]) root.setProperty(`--w-${col}`, `${widths[col]}px`);
+    if (widths[col]) root.setProperty(`--w-${col}`, `minmax(${RESIZABLE[col]}px, ${widths[col]}px)`);
     else root.removeProperty(`--w-${col}`);
   }
 }
@@ -41,11 +45,19 @@ export function wireColumnResize() {
     event.preventDefault();
     const col = handle.dataset.resize;
     const startX = event.clientX;
-    const startW = handle.parentElement.getBoundingClientRect().width;
+    const cell = handle.parentElement;
+    const startW = cell.getBoundingClientRect().width;
     document.body.classList.add("is-resizing");
     const move = (e) => {
       widths[col] = Math.round(Math.max(RESIZABLE[col], startW + e.clientX - startX));
       apply(widths);
+      // No room left (the other columns are at their smallest): the column
+      // stops growing at what really fits, so nothing leaves the frame.
+      const shown = Math.round(cell.getBoundingClientRect().width);
+      if (shown < widths[col] - 1) {
+        widths[col] = Math.max(RESIZABLE[col], shown);
+        apply(widths);
+      }
     };
     const up = () => {
       document.removeEventListener("pointermove", move);
