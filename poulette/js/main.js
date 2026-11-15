@@ -7,9 +7,16 @@
 import { HQ_BASE, IS_PREVIEW } from "./hqBase.js";
 import { requireLogin, loginUrl, onAuthChange, getMyHousehold } from "./storage.js";
 import { errorHtml } from "./utils/html.js";
-import * as screens from "./views/placeholders.js";
 import * as reglages from "./views/reglages.js";
 import * as welcome from "./views/welcome.js";
+import * as homeView from "./views/home.js";
+import * as journal from "./views/journal.js";
+import * as suivi from "./views/suivi.js";
+import * as pediatre from "./views/pediatre.js";
+import * as store from "./store.js";
+import { setMembers, closePanel } from "./views/actions.js";
+import { openSheet } from "./utils/sheet.js";
+import { escapeHtml } from "./utils/html.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "Poulette HQ" stays a link.
@@ -17,10 +24,10 @@ import(HQ_BASE + "switcher.js").catch(() => {});
 
 // The five tabs, in the order of the bottom bar.
 const routes = {
-  accueil:  { title: "", view: screens.home },
-  journal:  { title: "Journal", view: screens.journal },
-  suivi:    { title: "Suivi", view: screens.suivi },
-  pediatre: { title: "Pédiatre", view: screens.pediatre },
+  accueil:  { title: "", view: homeView },
+  journal:  { title: "Journal", view: journal },
+  suivi:    { title: "Suivi", view: suivi },
+  pediatre: { title: "Pédiatre", view: pediatre },
   reglages: { title: "Réglages", view: reglages, noHouseholdOk: true },
 };
 const DEFAULT_ROUTE = "accueil";
@@ -67,7 +74,17 @@ function render() {
     welcome.render(viewEl, { user, onDone: () => reload() });
     return;
   }
+  if (current && current !== route.view && current.leave) current.leave();
+  current = route.view;
   route.view.render(viewEl, { user, home, params, reload });
+}
+let current = null;
+
+// The data changed (an entry, the other phone, the outbox): the screen on
+// show redraws its live part (screens with a form keep what you typed).
+function onStoreChange() {
+  drawOutboxBadge();
+  if (current && current.refresh) current.refresh(viewEl);
 }
 
 // Load the household again (after creating it, or changing the baby) and
@@ -90,7 +107,38 @@ async function loadHome() {
     homeError = error;
   }
   showOffline();
+  if (home && home.babies[0]) {
+    setMembers(home.members);
+    store.start({ userId: user.id, babyId: home.babies[0].id, householdId: home.household.id });
+  }
 }
+
+// Top bar: "⏳ 2 en attente" (not sent yet) / "⚠ 1 refusée" (tap: details).
+function drawOutboxBadge() {
+  const badge = document.getElementById("outbox-badge");
+  const { pending, failed } = store.outboxState();
+  badge.hidden = !pending && !failed.length;
+  badge.classList.toggle("failed", failed.length > 0);
+  badge.textContent = failed.length ? `⚠ ${failed.length} refusée${failed.length > 1 ? "s" : ""}` : `⏳ ${pending} en attente`;
+}
+document.getElementById("outbox-badge").addEventListener("click", () => {
+  const { pending, failed } = store.outboxState();
+  openSheet({
+    title: "Saisies pas encore enregistrées",
+    body: `${pending ? `<p>${pending} saisie(s) attendent le réseau. Elles sont gardées sur ce téléphone et partiront toutes seules.</p>` : ""}
+      ${failed.map((i) => { const d = store.describeItem(i); return `<div class="card failed-item"><strong>${escapeHtml(d.how)} · ${escapeHtml(d.what)}</strong>
+        <span class="hint">${escapeHtml(i.error || "")}</span>
+        <div class="actions"><button type="button" class="btn danger small" data-drop="${i.seq}">Abandonner</button>
+        <button type="button" class="btn small" data-retry-item="${i.seq}">Réessayer</button></div></div>`; }).join("")}
+      ${pending ? '<button type="button" class="btn block" data-send>Envoyer maintenant</button>' : ""}`,
+    onOpen(el, close) {
+      el.querySelectorAll("[data-drop]").forEach((b) => b.addEventListener("click", async () => { await store.dropItem(Number(b.dataset.drop)); close(); }));
+      el.querySelectorAll("[data-retry-item]").forEach((b) => b.addEventListener("click", async () => { await store.retryItem(Number(b.dataset.retryItem)); close(); }));
+      el.querySelector("[data-send]")?.addEventListener("click", () => { store.flush(); close(); });
+    },
+  });
+});
+store.onChange(onStoreChange);
 
 // "Hors ligne" in the top bar: no network, or data shown from this device.
 function showOffline() {
@@ -141,7 +189,11 @@ async function start() {
   await loadHome();
   document.documentElement.dataset.ready = "true";
   render();
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", () => { closePanel(); render(); });
+  // Back to the app after a while (phone in the pocket): fresh data.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && home && !home.fromCache) store.refresh();
+  });
 
   // "Réessayer" on a loading error: load the household again, then redraw.
   viewEl.addEventListener("click", async (event) => {

@@ -14,7 +14,7 @@
 // Changing a file of the app: nothing to do (network first). Changing THIS
 // file's rules: bump VERSION, the old cache is then thrown away.
 
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = "poulette-" + VERSION;
 const TIMEOUT_MS = 3000;
 
@@ -32,9 +32,20 @@ const SHELL = [
   "js/main.js",
   "js/hqBase.js",
   "js/storage.js",
+  "js/store.js",
+  "js/queue.js",
+  "js/rules.js",
   "js/utils/html.js",
-  "js/views/placeholders.js",
+  "js/utils/dates.js",
+  "js/utils/sheet.js",
+  "js/views/actions.js",
+  "js/views/editor.js",
+  "js/views/export.js",
+  "js/views/home.js",
+  "js/views/journal.js",
+  "js/views/pediatre.js",
   "js/views/reglages.js",
+  "js/views/suivi.js",
   "js/views/welcome.js",
 ];
 

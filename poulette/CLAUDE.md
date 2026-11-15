@@ -188,7 +188,37 @@ main tant que main n'a pas le dossier poulette/ : sinon un mail « Production de
 ajouter le domaine `poulette.ownhq.app` (Production) ; vérifier ownhq.app (cartes filtrées, Léa redirigée) ;
 corriger test-qed.sh (branche par défaut) et la doc QED HQ sur hq-preview.
 
-**Phase 1 — MVP (mi-janvier 2027)** : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,
+**Phase 1 — MVP (mi-janvier 2027)** — construite d'un bloc le 2026-11-15 (Rom : « fais tout 1 et puis on check »),
+testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus, export) ; à vérifier par Rom + Léa :
+- 1.1 `js/store.js` (ce que les écrans montrent = copie serveur + boîte d'envoi appliquée par-dessus ; envoi dans
+  l'ordre ; refus définitif (droits, valeur) = « ⚠ refusée » dans la barre du haut, Réessayer / Abandonner, jamais
+  de perte silencieuse ; pas de réseau = « ⏳ n en attente », renvoi au retour du réseau + toutes les 30 s), `js/queue.js`
+  (boîte d'envoi IndexedDB, mémoire si indisponible). **Toutes** les écritures passent par la boîte d'envoi, y compris
+  modifs et suppressions (arrêter un chrono sans réseau la nuit = une modif) : dernier envoyé gagne, sans gestion
+  fine des conflits (niveau 3 complet toujours V2). Ids créés sur le téléphone ; insert déjà présent (23505) = OK ;
+  update qui ne touche aucune ligne = refus. Copie locale des 3 derniers jours + mesures + questions
+  (localStorage `poulette.cache.<bébé>`). `js/rules.js` : types, listes, prochain sein, résumés, durées.
+- 1.2 Accueil (`views/home.js`) : chronos en cours en haut (tétée : côté, chrono du côté, total, « Côté G/D », Stop ;
+  sommeil : Réveil), 4 cartes (dernière tétée + « Prochain : … », biberon, change, dernier sommeil fini), compteurs du
+  jour, 6 gros boutons + Plus. Saisies dans `views/actions.js`. Change = 2 taps (Change → Pipi / Caca / Les deux,
+  enregistré tout de suite). Après chaque saisie : le « reçu » en bas (−5 / −15 / −30 min, Modifier, Annuler ;
+  couleur + texture si caca), disparaît seul après 12 s. Couleurs de caca : 6 des cartes de selles pédiatriques (noir
+  méconium, vert, jaune, brun, pâle/blanc, rouge), toujours avec leur nom ; textures : liquide, grumeleuse, pâteuse,
+  moulée (choix de Claude, à valider)
+- 1.3 Tétée = 2 taps (Tétée → G / D, côté suggéré encadré), chrono = l'événement lui-même (ended_at vide, segments) :
+  survit à la fermeture et se voit sur l'autre téléphone. 1.4 Biberon (+10 / +30 / −10, dernier volume et lait repris),
+  Tirage. 1.5 Sommeil = 1 tap (chrono), Régurgitation (type + taille = 2 taps), Plus : Température (±0,1 / ±0,5,
+  dernière valeur), Médicament (déjà donnés en puces : un tap = enregistré), Mesure, Question
+- 1.6 `views/editor.js` : tout modifier (heure, fin, détails, note), Supprimer (2e tap = confirmer ; suppression douce)
+- 1.7 Journal (`views/journal.js`) : jour par jour, heures, plus récent en haut, qui a saisi, ⏳ / ⚠, totaux du jour
+- 1.8 Temps réel : `subscribeChanges` (storage.js) sur events / mesures (filtre bébé) / questions (filtre foyer) ;
+  rattrapage complet à la reconnexion et au retour dans l'app. Supabase ne filtre pas les suppressions réelles
+  (mesures, questions) : elles arrivent au plus tard au prochain rafraîchissement
+- 1.9 Suivi (`views/suivi.js`) : mesures + source, graphique du poids (une courbe, 1 unité = 1 px, valeur au toucher),
+  écart au poids de naissance (g et %). 1.10 Pédiatre : questions (ajout, coche, réponse). 1.11 Export CSV (;, BOM,
+  Excel) + JSON dans Réglages
+- 1.12 Recette sur les 2 téléphones + mise en ligne : à faire
+ : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,
 température, médicament), timeline, mesures, questions, realtime, hors-ligne niveau 2, export.
 
 **Phase 2 — Rapport** : rapport pédiatre + mode consultation + PDF (idéalement avant la naissance).

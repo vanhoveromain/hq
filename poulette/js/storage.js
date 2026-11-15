@@ -85,14 +85,14 @@ export async function getMyHousehold(userId) {
 }
 
 async function fetchHousehold(userId) {
-  const { data: members, error } = await db
+  const { data: mine, error } = await db
     .from("poulette_members")
     .select("id, display_name, role, household:poulette_households (id, name)")
     .eq("user_id", userId)
     .order("created_at")
     .limit(1);
   if (error) throw error;
-  const member = members[0];
+  const member = mine[0];
   if (!member) return null;
 
   const { data: babies, error: babyError } = await db
@@ -102,7 +102,8 @@ async function fetchHousehold(userId) {
     .order("created_at");
   if (babyError) throw babyError;
 
-  return { household: member.household, member, babies };
+  const members = await listMembers(member.household.id);
+  return { household: member.household, member, babies, members };
 }
 
 // Creates your household and makes you its first member (database function
@@ -172,8 +173,111 @@ export async function updateBaby(babyId, fields) {
 export function friendlyError(error) {
   const text = String((error && error.message) || error || "");
   if (/Failed to fetch|NetworkError|Load failed|offline/i.test(text)) return "Pas de réseau. Réessaie quand la connexion revient.";
+  if (/Ligne introuvable/.test(text)) return "Cette saisie n'existe plus (supprimée sur l'autre téléphone ?).";
   if (/Aucun compte avec cet email/.test(text)) return "Aucun compte HQ avec cet email. Crée-le d'abord dans Supabase (Authentication → Users), puis réessaie.";
   if (/Pas membre de ce foyer/.test(text)) return "Seul un membre du foyer peut ajouter quelqu'un.";
   if (/check constraint/i.test(text)) return "Une valeur n'est pas acceptée (vérifie les chiffres).";
   return "Quelque chose n'a pas marché : " + text;
+}
+
+
+// ---------------------------------------------------------------------
+// Events, measurements, questions (read). Writes go through store.js and
+// its outbox (queue.js), then sendChange() below.
+// ---------------------------------------------------------------------
+
+const EVENT_FIELDS = "id, baby_id, type, started_at, ended_at, data, note, created_by, created_at, updated_at, deleted_at";
+
+// Events of a baby that started in [fromIso, toIso), deleted ones included
+// (the app hides them; needed so a deletion made on the other phone shows).
+export async function fetchEvents(babyId, fromIso, toIso) {
+  let query = db.from("poulette_events").select(EVENT_FIELDS).eq("baby_id", babyId).gte("started_at", fromIso);
+  if (toIso) query = query.lt("started_at", toIso);
+  const { data, error } = await query.order("started_at", { ascending: false }).limit(2000);
+  if (error) throw error;
+  return data;
+}
+
+// Chronos still running, however old (a feed started before the window).
+export async function fetchRunning(babyId) {
+  const { data, error } = await db.from("poulette_events").select(EVENT_FIELDS)
+    .eq("baby_id", babyId).is("ended_at", null).in("type", ["breastfeed", "sleep"]).is("deleted_at", null);
+  if (error) throw error;
+  return data;
+}
+
+// Every event of a type (for suggestions / report), lighter columns.
+export async function fetchEventsOfType(babyId, type, limit = 200) {
+  const { data, error } = await db.from("poulette_events").select(EVENT_FIELDS)
+    .eq("baby_id", babyId).eq("type", type).is("deleted_at", null)
+    .order("started_at", { ascending: false }).limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMeasurements(babyId) {
+  const { data, error } = await db.from("poulette_measurements")
+    .select("id, baby_id, measured_at, weight_g, length_cm, head_cm, source, created_by, created_at, updated_at")
+    .eq("baby_id", babyId).order("measured_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchQuestions(householdId) {
+  const { data, error } = await db.from("poulette_questions")
+    .select("id, household_id, baby_id, text, done_at, answer, created_by, created_at, updated_at")
+    .eq("household_id", householdId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// Everything of a baby, for the export (Réglages).
+export async function fetchAllEvents(babyId) {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db.from("poulette_events").select(EVENT_FIELDS)
+      .eq("baby_id", babyId).order("started_at").range(from, from + 999);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) return out;
+  }
+}
+
+// Sends one outbox item. Throws { permanent: true } when the database refuses
+// it for good (rights, wrong value): it is then kept as "refusée", never lost.
+export async function sendChange(item) {
+  let result;
+  if (item.kind === "insert") {
+    result = await db.from(item.table).insert(item.row);
+    // Already there (sent before, answer lost on the way): fine.
+    if (result.error && result.error.code === "23505") return;
+  } else if (item.kind === "update") {
+    result = await db.from(item.table).update(item.patch).eq("id", item.id).select("id");
+    if (!result.error && (!result.data || result.data.length === 0)) {
+      throw Object.assign(new Error("Ligne introuvable (supprimée ou jamais enregistrée)"), { permanent: true });
+    }
+  } else if (item.kind === "delete") {
+    result = await db.from(item.table).delete().eq("id", item.id);
+  }
+  if (result && result.error) {
+    const error = result.error;
+    const message = error.message || String(error);
+    const network = !error.code || /Failed to fetch|NetworkError|Load failed|fetch/i.test(message);
+    const tokenExpired = error.code === "PGRST301" || /JWT/i.test(message);
+    throw Object.assign(new Error(message), { permanent: !network && !tokenExpired });
+  }
+}
+
+// Live changes from the other phone (Supabase Realtime). onChange(table,
+// eventType, newRow, oldRow). Returns a function that stops listening.
+export function subscribeChanges(babyId, householdId, onChange, onStatus) {
+  const channel = db.channel(`poulette-${babyId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "poulette_events", filter: `baby_id=eq.${babyId}` },
+      (p) => onChange("poulette_events", p.eventType, p.new, p.old))
+    .on("postgres_changes", { event: "*", schema: "public", table: "poulette_measurements", filter: `baby_id=eq.${babyId}` },
+      (p) => onChange("poulette_measurements", p.eventType, p.new, p.old))
+    .on("postgres_changes", { event: "*", schema: "public", table: "poulette_questions", filter: `household_id=eq.${householdId}` },
+      (p) => onChange("poulette_questions", p.eventType, p.new, p.old))
+    .subscribe((status) => onStatus && onStatus(status));
+  return () => { db.removeChannel(channel); };
 }

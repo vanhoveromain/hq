@@ -5,6 +5,7 @@
 //             for someone who only has Poulette HQ: the portal sends them back here)
 
 import { escapeHtml, errorHtml } from "../utils/html.js";
+import { exportAll } from "./export.js";
 import {
   signOut, loginUrl, listMembers, addMember, createBaby, updateBaby, friendlyError,
 } from "../storage.js";
@@ -61,6 +62,12 @@ export function render(el, { user, home, reload }) {
         <button type="submit" class="btn block">${baby ? "Enregistrer" : "Ajouter le bébé"}</button>
       </form>
     </section>` : ""}
+    ${home && baby ? `<section class="section">
+      <h2 class="section-title">Sauvegarde</h2>
+      <div class="field-pair"><button type="button" class="btn secondary" data-export="csv">Exporter (CSV)</button>
+        <button type="button" class="btn secondary" data-export="json">Exporter (JSON)</button></div>
+      <p class="hint" id="export-status">Tout télécharger, à ranger dans Dropbox de temps en temps (CSV = Excel, JSON = copie complète).</p>
+    </section>` : ""}
     <section class="section">
       <h2 class="section-title">Compte</h2>
       <div class="card">
@@ -85,10 +92,36 @@ export function render(el, { user, home, reload }) {
     wireBaby(el, home, baby, reload);
   }
 
+  el.querySelectorAll("[data-export]").forEach((button) => button.addEventListener("click", async () => {
+    const status = el.querySelector("#export-status");
+    button.disabled = true;
+    status.textContent = "Préparation…";
+    try {
+      await exportAll(home, button.dataset.export);
+      status.textContent = "Téléchargé. Pense à le ranger dans Dropbox.";
+    } catch (error) {
+      status.textContent = friendlyError(error);
+    }
+    button.disabled = false;
+  }));
+
   el.querySelectorAll("[data-theme-choice]").forEach((button) => {
     button.addEventListener("click", () => {
       applyTheme(button.dataset.themeChoice);
-      el.querySelectorAll("[data-theme-choice]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+      el.querySelectorAll("[data-export]").forEach((button) => button.addEventListener("click", async () => {
+    const status = el.querySelector("#export-status");
+    button.disabled = true;
+    status.textContent = "Préparation…";
+    try {
+      await exportAll(home, button.dataset.export);
+      status.textContent = "Téléchargé. Pense à le ranger dans Dropbox.";
+    } catch (error) {
+      status.textContent = friendlyError(error);
+    }
+    button.disabled = false;
+  }));
+
+  el.querySelectorAll("[data-theme-choice]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
     });
   });
 
