@@ -72,12 +72,19 @@ export async function render(el, { params = [] } = {}) {
     </nav>
     ${board.weekly ? weekNavHtml(board, offset, d) : ""}
     ${quickAddHtml({ today: board.id === "tomorrow-priority" ? d.tomorrow : offset ? d.monday : today, projects })}
-    <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it (laptop: double-click, or select it and use ← →).</p>
+    <details class="board-help"${hintSeen() ? "" : " open"}>
+      <summary aria-label="How the board works" title="How the board works">?</summary>
+      <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it (laptop: double-click, or select it and use ← →).</p>
+    </details>
     <div class="board" data-board="${board.id}">
       ${boardColumnsHtml(columns, shown, board, d, sorter, projectName)}
     </div>`;
 
   showActiveTab(el);
+  // The hint shows open until you close it once; then it stays behind "?".
+  el.querySelector(".board-help").addEventListener("toggle", (event) => {
+    if (!event.target.open) markHintSeen();
+  });
   const boardEl = el.querySelector(".board");
   const findTask = (id) => tasks.find((t) => t.id === id);
 
@@ -166,6 +173,16 @@ export async function render(el, { params = [] } = {}) {
   });
 
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });
+}
+
+// Planner hint (UX review #2 #11): open the first time, behind "?" once
+// closed. This device only.
+const HINT_KEY = "qedhq.plannerHintSeen";
+function hintSeen() {
+  try { return localStorage.getItem(HINT_KEY) === "1"; } catch { return false; }
+}
+function markHintSeen() {
+  try { localStorage.setItem(HINT_KEY, "1"); } catch { /* private mode: shows again next time */ }
 }
 
 // ‹ This week › (week boards): the week on show, arrows to move.

@@ -456,6 +456,13 @@ body.is-focus .main{padding-bottom:48px}
 
 /* Task planner: boards */
 .board-hint{margin:-4px 0 12px;font-size:13px}
+/* The hint sits behind a small "?" once closed (open on first visit). */
+.board-help{display:flex;align-items:flex-start;gap:8px;margin:-4px 0 12px}
+.board-help>summary{flex:none;display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--hq-border-strong);border-radius:50%;color:var(--hq-secondary-text);font-size:12px;font-weight:600;list-style:none;cursor:pointer}
+.board-help>summary::-webkit-details-marker{display:none}
+.board-help>summary:hover{color:var(--hq-primary-text);border-color:var(--hq-secondary-text)}
+.board-help[open]>summary{background:var(--hq-subtle)}
+.board-help .board-hint{margin:2px 0 0}
 /* The Task planner uses the whole screen width on a laptop (Romain, 2026-11-15). */
 body.is-wide .wrap{max-width:none}
 @media (min-width:1100px){body.is-wide .wrap{padding:0 32px}}

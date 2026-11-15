@@ -197,6 +197,8 @@ Coordination Team HQ, archived / passed projects.
    grid-template-columns set per board in boardColumnsHtml: var(--col) / var(--col-thin)). Phone (< 640): every board
    = agenda, columns stacked top to bottom, past days hidden, no min-height. drag.js: page auto-scrolls up / down
    (rAF loop) while a dragged card is held near the top / bottom of the screen
+7s. UX review #2 #11 (2026-11-15): Planner hint in <details class="board-help">: open on the first visit, closing it
+   stores localStorage qedhq.plannerHintSeen = 1 (this device), then it stays behind a small "?"
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
