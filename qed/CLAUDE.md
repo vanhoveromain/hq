@@ -180,7 +180,38 @@ Coordination Team HQ, archived / passed projects.
    project header (Undo), "Reopen" once done; Home toggle "Show done events". Task lists with a project: Project
    column right after Task, before Due (phone: first chip). Home projects = compact list (.plist: one thin line per
    project, name · dates · tags; phone: dates under the name), replaces the big cards
-9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
+7p. UX review #2 batch 1 (2026-11-15): fix: on touch screens the row bin (44 px) squeezed the title under the icons
+   + sideways scroll: bin only in a "+"-opened row there (stacked layout), .task-body column minmax(0,1fr) · long
+   chip values cut with "…" (full value on hover) · Planner cards: priority pill with a flag, scope pill dashed ·
+   Priorities: column titles once, above the first list (rowOptions.noHead) · meeting name tag hidden inside its own
+   group (rowOptions.inMeeting) · wider Project column · push arrow pinned right in its slot so icons line up.
+   Project page quick add keeps today as default (Romain). Next: batch 2 = phone Priorities (#2 + #12), batch 3 =
+   planner (#4 past days, #5 phone agenda)
+7q. UX review #2 batch 2 (2026-11-15): Priorities toolbar = Plan · Close · "Reset ▾" menu (details.menu: period /
+   scope / priority, same confirm + Undo; closes on outside click / Esc) + Push all. Phone (< 640): menu = "More"
+   and also holds Push all; 1-3-5 rule text hidden (warnings + "n without a scope" stay); quick add = one line, project
+   / date / Add appear once you tap it (:focus-within / :has). Stacked rows (< 1100): .task is a grid, .task-body
+   display:contents: tick · title · icons on line 1, fields across the full width below; project tag max 180 px;
+   scope buttons read Maj / Med / Sma on a phone (.show-phone / .hide-phone helpers)
+7r. UX review #2 batch 3 (2026-11-15): Planner This week: past days with no task = thin 44 px strip (col.isPast;
+   grid-template-columns set per board in boardColumnsHtml: var(--col) / var(--col-thin)). Phone (< 640): every board
+   = agenda, columns stacked top to bottom, past days hidden, no min-height. drag.js: page auto-scrolls up / down
+   (rAF loop) while a dragged card is held near the top / bottom of the screen
+7s. UX review #2 #11 (2026-11-15): Planner hint in <details class="board-help">: open on the first visit, closing it
+   stores localStorage qedhq.plannerHintSeen = 1 (this device), then it stays behind a small "?"
+9. Notion import (re-runnable) · 10. Switch day. 2026-11-15: fresh export (82 projects / leads, 158 open tasks;
+   3 tasks of archived / passed projects left out; 8 Paula / Gabriella projects imported as Bespoke), built with
+   `node build-sql.mjs --clean` (new flag: first deletes app-made projects + tasks, Tools links kept), tested on a
+   local Postgres (import + re-run). Romain runs data/import.sql in the QED project for switch day 16 Nov (run 2026-11-15, success)
+7t. Romain's feedback (2026-11-15): project statuses relabelled (codes unchanged, no migration): coming_up =
+   "Scheduled" (hard deadline), ongoing = "Continuous" (no deadline: multi-event contracts, website maintenance);
+   new Non-event project + Reopen of a non-event = Continuous. Task-list columns resizable on a laptop
+   (utils/colResize.js): handle on each column title's right edge, drag = width, double-click = normal width;
+   widths in localStorage qedhq.cols (this device), as --w-<col> on <html>, used in --task-cols with the normal
+   width as fallback; .task-list scrolls sideways if columns get wider than the page. Fit (Romain, 2026-11-15): a chosen width
+   is a maximum (minmax(smallest, chosen)), so columns give way in a narrower window; while dragging, a column
+   stops growing at what really fits (no column ever leaves the frame). Priorities: Due column last, just before
+   the push / focus icons (rowOptions.dueLast + list class due-last); other lists keep Due after Project · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

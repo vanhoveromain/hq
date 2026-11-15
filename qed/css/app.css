@@ -238,7 +238,7 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .task+.task{border-top:1px solid var(--hq-border)}
 .task:hover{background:color-mix(in srgb,var(--hq-subtle) 45%,transparent)}
 .tick{flex:none;width:18px;height:18px;margin:4px 10px 0 10px;accent-color:var(--hq-accent);cursor:pointer}
-.task-body{flex:1;min-width:0;display:grid;gap:6px}
+.task-body{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
 /* The title reads as text, not as a button; clicking it still renames. */
 .task-title{justify-self:start;max-width:100%;padding:0;margin:0;border:0;background:none;color:inherit;font:inherit;font-size:15px;font-weight:500;line-height:1.4;text-align:left;overflow-wrap:anywhere;cursor:text}
 .task-title:focus-visible{outline:2px solid var(--hq-accent);outline-offset:2px;border-radius:2px}
@@ -253,6 +253,10 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .tchip:hover{border-color:var(--hq-border-strong)}
 .tchip:focus-within,.tchip:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
 .tchip svg{width:12px;height:12px;flex:none;opacity:.8}
+/* Long values (project names) are cut with "…" so a row never gets wider than
+   the screen (full name on hover). */
+.tchip{max-width:100%;min-width:0}
+.tchip>span[aria-hidden]{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .tchip.is-on{background:var(--hq-accent-light);color:var(--hq-accent-text)}
 .tchip.is-overdue{background:var(--hq-danger-light);color:var(--hq-danger)}
 .tchip.prio-critical{background:var(--hq-danger-light);color:var(--hq-danger)}
@@ -282,6 +286,17 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .tchip-add:hover{color:var(--hq-primary-text);border-color:var(--hq-secondary-text)}
 .task.show-all .tchip-add{background:var(--hq-subtle);border-style:solid;transform:rotate(45deg)}
 @media (hover:hover){.tchip-add{opacity:0}.task:hover .tchip-add,.task:focus-within .tchip-add{opacity:1}}
+/* Stacked rows (below 1100 px): tick · title · icons on top; the fields use the
+   whole width underneath (also under the tick), so a row needs fewer lines. */
+@media (max-width:1099px){
+  .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:start}
+  .task-body{display:contents}
+  .task>.tick{grid-row:1}
+  .task-title{grid-row:1;grid-column:2;align-self:center}
+  .task-chips{grid-row:2;grid-column:1 / -1;padding:6px 0 0 10px}
+  .task>.slot-push,.task>.task-delete,.task>.task-more{grid-row:1}
+  .cell-project .tchip{max-width:180px}
+}
 /* Cells: on a phone they flow under the title like the tags themselves. */
 .cell{display:contents}
 .slot-push:empty{display:none}
@@ -292,9 +307,23 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 @media (min-width:1100px){
   /* tick | task | due | AM/PM | priority | scope | status | (project) | push | ⋯ */
   /* tick | task | due | AM/PM | priority | scope (3 buttons) | status | (project) | push | bin | ⋯ */
-  .task-list{--task-cols:32px minmax(220px,1fr) 100px 68px 96px 164px minmax(150px,.9fr) 32px 32px 36px}
+  /* Each width can be changed by dragging the column title's edge
+     (utils/colResize.js sets --w-…); the value after the comma is the normal width. */
+  .task-list{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-due,100px) var(--w-period,68px) var(--w-priority,96px) var(--w-scope,164px) var(--w-status,minmax(150px,.9fr)) 32px 32px 36px}
   /* with a project: tick | task | project | due | … */
-  .task-list.with-project{--task-cols:32px minmax(180px,1fr) minmax(120px,.7fr) 100px 64px 92px 164px minmax(130px,.8fr) 68px 32px 36px}
+  .task-list.with-project{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-project,minmax(160px,.9fr)) var(--w-due,100px) var(--w-period,64px) var(--w-priority,92px) var(--w-scope,164px) var(--w-status,minmax(120px,.7fr)) 68px 32px 36px}
+  /* Priorities: Due last, just before the push / focus icons. */
+  .task-list.with-project.due-last{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-project,minmax(160px,.9fr)) var(--w-period,64px) var(--w-priority,92px) var(--w-scope,164px) var(--w-status,minmax(120px,.7fr)) var(--w-due,100px) 68px 32px 36px}
+  /* Column titles: a thin handle on the right edge to resize. */
+  .task-head .th{position:relative;align-self:stretch;display:flex;align-items:center;min-width:0}
+  /* Always-visible divider between column titles (like a spreadsheet); a
+     14 px grab zone around it; turns teal and thicker under the mouse. */
+  .col-resize{position:absolute;top:4px;bottom:4px;right:-10px;width:14px;cursor:col-resize;z-index:1;touch-action:none}
+  .col-resize::after{content:"";position:absolute;left:6px;top:2px;bottom:2px;width:2px;border-radius:1px;background:var(--hq-border-strong);transition:background-color var(--hq-ease),width var(--hq-ease),left var(--hq-ease)}
+  .col-resize:hover::after,body.is-resizing .col-resize::after{left:5px;width:4px;background:var(--hq-accent)}
+  body.is-resizing{cursor:col-resize;user-select:none}
+  /* Columns may get wider than the screen: the list scrolls sideways then. */
+  .task-list{overflow-x:auto}
   .task-delete{margin-top:0}
   .task.is-done .task-delete{display:inline-grid;visibility:hidden}
   .task,.task-head{display:grid;grid-template-columns:var(--task-cols);align-items:center;column-gap:6px}
@@ -304,7 +333,8 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
   .cell{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
   .cell .tchip{max-width:100%}
   .cell .tchip>span[aria-hidden]{overflow:hidden;text-overflow:ellipsis}
-  .slot-push,.slot-push:empty{display:flex;justify-content:center}
+  /* push arrow always at the right edge, focus to its left: lines up across lists */
+  .slot-push,.slot-push:empty{display:flex;justify-content:flex-end}
   .task-push,.task-more,.score{margin-top:0}
   .cell-add{display:none}
   .task-head{padding:0 4px 0 0;min-height:34px;border-bottom:1px solid var(--hq-border);font-size:12px;font-weight:500;color:var(--hq-secondary-text)}
@@ -360,6 +390,32 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .day-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:-8px 0 16px}
 .day-tools-group{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .day-tools-label{font-size:13px;color:var(--hq-secondary-text);margin-right:2px}
+/* Small drop-down menu (Reset on Priorities) */
+.menu{position:relative}
+.menu>summary{list-style:none;cursor:pointer}
+.menu>summary::-webkit-details-marker{display:none}
+.menu>summary svg{width:14px;height:14px}
+.menu-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:30;display:grid;min-width:240px;padding:4px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);box-shadow:var(--hq-shadow-pop)}
+.menu-pop button{display:block;min-height:36px;padding:9px 10px;border:0;border-radius:var(--hq-radius-sm);background:none;color:var(--hq-primary-text);font:500 14px/1.2 var(--hq-font);text-align:left;cursor:pointer}
+.menu-pop button:hover,.menu-pop button:focus-visible{background:var(--hq-subtle);outline:none}
+.menu-pop button svg{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.menu-pop button.show-phone{display:none}
+/* Phone-only / laptop-only bits */
+.show-phone{display:none}
+@media (max-width:639px){
+  .show-phone{display:revert}
+  span.show-phone{display:inline}
+  .menu-pop button.show-phone{display:block}
+  .day-tools,.day-tools-group{flex-wrap:nowrap}
+  .day-tools .btn{padding:0 12px}
+  .hide-phone{display:none !important}
+  /* Priorities: no rule text on a phone (the boxes say it); warnings stay. */
+  .counter-rule{display:none}
+  .counter-note.is-plain{display:none}
+  .day-tools{margin-bottom:12px}
+  /* Quick add: one line until you tap it; project, date and Add appear then. */
+  .quick-add:not(:focus-within):not(:has(.quick-title:not(:placeholder-shown)))>:not(.quick-title){display:none}
+}
 .list-none{margin:0 0 12px;padding:8px 2px;font-size:13px;color:var(--hq-secondary-text);border-top:1px solid var(--hq-border)}
 .counter-mini{display:none}
 @media (min-width:720px){
@@ -414,6 +470,13 @@ body.is-focus .main{padding-bottom:48px}
 
 /* Task planner: boards */
 .board-hint{margin:-4px 0 12px;font-size:13px}
+/* The hint sits behind a small "?" once closed (open on first visit). */
+.board-help{display:flex;align-items:flex-start;gap:8px;margin:-4px 0 12px}
+.board-help>summary{flex:none;display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--hq-border-strong);border-radius:50%;color:var(--hq-secondary-text);font-size:12px;font-weight:600;list-style:none;cursor:pointer}
+.board-help>summary::-webkit-details-marker{display:none}
+.board-help>summary:hover{color:var(--hq-primary-text);border-color:var(--hq-secondary-text)}
+.board-help[open]>summary{background:var(--hq-subtle)}
+.board-help .board-hint{margin:2px 0 0}
 /* The Task planner uses the whole screen width on a laptop (Romain, 2026-11-15). */
 body.is-wide .wrap{max-width:none}
 @media (min-width:1100px){body.is-wide .wrap{padding:0 32px}}
@@ -423,8 +486,8 @@ body.is-wide .wrap{max-width:none}
 .week-nav .week-name{min-width:150px;text-align:center;font-size:14px}
 .week-nav .week-next svg{transform:scaleX(-1)}
 .week-nav .week-today{margin-left:8px;font-size:13px;color:var(--hq-accent-text)}
-.board-columns{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:10px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x proximity}
-@media (min-width:1100px){.board-columns{grid-auto-columns:minmax(0,1fr)}}
+.board-columns{--col:minmax(240px,1fr);--col-thin:44px;display:grid;grid-auto-flow:column;gap:10px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x proximity}
+@media (min-width:1100px){.board-columns{--col:minmax(0,1fr)}}
 .board-col{display:flex;flex-direction:column;min-height:240px;padding:8px;background:var(--hq-subtle);border:2px solid transparent;border-radius:var(--hq-radius);scroll-snap-align:start;transition:border-color var(--hq-ease),background-color var(--hq-ease)}
 .board-col.is-today{background:var(--hq-accent-light)}
 .board-col.is-undated{background:none;border:2px dashed var(--hq-border-strong)}
@@ -436,6 +499,19 @@ body.is-wide .wrap{max-width:none}
 .board-count.is-over{color:var(--hq-warning)}
 .board-cards{display:grid;gap:6px;align-content:start;flex:1}
 .board-empty{margin:0;padding:16px 8px;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius-sm);font-size:12px;color:var(--hq-secondary-text);text-align:center}
+/* A past day of this week (always empty): a thin strip with its name. */
+.board-col.is-past{min-width:0;padding:8px 2px;background:none;border:1px solid var(--hq-border);text-align:center}
+.board-col.is-past .board-col-head{justify-content:center;padding:4px 0}
+.board-col.is-past h2{font-size:12px;font-weight:500;color:var(--hq-secondary-text);line-height:1.4}
+.board-col.is-past .board-count,.board-col.is-past .board-empty{display:none}
+/* Phone: the columns become an agenda, stacked from top to bottom (past days
+   left out); drag a card up or down onto another day. */
+@media (max-width:639px){
+  .board-columns{grid-auto-flow:row;grid-template-columns:minmax(0,1fr) !important;overflow-x:visible;scroll-snap-type:none}
+  .board-col{min-height:0}
+  .board-col.is-past{display:none}
+  .board-empty{padding:10px 8px}
+}
 .kcard{display:grid;gap:6px;padding:10px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius-sm);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x pan-y}
 .kcard:hover{border-color:var(--hq-border-strong)}
 .kcard:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
@@ -447,6 +523,9 @@ body.is-wide .wrap{max-width:none}
 .kcard-project{margin:0;font-size:12px;color:var(--hq-secondary-text);overflow-wrap:anywhere}
 .kcard-tags{display:flex;flex-wrap:wrap;gap:4px}
 .kcard-tags .pill{min-height:20px;font-size:11px;padding:0 6px}
+/* Priority vs scope on cards: priority has a flag, scope a dashed outline. */
+.kcard-tags .pill svg{width:10px;height:10px;margin-right:3px;flex:none}
+.kcard-tags .pill-scope{background:none;border:1px dashed var(--hq-border-strong)}
 .kcard-tags .pill svg{width:11px;height:11px;margin-right:3px}
 .drag-ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;box-shadow:var(--hq-shadow-pop);cursor:grabbing}
 
@@ -567,10 +646,15 @@ kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--h
   .tchip-add svg{width:16px;height:16px}
   .tchip-input{min-height:36px;font-size:16px}
   .task-more,.task-push,.task-focus,.task-delete{width:44px;height:44px;margin-top:-10px}
+  /* Stacked rows on a touch screen: the bin only shows once the row is opened
+     with "+" (4 icons of 44 px left the title no room). */
   .scope-btn{min-height:32px;padding:0 12px;font-size:13px}
   .tick{width:22px;height:22px;margin:2px 10px 0 8px}
   .kcard .tick{width:22px;height:22px}
   .task-title{min-height:32px}
+}
+@media (hover:none) and (pointer:coarse) and (max-width:1099px){
+  .task:not(.show-all) .task-delete{display:none}
 }
 
 /* Quick capture (UX review #13): "＋" in the phone's bottom bar + sheet */

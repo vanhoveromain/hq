@@ -153,7 +153,9 @@ export async function markProjectDone(project, onChange) {
 }
 
 export async function restoreProject(project, onChange) {
-  await updateProject(project.id, { status: "coming_up" });
-  showToast(`"${project.name}" reopened as ${labelOf(PROJECT_STATUSES, "coming_up")}.`);
+  // Non-event projects have no deadline: they reopen as Continuous.
+  const status = project.type === "non_event" ? "ongoing" : "coming_up";
+  await updateProject(project.id, { status });
+  showToast(`"${project.name}" reopened as ${labelOf(PROJECT_STATUSES, status)}.`);
   onChange();
 }

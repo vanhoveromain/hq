@@ -14,6 +14,7 @@ import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, ROLLED_SHOW, ROLLED_WAR
 import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay, brusselsToday, addDays } from "../utils/dates.js";
 import { showToast } from "../utils/toast.js";
+import { handleHtml } from "../utils/colResize.js";
 
 // One row.
 //   options.today     "YYYY-MM-DD" (Brussels)
@@ -22,7 +23,11 @@ import { showToast } from "../utils/toast.js";
 //   options.showFocus show a "Focus" button (To do today only, decided 2026-11-08)
 //   options.hideDay   a day not written on the date chip (the day the list is
 //                     about, e.g. Today on Priorities): calendar icon only
-export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null }) {
+//   options.inMeeting the meeting group the row sits in: its name tag is left
+//                     out (the group heading says it already)
+//   options.dueLast   the Due column last, just before the push / focus icons
+//                     (Priorities, Romain 2026-11-15); add class "due-last" to the list
+export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null, inMeeting = null, dueLast = false }) {
   // Fields grouped in cells. On a phone the cells simply flow under the
   // title; on a laptop each cell is a column, aligned from row to row.
   const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
@@ -33,7 +38,7 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
     }),
     selectChip("delegated_to", "Delegated to", DELEGATES, task.delegated_to),
     `<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`,
-    task.is_meeting
+    task.is_meeting && !(task.meeting_name && task.meeting_name === inMeeting)
       ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`
       : "",
   ].join("");
@@ -44,12 +49,14 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
       emptyLabel: "No project", clearLabel: "No project",
     })));
   }
+  const due = cell("due", dateChip(task, today, hideDay));
   cells.push(
-    cell("due", dateChip(task, today, hideDay)),
+    ...(dueLast ? [] : [due]),
     cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
     cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
     cell("scope", scopeButtons(task)),
     cell("status", status),
+    ...(dueLast ? [due] : []),
   );
   cells.push(cell("add", `<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`));
 
@@ -71,10 +78,15 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
 // A whole list: the column titles (shown on a laptop only), then the rows.
 // Put it inside <ul class="task-list"> (add "with-project" when rowOptions
 // has projects, for the extra column).
+// A column title with its resize handle (laptop, utils/colResize.js).
+const th = (col, label) => `<span class="th">${label}${handleHtml(col)}</span>`;
+
+// rowOptions.noHead: leave the column titles out (Priorities shows them once,
+// above the first list).
 export function taskListInnerHtml(tasks, rowOptions) {
-  const head = `
+  const head = rowOptions.noHead ? "" : `
     <li class="task-head" aria-hidden="true">
-      <span></span><span>Task</span>${rowOptions.projects ? "<span>Project</span>" : ""}<span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
+      <span></span>${th("task", "Task")}${rowOptions.projects ? th("project", "Project") : ""}${rowOptions.dueLast ? "" : th("due", "Due")}${th("period", "AM/PM")}${th("priority", "Priority")}${th("scope", "Scope")}${th("status", "Status")}${rowOptions.dueLast ? th("due", "Due") : ""}
       <span></span><span></span><span></span>
     </li>`;
   return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");
@@ -97,7 +109,7 @@ function selectChip(field, title, list, value, options = {}) {
     `<option value="${escapeHtml(o.value)}"${o.value === value ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
   const clear = selected && clearable ? `<option value="">${escapeHtml(clearLabel)}</option>` : "";
   return `
-    <label class="tchip tchip-select ${cls}">
+    <label class="tchip tchip-select ${cls}"${selected ? ` title="${escapeHtml(title)}: ${escapeHtml(selected.label)}"` : ""}>
       <span class="sr-only">${escapeHtml(title)}</span>
       <span aria-hidden="true">${escapeHtml(selected ? selected.label : emptyLabel)}</span>
       <select data-field="${field}"${selected ? "" : " data-empty"}><optgroup label="${escapeHtml(title)}">${choices}</optgroup>${clear}</select>
@@ -121,7 +133,7 @@ export function rolledHtml(task) {
 function scopeButtons(task) {
   return `
     <span class="scope-pick" role="group" aria-label="Scope">
-      ${SCOPES.map((s) => `<button type="button" class="scope-btn${task.scope === s.value ? " is-on" : ""}" data-scope="${s.value}" aria-pressed="${task.scope === s.value}" title="${task.scope === s.value ? "Click to clear the scope" : "Scope: " + escapeHtml(s.label)}">${escapeHtml(s.label)}</button>`).join("")}
+      ${SCOPES.map((s) => `<button type="button" class="scope-btn${task.scope === s.value ? " is-on" : ""}" data-scope="${s.value}" aria-pressed="${task.scope === s.value}" title="${task.scope === s.value ? "Click to clear the scope" : "Scope: " + escapeHtml(s.label)}" aria-label="${escapeHtml(s.label)}"><span class="hide-phone">${escapeHtml(s.label)}</span><span class="show-phone" aria-hidden="true">${escapeHtml(s.label.slice(0, 3))}</span></button>`).join("")}
     </span>`;
 }
 

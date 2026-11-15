@@ -114,12 +114,17 @@ export async function render(el, { params = [] } = {}) {
         <a class="btn small${routineDoneToday("close") || !routineDoneToday("plan") ? " secondary" : ""}" href="#/routine/close">☾ Close the day</a>
       </span>
       <span class="day-tools-group">
-        <span class="day-tools-label">Reset:</span>
-        <button type="button" class="btn secondary small" data-bulk="period" title="Clear AM/PM on every open task">Period</button>
-        <button type="button" class="btn secondary small" data-bulk="scope" title="Clear the scope on every open task">Scope</button>
-        <button type="button" class="btn secondary small" data-bulk="priority" title="Clear the priority on every open task; Pending today back to Active">Priority</button>
+        <details class="menu" id="bulk-menu">
+          <summary class="btn secondary small"><span class="hide-phone">Reset</span><span class="show-phone">More</span> ${icon("down")}</summary>
+          <div class="menu-pop" role="menu">
+            <button type="button" role="menuitem" class="show-phone" data-bulk="push">${icon("forward")} Push all to tomorrow</button>
+            <button type="button" role="menuitem" data-bulk="period">Reset the period <span class="muted">(AM/PM)</span></button>
+            <button type="button" role="menuitem" data-bulk="scope">Reset the scope</button>
+            <button type="button" role="menuitem" data-bulk="priority">Reset the priority <span class="muted">(+ Pending today → Active)</span></button>
+          </div>
+        </details>
+        <button type="button" class="btn secondary small hide-phone" data-bulk="push">${icon("forward")} Push all to tomorrow</button>
       </span>
-      <button type="button" class="btn secondary small" data-bulk="push">${icon("forward")} Push all to tomorrow</button>
     </div>`}
     ${quickAddHtml({ today: day, placeholder: isTomorrow ? "Add a task for tomorrow…" : "Add a task for today…", projects })}
 
@@ -142,19 +147,31 @@ export async function render(el, { params = [] } = {}) {
   const onOpen = (task) => openTaskSheet(task, { onChange: redraw, meetingNames });
   // On the Tomorrow page "push to tomorrow" would change nothing: no button.
   const withPush = new Set(isTomorrow ? [] : ["today", "overdue", "toDelegate"]);
+  let first = true;
   el.querySelectorAll("[data-list]").forEach((ul) => {
     const key = ul.dataset.list;
     const group = ul.dataset.group;
     let listTasks = lists[key];
     if (group !== undefined) listTasks = listTasks.filter((t) => (t.meeting_name || "") === group);
-    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day };
-    ul.classList.add("with-project");
+    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day, inMeeting: group, noHead: !first, dueLast: true };
+    first = false;
+    ul.classList.add("with-project", "due-last");
     ul.innerHTML = taskListInnerHtml(listTasks, rowOptions);
     wireTaskList(ul, listTasks, {
       onOpen, onChange: redraw, rowOptions, meetingNames,
       onSaved: () => drawCounter(el.querySelector("#counter"), lists.today, d),
     });
   });
+  // The Reset menu closes on a click elsewhere or Esc.
+  const bulkMenu = el.querySelector("#bulk-menu");
+  if (bulkMenu) {
+    const close = (event) => {
+      if (!bulkMenu.isConnected) { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", close); return; }
+      if (event.type === "keydown" ? event.key === "Escape" : !bulkMenu.contains(event.target)) bulkMenu.open = false;
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+  }
   el.querySelectorAll("details[data-fold]").forEach((details) => {
     details.addEventListener("toggle", () => {
       if (details.open) unfolded.add(details.dataset.fold); else unfolded.delete(details.dataset.fold);
@@ -165,7 +182,11 @@ export async function render(el, { params = [] } = {}) {
   watchCounter(el.querySelector("#counter"), el.querySelector("#counter-mini"));
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });
   el.querySelectorAll("[data-bulk]").forEach((button) => {
-    button.addEventListener("click", () => runBulk(button.dataset.bulk, lists, tomorrow, redraw));
+    button.addEventListener("click", () => {
+      const menu = button.closest("details");
+      if (menu) menu.open = false;
+      runBulk(button.dataset.bulk, lists, tomorrow, redraw);
+    });
   });
 }
 
@@ -233,9 +254,9 @@ function drawCounter(counterEl, todayTasks, d) {
           <span class="counter-label">${escapeHtml(s.label)}</span>
         </div>`).join("")}
     </div>
-    <p class="counter-note">${over.length
+    <p class="counter-note${!over.length && !noScope ? " is-plain" : ""}">${over.length
       ? `${icon("target")} Too much for one day: ${over.map((s) => `${s.count - s.perDay} ${s.label.toLowerCase()} over`).join(", ")}. Push something to tomorrow?`
-      : "1-3-5 rule: 1 major, 3 medium, 5 small a day."}${noScope ? ` (${noScope} without a scope)` : ""}</p>`;
+      : `<span class="counter-rule">1-3-5 rule: 1 major, 3 medium, 5 small a day.</span>`}${noScope ? ` (${noScope} without a scope)` : ""}</p>`;
 }
 
 

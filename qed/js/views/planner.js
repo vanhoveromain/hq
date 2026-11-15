@@ -72,14 +72,19 @@ export async function render(el, { params = [] } = {}) {
     </nav>
     ${board.weekly ? weekNavHtml(board, offset, d) : ""}
     ${quickAddHtml({ today: board.id === "tomorrow-priority" ? d.tomorrow : offset ? d.monday : today, projects })}
-    <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it (laptop: double-click, or select it and use ← →).</p>
+    <details class="board-help"${hintSeen() ? "" : " open"}>
+      <summary aria-label="How the board works" title="How the board works">?</summary>
+      <p class="board-hint muted">${board.field === "due_date" ? "Drag a card onto a day to give it that date (No date = tasks still waiting for one)." : `Drag a card to another column to change its ${board.field}.`} On a phone: press and hold, then drag. Tap a card to open it (laptop: double-click, or select it and use ← →).</p>
+    </details>
     <div class="board" data-board="${board.id}">
-      <div class="board-columns" style="--cols:${columns.length}">
-        ${columns.map((col) => columnHtml(col, shown.filter((t) => (t[board.field] || null) === col.value).sort(sorter), board, d, projectName)).join("")}
-      </div>
+      ${boardColumnsHtml(columns, shown, board, d, sorter, projectName)}
     </div>`;
 
   showActiveTab(el);
+  // The hint shows open until you close it once; then it stays behind "?".
+  el.querySelector(".board-help").addEventListener("toggle", (event) => {
+    if (!event.target.open) markHintSeen();
+  });
   const boardEl = el.querySelector(".board");
   const findTask = (id) => tasks.find((t) => t.id === id);
 
@@ -170,6 +175,16 @@ export async function render(el, { params = [] } = {}) {
   wireQuickAdd(el.querySelector(".quick-add"), { onAdded: redraw });
 }
 
+// Planner hint (UX review #2 #11): open the first time, behind "?" once
+// closed. This device only.
+const HINT_KEY = "qedhq.plannerHintSeen";
+function hintSeen() {
+  try { return localStorage.getItem(HINT_KEY) === "1"; } catch { return false; }
+}
+function markHintSeen() {
+  try { localStorage.setItem(HINT_KEY, "1"); } catch { /* private mode: shows again next time */ }
+}
+
 // ‹ This week › (week boards): the week on show, arrows to move.
 function weekNavHtml(board, offset, d) {
   const name = offset === 0 ? "This week" : offset === 1 ? "Next week" : `In ${offset} weeks`;
@@ -187,6 +202,22 @@ function weekNavHtml(board, offset, d) {
     </nav>`;
 }
 
+// Past days of this week are always empty (the nightly rollover moves open
+// tasks to today): they shrink to a thin strip, and disappear on a phone,
+// so today and the days ahead get the room (UX review #2, 2026-11-15).
+function boardColumnsHtml(columns, shown, board, d, sorter, projectName) {
+  const cols = columns.map((col) => {
+    const tasks = shown.filter((t) => (t[board.field] || null) === col.value).sort(sorter);
+    const past = board.field === "due_date" && col.value && col.value < d.today && !tasks.length;
+    return { col: { ...col, isPast: past }, tasks };
+  });
+  const template = cols.map((c) => (c.col.isPast ? "var(--col-thin)" : "var(--col)")).join(" ");
+  return `
+      <div class="board-columns" style="grid-template-columns:${template}">
+        ${cols.map((c) => columnHtml(c.col, c.tasks, board, d, projectName)).join("")}
+      </div>`;
+}
+
 function columnLabel(board, value, d) {
   if (board.field === "due_date") return value ? friendlyDay(value, d.today) : "No date";
   if (board.field === "scope") return value ? labelOf(SCOPES, value) : "No scope";
@@ -198,7 +229,9 @@ function columnHtml(col, tasks, board, d, projectName) {
   if (board.field === "due_date" && col.value) {
     const [y, m, dd] = col.value.split("-").map(Number);
     const weekday = WEEKDAYS[(new Date(Date.UTC(y, m - 1, dd)).getUTCDay() + 6) % 7]; // Monday = 0
-    title = `${weekday} <span class="muted">${dd}/${m}</span>${col.isToday ? ' <span class="board-today">Today</span>' : ""}`;
+    title = col.isPast
+      ? `${weekday}<br><span class="muted">${dd}/${m}</span>`
+      : `${weekday} <span class="muted">${dd}/${m}</span>${col.isToday ? ' <span class="board-today">Today</span>' : ""}`;
   }
   const undated = board.field === "due_date" && !col.value;
   // Today's scope: the 1-3-5 room per column (amber when over).
@@ -206,7 +239,7 @@ function columnHtml(col, tasks, board, d, projectName) {
   const count = room !== null ? `${tasks.length}/${room}` : String(tasks.length);
   const over = room !== null && tasks.length > room;
   return `
-    <section class="board-col${col.isToday ? " is-today" : ""}${undated ? " is-undated" : ""}" data-column="${escapeHtml(col.value || "")}" aria-label="${escapeHtml(col.label)}">
+    <section class="board-col${col.isToday ? " is-today" : ""}${undated ? " is-undated" : ""}${col.isPast ? " is-past" : ""}" data-column="${escapeHtml(col.value || "")}" aria-label="${escapeHtml(col.label)}">
       <header class="board-col-head">
         <h2>${title}</h2>
         <span class="board-count${over ? " is-over" : ""}">${count}</span>
@@ -219,8 +252,8 @@ function columnHtml(col, tasks, board, d, projectName) {
 
 function cardHtml(t, board, d, projectName) {
   const tags = [];
-  if (board.field !== "priority" && t.priority) tags.push(`<span class="pill prio-${t.priority}">${escapeHtml(labelOf(PRIORITIES, t.priority))}</span>`);
-  if (board.field !== "scope" && t.scope) tags.push(`<span class="pill">${escapeHtml(labelOf(SCOPES, t.scope))}</span>`);
+  if (board.field !== "priority" && t.priority) tags.push(`<span class="pill prio-${t.priority}" title="Priority">${icon("flag")}${escapeHtml(labelOf(PRIORITIES, t.priority))}</span>`);
+  if (board.field !== "scope" && t.scope) tags.push(`<span class="pill pill-scope" title="Scope">${escapeHtml(labelOf(SCOPES, t.scope))}</span>`);
   if (board.field !== "due_date" && board.id.startsWith("week")) tags.push(`<span class="pill">${escapeHtml(friendlyDay(t.due_date, d.today))}</span>`);
   if (t.period) tags.push(`<span class="pill">${t.period.toUpperCase()}</span>`);
   if (t.state === "pending" || t.state === "delegated") tags.push(`<span class="pill">${t.state === "delegated" ? `Delegated${t.delegated_to ? " · " + escapeHtml(t.delegated_to) : ""}` : "Pending"}</span>`);
