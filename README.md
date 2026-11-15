@@ -9,6 +9,7 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 | `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (cards to QED HQ and Sport HQ) + the shared HQ switcher (`switcher.js`) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED HQ: work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
+| `poulette.ownhq.app` (planned) | `poulette/` | PouletteHQ: newborn tracker for Rom + Léa (French UI), data in the shared `own-hq` Supabase project (tables `poulette_*`), see `poulette/CLAUDE.md` |
 
 ## Shared hq login
 
