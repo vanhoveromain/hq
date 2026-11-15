@@ -7,7 +7,7 @@
 // A project or lead opens its page; a task opens its sheet where you are.
 
 import { listProjects, searchTasks, listMeetingNames, getTask } from "../storage.js";
-import { PROJECT_STATUSES, SALES_STATUSES, labelOf } from "../rules.js";
+import { SALES_STATUSES, labelOf, projectStatusLabel, hasDates } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay, brusselsToday, formatRange } from "../utils/dates.js";
@@ -143,7 +143,7 @@ export function openSearch() {
 
   function projectSub(p) {
     if (p.type === "sales") return ["Lead", labelOf(SALES_STATUSES, p.sales_status)].filter(Boolean).join(" · ");
-    return [labelOf(PROJECT_STATUSES, p.status), formatRange(p.date_start, p.date_end)].filter(Boolean).join(" · ");
+    return [projectStatusLabel(p), hasDates(p.type) ? formatRange(p.date_start, p.date_end) : ""].filter(Boolean).join(" · ");
   }
 
   function taskSub(t) {

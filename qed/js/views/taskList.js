@@ -9,7 +9,7 @@
 // after your last change the whole list redraws, so it re-sorts (Romain,
 // 2026-11-09). The priority score only decides the order: it isn't shown.
 
-import { createTask, updateTask } from "../storage.js";
+import { createTask, updateTask, deleteTask } from "../storage.js";
 import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, ROLLED_SHOW, ROLLED_WARN, pushChanges } from "../rules.js";
 import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay, brusselsToday, addDays } from "../utils/dates.js";
@@ -20,7 +20,9 @@ import { showToast } from "../utils/toast.js";
 //   options.projects  [{id, name}] -> adds a Project chip (lists across projects)
 //   options.showPush  show a "Push to tomorrow" button on the row
 //   options.showFocus show a "Focus" button (To do today only, decided 2026-11-08)
-export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false }) {
+//   options.hideDay   a day not written on the date chip (the day the list is
+//                     about, e.g. Today on Priorities): calendar icon only
+export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null }) {
   // Fields grouped in cells. On a phone the cells simply flow under the
   // title; on a laptop each cell is a column, aligned from row to row.
   const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
@@ -35,18 +37,20 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
       ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`
       : "",
   ].join("");
-  const cells = [
-    cell("due", dateChip(task, today)),
-    cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
-    cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
-    cell("scope", selectChip("scope", "Scope", SCOPES, task.scope)),
-    cell("status", status),
-  ];
+  // Project right after the task, before the due date (Romain, 2026-11-15).
+  const cells = [];
   if (projects) {
     cells.push(cell("project", selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
       emptyLabel: "No project", clearLabel: "No project",
     })));
   }
+  cells.push(
+    cell("due", dateChip(task, today, hideDay)),
+    cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
+    cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
+    cell("scope", scopeButtons(task)),
+    cell("status", status),
+  );
   cells.push(cell("add", `<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`));
 
   // The push slot is always there (empty if not used), so the columns line
@@ -59,6 +63,7 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
         <div class="task-chips">${cells.join("")}</div>
       </div>
       <span class="slot-push">${showFocus && !task.done ? `<a class="icon-btn task-focus" href="#/focus/${task.id}" aria-label="Focus on ${escapeHtml(task.title)}" title="Focus on this task">${icon("target")}</a>` : ""}${showPush && !task.done ? `<button type="button" class="icon-btn task-push" data-push aria-label="Push ${escapeHtml(task.title)} to tomorrow" title="Push to tomorrow">${icon("forward")}</button>` : ""}</span>
+      <button type="button" class="icon-btn task-delete" data-delete aria-label="Delete ${escapeHtml(task.title)}" title="Delete (click twice)">${icon("trash")}</button>
       <button type="button" class="icon-btn task-more" data-open aria-label="Open ${escapeHtml(task.title)}">${icon("more")}</button>
     </li>`;
 }
@@ -69,8 +74,8 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
 export function taskListInnerHtml(tasks, rowOptions) {
   const head = `
     <li class="task-head" aria-hidden="true">
-      <span></span><span>Task</span><span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
-      ${rowOptions.projects ? "<span>Project</span>" : ""}<span></span><span></span>
+      <span></span><span>Task</span>${rowOptions.projects ? "<span>Project</span>" : ""}<span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
+      <span></span><span></span><span></span>
     </li>`;
   return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");
 }
@@ -111,11 +116,23 @@ export function rolledHtml(task) {
   return `<span class="rolled${n >= ROLLED_WARN ? " is-warn" : ""}" title="Put off ${n} times (moved on by the night, or pushed to tomorrow)">↻ ${n}</span>`;
 }
 
-function dateChip(task, today) {
-  const overdue = !task.done && task.due_date && task.due_date < today;
+// Scope: three buttons always on show (Romain, 2026-11-15): one click sets
+// it, a click on the one already set clears it.
+function scopeButtons(task) {
   return `
-    <label class="tchip tchip-date${task.due_date ? "" : " is-empty"}${overdue ? " is-overdue" : ""}">
-      ${icon("calendar")}<span>${escapeHtml(task.due_date ? friendlyDay(task.due_date, today) : "Due date")}</span>${rolledHtml(task)}
+    <span class="scope-pick" role="group" aria-label="Scope">
+      ${SCOPES.map((s) => `<button type="button" class="scope-btn${task.scope === s.value ? " is-on" : ""}" data-scope="${s.value}" aria-pressed="${task.scope === s.value}" title="${task.scope === s.value ? "Click to clear the scope" : "Scope: " + escapeHtml(s.label)}">${escapeHtml(s.label)}</button>`).join("")}
+    </span>`;
+}
+
+function dateChip(task, today, hideDay = null) {
+  const overdue = !task.done && task.due_date && task.due_date < today;
+  // The list's own day isn't written out (you know it's today): icon only.
+  const iconOnly = task.due_date && task.due_date === hideDay;
+  const text = task.due_date ? friendlyDay(task.due_date, today) : "Due date";
+  return `
+    <label class="tchip tchip-date${task.due_date ? "" : " is-empty"}${overdue ? " is-overdue" : ""}${iconOnly ? " is-icon" : ""}" title="${iconOnly ? escapeHtml(text) + " · click to change" : ""}">
+      ${icon("calendar")}${iconOnly ? `<span class="sr-only">${escapeHtml(text)}</span>` : `<span>${escapeHtml(text)}</span>`}${rolledHtml(task)}
       <input type="date" data-field="due_date" value="${escapeHtml(task.due_date || "")}" aria-label="Due date">
     </label>`;
 }
@@ -259,10 +276,25 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
       if (open) expandedIds.add(task.id); else expandedIds.delete(task.id);
       return;
     }
+    const scopeBtn = event.target.closest("[data-scope]");
+    if (scopeBtn) {
+      const value = scopeBtn.dataset.scope;
+      save(task, { scope: task.scope === value ? null : value });
+      return;
+    }
+    const deleteBtn = event.target.closest("[data-delete]");
+    if (deleteBtn) {
+      askThenDelete(deleteBtn, task);
+      return;
+    }
     // Date chip: open the picker straight away where the browser allows it.
+    // The row keeps its empty fields on show while the picker is open: an
+    // empty date chip used to hide (and close its calendar) as soon as the
+    // mouse left the row (Romain, 2026-11-15).
     const dateInput = event.target.closest(".tchip-date")?.querySelector("input");
     if (dateInput && event.target !== dateInput) {
       event.preventDefault();
+      keepOpenWhilePicking(row);
       try { dateInput.showPicker(); } catch { dateInput.focus(); }
       return;
     }
@@ -275,6 +307,43 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
     const textButton = event.target.closest("[data-edit-text]");
     if (textButton) editText(textButton, task, textButton.dataset.editText);
   });
+
+  // Shows the row's empty fields until the date is picked or you click
+  // somewhere else (the picker closed without a choice).
+  function keepOpenWhilePicking(row) {
+    row.classList.add("is-picking");
+    const done = (event) => {
+      if (event && event.type === "pointerdown" && row.contains(event.target)) return;
+      row.classList.remove("is-picking");
+      document.removeEventListener("pointerdown", done, true);
+    };
+    setTimeout(() => document.addEventListener("pointerdown", done, true), 0);
+    row.querySelector(".tchip-date input")?.addEventListener("change", () => done(), { once: true });
+  }
+
+  // Delete from the row (Romain, 2026-11-15: tasks that aren't relevant any
+  // more, without counting them as done). First click arms the bin, second
+  // click deletes; Undo adds the task back.
+  async function askThenDelete(button, task) {
+    if (!button.classList.contains("is-armed")) {
+      button.classList.add("is-armed");
+      button.title = "Click again to delete";
+      setTimeout(() => { button.classList.remove("is-armed"); button.title = "Delete (click twice)"; }, 3000);
+      return;
+    }
+    try {
+      await deleteTask(task.id);
+    } catch (error) {
+      showToast("Could not delete: " + error.message);
+      return;
+    }
+    expandedIds.delete(task.id);
+    showToast(`Deleted: "${task.title}"`, {
+      actionLabel: "Undo",
+      onAction: async () => { await createTask(task); onChange(); },
+    });
+    onChange();
+  }
 
   // Push to tomorrow: the task leaves today's lists, so the whole screen
   // redraws; Undo puts the old date back.

@@ -88,6 +88,7 @@ function render() {
   if (current && current.view.leave) current.view.leave();
   current = routes[name];
   document.body.classList.toggle("is-focus", name === "focus" || name === "routine");
+  document.body.classList.toggle("is-wide", name === "planner");
   routes[name].view.render(viewEl, { user: currentUser, params });
 }
 
