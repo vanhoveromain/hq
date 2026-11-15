@@ -183,8 +183,9 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
   Piège Vercel : il arrive qu'un push sur la branche ne soit pas déployé (ancienne version affichée) → Deployments →
   ⋯ → Create Deployment avec le nom de la branche.
 
-**À la mise en ligne (fusion dans main)** : retirer l'« Ignored Build Step » du projet Vercel poulette-hq (il saute
-main tant que main n'a pas le dossier poulette/ : sinon un mail « Production deployment failed » à chaque push) ;
+**À la mise en ligne (fusion dans main)** : retirer l'« Ignored Build Step » du projet Vercel poulette-hq AVANT la
+fusion (il saute main ; remplacé par `ignoreCommand` dans poulette/vercel.json, comme qed et hq-home : on ne
+construit que si le dossier a changé dans le dernier commit → fusionner dans main avec un commit de fusion, --no-ff) ;
 ajouter le domaine `poulette.ownhq.app` (Production) ; vérifier ownhq.app (cartes filtrées, Léa redirigée) ;
 corriger test-qed.sh (branche par défaut) et la doc QED HQ sur hq-preview.
 
