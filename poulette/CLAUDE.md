@@ -162,13 +162,18 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     monter VERSION. Hors-ligne : login enregistré sur l'appareil accepté si le serveur est injoignable
     (storage.requireLogin, cookies hq-auth.*) ; foyer : dernière réponse gardée (localStorage poulette.home.<id>) ;
     badge « Hors ligne » en haut. Testé (Playwright) : 1re visite en ligne puis hors-ligne → l'app s'ouvre
-  - 0.5d Projet Vercel `poulette` — fait 2026-11-15 : Root Directory `poulette` tapé à la main (Settings → Build and
+  - 0.5d Projet Vercel `poulette-hq` — fait 2026-11-15 : Root Directory `poulette` tapé à la main (Settings → Build and
     Deployment ; le sélecteur ne montre que les dossiers de main), `poulette-preview.ownhq.app` sur la branche de
     travail, testé (Bienvenue + Version de test + sélecteur). **Vercel Authentication désactivée** sur les projets
     poulette ET hq-home : sinon `hq-preview.ownhq.app/auth.js` répond 302 (login Vercel) à l'import cross-origin et
     l'app reste sur « Chargement… ». `poulette.ownhq.app` (production) à ajouter à la mise en ligne seulement (main
     n'a pas encore le dossier)
 - 0.6 Household + profil bébé + ajout de Léa comme membre
+
+**À la mise en ligne (fusion dans main)** : retirer l'« Ignored Build Step » du projet Vercel poulette-hq (il saute
+main tant que main n'a pas le dossier poulette/ : sinon un mail « Production deployment failed » à chaque push) ;
+ajouter le domaine `poulette.ownhq.app` (Production) ; vérifier ownhq.app (cartes filtrées, Léa redirigée) ;
+corriger test-qed.sh (branche par défaut) et la doc QED HQ sur hq-preview.
 
 **Phase 1 — MVP (mi-janvier 2027)** : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,
 température, médicament), timeline, mesures, questions, realtime, hors-ligne niveau 2, export.
