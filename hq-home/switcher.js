@@ -9,9 +9,11 @@
 // ↑ ↓ Home End move, Esc closes.
 //
 // Colours come from the page's HQ tokens (hq-tokens.css), with fallbacks.
-// Access: every HQ listed below is open to the one user today. When HQs get
-// per-account access, filter SPACES by what the logged-in account may open
-// (guidelines §08: the switcher respects account permissions).
+// Access (since 2026-11-15, guidelines §08: the switcher respects account
+// permissions): the menu lists only the HQs this account may open (table
+// hq_access, via listMyHqs() in auth.js). The current HQ always stays. With
+// only one HQ (Léa), there is nothing to switch to: no menu, no "All HQs".
+// Unknown (no network, nothing remembered): every HQ, as before.
 
 const SYMBOLS = {
   // Product symbols from brand/logos/ (guidelines-v1.0/02_Logos/Products), unchanged.
@@ -35,6 +37,7 @@ const CSS = `
 hq-switcher{position:relative;display:inline-flex;min-width:0}
 .hqsw-btn{display:inline-flex;align-items:center;gap:10px;min-width:0;min-height:40px;margin:0 0 0 -6px;padding:4px 8px 4px 6px;border:0;border-radius:var(--hq-radius,8px);background:none;color:var(--hq-primary-text,#242424);font:600 16px/1.2 var(--hq-font,system-ui,sans-serif);letter-spacing:-.01em;cursor:pointer;transition:background-color var(--hq-ease,160ms ease)}
 .hqsw-btn:hover{background:var(--hq-subtle,#F2F2F0)}
+.hqsw-alone,.hqsw-alone:hover{cursor:default;background:none}
 .hqsw-btn:focus-visible{outline:2px solid var(--hq-accent,#242424);outline-offset:2px}
 .hqsw-btn .hqsw-sym{width:28px;height:28px;flex:none;display:block}
 .hqsw-btn .hqsw-sym svg{width:100%;height:100%;display:block}
@@ -71,19 +74,45 @@ class HqSwitcher extends HTMLElement {
       document.head.append(style);
     }
     const current = SPACES.find((s) => s.id === this.getAttribute("current")) || SPACES[0];
+    this.current = current;
+    this.menuId = `hqsw-menu-${++count}`;
+    this.render(SPACES.slice(1));
+    // Then keep only the HQs this account may open. "./auth.js" is the same
+    // file the page already loaded (same address), so no second login check.
+    import("./auth.js")
+      .then((auth) => auth.listMyHqs())
+      .then((list) => {
+        if (!list) return;
+        this.render(SPACES.slice(1).filter((s) => s.id === current.id || list.includes(s.id)));
+      })
+      .catch(() => { /* keep every HQ */ });
+
+    document.addEventListener("click", (e) => { if (!this.contains(e.target)) this.close?.(false); });
+  }
+
+  render(spaces) {
+    const current = this.current;
+    const menuId = this.menuId;
     const label = current.id === "hq" ? "HQ" : current.name;
-    const menuId = `hqsw-menu-${++count}`;
+    const alone = spaces.length <= 1 && current.id !== "hq";
 
     const item = (s) => `<li role="none"><a role="menuitem" class="hqsw-item" href="${s.url}" ${s.id === current.id ? 'aria-current="page"' : ""}>
       <span class="hqsw-sym ${s.id === "hq" ? "is-hq" : ""}">${SYMBOLS[s.id]}</span>
       <span>${s.name}</span>${s.id === current.id ? CHECK : ""}</a></li>`;
+
+    if (alone) {
+      // Nothing to switch to: just the HQ's symbol + name.
+      this.close = () => {};
+      this.innerHTML = `<span class="hqsw-btn hqsw-alone"><span class="hqsw-sym">${SYMBOLS[current.id]}</span><span class="hqsw-name">${label}</span></span>`;
+      return;
+    }
 
     this.innerHTML = `<button type="button" class="hqsw-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}" aria-label="${label}, switch HQ">
         <span class="hqsw-sym">${SYMBOLS[current.id]}</span><span class="hqsw-name">${label}</span>${CARET}</button>
       <ul class="hqsw-menu" id="${menuId}" role="menu" aria-label="Switch HQ" hidden>
         ${item(SPACES[0])}<li role="separator" class="hqsw-sep"></li>
         <li role="presentation" class="hqsw-label">Your HQs</li>
-        ${SPACES.slice(1).map(item).join("")}
+        ${spaces.map(item).join("")}
       </ul>`;
 
     const button = this.querySelector(".hqsw-btn");
@@ -101,6 +130,7 @@ class HqSwitcher extends HTMLElement {
       button.setAttribute("aria-expanded", "false");
       if (refocus) button.focus();
     };
+    this.close = close;
 
     button.addEventListener("click", () => (menu.hidden ? open() : close()));
     button.addEventListener("keydown", (e) => {
@@ -117,7 +147,6 @@ class HqSwitcher extends HTMLElement {
       else if (e.key === "End") { e.preventDefault(); all[all.length - 1].focus(); }
       else if (e.key === "Tab") close(false);
     });
-    document.addEventListener("click", (e) => { if (!this.contains(e.target)) close(false); });
   }
 }
 

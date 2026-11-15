@@ -64,6 +64,9 @@ a.card:hover img{transform:translateY(-3px);box-shadow:0 12px 24px -10px rgba(36
 /* Planned HQs (guidelines: planned, no URL, no features described) */
 .card.planned img{opacity:.45;filter:saturate(.5)}
 .card.planned h2{color:var(--hq-secondary-text)}
+/* Cards stay hidden until we know which HQs this account may open (home.js). */
+.cards[data-access="pending"]{visibility:hidden}
+.cards li[hidden]{display:none}
 @media (prefers-reduced-motion: reduce){a.card:hover img{transform:none}}
 
 /* Logged out: centred login panel */
@@ -140,32 +143,33 @@ main{padding-bottom:env(safe-area-inset-bottom)}
     <h1 id="greeting">Welcome back</h1>
     <p class="lede">Pick up where you left off.</p>
 
-    <ul class="cards" aria-label="Your HQs">
+    <ul class="cards" id="cards" data-access="pending" aria-label="Your HQs">
       <li>
-        <a class="card" href="https://qed.ownhq.app">
+        <a class="card" data-hq="qed" href="https://qed.ownhq.app">
           <img src="qed-hq.svg" alt="" width="80" height="80">
           <h2>QED HQ</h2>
         </a>
       </li>
       <li>
-        <a class="card" href="https://sport.ownhq.app">
+        <a class="card" data-hq="sport" href="https://sport.ownhq.app">
           <img src="sport-hq.svg" alt="" width="80" height="80">
           <h2>Sport HQ</h2>
         </a>
       </li>
       <li>
-        <div class="card planned">
+        <div class="card planned" data-hq="work">
           <img src="work-hq.svg" alt="" width="80" height="80">
           <h2>Work HQ<small>Coming soon</small></h2>
         </div>
       </li>
       <li>
-        <div class="card planned">
+        <div class="card planned" data-hq="personal">
           <img src="personal-hq.svg" alt="" width="80" height="80">
           <h2>Personal HQ<small>Coming soon</small></h2>
         </div>
       </li>
     </ul>
+    <p id="no-hq" class="lede" hidden>No HQ is open for this account yet.</p>
   </section>
 </main>
 
