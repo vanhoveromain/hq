@@ -10,6 +10,8 @@ Supabase project. Decided 2026-11-08 (Build spec, "Import from Notion"); built i
    - `data/tasks-*.json`: every open task (the ones of archived / passed projects are left out by the build).
 2. `node build-sql.mjs` writes `data/import.sql` and `data/preview.txt` (counts + the projects tagged Paula /
    Gabriella, whose real type can be set in `data/types.json`, default Bespoke).
+   `node build-sql.mjs --clean` (switch day, once): the SQL also deletes every project and task made in the app
+   first (test data), Tools links kept.
 3. Romain runs `import.sql` in the QED Supabase project → SQL Editor → Run. One transaction: all or nothing.
 
 ## Re-running (until switch day)

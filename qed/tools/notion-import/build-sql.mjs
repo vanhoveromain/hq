@@ -2,6 +2,9 @@
 // for QED HQ's database, plus a preview to check before running it.
 //
 //   node build-sql.mjs            -> data/import.sql + data/preview.txt
+//   node build-sql.mjs --clean    -> same, and the SQL first deletes every project
+//                                    and task made in the app (no notion_id): a clean
+//                                    start on switch day. Tools links are kept.
 //
 // data/ is gitignored: client data never goes into the public repo.
 // Inputs (written by Claude, reading Notion read-only):
@@ -22,6 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const CLEAN = process.argv.includes("--clean");
 const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "data");
 const read = (name) => JSON.parse(fs.readFileSync(path.join(DIR, name), "utf8"));
 
@@ -186,6 +190,12 @@ function main() {
   L.push("end $$;");
   L.push("create temporary table _owner on commit drop as select id from auth.users;");
   L.push("");
+  if (CLEAN) {
+    L.push("-- Clean start (--clean): projects and tasks made in the app while testing. Tools links stay.");
+    L.push("delete from public.qed_tasks where notion_id is null;");
+    L.push("delete from public.qed_projects where notion_id is null;");
+    L.push("");
+  }
   L.push("-- Projects and sales leads");
   L.push("insert into public.qed_projects (user_id, notion_id, name, type, status, sales_status, owner, date_start, date_end, notes, notion_url, created_at) values");
   L.push(projects.map((p) => `  ((select id from _owner), ${q(p.notion_id)}, ${q(p.name)}, ${q(p.type)}, ${q(p.status)}, ${q(p.sales_status)}, ${q(p.owner)}, ${q(p.date_start)}, ${q(p.date_end)}, ${q(p.notes)}, ${q(p.notion_url)}, ${q(p.created_at)})`).join(",\n"));
@@ -215,6 +225,7 @@ function main() {
   const count = (list, key) => Object.entries(list.reduce((m, x) => { const k = x[key] ?? "(empty)"; m[k] = (m[k] || 0) + 1; return m; }, {}))
     .sort((a, c) => c[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(" · ");
   const P = [];
+  if (CLEAN) P.push("CLEAN START: the SQL first deletes every project and task made in the app.");
   P.push(`Projects and leads: ${projects.length}`);
   P.push(`  by type: ${count(projects, "type")}`);
   P.push(`  by status: ${count(projects.filter((p) => p.type !== "sales"), "status")}`);
