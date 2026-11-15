@@ -142,12 +142,14 @@ export async function render(el, { params = [] } = {}) {
   const onOpen = (task) => openTaskSheet(task, { onChange: redraw, meetingNames });
   // On the Tomorrow page "push to tomorrow" would change nothing: no button.
   const withPush = new Set(isTomorrow ? [] : ["today", "overdue", "toDelegate"]);
+  let first = true;
   el.querySelectorAll("[data-list]").forEach((ul) => {
     const key = ul.dataset.list;
     const group = ul.dataset.group;
     let listTasks = lists[key];
     if (group !== undefined) listTasks = listTasks.filter((t) => (t.meeting_name || "") === group);
-    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day };
+    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day, inMeeting: group, noHead: !first };
+    first = false;
     ul.classList.add("with-project");
     ul.innerHTML = taskListInnerHtml(listTasks, rowOptions);
     wireTaskList(ul, listTasks, {

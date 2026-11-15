@@ -180,6 +180,13 @@ Coordination Team HQ, archived / passed projects.
    project header (Undo), "Reopen" once done; Home toggle "Show done events". Task lists with a project: Project
    column right after Task, before Due (phone: first chip). Home projects = compact list (.plist: one thin line per
    project, name · dates · tags; phone: dates under the name), replaces the big cards
+7p. UX review #2 batch 1 (2026-11-15): fix: on touch screens the row bin (44 px) squeezed the title under the icons
+   + sideways scroll: bin only in a "+"-opened row there (stacked layout), .task-body column minmax(0,1fr) · long
+   chip values cut with "…" (full value on hover) · Planner cards: priority pill with a flag, scope pill dashed ·
+   Priorities: column titles once, above the first list (rowOptions.noHead) · meeting name tag hidden inside its own
+   group (rowOptions.inMeeting) · wider Project column · push arrow pinned right in its slot so icons line up.
+   Project page quick add keeps today as default (Romain). Next: batch 2 = phone Priorities (#2 + #12), batch 3 =
+   planner (#4 past days, #5 phone agenda)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

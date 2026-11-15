@@ -219,8 +219,8 @@ function columnHtml(col, tasks, board, d, projectName) {
 
 function cardHtml(t, board, d, projectName) {
   const tags = [];
-  if (board.field !== "priority" && t.priority) tags.push(`<span class="pill prio-${t.priority}">${escapeHtml(labelOf(PRIORITIES, t.priority))}</span>`);
-  if (board.field !== "scope" && t.scope) tags.push(`<span class="pill">${escapeHtml(labelOf(SCOPES, t.scope))}</span>`);
+  if (board.field !== "priority" && t.priority) tags.push(`<span class="pill prio-${t.priority}" title="Priority">${icon("flag")}${escapeHtml(labelOf(PRIORITIES, t.priority))}</span>`);
+  if (board.field !== "scope" && t.scope) tags.push(`<span class="pill pill-scope" title="Scope">${escapeHtml(labelOf(SCOPES, t.scope))}</span>`);
   if (board.field !== "due_date" && board.id.startsWith("week")) tags.push(`<span class="pill">${escapeHtml(friendlyDay(t.due_date, d.today))}</span>`);
   if (t.period) tags.push(`<span class="pill">${t.period.toUpperCase()}</span>`);
   if (t.state === "pending" || t.state === "delegated") tags.push(`<span class="pill">${t.state === "delegated" ? `Delegated${t.delegated_to ? " · " + escapeHtml(t.delegated_to) : ""}` : "Pending"}</span>`);

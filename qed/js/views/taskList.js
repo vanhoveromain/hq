@@ -22,7 +22,9 @@ import { showToast } from "../utils/toast.js";
 //   options.showFocus show a "Focus" button (To do today only, decided 2026-11-08)
 //   options.hideDay   a day not written on the date chip (the day the list is
 //                     about, e.g. Today on Priorities): calendar icon only
-export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null }) {
+//   options.inMeeting the meeting group the row sits in: its name tag is left
+//                     out (the group heading says it already)
+export function taskRowHtml(task, { today, projects = null, showPush = false, showFocus = false, expanded = false, hideDay = null, inMeeting = null }) {
   // Fields grouped in cells. On a phone the cells simply flow under the
   // title; on a laptop each cell is a column, aligned from row to row.
   const cell = (name, html) => `<span class="cell cell-${name}">${html}</span>`;
@@ -33,7 +35,7 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
     }),
     selectChip("delegated_to", "Delegated to", DELEGATES, task.delegated_to),
     `<button type="button" class="tchip${task.is_meeting ? " is-on" : " is-empty"}" data-toggle="is_meeting" aria-pressed="${task.is_meeting}">${icon("meeting")}Meeting</button>`,
-    task.is_meeting
+    task.is_meeting && !(task.meeting_name && task.meeting_name === inMeeting)
       ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`
       : "",
   ].join("");
@@ -71,8 +73,10 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
 // A whole list: the column titles (shown on a laptop only), then the rows.
 // Put it inside <ul class="task-list"> (add "with-project" when rowOptions
 // has projects, for the extra column).
+// rowOptions.noHead: leave the column titles out (Priorities shows them once,
+// above the first list).
 export function taskListInnerHtml(tasks, rowOptions) {
-  const head = `
+  const head = rowOptions.noHead ? "" : `
     <li class="task-head" aria-hidden="true">
       <span></span><span>Task</span>${rowOptions.projects ? "<span>Project</span>" : ""}<span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
       <span></span><span></span><span></span>
@@ -97,7 +101,7 @@ function selectChip(field, title, list, value, options = {}) {
     `<option value="${escapeHtml(o.value)}"${o.value === value ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
   const clear = selected && clearable ? `<option value="">${escapeHtml(clearLabel)}</option>` : "";
   return `
-    <label class="tchip tchip-select ${cls}">
+    <label class="tchip tchip-select ${cls}"${selected ? ` title="${escapeHtml(title)}: ${escapeHtml(selected.label)}"` : ""}>
       <span class="sr-only">${escapeHtml(title)}</span>
       <span aria-hidden="true">${escapeHtml(selected ? selected.label : emptyLabel)}</span>
       <select data-field="${field}"${selected ? "" : " data-empty"}><optgroup label="${escapeHtml(title)}">${choices}</optgroup>${clear}</select>
