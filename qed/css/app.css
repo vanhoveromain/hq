@@ -314,10 +314,11 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
   .task-list.with-project{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-project,minmax(160px,.9fr)) var(--w-due,100px) var(--w-period,64px) var(--w-priority,92px) var(--w-scope,164px) var(--w-status,minmax(120px,.7fr)) 68px 32px 36px}
   /* Column titles: a thin handle on the right edge to resize. */
   .task-head .th{position:relative;align-self:stretch;display:flex;align-items:center;min-width:0}
-  .col-resize{position:absolute;top:6px;bottom:6px;right:-4px;width:8px;cursor:col-resize;z-index:1}
-  .col-resize::after{content:"";position:absolute;left:3px;top:0;bottom:0;width:2px;border-radius:1px;background:var(--hq-border-strong);opacity:0;transition:opacity var(--hq-ease)}
-  .task-head:hover .col-resize::after{opacity:.6}
-  .col-resize:hover::after,body.is-resizing .col-resize::after{opacity:1;background:var(--hq-accent)}
+  /* Always-visible divider between column titles (like a spreadsheet); a
+     14 px grab zone around it; turns teal and thicker under the mouse. */
+  .col-resize{position:absolute;top:4px;bottom:4px;right:-10px;width:14px;cursor:col-resize;z-index:1;touch-action:none}
+  .col-resize::after{content:"";position:absolute;left:6px;top:2px;bottom:2px;width:2px;border-radius:1px;background:var(--hq-border-strong);transition:background-color var(--hq-ease),width var(--hq-ease),left var(--hq-ease)}
+  .col-resize:hover::after,body.is-resizing .col-resize::after{left:5px;width:4px;background:var(--hq-accent)}
   body.is-resizing{cursor:col-resize;user-select:none}
   /* Columns may get wider than the screen: the list scrolls sideways then. */
   .task-list{overflow-x:auto}
