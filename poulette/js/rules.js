@@ -8,7 +8,7 @@
 // Event types (poulette_events.type). `timer` = has a start and an end
 // (chrono). Order = order of the quick actions on Accueil.
 export const TYPES = {
-  breastfeed:  { label: "Tétée",          emoji: "🤱", timer: true },
+  breastfeed:  { label: "Tétée",          emoji: "🤱" },
   bottle:      { label: "Biberon",        emoji: "🍼" },
   diaper:      { label: "Change",         emoji: "🧷" },
   sleep:       { label: "Sommeil",        emoji: "😴", timer: true },
@@ -57,34 +57,45 @@ export const DEFAULT_TEMPERATURE = 37.0;
 // ---------------------------------------------------------------------
 // Breastfeeding
 // ---------------------------------------------------------------------
+// No chrono (Rom, 2026-11-15): what matters is WHICH breast. A feed is one
+// entry: data = { sides: ["L"] | ["R"] | ["L","R"] | ["R","L"] (order used),
+// minutes?: total duration, optional }. Older test entries with
+// data.segments (chrono version) are still read.
 
-// The side to offer next = the opposite of the LAST side used (last segment
-// of the last feed), so a feed on both sides is counted right.
+// The choices offered when logging a feed (2 taps: Tétée, then one of these).
+export const FEED_CHOICES = [
+  { id: "L", sides: ["L"], label: "Gauche", short: "G" },
+  { id: "R", sides: ["R"], label: "Droite", short: "D" },
+  { id: "LR", sides: ["L", "R"], label: "Gauche puis droite", short: "G → D" },
+  { id: "RL", sides: ["R", "L"], label: "Droite puis gauche", short: "D → G" },
+];
+export const FEED_MINUTES = [5, 10, 15, 20, 30];
+
+export function feedSides(event) {
+  const d = (event && event.data) || {};
+  if (Array.isArray(d.sides)) return d.sides;
+  return (d.segments || []).map((s) => s.side);
+}
+
+// Total minutes of a feed, or null when not given.
+export function feedMinutes(event) {
+  const d = (event && event.data) || {};
+  if (d.minutes != null) return Number(d.minutes);
+  if (d.segments && d.segments.length && d.segments.every((s) => s.end)) {
+    return Math.round(d.segments.reduce((sum, s) => sum + (Date.parse(s.end) - Date.parse(s.start)), 0) / 60000);
+  }
+  return null;
+}
+
+// The side to offer next = the opposite of the LAST side used in the last
+// feed ("Gauche puis droite" -> next is Gauche).
 export function nextBreast(events) {
   const last = latest(events, "breastfeed");
   if (!last) return null;
-  const segments = (last.data && last.data.segments) || [];
-  const side = segments.length ? segments[segments.length - 1].side : null;
+  const sides = feedSides(last);
+  const side = sides[sides.length - 1];
   return side === "L" ? "R" : side === "R" ? "L" : null;
 }
-
-// Minutes per side of a feed (running segment counted up to `now`).
-export function sideMinutes(event, now = Date.now()) {
-  const out = { L: 0, R: 0 };
-  for (const s of (event.data && event.data.segments) || []) {
-    const end = s.end ? Date.parse(s.end) : now;
-    out[s.side] += Math.max(0, end - Date.parse(s.start)) / 60000;
-  }
-  return out;
-}
-
-// The side running right now in an open feed, or null.
-export function currentSide(event) {
-  const segments = (event.data && event.data.segments) || [];
-  const last = segments[segments.length - 1];
-  return last && !last.end ? last.side : null;
-}
-
 
 // ---------------------------------------------------------------------
 // Lists of events
@@ -136,11 +147,9 @@ export function summary(event, now = Date.now()) {
   const d = event.data || {};
   switch (event.type) {
     case "breastfeed": {
-      const m = sideMinutes(event, now);
-      const parts = [];
-      if (m.L >= 0.5 || (d.segments || []).some((s) => s.side === "L")) parts.push(`G ${fmtMinutes(m.L)}`);
-      if (m.R >= 0.5 || (d.segments || []).some((s) => s.side === "R")) parts.push(`D ${fmtMinutes(m.R)}`);
-      return parts.join(" · ") || "—";
+      const sides = feedSides(event).map((s) => SIDE_SHORT[s]).join(" → ");
+      const minutes = feedMinutes(event);
+      return [sides || "—", minutes != null ? fmtMinutes(minutes) : null].filter(Boolean).join(" · ");
     }
     case "bottle":
       return [d.ml != null ? `${d.ml} ml` : null, d.milk ? (d.milk === "breast" ? "maternel" : "infantile") : null].filter(Boolean).join(" · ");

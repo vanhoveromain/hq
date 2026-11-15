@@ -8,7 +8,7 @@ import * as store from "../store.js";
 import * as rules from "../rules.js";
 import { escapeHtml } from "../utils/html.js";
 import { dayKey, hhmm } from "../utils/dates.js";
-import { startAction, feedControls, switchSide, stopTimer } from "./actions.js";
+import { startAction, stopTimer } from "./actions.js";
 
 let ticker = null;
 
@@ -69,22 +69,15 @@ export function refresh(el) {
   box.querySelectorAll(".status-card").forEach((b) => b.addEventListener("click", () => startAction(b.dataset.action)));
   box.querySelectorAll("[data-banner]").forEach((b) => {
     const e = runningOnes.find((x) => x.id === b.dataset.banner);
-    b.querySelector("[data-switch]")?.addEventListener("click", () => switchSide(e));
     b.querySelector("[data-stop]")?.addEventListener("click", () => stopTimer(e));
   });
 }
 
 function banner(e, now) {
   if (e.type === "breastfeed") {
-    const side = rules.currentSide(e);
-    const segs = (e.data && e.data.segments) || [];
-    const segStart = segs.length ? segs[segs.length - 1].start : e.started_at;
-    return `<div class="banner" data-banner="${e.id}">
-      <div class="banner-text"><span class="banner-title">🤱 Tétée · ${side ? rules.SIDES[side] : ""}</span>
-        <span class="chrono" data-chrono="${escapeHtml(segStart)}">${rules.fmtChrono(now - Date.parse(segStart))}</span>
-        <span class="muted small">total <span data-chrono="${escapeHtml(e.started_at)}">${rules.fmtChrono(now - Date.parse(e.started_at))}</span></span></div>
-      <div class="banner-actions"><button type="button" class="btn secondary" data-switch>Côté ${side === "L" ? "D" : "G"}</button>
-        <button type="button" class="btn" data-stop>Stop</button></div></div>`;
+    // Old chrono feed (before Rom's feedback of 2026-11-15): only a Stop.
+    return `<div class="banner" data-banner="${e.id}"><div class="banner-text"><span class="banner-title">🤱 Tétée (ancienne version, chrono)</span></div>
+      <div class="banner-actions"><button type="button" class="btn" data-stop>Stop</button></div></div>`;
   }
   return `<div class="banner" data-banner="${e.id}">
     <div class="banner-text"><span class="banner-title">😴 Sommeil</span>
@@ -105,4 +98,3 @@ export function leave() {
   ticker = null;
 }
 
-export { feedControls };

@@ -38,19 +38,21 @@ export function startAction(type) {
 // ---------------------------------------------------------------------
 
 function breastfeedSheet(all) {
-  const open = rules.running(all).find((e) => e.type === "breastfeed");
-  if (open) return feedControls(open);
   const next = rules.nextBreast(all);
-  const btn = (side) => `<button type="button" class="big-choice ${side === next ? "suggested" : ""}" data-side="${side}">
-      <span class="big-letter">${side === "L" ? "G" : "D"}</span><span>${rules.SIDES[side]}</span>
-      ${side === next ? '<span class="tag">suggéré</span>' : ""}</button>`;
+  const btn = (c) => {
+    const suggested = c.sides[0] === next;
+    return `<button type="button" class="big-choice ${c.sides.length === 1 && suggested ? "suggested" : ""}" data-feed="${c.id}">
+      <span class="big-letter">${c.short}</span><span>${c.label}</span>
+      ${c.sides.length === 1 && suggested ? '<span class="tag">suggéré</span>' : ""}</button>`;
+  };
   openSheet({
-    title: "🤱 Tétée : quel côté ?",
-    body: `<div class="big-grid two">${btn("L")}${btn("R")}</div><p class="hint center">Le chrono démarre tout de suite.</p>`,
+    title: "🤱 Tétée : quel sein ?",
+    body: `<div class="big-grid two">${rules.FEED_CHOICES.map(btn).join("")}</div>
+      <p class="hint center">Durée facultative juste après.</p>`,
     onOpen(el, close) {
-      el.querySelectorAll("[data-side]").forEach((b) => b.addEventListener("click", async () => {
-        const now = new Date().toISOString();
-        const e = await store.addEvent("breastfeed", { started_at: now, data: { segments: [{ side: b.dataset.side, start: now, end: null }] } });
+      el.querySelectorAll("[data-feed]").forEach((b) => b.addEventListener("click", async () => {
+        const choice = rules.FEED_CHOICES.find((c) => c.id === b.dataset.feed);
+        const e = await store.addEvent("breastfeed", { data: { sides: choice.sides } });
         close();
         receipt(e);
       }));
@@ -58,39 +60,12 @@ function breastfeedSheet(all) {
   });
 }
 
-// Running feed: change side or stop (also reachable from the banner).
-export function feedControls(e) {
-  const side = rules.currentSide(e);
-  const other = side === "L" ? "R" : "L";
-  openSheet({
-    title: "🤱 Tétée en cours",
-    body: `<div class="big-grid two">
-        <button type="button" class="big-choice" data-switch><span class="big-letter">${other === "L" ? "G" : "D"}</span><span>Passer à ${rules.SIDES[other].toLowerCase()}</span></button>
-        <button type="button" class="big-choice stop" data-stop><span class="big-letter">■</span><span>Fin de la tétée</span></button>
-      </div>`,
-    onOpen(el, close) {
-      el.querySelector("[data-switch]").addEventListener("click", async () => { await switchSide(e); close(); });
-      el.querySelector("[data-stop]").addEventListener("click", async () => { await stopTimer(e); close(); });
-    },
-  });
-}
-
-export async function switchSide(e) {
-  const now = new Date().toISOString();
-  const segs = ((e.data && e.data.segments) || []).map((s) => ({ ...s }));
-  const last = segs[segs.length - 1];
-  const side = last ? (last.side === "L" ? "R" : "L") : "L";
-  if (last && !last.end) last.end = now;
-  segs.push({ side, start: now, end: null });
-  await store.updateEvent(e.id, { data: { ...e.data, segments: segs } });
-}
-
+// Stops a chrono (sleep; also an old feed from the chrono version).
 export async function stopTimer(e) {
   const now = new Date().toISOString();
   const patch = { ended_at: now };
-  if (e.type === "breastfeed") {
-    const segs = ((e.data && e.data.segments) || []).map((s) => (s.end ? s : { ...s, end: now }));
-    patch.data = { ...e.data, segments: segs };
+  if (e.data && e.data.segments) {
+    patch.data = { ...e.data, segments: e.data.segments.map((s) => (s.end ? s : { ...s, end: now })) };
   }
   await store.updateEvent(e.id, patch);
 }
@@ -324,6 +299,8 @@ export function receipt(e) {
   const draw = () => {
     const cur = store.events().find((x) => x.id === e.id) || e;
     const poop = cur.type === "diaper" && cur.data && cur.data.poop;
+    const feed = cur.type === "breastfeed";
+    const minutes = feed ? rules.feedMinutes(cur) : null;
     panel.innerHTML = `<div class="receipt-head"><strong>✓ ${rules.emoji(cur.type)} ${escapeHtml(rules.label(cur.type))}</strong>
         <span class="muted">${hhmm(cur.started_at)}${rules.TYPES[cur.type].timer ? " · chrono lancé" : ""}</span>
         <button type="button" class="icon-close" data-close aria-label="Fermer">✕</button></div>
@@ -333,7 +310,10 @@ export function receipt(e) {
         <button type="button" class="btn secondary small" data-minus="30">−30</button>
         <button type="button" class="btn secondary small" data-edit>Modifier</button>
         <button type="button" class="btn danger small" data-undo>Annuler</button></div>
-      ${poop ? `<form class="receipt-poop">${poopPickers(cur.data, { compact: true })}</form>` : ""}`;
+      ${feed ? `<div class="receipt-feed"><span class="hint">Durée (facultatif)</span><div class="chips">${rules.FEED_MINUTES.map((m) =>
+        `<button type="button" class="chip ${minutes === m ? "on" : ""}" data-minutes="${m}" aria-pressed="${minutes === m}">${m} min</button>`).join("")}</div></div>` : ""}
+      ${poop ? `<form class="receipt-poop">${poopPickers(cur.data, { compact: true })}</form>` : ""}
+      <button type="button" class="btn block big" data-ok>✓ OK</button>`;
     const form = panel.querySelector(".receipt-poop");
     if (form) makeRadiosClearable(form);
   };
@@ -347,15 +327,18 @@ export function receipt(e) {
     const cur = store.events().find((x) => x.id === e.id) || e;
     const t = ev.target.closest("button");
     if (!t) return;
-    if (t.dataset.close !== undefined) return closePanel();
+    if (t.dataset.close !== undefined || t.dataset.ok !== undefined) return closePanel();
+    if (t.dataset.minutes) {
+      const m = Number(t.dataset.minutes);
+      const data = { ...cur.data };
+      if (rules.feedMinutes(cur) === m) delete data.minutes; else data.minutes = m; // tap again = no duration
+      await store.updateEvent(cur.id, { data });
+      draw();
+      return;
+    }
     if (t.dataset.minus) {
       const m = Number(t.dataset.minus);
-      const patch = { started_at: minus(cur.started_at, m) };
-      if (cur.type === "breastfeed") {
-        const segs = ((cur.data && cur.data.segments) || []).map((s, i) => (i === 0 ? { ...s, start: minus(s.start, m) } : s));
-        patch.data = { ...cur.data, segments: segs };
-      }
-      await store.updateEvent(cur.id, patch);
+      await store.updateEvent(cur.id, { started_at: minus(cur.started_at, m) });
       draw();
     } else if (t.dataset.edit !== undefined) {
       closePanel();

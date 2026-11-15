@@ -73,7 +73,7 @@ poulette_questions    (id, household_id, baby_id, text, created_at, done_at NULL
 ### Types d'événements (`type`) et `data`
 | type | début/fin | data |
 |---|---|---|
-| `breastfeed` | début + fin (chrono) | `{ segments: [{ side: "L"\|"R", start, end }] }` (changement de sein en cours) |
+| `breastfeed` | ponctuel (**pas de chrono**, Rom 2026-11-15) | `{ sides: ["L"] \| ["R"] \| ["L","R"] \| ["R","L"] (ordre), minutes?: int }` (durée facultative ; ancien format `segments` encore lu) |
 | `bottle` | ponctuel | `{ ml: int, milk: "breast"\|"formula" }` |
 | `pump` | ponctuel ou durée | `{ side: "L"\|"R"\|"both", ml: int }` |
 | `diaper` | ponctuel | `{ pee: bool, poop: bool, poop_color?: enum, poop_texture?: enum }` |
@@ -205,8 +205,10 @@ testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus
   couleur + texture si caca), disparaît seul après 12 s. Couleurs de caca : 6 des cartes de selles pédiatriques (noir
   méconium, vert, jaune, brun, pâle/blanc, rouge), toujours avec leur nom ; textures : liquide, grumeleuse, pâteuse,
   moulée (choix de Claude, à valider)
-- 1.3 Tétée = 2 taps (Tétée → G / D, côté suggéré encadré), chrono = l'événement lui-même (ended_at vide, segments) :
-  survit à la fermeture et se voit sur l'autre téléphone. 1.4 Biberon (+10 / +30 / −10, dernier volume et lait repris),
+- 1.3 Tétée = 2 taps (Tétée → Gauche / Droite / Gauche puis droite / Droite puis gauche ; côté suggéré encadré),
+  **sans chrono** (retour de Rom 2026-11-15 : le but est de savoir quel sein) ; durée facultative sur le reçu (5 / 10 /
+  15 / 20 / 30 min, re-tap = aucune) ou dans Modifier. Prochain sein = opposé du dernier sein de la dernière tétée.
+  Le reçu a un gros bouton « ✓ OK » (retour de Rom : il manquait un bouton pour valider). 1.4 Biberon (+10 / +30 / −10, dernier volume et lait repris),
   Tirage. 1.5 Sommeil = 1 tap (chrono), Régurgitation (type + taille = 2 taps), Plus : Température (±0,1 / ±0,5,
   dernière valeur), Médicament (déjà donnés en puces : un tap = enregistré), Mesure, Question
 - 1.6 `views/editor.js` : tout modifier (heure, fin, détails, note), Supprimer (2e tap = confirmer ; suppression douce)

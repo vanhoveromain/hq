@@ -15,11 +15,11 @@ function typeFields(e) {
   const d = e.data || {};
   switch (e.type) {
     case "breastfeed": {
-      const segs = d.segments || [];
-      if (segs.length <= 1) {
-        return `<label class="field">Côté<select name="side">${options(rules.SIDES, segs[0] ? segs[0].side : "L")}</select></label>`;
-      }
-      return `<p class="hint">Côtés : ${escapeHtml(rules.summary(e))} (changer l'heure de début / fin ajuste le premier / dernier côté).</p>`;
+      const current = rules.feedSides(e).join("");
+      const minutes = rules.feedMinutes(e);
+      return `<div class="field-pair"><label class="field">Sein<select name="feed">${rules.FEED_CHOICES.map((c) =>
+        `<option value="${c.id}" ${c.id === current ? "selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</select></label>`
+        + `<label class="field">Durée (min, facultatif)<input name="minutes" type="number" inputmode="numeric" min="1" max="120" step="1" value="${minutes ?? ""}"></label></div>`;
     }
     case "bottle":
       return `<div class="field-pair"><label class="field">Quantité (ml)<input name="ml" type="number" inputmode="numeric" min="0" max="500" step="5" value="${d.ml ?? ""}"></label>`
@@ -69,6 +69,14 @@ function readData(e, form) {
   const d = { ...(e.data || {}) };
   const num = (name) => (form[name].value === "" ? null : Number(form[name].value));
   switch (e.type) {
+    case "breastfeed": {
+      const choice = rules.FEED_CHOICES.find((c) => c.id === form.feed.value);
+      d.sides = choice.sides;
+      delete d.segments;
+      const minutes = num("minutes");
+      if (minutes) d.minutes = Math.round(minutes); else delete d.minutes;
+      break;
+    }
     case "bottle": d.ml = num("ml"); d.milk = form.milk.value; break;
     case "pump": d.side = form.side.value; d.ml = num("ml"); break;
     case "diaper": {
@@ -124,7 +132,6 @@ export function openEditor(event, { members = [] } = {}) {
           return;
         }
         const data = readData(e, form);
-        if (e.type === "breastfeed") data.segments = adjustSegments(e, form, started, ended);
         const patch = { started_at: started, data, note: form.note.value.trim() || null };
         if (timer) patch.ended_at = ended;
         await store.updateEvent(e.id, patch);
@@ -142,15 +149,4 @@ export function openEditor(event, { members = [] } = {}) {
       });
     },
   });
-}
-
-// Keeps a feed's sides in line with a changed start / end.
-function adjustSegments(e, form, started, ended) {
-  const segs = ((e.data && e.data.segments) || []).map((s) => ({ ...s }));
-  if (segs.length <= 1) {
-    return [{ side: form.side.value, start: started, end: ended }];
-  }
-  segs[0].start = started;
-  if (ended) segs[segs.length - 1].end = ended;
-  return segs;
 }

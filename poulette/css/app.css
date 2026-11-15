@@ -163,6 +163,8 @@ fieldset.poop legend{padding:0;margin-bottom:8px;font-size:14px;font-weight:600;
 .receipt-row{display:flex;gap:6px;flex-wrap:wrap}
 .receipt-row .btn{flex:1 0 auto}
 .receipt-poop{display:grid;gap:10px}
+.receipt-feed{display:grid;gap:6px}
+.chip.on{border-color:var(--hq-accent-text);background:var(--hq-accent-light);color:var(--hq-primary-text)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;padding:10px 16px;border-radius:var(--hq-radius);background:var(--hq-primary-text);color:var(--hq-canvas);font-size:15px;box-shadow:var(--hq-shadow-pop)}
 
 /* ---------- Journal ---------- */
