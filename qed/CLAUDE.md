@@ -211,7 +211,8 @@ Coordination Team HQ, archived / passed projects.
    width as fallback; .task-list scrolls sideways if columns get wider than the page. Fit (Romain, 2026-11-15): a chosen width
    is a maximum (minmax(smallest, chosen)), so columns give way in a narrower window; while dragging, a column
    stops growing at what really fits (no column ever leaves the frame). Priorities: Due column last, just before
-   the push / focus icons (rowOptions.dueLast + list class due-last); other lists keep Due after Project · 11. Phone / laptop check + polish
+   the push / focus icons (rowOptions.dueLast + list class due-last); other lists keep Due after Project.
+   Priorities uses the full screen width too (body.is-wide, like the planner) · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

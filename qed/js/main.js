@@ -89,7 +89,8 @@ function render() {
   if (current && current.view.leave) current.view.leave();
   current = routes[name];
   document.body.classList.toggle("is-focus", name === "focus" || name === "routine");
-  document.body.classList.toggle("is-wide", name === "planner");
+  // Full screen width on a laptop: the planner board and Priorities (Romain, 2026-11-15).
+  document.body.classList.toggle("is-wide", name === "planner" || name === "priorities");
   routes[name].view.render(viewEl, { user: currentUser, params });
 }
 
