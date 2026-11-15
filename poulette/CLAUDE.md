@@ -177,7 +177,11 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
   Ajouter un membre par email → `poulette_add_member` ; compte own-hq + accès poulette à créer avant), Bébé (prénom,
   naissance, poids g, taille cm ; Enregistrer sans redessiner la page), Compte, thème, Se déconnecter.
   storage.js : createHousehold, listMembers, addMember, createBaby, updateBaby, friendlyError (messages FR).
-  Testé avec un faux Supabase. Boutons : survol seulement à la souris (pas de couleur collée après un tap)
+  Testé avec un faux Supabase. Boutons : survol seulement à la souris (pas de couleur collée après un tap).
+  Testé en vrai 2026-11-15 : Rom crée le foyer, ajoute Léa ; Léa arrive sur l'Accueil et voit le même foyer + bébé.
+  **Phase 0 terminée le 2026-11-15.**
+  Piège Vercel : il arrive qu'un push sur la branche ne soit pas déployé (ancienne version affichée) → Deployments →
+  ⋯ → Create Deployment avec le nom de la branche.
 
 **À la mise en ligne (fusion dans main)** : retirer l'« Ignored Build Step » du projet Vercel poulette-hq (il saute
 main tant que main n'a pas le dossier poulette/ : sinon un mail « Production deployment failed » à chaque push) ;
