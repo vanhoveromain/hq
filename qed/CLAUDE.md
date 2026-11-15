@@ -187,6 +187,12 @@ Coordination Team HQ, archived / passed projects.
    group (rowOptions.inMeeting) · wider Project column · push arrow pinned right in its slot so icons line up.
    Project page quick add keeps today as default (Romain). Next: batch 2 = phone Priorities (#2 + #12), batch 3 =
    planner (#4 past days, #5 phone agenda)
+7q. UX review #2 batch 2 (2026-11-15): Priorities toolbar = Plan · Close · "Reset ▾" menu (details.menu: period /
+   scope / priority, same confirm + Undo; closes on outside click / Esc) + Push all. Phone (< 640): menu = "More"
+   and also holds Push all; 1-3-5 rule text hidden (warnings + "n without a scope" stay); quick add = one line, project
+   / date / Add appear once you tap it (:focus-within / :has). Stacked rows (< 1100): .task is a grid, .task-body
+   display:contents: tick · title · icons on line 1, fields across the full width below; project tag max 180 px;
+   scope buttons read Maj / Med / Sma on a phone (.show-phone / .hide-phone helpers)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

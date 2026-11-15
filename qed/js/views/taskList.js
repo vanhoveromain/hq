@@ -125,7 +125,7 @@ export function rolledHtml(task) {
 function scopeButtons(task) {
   return `
     <span class="scope-pick" role="group" aria-label="Scope">
-      ${SCOPES.map((s) => `<button type="button" class="scope-btn${task.scope === s.value ? " is-on" : ""}" data-scope="${s.value}" aria-pressed="${task.scope === s.value}" title="${task.scope === s.value ? "Click to clear the scope" : "Scope: " + escapeHtml(s.label)}">${escapeHtml(s.label)}</button>`).join("")}
+      ${SCOPES.map((s) => `<button type="button" class="scope-btn${task.scope === s.value ? " is-on" : ""}" data-scope="${s.value}" aria-pressed="${task.scope === s.value}" title="${task.scope === s.value ? "Click to clear the scope" : "Scope: " + escapeHtml(s.label)}" aria-label="${escapeHtml(s.label)}"><span class="hide-phone">${escapeHtml(s.label)}</span><span class="show-phone" aria-hidden="true">${escapeHtml(s.label.slice(0, 3))}</span></button>`).join("")}
     </span>`;
 }
 

@@ -286,6 +286,17 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .tchip-add:hover{color:var(--hq-primary-text);border-color:var(--hq-secondary-text)}
 .task.show-all .tchip-add{background:var(--hq-subtle);border-style:solid;transform:rotate(45deg)}
 @media (hover:hover){.tchip-add{opacity:0}.task:hover .tchip-add,.task:focus-within .tchip-add{opacity:1}}
+/* Stacked rows (below 1100 px): tick · title · icons on top; the fields use the
+   whole width underneath (also under the tick), so a row needs fewer lines. */
+@media (max-width:1099px){
+  .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:start}
+  .task-body{display:contents}
+  .task>.tick{grid-row:1}
+  .task-title{grid-row:1;grid-column:2;align-self:center}
+  .task-chips{grid-row:2;grid-column:1 / -1;padding:6px 0 0 10px}
+  .task>.slot-push,.task>.task-delete,.task>.task-more{grid-row:1}
+  .cell-project .tchip{max-width:180px}
+}
 /* Cells: on a phone they flow under the title like the tags themselves. */
 .cell{display:contents}
 .slot-push:empty{display:none}
@@ -365,6 +376,32 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .day-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:-8px 0 16px}
 .day-tools-group{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .day-tools-label{font-size:13px;color:var(--hq-secondary-text);margin-right:2px}
+/* Small drop-down menu (Reset on Priorities) */
+.menu{position:relative}
+.menu>summary{list-style:none;cursor:pointer}
+.menu>summary::-webkit-details-marker{display:none}
+.menu>summary svg{width:14px;height:14px}
+.menu-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:30;display:grid;min-width:240px;padding:4px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);box-shadow:var(--hq-shadow-pop)}
+.menu-pop button{display:block;min-height:36px;padding:9px 10px;border:0;border-radius:var(--hq-radius-sm);background:none;color:var(--hq-primary-text);font:500 14px/1.2 var(--hq-font);text-align:left;cursor:pointer}
+.menu-pop button:hover,.menu-pop button:focus-visible{background:var(--hq-subtle);outline:none}
+.menu-pop button svg{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.menu-pop button.show-phone{display:none}
+/* Phone-only / laptop-only bits */
+.show-phone{display:none}
+@media (max-width:639px){
+  .show-phone{display:revert}
+  span.show-phone{display:inline}
+  .menu-pop button.show-phone{display:block}
+  .day-tools,.day-tools-group{flex-wrap:nowrap}
+  .day-tools .btn{padding:0 12px}
+  .hide-phone{display:none !important}
+  /* Priorities: no rule text on a phone (the boxes say it); warnings stay. */
+  .counter-rule{display:none}
+  .counter-note.is-plain{display:none}
+  .day-tools{margin-bottom:12px}
+  /* Quick add: one line until you tap it; project, date and Add appear then. */
+  .quick-add:not(:focus-within):not(:has(.quick-title:not(:placeholder-shown)))>:not(.quick-title){display:none}
+}
 .list-none{margin:0 0 12px;padding:8px 2px;font-size:13px;color:var(--hq-secondary-text);border-top:1px solid var(--hq-border)}
 .counter-mini{display:none}
 @media (min-width:720px){
