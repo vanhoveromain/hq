@@ -35,6 +35,7 @@ const SHELL = [
   "js/utils/html.js",
   "js/views/placeholders.js",
   "js/views/reglages.js",
+  "js/views/welcome.js",
 ];
 
 self.addEventListener("install", (event) => {

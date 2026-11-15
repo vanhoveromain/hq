@@ -104,3 +104,76 @@ async function fetchHousehold(userId) {
 
   return { household: member.household, member, babies };
 }
+
+// Creates your household and makes you its first member (database function
+// poulette_create_household), then adds the baby. Needs the network.
+export async function createHousehold({ name, displayName, baby }) {
+  const { data: householdId, error } = await db.rpc("poulette_create_household", {
+    p_name: name,
+    p_display_name: displayName,
+  });
+  if (error) throw error;
+  // The household exists now: never let a baby problem make you create a
+  // second one. The baby can be added again from Réglages → Bébé.
+  try {
+    await createBaby(householdId, baby);
+  } catch (babyError) {
+    console.warn("Baby not added:", babyError.message);
+  }
+  return householdId;
+}
+
+// Members of the household (Rom, Léa...), oldest first.
+export async function listMembers(householdId) {
+  const { data, error } = await db
+    .from("poulette_members")
+    .select("id, user_id, display_name, role, created_at")
+    .eq("household_id", householdId)
+    .order("created_at");
+  if (error) throw error;
+  return data;
+}
+
+// Adds an existing own-hq account to the household by its email (database
+// function poulette_add_member: only members may add someone).
+export async function addMember(householdId, email, displayName) {
+  const { error } = await db.rpc("poulette_add_member", {
+    p_household_id: householdId,
+    p_email: email,
+    p_display_name: displayName,
+  });
+  if (error) throw error;
+}
+
+
+// ---------------------------------------------------------------------
+// Baby
+// ---------------------------------------------------------------------
+
+const BABY_FIELDS = ["name", "birth_date", "birth_weight_g", "birth_length_cm"];
+
+function babyRow(fields) {
+  const row = {};
+  for (const key of BABY_FIELDS) if (key in fields) row[key] = fields[key] === "" ? null : fields[key];
+  return row;
+}
+
+export async function createBaby(householdId, fields) {
+  const { error } = await db.from("poulette_babies").insert({ household_id: householdId, ...babyRow(fields) });
+  if (error) throw error;
+}
+
+export async function updateBaby(babyId, fields) {
+  const { error } = await db.from("poulette_babies").update(babyRow(fields)).eq("id", babyId);
+  if (error) throw error;
+}
+
+// Supabase's messages are technical (and in English): the common ones in French.
+export function friendlyError(error) {
+  const text = String((error && error.message) || error || "");
+  if (/Failed to fetch|NetworkError|Load failed|offline/i.test(text)) return "Pas de réseau. Réessaie quand la connexion revient.";
+  if (/Aucun compte avec cet email/.test(text)) return "Aucun compte HQ avec cet email. Crée-le d'abord dans Supabase (Authentication → Users), puis réessaie.";
+  if (/Pas membre de ce foyer/.test(text)) return "Seul un membre du foyer peut ajouter quelqu'un.";
+  if (/check constraint/i.test(text)) return "Une valeur n'est pas acceptée (vérifie les chiffres).";
+  return "Quelque chose n'a pas marché : " + text;
+}

@@ -9,6 +9,7 @@ import { requireLogin, loginUrl, onAuthChange, getMyHousehold } from "./storage.
 import { errorHtml } from "./utils/html.js";
 import * as screens from "./views/placeholders.js";
 import * as reglages from "./views/reglages.js";
+import * as welcome from "./views/welcome.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
 // serve.py's /_hq/). Loaded on the side: if it fails, "Poulette HQ" stays a link.
@@ -53,7 +54,8 @@ function render() {
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
-  window.scrollTo(0, 0);
+  if (!keepScroll) window.scrollTo(0, 0);
+  keepScroll = false;
   document.body.classList.toggle("no-household", !home && !homeError);
 
   if (homeError && !route.noHouseholdOk) {
@@ -62,10 +64,21 @@ function render() {
   }
   if (!home && !route.noHouseholdOk) {
     titleEl.textContent = "";
-    screens.welcome.render(viewEl, { user });
+    welcome.render(viewEl, { user, onDone: () => reload() });
     return;
   }
-  route.view.render(viewEl, { user, home, params });
+  route.view.render(viewEl, { user, home, params, reload });
+}
+
+// Load the household again (after creating it, or changing the baby) and
+// redraw the screen you're on, unless { draw: false }.
+let keepScroll = false;
+async function reload({ draw = true } = {}) {
+  await loadHome();
+  if (draw) {
+    keepScroll = true;
+    render();
+  }
 }
 
 async function loadHome() {

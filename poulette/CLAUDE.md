@@ -170,7 +170,14 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     poulette ET hq-home : sinon `hq-preview.ownhq.app/auth.js` répond 302 (login Vercel) à l'import cross-origin et
     l'app reste sur « Chargement… ». `poulette.ownhq.app` (production) à ajouter à la mise en ligne seulement (main
     n'a pas encore le dossier)
-- 0.6 Household + profil bébé + ajout de Léa comme membre
+- 0.6 Household + profil bébé + ajout de Léa comme membre — construit 2026-11-15 (pas de migration) :
+  views/welcome.js (sans foyer : nom du foyer, ton prénom, bébé « Poulette » par défaut + date facultative ; note
+  « si ton/ta partenaire a déjà créé le foyer, ne crée rien ») → `poulette_create_household` puis le bébé (si le bébé
+  échoue, le foyer reste et le bébé s'ajoute dans Réglages : jamais de 2e foyer). Réglages : Foyer (membres, « toi »,
+  Ajouter un membre par email → `poulette_add_member` ; compte own-hq + accès poulette à créer avant), Bébé (prénom,
+  naissance, poids g, taille cm ; Enregistrer sans redessiner la page), Compte, thème, Se déconnecter.
+  storage.js : createHousehold, listMembers, addMember, createBaby, updateBaby, friendlyError (messages FR).
+  Testé avec un faux Supabase. Boutons : survol seulement à la souris (pas de couleur collée après un tap)
 
 **À la mise en ligne (fusion dans main)** : retirer l'« Ignored Build Step » du projet Vercel poulette-hq (il saute
 main tant que main n'a pas le dossier poulette/ : sinon un mail « Production deployment failed » à chaque push) ;

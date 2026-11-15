@@ -50,18 +50,37 @@ body.no-household .tabbar a:not([data-route="reglages"]){visibility:hidden}
 
 /* Buttons: >= 48 px tall (one thumb, in the dark) */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:0;border-radius:var(--hq-radius);background:var(--hq-accent);color:var(--hq-on-accent);font:600 16px/1 var(--hq-font);text-decoration:none;cursor:pointer;transition:background-color var(--hq-ease)}
-.btn:hover{background:var(--hq-accent-dark)}
+/* Hover only with a mouse (on a phone, a tap would leave it stuck), and a
+   slight lightening: in dark mode --hq-accent-dark is a pale teal. */
+@media (hover:hover){.btn:hover{filter:brightness(1.12)}}
 .btn:disabled{opacity:.6;cursor:default}
 .btn.secondary{background:var(--hq-surface);color:var(--hq-primary-text);border:1px solid var(--hq-border-strong)}
-.btn.secondary:hover{background:var(--hq-subtle)}
+@media (hover:hover){.btn.secondary:hover{filter:none;background:var(--hq-subtle)}}
 .btn.danger{background:var(--hq-surface);color:var(--hq-danger);border:1px solid var(--hq-border-strong)}
-.btn.danger:hover{background:var(--hq-danger-light)}
+@media (hover:hover){.btn.danger:hover{filter:none;background:var(--hq-danger-light)}}
 .btn.block{width:100%}
 
 /* Segmented choice (theme) */
 .segmented{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:var(--hq-radius);background:var(--hq-subtle)}
 .segmented button{min-height:44px;border:0;border-radius:var(--hq-radius-sm);background:none;color:var(--hq-secondary-text);font:500 15px/1 var(--hq-font);cursor:pointer}
 .segmented button[aria-pressed="true"]{background:var(--hq-surface);color:var(--hq-primary-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+
+/* Forms */
+.form{display:grid;gap:16px}
+.form .section-title{margin:8px 0 -4px}
+.field{display:grid;gap:6px;font-size:15px;font-weight:500}
+.field input{font:400 17px/1.2 var(--hq-font);color:var(--hq-primary-text);background:var(--hq-canvas);border:1px solid var(--hq-border-strong);border-radius:var(--hq-radius);padding:0 12px;min-height:48px;width:100%;color-scheme:inherit}
+.field input:focus-visible{outline:2px solid var(--hq-accent-text);outline-offset:0;border-color:var(--hq-accent-text)}
+.field-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:14px;font-weight:400;color:var(--hq-secondary-text);margin:0}
+.note{margin:16px 0 20px;padding:12px 14px;border-radius:var(--hq-radius);background:var(--hq-accent-light);font-size:15px}
+.status{margin:0;font-size:15px;min-height:1.5em}
+.status.error{color:var(--hq-danger)}
+.status.ok{color:var(--hq-success)}
+.add-member{margin-top:12px}
+.add-member summary{list-style:none}
+.add-member summary::-webkit-details-marker{display:none}
+.add-member[open] summary{margin-bottom:16px}
 
 .error-box{display:grid;gap:12px;justify-items:start;padding:16px;border-radius:var(--hq-radius);background:var(--hq-danger-light)}
 .error-box p{margin:0}

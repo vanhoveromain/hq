@@ -30,10 +30,3 @@ export const pediatre = {
       + comingHtml("Rapport", "Résumé pour la pédiatre, mode consultation, PDF. Phase 2.");
   },
 };
-
-// No household yet (first start). Step 0.6 turns this into the setup screen.
-export const welcome = {
-  render(el) {
-    el.innerHTML = comingHtml("Bienvenue", "Ce compte ne fait encore partie d'aucun foyer. La création du foyer (nom, prénoms, bébé) arrive à l'étape 0.6.");
-  },
-};
