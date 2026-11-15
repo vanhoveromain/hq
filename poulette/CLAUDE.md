@@ -207,7 +207,7 @@ testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus
   moulée (choix de Claude, à valider)
 - 1.3 Tétée = 2 taps (Tétée → Gauche / Droite / Gauche puis droite / Droite puis gauche ; côté suggéré encadré),
   **sans chrono** (retour de Rom 2026-11-15 : le but est de savoir quel sein) ; durée facultative sur le reçu (5 / 10 /
-  15 / 20 / 30 min, re-tap = aucune) ou dans Modifier. Prochain sein = opposé du dernier sein de la dernière tétée.
+  15 / 20 / 30 min, re-tap = aucune, + champ libre « autre » 1 à 180 min, Rom 2026-11-15) ou dans Modifier. Prochain sein = opposé du dernier sein de la dernière tétée.
   Le reçu a un gros bouton « ✓ OK » (retour de Rom : il manquait un bouton pour valider). 1.4 Biberon (+10 / +30 / −10, dernier volume et lait repris),
   Tirage. 1.5 Sommeil = 1 tap (chrono), Régurgitation (type + taille = 2 taps), Plus : Température (±0,1 / ±0,5,
   dernière valeur), Médicament (déjà donnés en puces : un tap = enregistré), Mesure, Question

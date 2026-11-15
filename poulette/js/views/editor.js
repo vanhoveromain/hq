@@ -19,7 +19,7 @@ function typeFields(e) {
       const minutes = rules.feedMinutes(e);
       return `<div class="field-pair"><label class="field">Sein<select name="feed">${rules.FEED_CHOICES.map((c) =>
         `<option value="${c.id}" ${c.id === current ? "selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</select></label>`
-        + `<label class="field">Durée (min, facultatif)<input name="minutes" type="number" inputmode="numeric" min="1" max="120" step="1" value="${minutes ?? ""}"></label></div>`;
+        + `<label class="field">Durée (min, facultatif)<input name="minutes" type="number" inputmode="numeric" min="1" max="180" step="1" value="${minutes ?? ""}"></label></div>`;
     }
     case "bottle":
       return `<div class="field-pair"><label class="field">Quantité (ml)<input name="ml" type="number" inputmode="numeric" min="0" max="500" step="5" value="${d.ml ?? ""}"></label>`

@@ -164,6 +164,9 @@ fieldset.poop legend{padding:0;margin-bottom:8px;font-size:14px;font-weight:600;
 .receipt-row .btn{flex:1 0 auto}
 .receipt-poop{display:grid;gap:10px}
 .receipt-feed{display:grid;gap:6px}
+.chip-input{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 4px;border:1px solid var(--hq-border-strong);border-radius:999px;background:var(--hq-canvas);font-size:15px}
+.chip-input input{width:64px;min-height:36px;border:0;background:none;color:var(--hq-primary-text);font:500 16px/1 var(--hq-font);text-align:center;color-scheme:inherit}
+.chip-input.on{border-color:var(--hq-accent-text);background:var(--hq-accent-light)}
 .chip.on{border-color:var(--hq-accent-text);background:var(--hq-accent-light);color:var(--hq-primary-text)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;padding:10px 16px;border-radius:var(--hq-radius);background:var(--hq-primary-text);color:var(--hq-canvas);font-size:15px;box-shadow:var(--hq-shadow-pop)}
 

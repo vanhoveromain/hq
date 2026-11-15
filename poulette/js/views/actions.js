@@ -311,7 +311,9 @@ export function receipt(e) {
         <button type="button" class="btn secondary small" data-edit>Modifier</button>
         <button type="button" class="btn danger small" data-undo>Annuler</button></div>
       ${feed ? `<div class="receipt-feed"><span class="hint">Durée (facultatif)</span><div class="chips">${rules.FEED_MINUTES.map((m) =>
-        `<button type="button" class="chip ${minutes === m ? "on" : ""}" data-minutes="${m}" aria-pressed="${minutes === m}">${m} min</button>`).join("")}</div></div>` : ""}
+        `<button type="button" class="chip ${minutes === m ? "on" : ""}" data-minutes="${m}" aria-pressed="${minutes === m}">${m} min</button>`).join("")}
+        <label class="chip-input ${minutes != null && !rules.FEED_MINUTES.includes(minutes) ? "on" : ""}"><input type="number" inputmode="numeric" min="1" max="180" step="1"
+          data-custom-minutes placeholder="autre" aria-label="Autre durée en minutes" value="${minutes != null && !rules.FEED_MINUTES.includes(minutes) ? minutes : ""}"> min</label></div></div>` : ""}
       ${poop ? `<form class="receipt-poop">${poopPickers(cur.data, { compact: true })}</form>` : ""}
       <button type="button" class="btn block big" data-ok>✓ OK</button>`;
     const form = panel.querySelector(".receipt-poop");
@@ -322,12 +324,24 @@ export function receipt(e) {
 
   const keepOpen = () => { clearTimeout(panelTimer); panelTimer = setTimeout(closePanel, 12000); };
   keepOpen();
+  panel.addEventListener("focusin", () => clearTimeout(panelTimer));
+  panel.addEventListener("input", () => clearTimeout(panelTimer));
+  // Enter in the duration field = save it (the "change" event) and close.
+  panel.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter" && ev.target.matches("[data-custom-minutes]")) { ev.preventDefault(); ev.target.blur(); }
+  });
   panel.addEventListener("click", async (ev) => {
     keepOpen();
     const cur = store.events().find((x) => x.id === e.id) || e;
     const t = ev.target.closest("button");
     if (!t) return;
-    if (t.dataset.close !== undefined || t.dataset.ok !== undefined) return closePanel();
+    if (t.dataset.close !== undefined || t.dataset.ok !== undefined) {
+      // A duration typed but not yet saved (field still focused): save it first.
+      const field = panel.querySelector("[data-custom-minutes]");
+      if (field && document.activeElement === field) field.blur();
+      setTimeout(closePanel, 50);
+      return;
+    }
     if (t.dataset.minutes) {
       const m = Number(t.dataset.minutes);
       const data = { ...cur.data };
@@ -351,6 +365,15 @@ export function receipt(e) {
   });
   panel.addEventListener("change", async (ev) => {
     keepOpen();
+    if (ev.target.matches("[data-custom-minutes]")) {
+      const cur = store.events().find((x) => x.id === e.id) || e;
+      const value = Math.round(Number(ev.target.value));
+      const data = { ...cur.data };
+      if (value >= 1 && value <= 180) data.minutes = value; else delete data.minutes;
+      await store.updateEvent(cur.id, { data });
+      draw();
+      return;
+    }
     if (!ev.target.name || !ev.target.name.startsWith("poop_")) return;
     const cur = store.events().find((x) => x.id === e.id) || e;
     const form = panel.querySelector(".receipt-poop");
