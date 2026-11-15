@@ -10,6 +10,11 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED HQ: work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
 
+Build only when the app's own folder changed: `qed/vercel.json` and `hq-home/vercel.json` set
+`"ignoreCommand": "git diff HEAD^ HEAD --quiet -- ."` (runs in the project root; exit 0 = skip). Every push used to
+rebuild every project on every branch and hit Vercel's daily build limit (2026-11-15). Note: only the LAST commit of a
+push is checked, so a push whose last commit doesn't touch the folder is skipped (redeploy by hand if needed).
+
 ## Shared hq login
 
 One login for every hq site, on `ownhq.app` (`hq-home/auth.js`).
