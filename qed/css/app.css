@@ -275,7 +275,8 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
   /* tick | task | due | AM/PM | priority | scope | status | (project) | push | ⋯ */
   /* tick | task | due | AM/PM | priority | scope (3 buttons) | status | (project) | push | bin | ⋯ */
   .task-list{--task-cols:32px minmax(220px,1fr) 100px 68px 96px 164px minmax(150px,.9fr) 32px 32px 36px}
-  .task-list.with-project{--task-cols:32px minmax(180px,1fr) 100px 64px 92px 164px minmax(130px,.8fr) minmax(120px,.7fr) 68px 32px 36px}
+  /* with a project: tick | task | project | due | … */
+  .task-list.with-project{--task-cols:32px minmax(180px,1fr) minmax(120px,.7fr) 100px 64px 92px 164px minmax(130px,.8fr) 68px 32px 36px}
   .task-delete{margin-top:0}
   .task.is-done .task-delete{display:inline-grid;visibility:hidden}
   .task,.task-head{display:grid;grid-template-columns:var(--task-cols);align-items:center;column-gap:6px}

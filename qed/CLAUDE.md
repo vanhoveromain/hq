@@ -177,7 +177,8 @@ Coordination Team HQ, archived / passed projects.
    screen width (body.is-wide) · Non-event projects have no dates (hidden in form, saved as null, not shown on
    page / card / search; hasDates in rules.js) · status "archived" now reads "Event done" ("Done" on non-event,
    projectStatusLabel in rules.js; stored value unchanged, no migration); "Event done" / "Done" button in the
-   project header (Undo), "Reopen" once done; Home toggle "Show done events"
+   project header (Undo), "Reopen" once done; Home toggle "Show done events". Task lists with a project: Project
+   column right after Task, before Due (phone: first chip)
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

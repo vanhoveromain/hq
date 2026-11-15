@@ -37,18 +37,20 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
       ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`
       : "",
   ].join("");
-  const cells = [
-    cell("due", dateChip(task, today, hideDay)),
-    cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
-    cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
-    cell("scope", scopeButtons(task)),
-    cell("status", status),
-  ];
+  // Project right after the task, before the due date (Romain, 2026-11-15).
+  const cells = [];
   if (projects) {
     cells.push(cell("project", selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
       emptyLabel: "No project", clearLabel: "No project",
     })));
   }
+  cells.push(
+    cell("due", dateChip(task, today, hideDay)),
+    cell("period", selectChip("period", "AM / PM", PERIODS, task.period, { emptyLabel: "AM/PM" })),
+    cell("priority", selectChip("priority", "Priority", PRIORITIES, task.priority, { classFor: (v) => `prio-${v}` })),
+    cell("scope", scopeButtons(task)),
+    cell("status", status),
+  );
   cells.push(cell("add", `<button type="button" class="tchip-add" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`));
 
   // The push slot is always there (empty if not used), so the columns line
@@ -72,8 +74,8 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
 export function taskListInnerHtml(tasks, rowOptions) {
   const head = `
     <li class="task-head" aria-hidden="true">
-      <span></span><span>Task</span><span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
-      ${rowOptions.projects ? "<span>Project</span>" : ""}<span></span><span></span><span></span>
+      <span></span><span>Task</span>${rowOptions.projects ? "<span>Project</span>" : ""}<span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
+      <span></span><span></span><span></span>
     </li>`;
   return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");
 }
