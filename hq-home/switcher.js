@@ -9,14 +9,18 @@
 // ↑ ↓ Home End move, Esc closes.
 //
 // Colours come from the page's HQ tokens (hq-tokens.css), with fallbacks.
-// Access: every HQ listed below is open to the one user today. When HQs get
-// per-account access, filter SPACES by what the logged-in account may open
-// (guidelines §08: the switcher respects account permissions).
+// Access (since 2026-11-15, guidelines §08: the switcher respects account
+// permissions): the menu lists only the HQs this account may open (table
+// hq_access, via listMyHqs() in auth.js). The current HQ always stays. With
+// only one HQ (Léa), there is nothing to switch to: no menu, no "All HQs".
+// Unknown (no network, nothing remembered): every HQ, as before.
 
 const SYMBOLS = {
   // Product symbols from brand/logos/ (guidelines-v1.0/02_Logos/Products), unchanged.
   sport: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#75638F"/><g fill="#FFFFFF"><path d="M50 14A36 36 0 0 1 86 50H72A22 22 0 0 0 50 28Z"/><path d="M86 50A36 36 0 0 1 50 86V72A22 22 0 0 0 72 50Z"/><path d="M50 86A36 36 0 0 1 14 50H28A22 22 0 0 0 50 72Z"/><path d="M14 50A36 36 0 0 1 50 14V28A22 22 0 0 0 28 50Z"/><circle cx="50" cy="50" r="9"/></g></svg>`,
   qed: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#547B91"/><g fill="#FFFFFF"><path d="M48 46L34 32L40 26L54 40Z"/><path d="M54 44L70 29L76 35L60 50Z"/><path d="M50 58L50 75L59 75L59 58Z"/><rect x="17" y="14" width="25" height="25" rx="5"/><rect x="65" y="14" width="25" height="25" rx="5"/><rect x="42" y="69" width="25" height="22" rx="5"/><path d="M54 34L70 50L54 66L38 50Z"/></g></svg>`,
+  // Poulette HQ (egg, teal), chosen 2026-11-15: brand/logos/poulette-hq.svg.
+  poulette: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#3D7D78"/><g fill="#FFFFFF"><path fill-rule="evenodd" d="M50 13C67 13 80 40 80 59C80 76 67 87 50 87C33 87 20 76 20 59C20 40 33 13 50 13ZM50 24C61 24 70 44 70 59C70 70 62 77 50 77C38 77 30 70 30 59C30 44 39 24 50 24Z"/><circle cx="50" cy="59" r="9"/></g></svg>`,
   // Parent HQ mark (provisional redraw, brand/export.mjs), in the text colour.
   hq: `<svg viewBox="4.6 10.2 82.5 80" aria-hidden="true" focusable="false"><g fill="currentColor" transform="translate(.6 .7)"><path d="M59 12.42A40 40 0 0 0 20 81.5L20 70.67A32 32 0 0 1 59 21.23Z"/><path d="M68 17.5A40 40 0 0 1 78.95 68.95L73.01 63.01A32 32 0 0 0 68 28.33Z"/><path d="M29 86.58A40 40 0 0 0 73.5 76.5L67.84 70.84A32 32 0 0 1 29 77.77Z"/><path d="M67.84 70.84L86.5 89.5L75.5 89.5L62.34 76.34Z"/><path d="M29 32L37 28L37 85L29 85Z"/><path d="M51 15L59 15L59 67L51 71Z"/><path d="M36.5 46H51.5V53H36.5Z"/></g></svg>`,
 };
@@ -29,12 +33,14 @@ const SPACES = [
   { id: "hq", name: "All HQs", url: ON_OWNHQ ? "https://ownhq.app/" : "/_hq/" },
   { id: "qed", name: "QED HQ", url: "https://qed.ownhq.app/" },
   { id: "sport", name: "Sport HQ", url: ON_OWNHQ ? "https://sport.ownhq.app/" : "/" },
+  { id: "poulette", name: "Poulette HQ", url: "https://poulette.ownhq.app/" },
 ];
 
 const CSS = `
 hq-switcher{position:relative;display:inline-flex;min-width:0}
 .hqsw-btn{display:inline-flex;align-items:center;gap:10px;min-width:0;min-height:40px;margin:0 0 0 -6px;padding:4px 8px 4px 6px;border:0;border-radius:var(--hq-radius,8px);background:none;color:var(--hq-primary-text,#242424);font:600 16px/1.2 var(--hq-font,system-ui,sans-serif);letter-spacing:-.01em;cursor:pointer;transition:background-color var(--hq-ease,160ms ease)}
 .hqsw-btn:hover{background:var(--hq-subtle,#F2F2F0)}
+.hqsw-alone,.hqsw-alone:hover{cursor:default;background:none}
 .hqsw-btn:focus-visible{outline:2px solid var(--hq-accent,#242424);outline-offset:2px}
 .hqsw-btn .hqsw-sym{width:28px;height:28px;flex:none;display:block}
 .hqsw-btn .hqsw-sym svg{width:100%;height:100%;display:block}
@@ -71,19 +77,45 @@ class HqSwitcher extends HTMLElement {
       document.head.append(style);
     }
     const current = SPACES.find((s) => s.id === this.getAttribute("current")) || SPACES[0];
+    this.current = current;
+    this.menuId = `hqsw-menu-${++count}`;
+    this.render(SPACES.slice(1));
+    // Then keep only the HQs this account may open. "./auth.js" is the same
+    // file the page already loaded (same address), so no second login check.
+    import("./auth.js")
+      .then((auth) => auth.listMyHqs())
+      .then((list) => {
+        if (!list) return;
+        this.render(SPACES.slice(1).filter((s) => s.id === current.id || list.includes(s.id)));
+      })
+      .catch(() => { /* keep every HQ */ });
+
+    document.addEventListener("click", (e) => { if (!this.contains(e.target)) this.close?.(false); });
+  }
+
+  render(spaces) {
+    const current = this.current;
+    const menuId = this.menuId;
     const label = current.id === "hq" ? "HQ" : current.name;
-    const menuId = `hqsw-menu-${++count}`;
+    const alone = spaces.length <= 1 && current.id !== "hq";
 
     const item = (s) => `<li role="none"><a role="menuitem" class="hqsw-item" href="${s.url}" ${s.id === current.id ? 'aria-current="page"' : ""}>
       <span class="hqsw-sym ${s.id === "hq" ? "is-hq" : ""}">${SYMBOLS[s.id]}</span>
       <span>${s.name}</span>${s.id === current.id ? CHECK : ""}</a></li>`;
+
+    if (alone) {
+      // Nothing to switch to: just the HQ's symbol + name.
+      this.close = () => {};
+      this.innerHTML = `<span class="hqsw-btn hqsw-alone"><span class="hqsw-sym">${SYMBOLS[current.id]}</span><span class="hqsw-name">${label}</span></span>`;
+      return;
+    }
 
     this.innerHTML = `<button type="button" class="hqsw-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}" aria-label="${label}, switch HQ">
         <span class="hqsw-sym">${SYMBOLS[current.id]}</span><span class="hqsw-name">${label}</span>${CARET}</button>
       <ul class="hqsw-menu" id="${menuId}" role="menu" aria-label="Switch HQ" hidden>
         ${item(SPACES[0])}<li role="separator" class="hqsw-sep"></li>
         <li role="presentation" class="hqsw-label">Your HQs</li>
-        ${SPACES.slice(1).map(item).join("")}
+        ${spaces.map(item).join("")}
       </ul>`;
 
     const button = this.querySelector(".hqsw-btn");
@@ -101,6 +133,7 @@ class HqSwitcher extends HTMLElement {
       button.setAttribute("aria-expanded", "false");
       if (refocus) button.focus();
     };
+    this.close = close;
 
     button.addEventListener("click", () => (menu.hidden ? open() : close()));
     button.addEventListener("keydown", (e) => {
@@ -117,7 +150,6 @@ class HqSwitcher extends HTMLElement {
       else if (e.key === "End") { e.preventDefault(); all[all.length - 1].focus(); }
       else if (e.key === "Tab") close(false);
     });
-    document.addEventListener("click", (e) => { if (!this.contains(e.target)) close(false); });
   }
 }
 

@@ -13,6 +13,7 @@ It replaces the old hq / sporthq logos and the SportHQ brand book (removed; stil
 |---|---|---|---|---|
 | Sport HQ | `#75638F` | `#F1EDF5` | `#594771` | sport.ownhq.app |
 | QED HQ | `#547B91` | `#EBF2F5` | `#3B6075` | qed.ownhq.app |
+| Poulette HQ | `#3D7D78` (teal) | `#EBF4F3` | `#2A5B57` | poulette.ownhq.app |
 | Work HQ (planned) | `#486B94` | `#EBF0F6` | `#345173` | — |
 | Personal HQ (planned) | `#9F597A` | `#F7EDF1` | `#793E5D` | — |
 
@@ -24,11 +25,12 @@ It replaces the old hq / sporthq logos and the SportHQ brand book (removed; stil
 
 | File | Use |
 |---|---|
-| `hq-tokens.css` | The shared design tokens (`--hq-*`) + Geist @font-face. Copied into each app: `hq-home/hq-tokens.css`, `qed/assets/hq-tokens.css`, `sporthq3/css/hq-tokens.css`. Edit here, then copy. |
+| `hq-tokens.css` | The shared design tokens (`--hq-*`) + Geist @font-face. Copied into each app: `hq-home/hq-tokens.css`, `qed/assets/hq-tokens.css`, `sporthq3/css/hq-tokens.css`, `poulette/assets/hq-tokens.css`. Edit here, then copy. |
 | `fonts/` | Geist Sans + Geist Mono variable woff2 (SIL OFL, `fonts/OFL.txt`, from the official `geist` npm package 1.9.1). Copied next to each app's tokens file. |
 | `logos/hq-mark.svg`, `hq-mark-white.svg` | Parent HQ mark for light / dark backgrounds |
 | `logos/hq-icon.svg`, `hq-icon-*.png` | Parent app icon (white tile, 0.25× clear space) |
 | `logos/{sport,qed,work,personal}-hq.svg` | Product symbols, unchanged from the kit |
+| `logos/poulette-hq.svg` | Poulette HQ symbol (egg on teal), added 2026-11-15, NOT in the kit: drawn here, choice made by Rom (amber dropped, too close to… nappy colours). Dark mode: accent text `#8FC7C0`, light `#1E3331` |
 | `logos/*-icon-*.png`, `*-square.svg` | App icons / favicons (square: iOS and Android round the corners) |
 
 ## Parent mark: provisional
