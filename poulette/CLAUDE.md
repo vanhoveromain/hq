@@ -22,7 +22,8 @@ PouletteHQ ; ce fichier la remplace et intègre les décisions.
 - **Tables préfixées `poulette_`**, RLS sur chaque table. Changements de schéma uniquement via
   `supabase/migrations/`, toujours signalés avant d'être lancés (une seule base pour test et live).
 - **Adresse** : `poulette.ownhq.app` (projet Vercel, racine `poulette/`) ; test : `poulette-preview.ownhq.app`
-  (branche de travail, comme qed-preview).
+  (branche de travail, comme qed-preview). `hq-preview.ownhq.app` (projet hq-home) ajouté le 2026-11-15, sur la
+  branche `claude/compassionate-davinci-whm0b2` (il n'existait pas dans Vercel malgré la doc QED HQ).
 - **Login** : le login partagé ownhq.app (`requireLogin()` de `https://ownhq.app/auth.js`). Léa a un compte dans
   `own-hq`, créé à la main (inscriptions fermées).
 - **Accès par personne** : le portail ownhq.app et le `<hq-switcher>` n'affichent que les HQ auxquels la personne
@@ -136,7 +137,9 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     `hq.access.<user id>`) ; inconnue (hors-ligne, rien en mémoire) → toutes les cartes. Sélecteur : même filtre (le HQ
     courant reste) ; un seul HQ → nom + symbole, sans menu. Testé avec un faux Supabase (Playwright). La carte
     PouletteHQ arrive à la 0.5 : d'ici là, Léa voit « No HQ is open… »
-  - 0.4c compte Léa (Supabase → Add user) + `hq_access` poulette, vérification
+  - 0.4c compte Léa (Supabase → Add user) + `hq_access` poulette — fait 2026-11-15. Vérifié en vrai sur hq-preview
+    (fenêtre privée) : Léa n'a que poulette, aucune carte (« No HQ is open… »), Sport HQ vide (RLS OK). Rom : 4 cartes.
+    Tant que la 0.4 n'est pas sur main, le vrai ownhq.app montre encore toutes les cartes : ne pas donner l'adresse à Léa
 - 0.5 Coquille de l'app : login, PWA (manifest, service worker, sombre), projet Vercel + domaines
 - 0.6 Household + profil bébé + ajout de Léa comme membre
 
