@@ -155,10 +155,12 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     de chargement → Réessayer), views/placeholders.js (écrans Phase 1/2 annoncés), views/reglages.js (compte, thème,
     Se déconnecter → login hq). serve.py port 8002. Testé avec un faux Supabase (Playwright, iPhone 13)
   - 0.5c PWA (manifest, icônes, service worker : l'app s'ouvre sans réseau)
-  - 0.5d Projet Vercel `poulette` + domaines poulette / poulette-preview — en cours 2026-11-15 : projet créé (Root
-    Directory `poulette` tapé à la main dans Settings, le sélecteur ne montre que les dossiers de main),
-    `poulette-preview.ownhq.app` sur la branche de travail. `poulette.ownhq.app` (production) à ajouter à la mise en
-    ligne seulement (main n'a pas encore le dossier)
+  - 0.5d Projet Vercel `poulette` — fait 2026-11-15 : Root Directory `poulette` tapé à la main (Settings → Build and
+    Deployment ; le sélecteur ne montre que les dossiers de main), `poulette-preview.ownhq.app` sur la branche de
+    travail, testé (Bienvenue + Version de test + sélecteur). **Vercel Authentication désactivée** sur les projets
+    poulette ET hq-home : sinon `hq-preview.ownhq.app/auth.js` répond 302 (login Vercel) à l'import cross-origin et
+    l'app reste sur « Chargement… ». `poulette.ownhq.app` (production) à ajouter à la mise en ligne seulement (main
+    n'a pas encore le dossier)
 - 0.6 Household + profil bébé + ajout de Léa comme membre
 
 **Phase 1 — MVP (mi-janvier 2027)** : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,
