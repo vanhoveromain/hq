@@ -12,8 +12,8 @@
 
 import { listDayTasks, listProjects, listLinks, createLink, updateLink, deleteLink, reorderLinks } from "../storage.js";
 import {
-  HOME_TABS, PROJECT_TYPES, PROJECT_STATUSES, OWNERS, DEFAULT_OWNER,
-  labelOf, isVisible, compareProjects,
+  HOME_TABS, PROJECT_TYPES, OWNERS, DEFAULT_OWNER,
+  labelOf, isVisible, compareProjects, projectStatusLabel, hasDates,
   PRIORITY_LISTS, countOneThreeFive, reachOutDate,
 } from "../rules.js";
 import { openProjectForm } from "./projectForm.js";
@@ -43,7 +43,7 @@ export async function render(el, { params }) {
       </nav>
       <div class="filters">
         ${tab.byOwner ? ownerChips() : ""}
-        <label class="switch"><input type="checkbox" id="show-archived"${showArchived ? " checked" : ""}> Show archived</label>
+        <label class="switch"><input type="checkbox" id="show-archived"${showArchived ? " checked" : ""}> Show done events</label>
       </div>
       <div id="gallery"><p class="muted">Loading…</p></div>
     </section>
@@ -178,15 +178,15 @@ async function drawGallery(galleryEl, tab, projectsLoad) {
 }
 
 function cardHtml(p, tab) {
-  const dates = formatRange(p.date_start, p.date_end);
+  const dates = hasDates(p.type) ? formatRange(p.date_start, p.date_end) : "";
   const tags = [];
-  if (p.status) tags.push(`<span class="pill status-${p.status}">${escapeHtml(labelOf(PROJECT_STATUSES, p.status))}</span>`);
+  if (p.status) tags.push(`<span class="pill status-${p.status}">${escapeHtml(projectStatusLabel(p))}</span>`);
   if (tab.id === "all") tags.push(`<span class="pill">${escapeHtml(labelOf(PROJECT_TYPES, p.type))}</span>`);
   if (p.owner !== DEFAULT_OWNER) tags.push(`<span class="pill owner">${escapeHtml(labelOf(OWNERS, p.owner) || p.owner)}</span>`);
   return `
     <li><button type="button" class="card${p.status === "archived" ? " is-archived" : ""}" data-project="${p.id}">
       <span class="card-name">${escapeHtml(p.name)}</span>
-      <span class="card-date">${dates ? escapeHtml(dates) : "No date yet"}</span>
+      ${hasDates(p.type) ? `<span class="card-date">${dates ? escapeHtml(dates) : "No date yet"}</span>` : ""}
       <span class="card-tags">${tags.join("")}</span>
     </button></li>`;
 }

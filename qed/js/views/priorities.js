@@ -147,7 +147,7 @@ export async function render(el, { params = [] } = {}) {
     const group = ul.dataset.group;
     let listTasks = lists[key];
     if (group !== undefined) listTasks = listTasks.filter((t) => (t.meeting_name || "") === group);
-    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow };
+    const rowOptions = { today, projects: projectChoices, showPush: withPush.has(key), showFocus: key === "today" && !isTomorrow, hideDay: day };
     ul.classList.add("with-project");
     ul.innerHTML = taskListInnerHtml(listTasks, rowOptions);
     wireTaskList(ul, listTasks, {

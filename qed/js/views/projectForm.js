@@ -3,7 +3,7 @@
 
 import { createProject, updateProject, deleteProject } from "../storage.js";
 import {
-  PROJECT_TYPES, PROJECT_STATUSES, SALES_STATUSES, OWNERS, DEFAULT_OWNER, labelOf,
+  PROJECT_TYPES, PROJECT_STATUSES, SALES_STATUSES, OWNERS, DEFAULT_OWNER, labelOf, projectStatusLabel, hasDates,
 } from "../rules.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
@@ -19,8 +19,8 @@ export function openProjectForm({ project = null, defaults = {}, onChange, onDel
   if (!isNew) {
     const archived = p.status === "archived";
     actions.push({
-      label: archived ? "Restore" : "Archive",
-      onClick: () => (archived ? restore(project, onChange) : archive(project, onChange)),
+      label: archived ? "Reopen" : (p.type === "non_event" ? "Done" : "Event done"),
+      onClick: () => (archived ? restoreProject(project, onChange) : markProjectDone(project, onChange)),
     });
     actions.push({
       label: "Delete", kind: "danger", confirm: "Click again to delete",
@@ -49,7 +49,7 @@ export function openProjectForm({ project = null, defaults = {}, onChange, onDel
       </div>
       <label class="field"><span>Owner</span>
         <select name="owner">${options(OWNERS, p.owner)}</select></label>
-      <div class="field-row">
+      <div class="field-row" data-show="dates">
         <label class="field"><span>Start date</span>
           <input name="date_start" type="date" value="${escapeHtml(p.date_start || "")}"></label>
         <label class="field"><span>End date <em>(optional)</em></span>
@@ -68,9 +68,13 @@ export function openProjectForm({ project = null, defaults = {}, onChange, onDel
     onOpen(form) {
       // Sales leads use Sales status; other projects use Status.
       const typeSelect = form.elements.type;
+      const archivedOption = form.elements.status.querySelector('option[value="archived"]');
       const sync = () => {
         const sales = typeSelect.value === "sales";
         form.querySelectorAll('[data-show="sales"]').forEach((el) => { el.hidden = !sales; });
+        // Non-event projects: no dates, and "Done" instead of "Event done".
+        form.querySelectorAll('[data-show="dates"]').forEach((el) => { el.hidden = !hasDates(typeSelect.value); });
+        if (archivedOption) archivedOption.textContent = projectStatusLabel({ status: "archived", type: typeSelect.value });
         if (sales && !form.elements.sales_status.value) form.elements.sales_status.value = "lead";
         if (!sales && !form.elements.status.value) form.elements.status.value = "coming_up";
       };
@@ -104,8 +108,9 @@ function readForm(form) {
   const name = f.name.value.trim();
   if (!name) throw new Error("Please give the project a name.");
   const type = f.type.value;
-  const dateStart = f.date_start.value || null;
-  const dateEnd = f.date_end.value || null;
+  // Non-event projects keep no dates (the fields are hidden).
+  const dateStart = hasDates(type) ? f.date_start.value || null : null;
+  const dateEnd = hasDates(type) ? f.date_end.value || null : null;
   if (dateStart && dateEnd && dateEnd < dateStart) {
     throw new Error("The end date is before the start date.");
   }
@@ -132,10 +137,12 @@ function readForm(form) {
   };
 }
 
-async function archive(project, onChange) {
+// "Event done" (stored as status "archived"), with Undo. Also used by the
+// button on the project page.
+export async function markProjectDone(project, onChange) {
   const previous = project.status;
   await updateProject(project.id, { status: "archived" });
-  showToast(`"${project.name}" archived.`, {
+  showToast(`"${project.name}": ${projectStatusLabel({ ...project, status: "archived" }).toLowerCase()}!`, {
     actionLabel: "Undo",
     onAction: async () => {
       await updateProject(project.id, { status: previous });
@@ -145,8 +152,8 @@ async function archive(project, onChange) {
   onChange();
 }
 
-async function restore(project, onChange) {
+export async function restoreProject(project, onChange) {
   await updateProject(project.id, { status: "coming_up" });
-  showToast(`"${project.name}" restored as ${labelOf(PROJECT_STATUSES, "coming_up")}.`);
+  showToast(`"${project.name}" reopened as ${labelOf(PROJECT_STATUSES, "coming_up")}.`);
   onChange();
 }

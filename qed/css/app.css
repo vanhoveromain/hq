@@ -242,7 +242,22 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .tchip.state-pending,.tchip.state-pending_today,.tchip.state-to_delegate,.tchip.state-delegated{background:var(--hq-accent-light);color:var(--hq-accent-text)}
 /* Empty fields: out of sight until you hover the row (laptop) or tap "+". */
 .tchip.is-empty{display:none;background:none;border:1px dashed var(--hq-border-strong);color:var(--hq-secondary-text);font-weight:400}
-.task.show-all .tchip.is-empty{display:inline-flex}
+.task.show-all .tchip.is-empty,.task.is-picking .tchip.is-empty{display:inline-flex}
+/* Due today on today's list: the calendar icon alone (still opens the picker). */
+.tchip-date.is-icon{padding:0 6px;background:none;border-color:transparent}
+.tchip-date.is-icon:hover{background:var(--hq-subtle)}
+/* Scope: three buttons always on show; one click sets, a click on the set one clears. */
+.scope-pick{display:inline-flex;gap:2px;padding:2px;border-radius:var(--hq-radius-sm);background:var(--hq-subtle)}
+.scope-btn{min-height:20px;padding:0 6px;border:0;border-radius:4px;background:none;color:var(--hq-secondary-text);font:500 11px/1 var(--hq-font);cursor:pointer}
+.scope-btn:hover{color:var(--hq-primary-text);background:var(--hq-surface)}
+.scope-btn.is-on{background:var(--hq-accent);color:var(--hq-on-accent)}
+.scope-btn:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
+/* Delete from the row: two clicks (the first one turns the bin red). */
+.task-delete{flex:none;width:32px;height:32px;margin-top:-4px;color:var(--hq-secondary-text)}
+.task-delete svg{width:16px;height:16px}
+.task-delete.is-armed,.task-delete.is-armed:hover{background:var(--hq-danger-light);color:var(--hq-danger)}
+@media (hover:hover){.task-delete{opacity:0}.task:hover .task-delete,.task:focus-within .task-delete,.task-delete.is-armed{opacity:1}}
+.task.is-done .task-delete{display:none}
 @media (hover:hover){.task:hover .tchip.is-empty,.task:focus-within .tchip.is-empty{display:inline-flex}}
 .tchip-add{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius-sm);background:none;color:var(--hq-secondary-text);cursor:pointer}
 .tchip-add svg{width:12px;height:12px}
@@ -258,8 +273,11 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
    fields in aligned columns with titles. Narrower: the stacked rows above. */
 @media (min-width:1100px){
   /* tick | task | due | AM/PM | priority | scope | status | (project) | push | ⋯ */
-  .task-list{--task-cols:32px minmax(220px,1fr) 100px 68px 96px 84px minmax(160px,.9fr) 32px 36px}
-  .task-list.with-project{--task-cols:32px minmax(200px,1fr) 100px 68px 96px 84px minmax(150px,.8fr) minmax(130px,.7fr) 68px 36px}
+  /* tick | task | due | AM/PM | priority | scope (3 buttons) | status | (project) | push | bin | ⋯ */
+  .task-list{--task-cols:32px minmax(220px,1fr) 100px 68px 96px 164px minmax(150px,.9fr) 32px 32px 36px}
+  .task-list.with-project{--task-cols:32px minmax(180px,1fr) 100px 64px 92px 164px minmax(130px,.8fr) minmax(120px,.7fr) 68px 32px 36px}
+  .task-delete{margin-top:0}
+  .task.is-done .task-delete{display:inline-grid;visibility:hidden}
   .task,.task-head{display:grid;grid-template-columns:var(--task-cols);align-items:center;column-gap:6px}
   .task{min-height:48px;padding:4px 4px 4px 0}
   .task-body,.task-chips{display:contents}
@@ -377,6 +395,9 @@ body.is-focus .main{padding-bottom:48px}
 
 /* Task planner: boards */
 .board-hint{margin:-4px 0 12px;font-size:13px}
+/* The Task planner uses the whole screen width on a laptop (Romain, 2026-11-15). */
+body.is-wide .wrap{max-width:none}
+@media (min-width:1100px){body.is-wide .wrap{padding:0 32px}}
 .board{margin:0 -16px;padding:0 16px}
 @media (min-width:640px){.board{margin:0;padding:0}}
 .week-nav{display:flex;align-items:center;gap:4px;margin:0 0 12px}
@@ -526,7 +547,8 @@ kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--h
   .tchip-add{width:36px;height:36px}
   .tchip-add svg{width:16px;height:16px}
   .tchip-input{min-height:36px;font-size:16px}
-  .task-more,.task-push,.task-focus{width:44px;height:44px;margin-top:-10px}
+  .task-more,.task-push,.task-focus,.task-delete{width:44px;height:44px;margin-top:-10px}
+  .scope-btn{min-height:32px;padding:0 12px;font-size:13px}
   .tick{width:22px;height:22px;margin:2px 10px 0 8px}
   .kcard .tick{width:22px;height:22px}
   .task-title{min-height:32px}

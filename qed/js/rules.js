@@ -22,8 +22,17 @@ export const PROJECT_STATUSES = [
   { value: "coming_up", label: "Coming up" },
   { value: "ongoing", label: "Ongoing" },
   { value: "passed", label: "Passed" },
-  { value: "archived", label: "Archived" },
+  { value: "archived", label: "Event done" }, // stored as "archived" (Romain, 2026-11-15: a more positive name)
 ];
+
+// A project's status as shown: "Event done" reads "Done" on non-event projects.
+export function projectStatusLabel(p) {
+  if (p.status === "archived" && p.type === "non_event") return "Done";
+  return labelOf(PROJECT_STATUSES, p.status);
+}
+
+// Non-event projects have no dates (Romain, 2026-11-15).
+export const hasDates = (type) => type !== "non_event";
 
 // Sales leads only. Tracking only: a confirmed lead stays a lead.
 export const SALES_STATUSES = [

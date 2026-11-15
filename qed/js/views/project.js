@@ -6,14 +6,15 @@
 //   - notes: free text, saved by itself while you type
 
 import { getProject, updateProject, listProjectTasks, listMeetingNames } from "../storage.js";
-import { PROJECT_TYPES, PROJECT_STATUSES, SALES_STATUSES, OWNERS, DEFAULT_OWNER, labelOf, compareByDueThenScore } from "../rules.js";
-import { openProjectForm } from "./projectForm.js";
+import { PROJECT_TYPES, SALES_STATUSES, OWNERS, DEFAULT_OWNER, labelOf, compareByDueThenScore, projectStatusLabel, hasDates } from "../rules.js";
+import { openProjectForm, markProjectDone, restoreProject } from "./projectForm.js";
 import { openTaskSheet } from "./taskSheet.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { escapeHtml, safeUrl, icon, errorHtml } from "../utils/html.js";
 import { formatRange, brusselsToday, friendlyDay } from "../utils/dates.js";
 import { renderMarkdown } from "../utils/markdown.js";
 import { rememberOpened } from "./search.js";
+import { showToast } from "../utils/toast.js";
 
 // Remembered while the app is open: is the Done list unfolded?
 let showDone = false;
@@ -56,7 +57,7 @@ export async function render(el, { params }) {
   });
 
   document.title = `${project.name} · QED HQ`;
-  rememberOpened({ kind: "project", id: project.id, label: project.name, sub: isSales ? "Lead" : labelOf(PROJECT_STATUSES, project.status) });
+  rememberOpened({ kind: "project", id: project.id, label: project.name, sub: isSales ? "Lead" : projectStatusLabel(project) });
   el.innerHTML = `
     <a class="back" href="${backHref}">${icon("back")} ${isSales ? "Sales" : "Projects"}</a>
     <header class="project-head">
@@ -64,13 +65,14 @@ export async function render(el, { params }) {
         <h1 class="project-name">${escapeHtml(project.name)}</h1>
         <p class="project-meta">
           ${headerTags(project)}
-          <span class="muted">${escapeHtml(formatRange(project.date_start, project.date_end) || "No date yet")}</span>
+          ${hasDates(project.type) ? `<span class="muted">${escapeHtml(formatRange(project.date_start, project.date_end) || "No date yet")}</span>` : ""}
         </p>
         ${isSales ? contactLine(project) : ""}
         ${progressLine(open, done, today)}
       </div>
       <div class="project-actions">
         ${notionLink(project)}
+        ${doneButton(project)}
         <button type="button" class="btn secondary small" id="edit-project">${icon("pencil")} Edit</button>
       </div>
     </header>
@@ -109,6 +111,18 @@ export async function render(el, { params }) {
 
   wireQuickAdd(el.querySelector(".quick-add"), { defaults: { project_id: project.id }, onAdded: redraw });
 
+  const doneBtn = el.querySelector("#project-done");
+  if (doneBtn) {
+    doneBtn.addEventListener("click", () => {
+      doneBtn.disabled = true;
+      const action = project.status === "archived" ? restoreProject : markProjectDone;
+      action(project, redraw).catch((error) => {
+        doneBtn.disabled = false;
+        showToast("Could not save: " + error.message);
+      });
+    });
+  }
+
   el.querySelector("#edit-project").addEventListener("click", () => {
     openProjectForm({ project, onChange: redraw, onDeleted: () => { window.location.hash = "#/home"; } });
   });
@@ -139,10 +153,21 @@ function progressLine(open, done, today) {
 function headerTags(p) {
   const tags = [];
   if (p.type === "sales" && p.sales_status) tags.push(`<span class="pill">${escapeHtml(labelOf(SALES_STATUSES, p.sales_status))}</span>`);
-  if (p.status) tags.push(`<span class="pill status-${p.status}">${escapeHtml(labelOf(PROJECT_STATUSES, p.status))}</span>`);
+  if (p.status) tags.push(`<span class="pill status-${p.status}">${escapeHtml(projectStatusLabel(p))}</span>`);
   tags.push(`<span class="pill">${escapeHtml(labelOf(PROJECT_TYPES, p.type))}</span>`);
   if (p.owner !== DEFAULT_OWNER) tags.push(`<span class="pill owner">${escapeHtml(labelOf(OWNERS, p.owner) || p.owner)}</span>`);
   return tags.join("");
+}
+
+// "Event done" (or "Done" on a non-event project) in one click, with Undo;
+// once done, the button puts the project back (Romain, 2026-11-15).
+// Not on sales leads: they have their own Sales status.
+function doneButton(p) {
+  if (p.type === "sales") return "";
+  if (p.status === "archived") {
+    return `<button type="button" class="btn secondary small" id="project-done">${icon("back")} Reopen</button>`;
+  }
+  return `<button type="button" class="btn secondary small" id="project-done">${icon("check")} ${p.type === "non_event" ? "Done" : "Event done"}</button>`;
 }
 
 function notionLink(p) {

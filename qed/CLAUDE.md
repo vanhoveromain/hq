@@ -169,6 +169,15 @@ Coordination Team HQ, archived / passed projects.
 7n. Polish (UX review #17-#18, 2026-11-13): row chip "Delegated to" (same as the sheet). Loading errors use
    errorHtml() (utils/html.js) with a "Try again" button; main.js redraws the current screen on [data-retry].
    #19 (faint "—" in empty table columns): declined, empty fields stay hidden until hover
+7o. Romain's feedback (2026-11-15): date chip shows only the calendar icon when the task is due on the list's own
+   day (rowOptions.hideDay: Priorities Today / Tomorrow, routines) · fix: an empty date chip hid (and closed its
+   calendar) when the mouse left the row: row gets .is-picking until a date is picked or you click elsewhere ·
+   scope = 3 buttons always on show (Major Medium Small; click the set one = clear), no "+" needed · bin on every
+   open row: delete with two clicks + Undo (re-creates the task), never counted as done · Task planner uses the full
+   screen width (body.is-wide) · Non-event projects have no dates (hidden in form, saved as null, not shown on
+   page / card / search; hasDates in rules.js) · status "archived" now reads "Event done" ("Done" on non-event,
+   projectStatusLabel in rules.js; stored value unchanged, no migration); "Event done" / "Done" button in the
+   project header (Undo), "Reopen" once done; Home toggle "Show done events"
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

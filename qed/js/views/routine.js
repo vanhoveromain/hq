@@ -207,7 +207,8 @@ export async function render(el, { params = [] } = {}) {
   // The rows: the usual chips, tick, push arrow, "⋯".
   const listEl = el.querySelector("#routine-list");
   if (listEl) {
-    const rowOptions = { today, projects: projectChoices, showPush: Boolean(step.showPush) };
+    // The list's own day isn't written on the date chips (Romain, 2026-11-15).
+    const rowOptions = { today, projects: projectChoices, showPush: Boolean(step.showPush), hideDay: quickDay };
     listEl.innerHTML = taskListInnerHtml(shown, rowOptions);
     wireTaskList(listEl, shown, {
       onOpen: (task) => openTaskSheet(task, { onChange: redraw, meetingNames }),
