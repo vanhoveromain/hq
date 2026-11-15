@@ -193,6 +193,10 @@ Coordination Team HQ, archived / passed projects.
    / date / Add appear once you tap it (:focus-within / :has). Stacked rows (< 1100): .task is a grid, .task-body
    display:contents: tick · title · icons on line 1, fields across the full width below; project tag max 180 px;
    scope buttons read Maj / Med / Sma on a phone (.show-phone / .hide-phone helpers)
+7r. UX review #2 batch 3 (2026-11-15): Planner This week: past days with no task = thin 44 px strip (col.isPast;
+   grid-template-columns set per board in boardColumnsHtml: var(--col) / var(--col-thin)). Phone (< 640): every board
+   = agenda, columns stacked top to bottom, past days hidden, no min-height. drag.js: page auto-scrolls up / down
+   (rAF loop) while a dragged card is held near the top / bottom of the screen
 9. Notion import (re-runnable) · 10. Switch day · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)

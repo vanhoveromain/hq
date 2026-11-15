@@ -113,10 +113,26 @@ export function makeBoardDraggable(boardEl, { onDrop, onTap }) {
     const box = scroller.getBoundingClientRect();
     if (x < box.left + 40) scroller.scrollLeft -= 12;
     else if (x > box.right - 40) scroller.scrollLeft += 12;
+    // Near the top / bottom of the screen: the page keeps scrolling while
+    // the card is held there (phone agenda, where the days are stacked; the
+    // bottom bar is about 72 px high).
+    drag.x = x;
+    drag.y = y;
+    drag.vy = y < 80 ? -12 : y > window.innerHeight - 110 ? 12 : 0;
+    if (drag.vy && !drag.raf) drag.raf = requestAnimationFrame(autoScroll);
+  }
+
+  function autoScroll() {
+    if (!drag) return;
+    drag.raf = 0;
+    if (!drag.vy) return;
+    window.scrollBy(0, drag.vy);
+    moveDrag(drag.x, drag.y); // the column under the card changes as the page moves
   }
 
   function endDrag(drop) {
-    const { card, ghost, over } = drag;
+    const { card, ghost, over, raf } = drag;
+    if (raf) cancelAnimationFrame(raf);
     ghost.remove();
     card.classList.remove("is-dragging");
     if (over) over.classList.remove("is-over");

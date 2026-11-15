@@ -465,8 +465,8 @@ body.is-wide .wrap{max-width:none}
 .week-nav .week-name{min-width:150px;text-align:center;font-size:14px}
 .week-nav .week-next svg{transform:scaleX(-1)}
 .week-nav .week-today{margin-left:8px;font-size:13px;color:var(--hq-accent-text)}
-.board-columns{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:10px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x proximity}
-@media (min-width:1100px){.board-columns{grid-auto-columns:minmax(0,1fr)}}
+.board-columns{--col:minmax(240px,1fr);--col-thin:44px;display:grid;grid-auto-flow:column;gap:10px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x proximity}
+@media (min-width:1100px){.board-columns{--col:minmax(0,1fr)}}
 .board-col{display:flex;flex-direction:column;min-height:240px;padding:8px;background:var(--hq-subtle);border:2px solid transparent;border-radius:var(--hq-radius);scroll-snap-align:start;transition:border-color var(--hq-ease),background-color var(--hq-ease)}
 .board-col.is-today{background:var(--hq-accent-light)}
 .board-col.is-undated{background:none;border:2px dashed var(--hq-border-strong)}
@@ -478,6 +478,19 @@ body.is-wide .wrap{max-width:none}
 .board-count.is-over{color:var(--hq-warning)}
 .board-cards{display:grid;gap:6px;align-content:start;flex:1}
 .board-empty{margin:0;padding:16px 8px;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius-sm);font-size:12px;color:var(--hq-secondary-text);text-align:center}
+/* A past day of this week (always empty): a thin strip with its name. */
+.board-col.is-past{min-width:0;padding:8px 2px;background:none;border:1px solid var(--hq-border);text-align:center}
+.board-col.is-past .board-col-head{justify-content:center;padding:4px 0}
+.board-col.is-past h2{font-size:12px;font-weight:500;color:var(--hq-secondary-text);line-height:1.4}
+.board-col.is-past .board-count,.board-col.is-past .board-empty{display:none}
+/* Phone: the columns become an agenda, stacked from top to bottom (past days
+   left out); drag a card up or down onto another day. */
+@media (max-width:639px){
+  .board-columns{grid-auto-flow:row;grid-template-columns:minmax(0,1fr) !important;overflow-x:visible;scroll-snap-type:none}
+  .board-col{min-height:0}
+  .board-col.is-past{display:none}
+  .board-empty{padding:10px 8px}
+}
 .kcard{display:grid;gap:6px;padding:10px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius-sm);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x pan-y}
 .kcard:hover{border-color:var(--hq-border-strong)}
 .kcard:focus-visible{outline:2px solid var(--hq-accent);outline-offset:1px}
