@@ -97,7 +97,7 @@ body.no-household .tabbar a:not([data-route="reglages"]){visibility:hidden}
 .banner-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .small{font-size:14px}
 .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.status-card{display:grid;gap:2px;align-content:start;text-align:left;padding:14px;min-height:108px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface);color:var(--hq-primary-text);font:inherit;cursor:pointer}
+.status-card{text-decoration:none;display:grid;gap:2px;align-content:start;text-align:left;padding:14px;min-height:108px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface);color:var(--hq-primary-text);font:inherit;cursor:pointer}
 .status-title{font-size:14px;font-weight:600;color:var(--hq-secondary-text)}
 .status-ago{font-size:20px;font-weight:600;letter-spacing:-.01em}
 .status-sub{font-size:14px;color:var(--hq-secondary-text)}
@@ -168,7 +168,7 @@ fieldset.poop legend{padding:0;margin-bottom:8px;font-size:14px;font-weight:600;
 .chip-input input{width:64px;min-height:36px;border:0;background:none;color:var(--hq-primary-text);font:500 16px/1 var(--hq-font);text-align:center;color-scheme:inherit}
 .chip-input.on{border-color:var(--hq-accent-text);background:var(--hq-accent-light)}
 .chip.on{border-color:var(--hq-accent-text);background:var(--hq-accent-light);color:var(--hq-primary-text)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;padding:10px 16px;border-radius:var(--hq-radius);background:var(--hq-primary-text);color:var(--hq-canvas);font-size:15px;box-shadow:var(--hq-shadow-pop)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top));z-index:40;padding:10px 16px;border-radius:var(--hq-radius);background:var(--hq-primary-text);color:var(--hq-canvas);font-size:15px;box-shadow:var(--hq-shadow-pop)}
 
 /* ---------- Journal ---------- */
 .day-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}

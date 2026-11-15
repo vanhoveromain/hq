@@ -17,7 +17,10 @@ export const TYPES = {
   temperature: { label: "Température",    emoji: "🌡️" },
   medication:  { label: "Médicament",     emoji: "💊" },
 };
-export const QUICK_ACTIONS = ["breastfeed", "bottle", "diaper", "sleep", "pump", "spit_up"];
+// Accueil buttons (Rom, 2026-11-15: no sleep; a "Question pédiatre" button).
+// "sleep" stays a known type (old entries still show) but is offered nowhere.
+export const QUICK_ACTIONS = ["breastfeed", "bottle", "diaper", "pump", "spit_up", "question"];
+export const QUESTION_ACTION = { label: "Question pédiatre", emoji: "❓" };
 export const MORE_ACTIONS = ["temperature", "medication"];
 
 export const SIDES = { L: "Gauche", R: "Droite" };

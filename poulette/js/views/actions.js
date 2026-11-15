@@ -28,6 +28,7 @@ export function startAction(type) {
     case "spit_up": return spitSheet();
     case "temperature": return temperatureSheet(all);
     case "medication": return medicationSheet(all);
+    case "question": return questionSheet();
     case "more": return moreSheet();
     default: return null;
   }
@@ -248,11 +249,10 @@ function medicationSheet(all) {
 function moreSheet() {
   openSheet({
     title: "Plus",
-    body: `<div class="big-grid two">
+    body: `<div class="big-grid three">
       <button type="button" class="big-choice" data-more="temperature"><span class="big-letter">🌡️</span><span>Température</span></button>
       <button type="button" class="big-choice" data-more="medication"><span class="big-letter">💊</span><span>Médicament</span></button>
-      <a class="big-choice" href="#/suivi/ajout"><span class="big-letter">⚖️</span><span>Mesure</span></a>
-      <button type="button" class="big-choice" data-more="question"><span class="big-letter">❓</span><span>Question pédiatre</span></button></div>`,
+      <a class="big-choice" href="#/suivi/ajout"><span class="big-letter">⚖️</span><span>Mesure</span></a></div>`,
     onOpen(el, close) {
       el.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", () => {
         const what = b.dataset.more;

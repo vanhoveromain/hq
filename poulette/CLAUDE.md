@@ -200,7 +200,9 @@ testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus
   (localStorage `poulette.cache.<bébé>`). `js/rules.js` : types, listes, prochain sein, résumés, durées.
 - 1.2 Accueil (`views/home.js`) : chronos en cours en haut (tétée : côté, chrono du côté, total, « Côté G/D », Stop ;
   sommeil : Réveil), 4 cartes (dernière tétée + « Prochain : … », biberon, change, dernier sommeil fini), compteurs du
-  jour, 6 gros boutons + Plus. Saisies dans `views/actions.js`. Change = 2 taps (Change → Pipi / Caca / Les deux,
+  jour, 6 gros boutons + Plus. **Retour de Rom 2026-11-15 : plus de Sommeil** (type gardé pour les anciennes saisies,
+  proposé nulle part) ; **bouton « Question pédiatre » sur l'Accueil** + carte « Questions pédiatre · n à poser »
+  (→ onglet Pédiatre) à la place de la carte Sommeil ; Plus = Température, Médicament, Mesure. Saisies dans `views/actions.js`. Change = 2 taps (Change → Pipi / Caca / Les deux,
   enregistré tout de suite). Après chaque saisie : le « reçu » en bas (−5 / −15 / −30 min, Modifier, Annuler ;
   couleur + texture si caca), disparaît seul après 12 s. Couleurs de caca : 6 des cartes de selles pédiatriques (noir
   méconium, vert, jaune, brun, pâle/blanc, rouge), toujours avec leur nom ; textures : liquide, grumeleuse, pâteuse,

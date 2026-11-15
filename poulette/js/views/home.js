@@ -1,6 +1,6 @@
 // home.js: Accueil = "État actuel" (steps 1.2 to 1.5).
-//   - running chronos on top (feed: side, time, change side, stop; sleep)
-//   - the last feed (+ next breast), bottle, change, sleep
+//   - a chrono still running on top (only old test entries: no chrono is offered any more)
+//   - the last feed (+ next breast), bottle, change, open paediatrician questions
 //   - today's counts
 //   - the quick actions (big buttons), "Plus" for the rest
 
@@ -20,8 +20,11 @@ export function render(el, { home }) {
   }
   el.innerHTML = `<div id="home-live"></div>
     <section class="section">
-      <div class="quick">${rules.QUICK_ACTIONS.map((t) => `<button type="button" class="quick-btn" data-action="${t}">
-        <span class="quick-emoji">${rules.emoji(t)}</span><span>${escapeHtml(rules.label(t))}</span></button>`).join("")}
+      <div class="quick">${rules.QUICK_ACTIONS.map((t) => {
+        const a = t === "question" ? rules.QUESTION_ACTION : { emoji: rules.emoji(t), label: rules.label(t) };
+        return `<button type="button" class="quick-btn" data-action="${t}">
+        <span class="quick-emoji">${a.emoji}</span><span>${escapeHtml(a.label)}</span></button>`;
+      }).join("")}
         <button type="button" class="quick-btn more" data-action="more"><span class="quick-emoji">＋</span><span>Plus</span></button>
       </div>
     </section>`;
@@ -40,9 +43,7 @@ export function refresh(el) {
   const feed = rules.latest(all, "breastfeed");
   const bottle = rules.latest(all, "bottle");
   const diaper = rules.latest(all, "diaper");
-  // Last FINISHED sleep (a running one is the banner on top).
-  const sleep = rules.live(all).filter((e) => e.type === "sleep" && e.ended_at)
-    .sort((a, b) => b.ended_at.localeCompare(a.ended_at))[0] || null;
+  const openQuestions = store.questions().filter((q) => !q.done_at).length;
   const next = rules.nextBreast(all);
 
   const today = rules.live(all).filter((e) => dayKey(e.started_at) === dayKey());
@@ -61,12 +62,15 @@ export function refresh(el) {
       ${card("breastfeed", feed, next ? `<span class="next-side">Prochain : <strong>${rules.SIDES[next]}</strong></span>` : "")}
       ${card("bottle", bottle)}
       ${card("diaper", diaper)}
-      ${card("sleep", sleep)}
+      <a class="status-card" href="#/pediatre">
+        <span class="status-title">❓ Questions pédiatre</span>
+        <span class="status-ago">${openQuestions ? `${openQuestions} à poser` : "Aucune"}</span>
+        <span class="status-sub">${openQuestions ? "Voir la liste" : "Rien en attente"}</span></a>
     </section>
     <p class="today muted">Aujourd'hui : ${count("breastfeed")} tétée(s) · ${ml} ml de biberon ·
       ${count("diaper", (e) => e.data && e.data.pee)} mouillée(s) · ${count("diaper", (e) => e.data && e.data.poop)} sale(s)</p>`;
 
-  box.querySelectorAll(".status-card").forEach((b) => b.addEventListener("click", () => startAction(b.dataset.action)));
+  box.querySelectorAll("button.status-card").forEach((b) => b.addEventListener("click", () => startAction(b.dataset.action)));
   box.querySelectorAll("[data-banner]").forEach((b) => {
     const e = runningOnes.find((x) => x.id === b.dataset.banner);
     b.querySelector("[data-stop]")?.addEventListener("click", () => stopTimer(e));
