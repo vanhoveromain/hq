@@ -37,8 +37,11 @@ PouletteHQ ; ce fichier la remplace et intègre les décisions.
   Réglages (sur le modèle de l'export Sport HQ), à ranger régulièrement dans Dropbox. Plan payant à reconsidérer
   plus tard pour `own-hq` entier.
 - **Mode sombre forcé par défaut** (les tokens HQ suivent le téléphone : à surcharger).
-- **Marque** : tokens HQ (`hq-tokens.css`), Geist, `<hq-switcher current="poulette">`. Logo produit
-  « PouletteHQ » à créer dans `brand/`.
+- **Marque** : tokens HQ (`hq-tokens.css`, `[data-hq="poulette"]`), Geist, `<hq-switcher current="poulette">`. Nom
+  affiché « Poulette HQ » (avec espace, règle de la charte) ; `poulette` dans le code et les URL. Couleur **sarcelle
+  `#3D7D78`** (light `#EBF4F3`, dark `#2A5B57` ; sombre : texte `#8FC7C0`, fond `#1E3331`). Symbole : **l'œuf**
+  (`brand/logos/poulette-hq.svg`, propositions dans `poulette/design/symboles.html`). Choisis le 2026-11-15 ; ambre
+  écarté (trop proche des couleurs de couche), corail et lune/berceau écartés.
 
 ## Principes UX (non négociables)
 1. Chaque saisie courante en **2 taps maximum**.
@@ -141,6 +144,12 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     (fenêtre privée) : Léa n'a que poulette, aucune carte (« No HQ is open… »), Sport HQ vide (RLS OK). Rom : 4 cartes.
     Tant que la 0.4 n'est pas sur main, le vrai ownhq.app montre encore toutes les cartes : ne pas donner l'adresse à Léa
 - 0.5 Coquille de l'app : login, PWA (manifest, service worker, sombre), projet Vercel + domaines
+  - 0.5a Identité — faite 2026-11-15 : symbole + icônes (`brand/export.mjs` → `poulette/icons/`, `hq-home/`), tokens
+    (copiés dans les 4 apps), carte sur le portail + entrée dans le sélecteur (lien vers poulette.ownhq.app, vivant à
+    la 0.5d). Léa est désormais redirigée vers Poulette HQ par le portail
+  - 0.5b Coquille (login, barre + sélecteur, navigation, Réglages + Se déconnecter, FR, sombre forcé)
+  - 0.5c PWA (manifest, icônes, service worker : l'app s'ouvre sans réseau)
+  - 0.5d Projet Vercel `poulette` + domaines poulette / poulette-preview
 - 0.6 Household + profil bébé + ajout de Léa comme membre
 
 **Phase 1 — MVP (mi-janvier 2027)** : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,

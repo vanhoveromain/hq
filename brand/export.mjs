@@ -8,6 +8,8 @@
 //   It is still PROVISIONAL artwork (guidelines §03): a working vector for the
 //   apps, not the signed-off trademark master. Charcoal #242424 on white.
 // - Product symbols: copied unchanged from guidelines-v1.0/02_Logos/Products/.
+//   Poulette HQ (egg, teal #3D7D78, chosen 2026-11-15) is not in the kit: its
+//   drawing lives directly in logos/poulette-hq.svg.
 //   Only the app-icon PNGs are made square (iOS / Android round the corners).
 // Then copies what each app needs into hq-home/, qed/ and sporthq3/.
 
@@ -54,7 +56,7 @@ writeFileSync(out("hq-mark.svg"), mark("#242424"));
 writeFileSync(out("hq-mark-white.svg"), mark("#FFFFFF"));
 writeFileSync(out("hq-icon.svg"), icon({ rounded: true }));
 writeFileSync(out("hq-icon-square.svg"), icon());
-for (const name of ["sport-hq", "qed-hq", "work-hq", "personal-hq"]) {
+for (const name of ["sport-hq", "qed-hq", "work-hq", "personal-hq", "poulette-hq"]) {
   writeFileSync(out(`${name}-square.svg`), squareProduct(name));
 }
 
@@ -74,15 +76,16 @@ async function png(svgFile, size, file) {
   await page.screenshot({ path: out(file), omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } });
 }
 for (const s of [32, 180, 192, 512]) await png("hq-icon-square.svg", s, `hq-icon-${s}.png`);
-for (const name of ["sport-hq", "qed-hq"]) {
+for (const name of ["sport-hq", "qed-hq", "poulette-hq"]) {
   for (const s of [32, 180, 192, 512]) await png(`${name}-square.svg`, s, `${name}-icon-${s}.png`);
 }
 await browser.close();
 
 // Copies into the apps (each Vercel project only serves its own folder).
 const copies = {
-  "hq-home": ["hq-mark.svg", "hq-mark-white.svg", "hq-icon.svg", "hq-icon-180.png", "sport-hq.svg", "qed-hq.svg"],
+  "hq-home": ["hq-mark.svg", "hq-mark-white.svg", "hq-icon.svg", "hq-icon-180.png", "sport-hq.svg", "qed-hq.svg", "poulette-hq.svg"],
   "qed/assets": ["qed-hq.svg", "qed-hq-icon-180.png", "qed-hq-icon-32.png"],
+  "poulette/icons": ["poulette-hq.svg", "poulette-hq-icon-32.png", "poulette-hq-icon-180.png", "poulette-hq-icon-192.png", "poulette-hq-icon-512.png"],
   "sporthq3/icons": ["sport-hq.svg", "sport-hq-icon-180.png", "sport-hq-icon-192.png", "sport-hq-icon-512.png"],
 };
 for (const [dir, files] of Object.entries(copies)) {
