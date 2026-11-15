@@ -14,6 +14,7 @@ import { PRIORITIES, STATES, SCOPES, PERIODS, DELEGATES, ROLLED_SHOW, ROLLED_WAR
 import { escapeHtml, icon } from "../utils/html.js";
 import { friendlyDay, brusselsToday, addDays } from "../utils/dates.js";
 import { showToast } from "../utils/toast.js";
+import { handleHtml } from "../utils/colResize.js";
 
 // One row.
 //   options.today     "YYYY-MM-DD" (Brussels)
@@ -73,12 +74,15 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
 // A whole list: the column titles (shown on a laptop only), then the rows.
 // Put it inside <ul class="task-list"> (add "with-project" when rowOptions
 // has projects, for the extra column).
+// A column title with its resize handle (laptop, utils/colResize.js).
+const th = (col, label) => `<span class="th">${label}${handleHtml(col)}</span>`;
+
 // rowOptions.noHead: leave the column titles out (Priorities shows them once,
 // above the first list).
 export function taskListInnerHtml(tasks, rowOptions) {
   const head = rowOptions.noHead ? "" : `
     <li class="task-head" aria-hidden="true">
-      <span></span><span>Task</span>${rowOptions.projects ? "<span>Project</span>" : ""}<span>Due</span><span>AM/PM</span><span>Priority</span><span>Scope</span><span>Status</span>
+      <span></span>${th("task", "Task")}${rowOptions.projects ? th("project", "Project") : ""}${th("due", "Due")}${th("period", "AM/PM")}${th("priority", "Priority")}${th("scope", "Scope")}${th("status", "Status")}
       <span></span><span></span><span></span>
     </li>`;
   return head + tasks.map((t) => taskRowHtml(t, rowOptions)).join("");

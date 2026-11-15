@@ -202,7 +202,13 @@ Coordination Team HQ, archived / passed projects.
 9. Notion import (re-runnable) · 10. Switch day. 2026-11-15: fresh export (82 projects / leads, 158 open tasks;
    3 tasks of archived / passed projects left out; 8 Paula / Gabriella projects imported as Bespoke), built with
    `node build-sql.mjs --clean` (new flag: first deletes app-made projects + tasks, Tools links kept), tested on a
-   local Postgres (import + re-run). Romain runs data/import.sql in the QED project for switch day 16 Nov · 11. Phone / laptop check + polish
+   local Postgres (import + re-run). Romain runs data/import.sql in the QED project for switch day 16 Nov (run 2026-11-15, success)
+7t. Romain's feedback (2026-11-15): project statuses relabelled (codes unchanged, no migration): coming_up =
+   "Scheduled" (hard deadline), ongoing = "Continuous" (no deadline: multi-event contracts, website maintenance);
+   new Non-event project + Reopen of a non-event = Continuous. Task-list columns resizable on a laptop
+   (utils/colResize.js): handle on each column title's right edge, drag = width, double-click = normal width;
+   widths in localStorage qedhq.cols (this device), as --w-<col> on <html>, used in --task-cols with the normal
+   width as fallback; .task-list scrolls sideways if columns get wider than the page · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

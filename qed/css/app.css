@@ -307,9 +307,20 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 @media (min-width:1100px){
   /* tick | task | due | AM/PM | priority | scope | status | (project) | push | ⋯ */
   /* tick | task | due | AM/PM | priority | scope (3 buttons) | status | (project) | push | bin | ⋯ */
-  .task-list{--task-cols:32px minmax(220px,1fr) 100px 68px 96px 164px minmax(150px,.9fr) 32px 32px 36px}
+  /* Each width can be changed by dragging the column title's edge
+     (utils/colResize.js sets --w-…); the value after the comma is the normal width. */
+  .task-list{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-due,100px) var(--w-period,68px) var(--w-priority,96px) var(--w-scope,164px) var(--w-status,minmax(150px,.9fr)) 32px 32px 36px}
   /* with a project: tick | task | project | due | … */
-  .task-list.with-project{--task-cols:32px minmax(180px,1fr) minmax(160px,.9fr) 100px 64px 92px 164px minmax(120px,.7fr) 68px 32px 36px}
+  .task-list.with-project{--task-cols:32px var(--w-task,minmax(140px,1fr)) var(--w-project,minmax(160px,.9fr)) var(--w-due,100px) var(--w-period,64px) var(--w-priority,92px) var(--w-scope,164px) var(--w-status,minmax(120px,.7fr)) 68px 32px 36px}
+  /* Column titles: a thin handle on the right edge to resize. */
+  .task-head .th{position:relative;align-self:stretch;display:flex;align-items:center;min-width:0}
+  .col-resize{position:absolute;top:6px;bottom:6px;right:-4px;width:8px;cursor:col-resize;z-index:1}
+  .col-resize::after{content:"";position:absolute;left:3px;top:0;bottom:0;width:2px;border-radius:1px;background:var(--hq-border-strong);opacity:0;transition:opacity var(--hq-ease)}
+  .task-head:hover .col-resize::after{opacity:.6}
+  .col-resize:hover::after,body.is-resizing .col-resize::after{opacity:1;background:var(--hq-accent)}
+  body.is-resizing{cursor:col-resize;user-select:none}
+  /* Columns may get wider than the screen: the list scrolls sideways then. */
+  .task-list{overflow-x:auto}
   .task-delete{margin-top:0}
   .task.is-done .task-delete{display:inline-grid;visibility:hidden}
   .task,.task-head{display:grid;grid-template-columns:var(--task-cols);align-items:center;column-gap:6px}

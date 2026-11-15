@@ -1,6 +1,6 @@
 // rules.js: QED HQ's lists and rules, in one place (never inside screen code).
 //
-// The database stores short codes ("coming_up"); people see labels ("Coming up").
+// The database stores short codes ("coming_up"); people see labels ("Scheduled").
 // Fixed lists (type, status) are also checked by the database; the people lists
 // (OWNERS, later DELEGATES) are not, so a name can be added here without a
 // database change.
@@ -19,8 +19,11 @@ export const PROJECT_TYPES = [
 // In the order a project goes through them.
 export const PROJECT_STATUSES = [
   { value: "tbc", label: "Tbc" },
-  { value: "coming_up", label: "Coming up" },
-  { value: "ongoing", label: "Ongoing" },
+  // Romain, 2026-11-15: projects with a hard deadline are "Scheduled", projects
+  // without one (multi-event contracts, website maintenance) "Continuous".
+  // Stored codes unchanged (coming_up / ongoing): no migration.
+  { value: "coming_up", label: "Scheduled" },
+  { value: "ongoing", label: "Continuous" },
   { value: "passed", label: "Passed" },
   { value: "archived", label: "Event done" }, // stored as "archived" (Romain, 2026-11-15: a more positive name)
 ];
@@ -76,13 +79,13 @@ export const HOME_TABS = [
     id: "bespoke", label: "Bespoke",
     filter: (p) => p.type === "bespoke",
     newProject: { type: "bespoke", status: "coming_up" },
-    // Date, then status (Coming up before Ongoing…), then name.
+    // Date, then status (Scheduled before Continuous…), then name.
     sort: ["date", "status", "name"],
   },
   {
     id: "nonevent", label: "Non-event",
     filter: (p) => p.type === "non_event",
-    newProject: { type: "non_event", status: "coming_up" },
+    newProject: { type: "non_event", status: "ongoing" }, // no deadline: Continuous
     sort: ["date", "name"],
   },
   {
