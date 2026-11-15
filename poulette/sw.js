@@ -14,7 +14,7 @@
 // Changing a file of the app: nothing to do (network first). Changing THIS
 // file's rules: bump VERSION, the old cache is then thrown away.
 
-const VERSION = "v3";
+const VERSION = "v4";
 const CACHE = "poulette-" + VERSION;
 const TIMEOUT_MS = 3000;
 

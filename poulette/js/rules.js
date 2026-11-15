@@ -218,3 +218,87 @@ export function ago(iso, now = Date.now()) {
 export function fmtNumber(value, decimals = 0) {
   return Number(value).toLocaleString("fr-BE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
+
+
+// ---------------------------------------------------------------------
+// Journal: summaries (Rom, 2026-11-15: "un journal plus complet")
+// ---------------------------------------------------------------------
+
+// Filters of the day list. "other" = everything not in the named ones.
+export const JOURNAL_FILTERS = [
+  { id: "all", label: "Tout" },
+  { id: "breastfeed", label: "Tétées" },
+  { id: "bottle", label: "Biberons" },
+  { id: "diaper", label: "Changes" },
+  { id: "pump", label: "Tirages" },
+  { id: "spit_up", label: "Régurg." },
+  { id: "other", label: "Autres" },
+];
+export function matchesFilter(event, filter) {
+  if (filter === "all") return true;
+  if (filter === "other") return !["breastfeed", "bottle", "diaper", "pump", "spit_up"].includes(event.type);
+  return event.type === filter;
+}
+
+// Lanes of the 24 h strip (one line per kind of entry).
+export const STRIP_LANES = [
+  { id: "breastfeed", label: "Tétée", emoji: "🤱" },
+  { id: "bottle", label: "Biberon", emoji: "🍼" },
+  { id: "diaper", label: "Change", emoji: "🧷" },
+  { id: "pump", label: "Tirage", emoji: "🥛" },
+  { id: "spit_up", label: "Régurg.", emoji: "💧" },
+  { id: "other", label: "Autres", emoji: "＋" },
+];
+export function laneOf(event) {
+  return STRIP_LANES.some((l) => l.id === event.type) ? event.type : "other";
+}
+
+// Everything worth knowing about one day's entries (already filtered to the
+// day, not deleted). Plain numbers; the screen formats them.
+export function daySummary(events) {
+  const of = (t) => events.filter((e) => e.type === t);
+  const feeds = of("breastfeed");
+  const bottles = of("bottle");
+  const diapers = of("diaper");
+  const pumps = of("pump");
+  const sides = { L: 0, R: 0 };
+  for (const f of feeds) for (const s of feedSides(f)) sides[s] = (sides[s] || 0) + 1;
+  const feedDurations = feeds.map(feedMinutes).filter((m) => m != null);
+
+  // Meals = feeds + bottles, in time order; gaps between two in a row.
+  const meals = [...feeds, ...bottles].map((e) => Date.parse(e.started_at)).sort((a, b) => a - b);
+  const gaps = meals.slice(1).map((t, i) => t - meals[i]);
+
+  const temps = of("temperature").map((e) => Number(e.data && e.data.celsius)).filter((n) => !Number.isNaN(n));
+  const meds = new Map();
+  for (const m of of("medication")) {
+    const key = [m.data && m.data.name, m.data && m.data.dose].filter(Boolean).join(" · ");
+    meds.set(key, (meds.get(key) || 0) + 1);
+  }
+  return {
+    feeds: feeds.length,
+    sides,
+    feedAvgMinutes: feedDurations.length ? feedDurations.reduce((a, b) => a + b, 0) / feedDurations.length : null,
+    bottles: bottles.length,
+    bottleMl: bottles.reduce((s, e) => s + (Number(e.data && e.data.ml) || 0), 0),
+    meals: meals.length,
+    gapAvgMs: gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : null,
+    gapMaxMs: gaps.length ? Math.max(...gaps) : null,
+    wet: diapers.filter((e) => e.data && e.data.pee).length,
+    dirty: diapers.filter((e) => e.data && e.data.poop).length,
+    pumps: pumps.length,
+    pumpMl: pumps.reduce((s, e) => s + (Number(e.data && e.data.ml) || 0), 0),
+    spitUps: of("spit_up").length,
+    tempMax: temps.length ? Math.max(...temps) : null,
+    meds: [...meds.entries()].map(([label, n]) => ({ label, n })),
+  };
+}
+
+// The week view's rows: what is counted per day.
+export const WEEK_METRICS = [
+  { id: "feeds", label: "Tétées", unit: "", get: (s) => s.feeds },
+  { id: "bottleMl", label: "Biberon", unit: "ml", get: (s) => s.bottleMl },
+  { id: "wet", label: "Couches mouillées", unit: "", get: (s) => s.wet },
+  { id: "dirty", label: "Couches sales", unit: "", get: (s) => s.dirty },
+  { id: "gap", label: "Intervalle moyen entre repas", unit: "min", get: (s) => (s.gapAvgMs == null ? null : Math.round(s.gapAvgMs / 60000)) },
+];

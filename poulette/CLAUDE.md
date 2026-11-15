@@ -214,7 +214,15 @@ testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus
   Tirage. 1.5 Sommeil = 1 tap (chrono), Régurgitation (type + taille = 2 taps), Plus : Température (±0,1 / ±0,5,
   dernière valeur), Médicament (déjà donnés en puces : un tap = enregistré), Mesure, Question
 - 1.6 `views/editor.js` : tout modifier (heure, fin, détails, note), Supprimer (2e tap = confirmer ; suppression douce)
-- 1.7 Journal (`views/journal.js`) : jour par jour, heures, plus récent en haut, qui a saisi, ⏳ / ⚠, totaux du jour
+- 1.7 Journal (`views/journal.js`) : jour par jour, heures, plus récent en haut, qui a saisi, ⏳ / ⚠. **Plus complet
+  (Rom 2026-11-15, a choisi les 4 options)** : Jour | Semaine. Jour = cartes résumé (tétées + G/D + durée moyenne,
+  ml biberon, intervalle moyen et max entre 2 repas (tétées + biberons), couches mouillées / sales ; tirage,
+  régurgitations, température max, médicaments s'il y en a), frise de 24 h (une ligne par type, un point par saisie,
+  couleur unique + libellé de ligne, tap = modifier, trait = maintenant), filtres (Tout, Tétées, Biberons, Changes,
+  Tirages, Régurg., Autres, avec leur nombre), puis la liste. Semaine = 7 jours jusqu'au jour choisi (‹ › = ±7 j),
+  un petit graphique en barres par mesure (tétées, ml, mouillées, sales, intervalle moyen ; tap = valeur du jour,
+  sinon moyenne / jour) + le tableau des mêmes chiffres (tap sur un jour = l'ouvrir). Calculs dans rules.js
+  (daySummary, WEEK_METRICS, JOURNAL_FILTERS, STRIP_LANES)
 - 1.8 Temps réel : `subscribeChanges` (storage.js) sur events / mesures (filtre bébé) / questions (filtre foyer) ;
   rattrapage complet à la reconnexion et au retour dans l'app. Supabase ne filtre pas les suppressions réelles
   (mesures, questions) : elles arrivent au plus tard au prochain rafraîchissement
