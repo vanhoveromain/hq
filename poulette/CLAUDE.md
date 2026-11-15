@@ -145,7 +145,7 @@ température, médicament), timeline, mesures, questions, realtime, hors-ligne n
 
 ## Points ouverts
 - Couleurs / textures de caca (4 à 6 pastilles max) — à fixer en Phase 1.
-- Mécanisme « HQ accessibles par personne » — à concevoir en 0.4.
+- Mécanisme « HQ accessibles par personne » — table `hq_access` (0.4a).
 
 ## Comment on travaille
 - Une étape à la fois ; Rom teste chaque étape avant la suivante.
