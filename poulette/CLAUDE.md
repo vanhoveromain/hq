@@ -100,7 +100,8 @@ poulette_questions    (id, household_id, baby_id, text, created_at, done_at NULL
 - **Mesures** : poids / taille / périmètre crânien + source (maternité, sage-femme, ONE / Kind en Gezin, pédiatre).
   Liste + graphique du poids, écart au poids de naissance.
 - **Questions pour la pédiatre** : ajout en 1 champ, liste à cocher pendant le RDV, réponse optionnelle.
-- **Réglages** : profil du bébé, membres du household, médicaments favoris, export JSON + CSV.
+- **Réglages** : profil du bébé, membres du household, export JSON + CSV. Médicaments favoris = déduits de
+  l'historique (noms + doses déjà saisis proposés en premier), pas de table (décidé 2026-11-15).
 
 ## Hors périmètre
 Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et résume, elle n'interprète pas.
@@ -119,7 +120,11 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
 **Phase 0 — Fondations**
 - 0.1 Lecture du repo HQ — fait 2026-11-15
 - 0.2 Décisions (Supabase, adresse, hors-ligne, accès Léa) — fait 2026-11-15
-- 0.3 Migration : tables `poulette_*`, RLS, index, realtime
+- 0.3 Migration : tables `poulette_*`, RLS, index, realtime — écrite et testée en local 2026-11-15
+  (migration 20261115000001 ; RLS testée : Léa voit tout, un compte hors foyer ne voit et n'écrit rien, anon
+  rien). Ajouts : `updated_at` sur toutes les tables modifiables, ids fournis par l'app (renvoi hors-ligne
+  sans doublon), fonctions `poulette_create_household` / `poulette_add_member` (par email). À lancer dans own-hq
+  (voir supabase/README.md)
 - 0.4 Accès par personne : portail + switcher selon les HQ accessibles ; compte Léa
 - 0.5 Coquille de l'app : login, PWA (manifest, service worker, sombre), projet Vercel + domaines
 - 0.6 Household + profil bébé + ajout de Léa comme membre
@@ -135,7 +140,6 @@ température, médicament), timeline, mesures, questions, realtime, hors-ligne n
 
 ## Points ouverts
 - Couleurs / textures de caca (4 à 6 pastilles max) — à fixer en Phase 1.
-- Médicaments favoris : table dédiée ou déduits de l'historique — à fixer en 0.3.
 - Mécanisme « HQ accessibles par personne » — à concevoir en 0.4.
 
 ## Comment on travaille
