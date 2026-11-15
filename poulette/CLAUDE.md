@@ -127,9 +127,15 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
   (voir supabase/README.md) — lancée dans own-hq 2026-11-15 (Success)
 - 0.4 Accès par personne : portail + switcher selon les HQ accessibles ; compte Léa
   - 0.4a table `hq_access` (own-hq, `hq-home/supabase/migrations/20261115000002`) — écrite et testée en local
-    2026-11-15. Une ligne = une personne voit un HQ ; lecture de ses lignes seulement, gestion au SQL Editor. Remplit
-    Rom avec tous les HQ ; s'arrête sans rien créer si own-hq a plus d'un compte (→ à lancer avant le compte de Léa)
-  - 0.4b portail + sélecteur filtrés, un seul HQ → redirection ; cache local si réseau KO ; carte Poulette à la 0.5
+    2026-11-15, lancée dans own-hq 2026-11-15 (Success). Une ligne = une personne voit un HQ ; lecture de ses lignes
+    seulement, gestion au SQL Editor. Remplit Rom avec tous les HQ ; s'arrête sans rien créer si own-hq a plus d'un
+    compte (→ lancée avant le compte de Léa)
+  - 0.4b portail + sélecteur filtrés — construit 2026-11-15 (hq-home/auth.js `listMyHqs()`, home.js, switcher.js).
+    Portail : cartes cachées tant que la liste n'est pas connue ; un seul HQ ouvrable → redirection ; aucun → « No HQ
+    is open for this account yet. » ; dernière liste mémorisée par compte sur l'appareil (localStorage
+    `hq.access.<user id>`) ; inconnue (hors-ligne, rien en mémoire) → toutes les cartes. Sélecteur : même filtre (le HQ
+    courant reste) ; un seul HQ → nom + symbole, sans menu. Testé avec un faux Supabase (Playwright). La carte
+    PouletteHQ arrive à la 0.5 : d'ici là, Léa voit « No HQ is open… »
   - 0.4c compte Léa (Supabase → Add user) + `hq_access` poulette, vérification
 - 0.5 Coquille de l'app : login, PWA (manifest, service worker, sombre), projet Vercel + domaines
 - 0.6 Household + profil bébé + ajout de Léa comme membre
