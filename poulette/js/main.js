@@ -76,6 +76,35 @@ async function loadHome() {
     console.warn("Household not loaded:", error.message);
     homeError = error;
   }
+  showOffline();
+}
+
+// "Hors ligne" in the top bar: no network, or data shown from this device.
+function showOffline() {
+  const offline = !navigator.onLine || Boolean(home && home.fromCache);
+  document.getElementById("offline-badge").hidden = !offline;
+}
+
+// Back online after showing cached data: load the fresh household again.
+window.addEventListener("online", async () => {
+  if (!user) return;
+  if (home && !home.fromCache && !homeError) return showOffline();
+  await loadHome();
+  render();
+});
+window.addEventListener("offline", showOffline);
+
+// The service worker (sw.js) keeps the app's files on the phone, so it opens
+// without network. Only on https (or localhost while testing).
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch((error) => console.warn("Service worker:", error.message));
+  // Hand it the scripts this page loaded from other sites (see sw.js).
+  navigator.serviceWorker.ready.then((registration) => {
+    const urls = performance.getEntriesByType("resource")
+      .map((entry) => entry.name)
+      .filter((name) => /\.(m?js)(\?|$)|\/\+esm$|cdn\.jsdelivr\.net/.test(name));
+    if (registration.active) registration.active.postMessage({ type: "cache-these", urls });
+  }).catch(() => {});
 }
 
 async function start() {

@@ -60,6 +60,12 @@ for (const name of ["sport-hq", "qed-hq", "work-hq", "personal-hq", "poulette-hq
   writeFileSync(out(`${name}-square.svg`), squareProduct(name));
 }
 
+// Android "maskable" icon: the phone may cut the icon into a circle or any
+// shape, keeping only the middle 80 %. Same square, symbol shrunk to fit it.
+const maskableProduct = (name) => squareProduct(name)
+  .replace(/<g fill="#FFFFFF">/, '<g fill="#FFFFFF" transform="translate(50 50) scale(.8) translate(-50 -50)">');
+writeFileSync(out("poulette-hq-maskable.svg"), maskableProduct("poulette-hq"));
+
 // PNGs
 // Playwright: the project's own, else the one installed globally.
 const { createRequire } = await import("node:module");
@@ -79,13 +85,14 @@ for (const s of [32, 180, 192, 512]) await png("hq-icon-square.svg", s, `hq-icon
 for (const name of ["sport-hq", "qed-hq", "poulette-hq"]) {
   for (const s of [32, 180, 192, 512]) await png(`${name}-square.svg`, s, `${name}-icon-${s}.png`);
 }
+await png("poulette-hq-maskable.svg", 512, "poulette-hq-icon-maskable-512.png");
 await browser.close();
 
 // Copies into the apps (each Vercel project only serves its own folder).
 const copies = {
   "hq-home": ["hq-mark.svg", "hq-mark-white.svg", "hq-icon.svg", "hq-icon-180.png", "sport-hq.svg", "qed-hq.svg", "poulette-hq.svg"],
   "qed/assets": ["qed-hq.svg", "qed-hq-icon-180.png", "qed-hq-icon-32.png"],
-  "poulette/icons": ["poulette-hq.svg", "poulette-hq-icon-32.png", "poulette-hq-icon-180.png", "poulette-hq-icon-192.png", "poulette-hq-icon-512.png"],
+  "poulette/icons": ["poulette-hq.svg", "poulette-hq-icon-32.png", "poulette-hq-icon-180.png", "poulette-hq-icon-192.png", "poulette-hq-icon-512.png", "poulette-hq-icon-maskable-512.png"],
   "sporthq3/icons": ["sport-hq.svg", "sport-hq-icon-180.png", "sport-hq-icon-192.png", "sport-hq-icon-512.png"],
 };
 for (const [dir, files] of Object.entries(copies)) {

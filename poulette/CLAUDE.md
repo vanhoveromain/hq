@@ -154,7 +154,14 @@ Aucun conseil médical ni alerte automatique sur seuils : l'app enregistre et r�
     en bas : Accueil, Journal, Suivi, Pédiatre, Réglages ; sans foyer → écran Bienvenue, seul Réglages reste ; erreur
     de chargement → Réessayer), views/placeholders.js (écrans Phase 1/2 annoncés), views/reglages.js (compte, thème,
     Se déconnecter → login hq). serve.py port 8002. Testé avec un faux Supabase (Playwright, iPhone 13)
-  - 0.5c PWA (manifest, icônes, service worker : l'app s'ouvre sans réseau)
+  - 0.5c PWA — construite 2026-11-15 : manifest.webmanifest (FR, standalone, portrait, fond #171819, icônes 192/512
+    + maskable 512 via brand/export.mjs), metas iPhone, vercel.json (sw.js + manifest jamais en cache HTTP). sw.js :
+    app + login/sélecteur hq = réseau d'abord (3 s max) puis copie locale ; supabase-js (jsDelivr, version figée) =
+    cache d'abord ; la base (supabase.co) jamais mise en cache par le SW. main.js envoie au SW les scripts d'autres
+    sites chargés avant qu'il prenne la main (sinon la 1re ouverture hors-ligne échoue). Changer les règles du SW =
+    monter VERSION. Hors-ligne : login enregistré sur l'appareil accepté si le serveur est injoignable
+    (storage.requireLogin, cookies hq-auth.*) ; foyer : dernière réponse gardée (localStorage poulette.home.<id>) ;
+    badge « Hors ligne » en haut. Testé (Playwright) : 1re visite en ligne puis hors-ligne → l'app s'ouvre
   - 0.5d Projet Vercel `poulette` — fait 2026-11-15 : Root Directory `poulette` tapé à la main (Settings → Build and
     Deployment ; le sélecteur ne montre que les dossiers de main), `poulette-preview.ownhq.app` sur la branche de
     travail, testé (Bienvenue + Version de test + sélecteur). **Vercel Authentication désactivée** sur les projets

@@ -15,7 +15,13 @@
     if (t === "auto") delete document.documentElement.dataset.theme;
   } catch (e) { /* storage blocked: stay dark */ }
 </script>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/poulette-hq-icon-32.png" type="image/png">
+<!-- iPhone: full screen from the home-screen icon, dark status bar. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Poulette">
 <link rel="apple-touch-icon" href="icons/poulette-hq-icon-180.png">
 <link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/hq-tokens.css">
@@ -26,6 +32,7 @@
 <header class="top">
   <div class="wrap top-row">
     <hq-switcher current="poulette"><a href="#/accueil">Poulette HQ</a></hq-switcher>
+    <span class="offline-badge" id="offline-badge" hidden>Hors ligne</span>
   </div>
 </header>
 
