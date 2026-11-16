@@ -188,6 +188,7 @@ export async function signInWithPassword(email, password) {
   } catch {
     // No QED account, or a different password: QED HQ will ask.
   }
+  accessRequest = null; // the next account gets its own list
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     await signOutOfQed(); // wrong hq password: leave no half login behind
@@ -224,9 +225,56 @@ export async function setPassword(password) {
 }
 
 export async function signOut() {
+  accessRequest = null; // the next account gets its own list
   await signOutOfQed();
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Which HQs this account may open (table hq_access in own-hq, since
+// 2026-11-15). Used by the portal and the HQ switcher to show only those.
+// It HIDES cards, it protects nothing: each HQ's RLS does that.
+//
+// Returns a list of HQ ids (["qed", "sport", ...]), or null when unknown
+// (logged out, or no network and nothing remembered on this device).
+// The last answer is remembered per account on this device, so a network
+// problem shows the last known list instead of breaking anything.
+// ---------------------------------------------------------------------
+const ACCESS_KEY = "hq.access.";
+let accessRequest = null; // one request per page, shared by portal + switcher
+
+export function rememberedHqs(userId) {
+  try {
+    const list = JSON.parse(localStorage.getItem(ACCESS_KEY + userId));
+    return Array.isArray(list) ? list : null;
+  } catch {
+    return null;
+  }
+}
+
+export function listMyHqs() {
+  if (!accessRequest) accessRequest = loadMyHqs();
+  return accessRequest;
+}
+
+async function loadMyHqs() {
+  let user = null;
+  try { user = await getUser(); } catch { /* treat as logged out */ }
+  if (!user) {
+    accessRequest = null; // ask again after a login
+    return null;
+  }
+  try {
+    const { data, error } = await supabase.from("hq_access").select("hq");
+    if (error) throw error;
+    const list = data.map((row) => row.hq);
+    try { localStorage.setItem(ACCESS_KEY + user.id, JSON.stringify(list)); } catch { /* not important */ }
+    return list;
+  } catch {
+    accessRequest = null; // try again next time
+    return rememberedHqs(user.id);
+  }
 }
 
 // callback(user) on every login / logout. Logouts on another hq site are

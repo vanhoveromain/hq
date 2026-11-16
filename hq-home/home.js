@@ -5,7 +5,7 @@
 
 import {
   getUser, onAuthChange, signInWithPassword, sendMagicLink, signOut,
-  safeNext, loginErrorFromUrl,
+  safeNext, loginErrorFromUrl, listMyHqs, rememberedHqs,
 } from "./auth.js";
 
 const EMAIL_KEY = "hq.lastEmail"; // remembered on this device only
@@ -19,6 +19,7 @@ const passwordInput = document.getElementById("password");
 const loginButton = form.querySelector('button[type="submit"]');
 const linkButton = document.getElementById("send-link");
 const status = document.getElementById("login-status");
+const cards = document.getElementById("cards");
 
 function show(user) {
   if (user && next) {
@@ -26,7 +27,38 @@ function show(user) {
     return;
   }
   root.dataset.auth = user ? "in" : "out";
-  if (user) greet(user);
+  if (!user) cards.dataset.access = "pending";
+  if (user) {
+    greet(user);
+    // What this device remembers first (no flash), then the fresh answer.
+    applyAccess(rememberedHqs(user.id), false);
+    listMyHqs().then((list) => applyAccess(list, true));
+  }
+}
+
+// Shows only the cards of the HQs this account may open (table hq_access).
+// list = null means unknown (no network, nothing remembered): show them all,
+// the data stays protected by each HQ's own locks.
+// Exactly one HQ you can open -> go straight there (Léa -> PouletteHQ).
+function applyAccess(list, final) {
+  if (!list) {
+    if (!final) return; // keep waiting for the real answer
+    for (const li of cards.children) li.hidden = false;
+    cards.dataset.access = "ready";
+    return;
+  }
+  for (const li of cards.children) {
+    const card = li.querySelector("[data-hq]");
+    li.hidden = !card || !list.includes(card.dataset.hq);
+  }
+  const visible = [...cards.children].filter((li) => !li.hidden);
+  const live = visible.map((li) => li.querySelector("a.card")).filter(Boolean);
+  document.getElementById("no-hq").hidden = visible.length > 0;
+  if (final && visible.length === 1 && live.length === 1) {
+    window.location.replace(live[0].href);
+    return;
+  }
+  cards.dataset.access = "ready";
 }
 
 // Logged-in header: today's date, a greeting for the time of day, and who
