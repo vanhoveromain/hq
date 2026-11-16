@@ -213,7 +213,10 @@ Coordination Team HQ, archived / passed projects.
    stops growing at what really fits (no column ever leaves the frame). Priorities: Due column last, just before
    the push / focus icons (rowOptions.dueLast + list class due-last); other lists keep Due after Project.
    Priorities uses the full screen width too (body.is-wide, like the planner). Home (2026-11-16): All projects = compact
-   list, the other tabs (Own-initiated, Bespoke, Non-event, Followed up) = cards again (cardHtml, <a class="card">) · 11. Phone / laptop check + polish
+   list, the other tabs (Own-initiated, Bespoke, Non-event, Followed up) = cards again (cardHtml, <a class="card">)
+   Planner (Romain, 2026-11-16): column titles (day + date) stick under the top bar while scrolling a long column
+   (.board-col-head sticky; >= 1100 px .board-columns overflow-x visible so sticky works; also on the phone agenda;
+   640-1099 px still scrolls sideways, so no sticky there) · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

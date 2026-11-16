@@ -496,6 +496,13 @@ body.is-wide .wrap{max-width:none}
 .board-col.is-over{border-color:var(--hq-accent);border-style:dashed}
 .board-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 8px}
 .board-col-head h2{margin:0;font-size:13px;font-weight:600}
+/* Day names stay in view while you scroll down a long column: the column
+   titles stick just under the top bar (Romain, 2026-11-16). Works on a laptop
+   (>= 1100 px, the columns fit, no sideways scroll) and on a phone (agenda);
+   in between, the columns scroll sideways, which stops sticky from working. */
+.board-col-head{position:sticky;top:calc(65px + env(safe-area-inset-top));z-index:2;margin:-8px -8px 0;padding:12px 12px 8px;background:inherit;border-radius:var(--hq-radius) var(--hq-radius) 0 0}
+.board-col.is-undated .board-col-head{background:var(--hq-canvas)}
+@media (min-width:1100px){.board-columns{overflow-x:visible}}
 .board-today{margin-left:4px;padding:1px 6px;border-radius:999px;background:var(--hq-accent);color:var(--hq-on-accent);font-size:11px;font-weight:600}
 .board-count{font-size:12px;font-weight:600;color:var(--hq-secondary-text);font-variant-numeric:tabular-nums}
 .board-count.is-over{color:var(--hq-warning)}
@@ -503,7 +510,7 @@ body.is-wide .wrap{max-width:none}
 .board-empty{margin:0;padding:16px 8px;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius-sm);font-size:12px;color:var(--hq-secondary-text);text-align:center}
 /* A past day of this week (always empty): a thin strip with its name. */
 .board-col.is-past{min-width:0;padding:8px 2px;background:none;border:1px solid var(--hq-border);text-align:center}
-.board-col.is-past .board-col-head{justify-content:center;padding:4px 0}
+.board-col.is-past .board-col-head{justify-content:center;margin:-8px -2px 0;padding:12px 0 4px}
 .board-col.is-past h2{font-size:12px;font-weight:500;color:var(--hq-secondary-text);line-height:1.4}
 .board-col.is-past .board-count,.board-col.is-past .board-empty{display:none}
 /* Phone: the columns become an agenda, stacked from top to bottom (past days
