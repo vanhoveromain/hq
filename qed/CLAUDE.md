@@ -212,7 +212,8 @@ Coordination Team HQ, archived / passed projects.
    is a maximum (minmax(smallest, chosen)), so columns give way in a narrower window; while dragging, a column
    stops growing at what really fits (no column ever leaves the frame). Priorities: Due column last, just before
    the push / focus icons (rowOptions.dueLast + list class due-last); other lists keep Due after Project.
-   Priorities uses the full screen width too (body.is-wide, like the planner) · 11. Phone / laptop check + polish
+   Priorities uses the full screen width too (body.is-wide, like the planner). Home (2026-11-16): All projects = compact
+   list, the other tabs (Own-initiated, Bespoke, Non-event, Followed up) = cards again (cardHtml, <a class="card">) · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

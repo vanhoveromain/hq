@@ -149,6 +149,8 @@ body.is-locked .tabbar,body.is-locked .top-nav{visibility:hidden}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:0;padding:0;list-style:none}
 .card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;height:100%;padding:14px 16px;text-align:left;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);color:inherit;font:inherit;cursor:pointer;transition:border-color var(--hq-ease)}
 .card:hover{border-color:var(--hq-accent)}
+a.card{text-decoration:none}
+.card:focus-visible{outline:2px solid var(--hq-accent);outline-offset:2px}
 .card.is-archived{opacity:.65}
 /* Home projects: a compact list, one thin line per project (2026-11-15). */
 .plist{margin:0;padding:0;list-style:none;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius)}

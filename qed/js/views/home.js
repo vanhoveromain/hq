@@ -171,7 +171,24 @@ async function drawGallery(galleryEl, tab, projectsLoad) {
 
   // A compact list, one thin line per project (Romain, 2026-11-15: the big
   // cards were too much). Each line is a link to the project page.
-  galleryEl.innerHTML = `<ul class="plist">${shown.map((p) => rowHtml(p, tab)).join("")}</ul>`;
+  // All projects: the compact list; the other tabs (Own-initiated, Bespoke,
+  // Non-event, Followed up) keep the cards (Romain, 2026-11-16).
+  galleryEl.innerHTML = tab.id === "all"
+    ? `<ul class="plist">${shown.map((p) => rowHtml(p, tab)).join("")}</ul>`
+    : `<ul class="cards">${shown.map((p) => cardHtml(p, tab)).join("")}</ul>`;
+}
+
+function cardHtml(p, tab) {
+  const dates = hasDates(p.type) ? formatRange(p.date_start, p.date_end) : "";
+  const tags = [];
+  if (p.status) tags.push(`<span class="pill status-${p.status}">${escapeHtml(projectStatusLabel(p))}</span>`);
+  if (p.owner !== DEFAULT_OWNER) tags.push(`<span class="pill owner">${escapeHtml(labelOf(OWNERS, p.owner) || p.owner)}</span>`);
+  return `
+    <li><a class="card${p.status === "archived" ? " is-archived" : ""}" href="#/project/${escapeHtml(p.id)}" data-project="${escapeHtml(p.id)}">
+      <span class="card-name">${escapeHtml(p.name)}</span>
+      ${hasDates(p.type) ? `<span class="card-date">${dates ? escapeHtml(dates) : "No date yet"}</span>` : ""}
+      <span class="card-tags">${tags.join("")}</span>
+    </a></li>`;
 }
 
 function rowHtml(p, tab) {
