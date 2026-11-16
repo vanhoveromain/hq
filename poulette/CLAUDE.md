@@ -230,7 +230,9 @@ testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus
 - 1.9 Suivi (`views/suivi.js`) : mesures + source, graphique du poids (une courbe, 1 unité = 1 px, valeur au toucher),
   écart au poids de naissance (g et %). 1.10 Pédiatre : questions (ajout, coche, réponse). 1.11 Export CSV (;, BOM,
   Excel) + JSON dans Réglages
-- 1.12 Recette sur les 2 téléphones + mise en ligne : à faire
+- 1.12 Recette par Rom (retours intégrés : OK sur le reçu, tétée sans chrono + durée libre, pas de sommeil, question
+  pédiatre sur l'Accueil, Journal complet) ; données de test effacées (SQL) ; **mise en ligne 2026-11-15** (commit de
+  fusion c2bab24 sur main, publié le 2026-11-16 après la limite quotidienne de Vercel). **Phase 1 terminée.**
  : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,
 température, médicament), timeline, mesures, questions, realtime, hors-ligne niveau 2, export.
 
