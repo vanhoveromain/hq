@@ -14,7 +14,7 @@
 // Changing a file of the app: nothing to do (network first). Changing THIS
 // file's rules: bump VERSION, the old cache is then thrown away.
 
-const VERSION = "v4";
+const VERSION = "v5";
 const CACHE = "poulette-" + VERSION;
 const TIMEOUT_MS = 3000;
 
@@ -44,6 +44,7 @@ const SHELL = [
   "js/views/home.js",
   "js/views/journal.js",
   "js/views/pediatre.js",
+  "js/views/rapport.js",
   "js/views/reglages.js",
   "js/views/suivi.js",
   "js/views/welcome.js",

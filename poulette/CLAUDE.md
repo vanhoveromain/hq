@@ -230,11 +230,29 @@ testée de bout en bout avec un faux Supabase (2 utilisateurs, hors-ligne, refus
 - 1.9 Suivi (`views/suivi.js`) : mesures + source, graphique du poids (une courbe, 1 unité = 1 px, valeur au toucher),
   écart au poids de naissance (g et %). 1.10 Pédiatre : questions (ajout, coche, réponse). 1.11 Export CSV (;, BOM,
   Excel) + JSON dans Réglages
-- 1.12 Recette sur les 2 téléphones + mise en ligne : à faire
+- 1.12 Recette par Rom (retours intégrés : OK sur le reçu, tétée sans chrono + durée libre, pas de sommeil, question
+  pédiatre sur l'Accueil, Journal complet) ; données de test effacées (SQL) ; **mise en ligne 2026-11-15** (commit de
+  fusion c2bab24 sur main, publié le 2026-11-16 après la limite quotidienne de Vercel). **Phase 1 terminée.**
  : accueil, saisies (tétée, biberon, change, sommeil, tirage, régurgitation,
 température, médicament), timeline, mesures, questions, realtime, hors-ligne niveau 2, export.
 
-**Phase 2 — Rapport** : rapport pédiatre + mode consultation + PDF (idéalement avant la naissance).
+**Phase 2 — Rapport** — construite le 2026-11-16 (Rom : « B, fais toute la Phase 2 ») :
+- Migration **20261116000001** (à lancer dans own-hq, ajout pur) : table `poulette_appointments` (bébé, held_on, note),
+  même verrou que les saisies, temps réel. Tant qu'elle n'a pas tourné, l'app continue (liste de RDV vide).
+- Onglet Pédiatre : « 📄 Rapport » + « 📅 RDV aujourd'hui » (date modifiable, note), dernier RDV affiché, liste des
+  RDV (modifier / supprimer). Choix de Rom : RDV noté à la main (option B), pas déduit des mesures.
+- `views/rapport.js` (#/rapport, onglet Pédiatre allumé) : période 24 h / 7 jours / Depuis le RDV / Dates ; en-tête
+  (bébé, âge, poids de naissance, période, nb de saisies, dernier RDV) ; Alimentation (tétées + / 24 h, durée moyenne
+  quand notée, G/D en nombre et %, biberons ml + ml / jour, repas / 24 h, intervalle moyen et le plus long, tirage) ;
+  Couches (mouillées, sales, / jour, couleurs notées) ; Santé (régurgitations par type, températures avec heure,
+  médicaments ×n + dernière prise) ; Croissance (courbe du poids depuis la naissance, 5 dernières mesures, écart) ;
+  Questions ouvertes ; Jour par jour (≤ 31 jours). Calculs : rules.reportSummary, babyAge. Pas d'interprétation.
+  « Sommeil total » de la spec retiré (plus de saisie de sommeil).
+- Mode consultation : plein écran, gros texte, toujours clair, sans navigation ; « ✕ Fermer » rend le thème de nuit.
+- PDF : bouton « PDF / Imprimer » = fenêtre d'impression du téléphone (window.print) → Enregistrer en PDF / partager ;
+  styles @media print (A4, clair, rapport seul). Sur iPhone, depuis l'app installée, l'impression peut ne pas
+  s'ouvrir sur d'anciennes versions d'iOS : ouvrir alors poulette.ownhq.app dans Safari.
+- store.ensureRange (une requête pour les jours pas encore chargés) ; fetchEvents lit par paquets de 1000.
 
 **Phase 3 — V2 (après la naissance)** : types V2, hors-ligne niveau 3, graphiques de tendance, rappels (vitamines).
 

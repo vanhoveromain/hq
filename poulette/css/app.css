@@ -244,4 +244,49 @@ fieldset.poop legend{padding:0;margin-bottom:8px;font-size:14px;font-weight:600;
 details>summary.section-title{cursor:pointer;min-height:44px;display:flex;align-items:center}
 .failed-item{display:grid;gap:8px;margin-top:8px}
 
+/* ---------- Rapport ---------- */
+.ped-top{margin-bottom:6px}
+.ped-top .btn{padding:0 10px}
+.report-tools{display:grid;gap:12px;margin-bottom:20px}
+.back{font-weight:600;text-decoration:none;min-height:32px;display:inline-flex;align-items:center}
+.consult-exit{display:none}
+.report{display:grid;gap:20px}
+.r-head h1{margin:0;font-size:28px;letter-spacing:-.02em}
+.r-head p{margin:4px 0 0;color:var(--hq-secondary-text)}
+.r-head .r-period{color:var(--hq-primary-text)}
+.r-section{padding:14px 16px;border:1px solid var(--hq-border);border-radius:var(--hq-radius);background:var(--hq-surface);break-inside:avoid}
+.r-section h2{margin:0 0 6px;font-size:16px;color:var(--hq-accent-text)}
+.r-row{display:grid;grid-template-columns:minmax(110px,38%) 1fr;gap:12px;padding:8px 0;border-top:1px solid var(--hq-border)}
+.r-row:first-of-type{border-top:0}
+.r-label{color:var(--hq-secondary-text);font-size:15px}
+.r-value{font-weight:600;display:grid;gap:2px}
+.r-sub,.r-sub-inline{font-weight:400;font-size:14px;color:var(--hq-secondary-text)}
+.r-color{display:inline-flex;align-items:center;gap:6px;margin-right:10px;font-weight:500}
+.r-color .dot{width:14px;height:14px}
+.r-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+.r-table th,.r-table td{padding:6px 4px;border-bottom:1px solid var(--hq-border);text-align:left}
+.r-table.days td{text-align:right;font-variant-numeric:tabular-nums}
+.r-table.days thead th:not(:first-child){text-align:right}
+.r-questions{margin:4px 0 0;padding-left:22px;display:grid;gap:6px}
+.r-foot{font-size:12px;color:var(--hq-secondary-text);margin:0}
+
+/* Consultation: full screen, big and clean, no navigation */
+body.is-consult .top,body.is-consult .tabbar,body.is-consult .report-tools,body.is-consult .page-title,body.is-consult .receipt{display:none!important}
+body.is-consult .consult-exit{display:flex;width:100%;margin-bottom:16px}
+body.is-consult .main{padding-top:16px;padding-bottom:32px}
+body.is-consult .report{font-size:18px}
+body.is-consult .r-head h1{font-size:34px}
+
+/* Paper / PDF (window.print): the report only, light, A4 */
+@media print{
+  @page{size:A4;margin:14mm}
+  .top,.tabbar,.report-tools,.consult-exit,.page-title,.receipt,.toast,.offline-badge,.outbox-badge,.no-print{display:none!important}
+  body{background:#fff}
+  .main{padding:0!important;max-width:none}
+  .r-section{border-color:#ccc;padding:8px 10px}
+  .report{gap:10px;font-size:12pt}
+  .chart .hit{display:none}
+  #r-chart{max-width:120mm}
+}
+
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}

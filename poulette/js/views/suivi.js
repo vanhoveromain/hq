@@ -27,19 +27,20 @@ export function render(el, { home, params }) {
   }
 }
 
-function weightPoints() {
-  const pts = store.measurements().filter((m) => m.weight_g)
+function weightPoints(b = baby, list = store.measurements()) {
+  const pts = list.filter((m) => m.weight_g)
     .map((m) => ({ t: Date.parse(m.measured_at), g: m.weight_g, label: shortDate(m.measured_at), source: m.source }));
-  if (baby.birth_weight_g && baby.birth_date) {
-    pts.push({ t: Date.parse(baby.birth_date + "T12:00:00"), g: baby.birth_weight_g, label: `${shortDate(baby.birth_date + "T12:00:00")} (naissance)`, birth: true });
+  if (b.birth_weight_g && b.birth_date) {
+    pts.push({ t: Date.parse(b.birth_date + "T12:00:00"), g: b.birth_weight_g, label: `${shortDate(b.birth_date + "T12:00:00")} (naissance)`, birth: true });
   }
-  return pts.sort((a, b) => a.t - b.t);
+  return pts.sort((x, y) => x.t - y.t);
 }
 
-function gap(g) {
-  if (!baby.birth_weight_g || !g) return "";
-  const diff = g - baby.birth_weight_g;
-  const pct = (diff / baby.birth_weight_g) * 100;
+// "+120 g (+3,5 %) depuis la naissance"
+export function gapFromBirth(g, b = baby) {
+  if (!b || !b.birth_weight_g || !g) return "";
+  const diff = g - b.birth_weight_g;
+  const pct = (diff / b.birth_weight_g) * 100;
   return `${diff >= 0 ? "+" : "−"}${rules.fmtNumber(Math.abs(diff))} g (${diff >= 0 ? "+" : "−"}${rules.fmtNumber(Math.abs(pct), 1)} %) depuis la naissance`;
 }
 
@@ -47,14 +48,14 @@ export function refresh(el) {
   const chart = el.querySelector("#chart");
   const list = el.querySelector("#list");
   if (!chart || !list) return;
-  drawChart(chart, weightPoints());
+  drawChart(chart, weightPoints(), baby);
 
   const rows = store.measurements().sort((a, b) => b.measured_at.localeCompare(a.measured_at));
   list.innerHTML = rows.length ? rows.map((m) => `<button type="button" class="entry wide" data-id="${m.id}">
       <span class="entry-time">${shortDate(m.measured_at)}</span>
       <span class="entry-main"><span class="entry-title">${[m.weight_g ? `${rules.fmtNumber(m.weight_g)} g` : null, m.length_cm ? `${rules.fmtNumber(m.length_cm, 1)} cm` : null,
         m.head_cm ? `PC ${rules.fmtNumber(m.head_cm, 1)} cm` : null].filter(Boolean).join(" · ")}${m._pending ? " ⏳" : ""}</span>
-        <span class="entry-sub">${escapeHtml([m.source, m.weight_g && baby.birth_weight_g ? gap(m.weight_g) : null].filter(Boolean).join(" · "))}</span></span></button>`).join("")
+        <span class="entry-sub">${escapeHtml([m.source, m.weight_g && baby.birth_weight_g ? gapFromBirth(m.weight_g) : null].filter(Boolean).join(" · "))}</span></span></button>`).join("")
     : '<p class="muted">Aucune mesure pour l\'instant.</p>';
   list.querySelectorAll("[data-id]").forEach((b) => b.addEventListener("click", () => {
     measureSheet(store.measurements().find((m) => m.id === b.dataset.id));
@@ -63,9 +64,15 @@ export function refresh(el) {
 
 // One line, the accent colour, 2 px; 8 px points; a recessive grid; tap or
 // hover a point to read it (the line above the chart).
-function drawChart(box, pts) {
+// Used by the report too (weightChart below).
+export function weightChart(box, b, list) {
+  drawChart(box, weightPoints(b, list), b);
+}
+
+function drawChart(box, pts, b) {
+  const gap = (g) => gapFromBirth(g, b);
   if (pts.length < 2) {
-    box.innerHTML = `<p class="muted">Le graphique du poids apparaît dès qu'il y a deux poids${baby.birth_weight_g ? "" : " (pense au poids de naissance dans Réglages)"}.</p>`;
+    box.innerHTML = `<p class="muted">Le graphique du poids apparaît dès qu'il y a deux poids${b.birth_weight_g ? "" : " (pense au poids de naissance dans Réglages)"}.</p>`;
     return;
   }
   // 1 unit = 1 px (the box's real width): text 12 px, line 2 px, points 8 px.

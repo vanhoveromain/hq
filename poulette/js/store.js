@@ -9,7 +9,7 @@
 // The other phone's changes arrive live (Supabase Realtime, step 1.8).
 
 import {
-  fetchEvents, fetchRunning, fetchMeasurements, fetchQuestions, sendChange, subscribeChanges,
+  fetchEvents, fetchRunning, fetchMeasurements, fetchQuestions, fetchAppointments, sendChange, subscribeChanges,
 } from "./storage.js";
 import { addItem, putItem, removeItem, allItems } from "./queue.js";
 import { dayKey, dayStart, addDays } from "./utils/dates.js";
@@ -18,11 +18,12 @@ const TABLES = {
   poulette_events: "events",
   poulette_measurements: "measurements",
   poulette_questions: "questions",
+  poulette_appointments: "appointments",
 };
 const RECENT_DAYS = 3;         // fetched at start (and kept on the phone)
 const RETRY_MS = 30000;        // outbox retry while items wait
 
-const server = { events: new Map(), measurements: new Map(), questions: new Map() };
+const server = { events: new Map(), measurements: new Map(), questions: new Map(), appointments: new Map() };
 let outbox = [];
 let ctx = null;                // { userId, babyId, householdId }
 let listeners = new Set();
@@ -50,6 +51,7 @@ function applyOutbox(collection, table) {
 export function events() { return applyOutbox("events", "poulette_events"); }
 export function measurements() { return applyOutbox("measurements", "poulette_measurements"); }
 export function questions() { return applyOutbox("questions", "poulette_questions"); }
+export function appointments() { return applyOutbox("appointments", "poulette_appointments"); }
 
 export function outboxState() {
   return {
@@ -82,6 +84,7 @@ function saveCache() {
   try {
     localStorage.setItem(cacheKey(), JSON.stringify({
       events: recent, measurements: [...server.measurements.values()], questions: [...server.questions.values()],
+      appointments: [...server.appointments.values()],
     }));
   } catch { /* full or blocked: the database still has everything */ }
 }
@@ -91,6 +94,7 @@ function loadCache() {
     const cached = JSON.parse(localStorage.getItem(cacheKey()) || "null");
     if (!cached) return;
     for (const [collection, rows] of Object.entries(cached)) {
+      if (!server[collection]) continue;
       for (const row of rows) server[collection].set(row.id, row);
     }
   } catch { /* ignore a broken cache */ }
@@ -130,15 +134,16 @@ export function refresh() {
     refreshing = (async () => {
       try {
         const since = dayStart(addDays(dayKey(), -RECENT_DAYS)).toISOString();
-        const [recent, open, meas, qs] = await Promise.all([
+        const [recent, open, meas, qs, appts] = await Promise.all([
           fetchEvents(ctx.babyId, since), fetchRunning(ctx.babyId),
-          fetchMeasurements(ctx.babyId), fetchQuestions(ctx.householdId),
+          fetchMeasurements(ctx.babyId), fetchQuestions(ctx.householdId), fetchAppointments(ctx.babyId),
         ]);
         // Replace the recent window (an event deleted for good disappears).
         for (const [id, e] of server.events) if (e.started_at >= since) server.events.delete(id);
         for (const e of [...recent, ...open]) server.events.set(e.id, e);
         server.measurements = new Map(meas.map((m) => [m.id, m]));
         server.questions = new Map(qs.map((q) => [q.id, q]));
+        server.appointments = new Map(appts.map((a) => [a.id, a]));
         for (let i = 0; i <= RECENT_DAYS; i++) loadedDays.add(addDays(dayKey(), -i));
       } catch (error) {
         console.warn("Refresh failed (offline?):", error.message);
@@ -156,6 +161,19 @@ export async function ensureDay(key) {
   const rows = await fetchEvents(ctx.babyId, dayStart(key).toISOString(), dayStart(addDays(key, 1)).toISOString());
   for (const e of rows) server.events.set(e.id, e);
   loadedDays.add(key);
+  notify();
+}
+
+// Report: make sure every day of a period is loaded (one query for the days
+// not loaded yet).
+export async function ensureRange(fromKey, toKey) {
+  if (!ctx) return;
+  const missing = [];
+  for (let d = fromKey; d <= toKey; d = addDays(d, 1)) if (!loadedDays.has(d)) missing.push(d);
+  if (!missing.length) return;
+  const rows = await fetchEvents(ctx.babyId, dayStart(missing[0]).toISOString(), dayStart(addDays(missing[missing.length - 1], 1)).toISOString());
+  for (const e of rows) server.events.set(e.id, e);
+  for (const d of missing) loadedDays.add(d);
   notify();
 }
 
@@ -235,6 +253,19 @@ export async function deleteQuestion(id) {
   await enqueue({ table: "poulette_questions", kind: "delete", id });
 }
 
+export async function addAppointment(heldOn, note = null) {
+  const now = new Date().toISOString();
+  const row = { id: uuid(), baby_id: ctx.babyId, held_on: heldOn, note, created_by: ctx.userId, created_at: now, updated_at: now };
+  await enqueue({ table: "poulette_appointments", kind: "insert", id: row.id, row });
+  return row;
+}
+export async function updateAppointment(id, patch) {
+  await enqueue({ table: "poulette_appointments", kind: "update", id, patch });
+}
+export async function deleteAppointment(id) {
+  await enqueue({ table: "poulette_appointments", kind: "delete", id });
+}
+
 // ---------------------------------------------------------------------
 // Sending the outbox
 // ---------------------------------------------------------------------
@@ -290,7 +321,8 @@ export async function dropItem(seq) {
 }
 
 export function describeItem(item) {
-  const what = { poulette_events: "saisie", poulette_measurements: "mesure", poulette_questions: "question" }[item.table] || "changement";
+  const what = { poulette_events: "saisie", poulette_measurements: "mesure", poulette_questions: "question",
+    poulette_appointments: "rendez-vous" }[item.table] || "changement";
   const how = { insert: "nouvelle", update: "modification", delete: "suppression" }[item.kind];
   return { what, how };
 }
