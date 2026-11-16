@@ -253,6 +253,7 @@ température, médicament), timeline, mesures, questions, realtime, hors-ligne n
   styles @media print (A4, clair, rapport seul). Sur iPhone, depuis l'app installée, l'impression peut ne pas
   s'ouvrir sur d'anciennes versions d'iOS : ouvrir alors poulette.ownhq.app dans Safari.
 - store.ensureRange (une requête pour les jours pas encore chargés) ; fetchEvents lit par paquets de 1000.
+- Testée par Rom (migration lancée) ; **mise en ligne 2026-11-16** (commit de fusion 552880a sur main). **Phase 2 terminée.**
 
 **Phase 3 — V2 (après la naissance)** : types V2, hors-ligne niveau 3, graphiques de tendance, rappels (vitamines).
 
