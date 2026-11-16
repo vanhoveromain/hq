@@ -13,6 +13,7 @@ import * as homeView from "./views/home.js";
 import * as journal from "./views/journal.js";
 import * as suivi from "./views/suivi.js";
 import * as pediatre from "./views/pediatre.js";
+import * as rapport from "./views/rapport.js";
 import * as store from "./store.js";
 import { setMembers, closePanel } from "./views/actions.js";
 import { openSheet } from "./utils/sheet.js";
@@ -28,6 +29,7 @@ const routes = {
   journal:  { title: "Journal", view: journal },
   suivi:    { title: "Suivi", view: suivi },
   pediatre: { title: "Pédiatre", view: pediatre },
+  rapport:  { title: "Rapport pour la pédiatre", view: rapport, tab: "pediatre" },
   reglages: { title: "Réglages", view: reglages, noHouseholdOk: true },
 };
 const DEFAULT_ROUTE = "accueil";
@@ -56,7 +58,7 @@ function render() {
   titleEl.textContent = route.title;
   document.title = route.title ? `${route.title} · Poulette HQ` : "Poulette HQ";
   for (const link of navLinks) {
-    const active = link.dataset.route === name;
+    const active = link.dataset.route === (route.tab || name);
     link.classList.toggle("active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");

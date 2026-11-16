@@ -1,19 +1,25 @@
 // pediatre.js: questions for the paediatrician (step 1.10). One field to add;
 // during the appointment, tick them; an answer can be noted (optional).
-// The report (Phase 2) will list the open ones.
+// Phase 2: « RDV aujourd'hui » (dates of appointments, for the report
+// period « Depuis le RDV ») and the link to the report.
 
 import * as store from "../store.js";
 import { escapeHtml } from "../utils/html.js";
 import { openSheet } from "../utils/sheet.js";
-import { shortDate } from "../utils/dates.js";
+import { shortDate, dayKey, dayStart } from "../utils/dates.js";
 
 export function render(el) {
-  el.innerHTML = `<form class="add-line" id="q-add" novalidate>
+  el.innerHTML = `<div class="field-pair ped-top">
+      <a class="btn big" href="#/rapport">📄 Rapport</a>
+      <button type="button" class="btn secondary big" data-rdv>📅 RDV aujourd'hui</button></div>
+    <p class="hint" id="rdv-last"></p>
+    <form class="add-line" id="q-add" novalidate>
       <input name="text" maxlength="1000" placeholder="Nouvelle question…" aria-label="Nouvelle question" autocomplete="off">
       <button type="submit" class="btn">Ajouter</button></form>
     <section class="section"><h2 class="section-title">À poser</h2><div id="q-open"></div></section>
     <details class="section" id="q-done-box"><summary class="section-title">Déjà posées</summary><div id="q-done"></div></details>
-    <div class="placeholder"><strong>Rapport pour la pédiatre</strong><span class="muted">Résumé de la période, mode consultation, PDF : Phase 2.</span></div>`;
+    <details class="section"><summary class="section-title">Rendez-vous</summary><div id="rdv-list"></div></details>`;
+  el.querySelector("[data-rdv]").addEventListener("click", () => appointmentSheet());
   const form = el.querySelector("#q-add");
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -29,6 +35,17 @@ export function refresh(el) {
   const open = el.querySelector("#q-open");
   const done = el.querySelector("#q-done");
   if (!open || !done) return;
+  const appts = store.appointments().sort((a, b) => b.held_on.localeCompare(a.held_on));
+  el.querySelector("#rdv-last").textContent = appts.length
+    ? `Dernier RDV : ${shortDate(dayStart(appts[0].held_on))}${appts[0]._pending ? " ⏳" : ""} (le rapport peut partir de là).`
+    : "Aucun RDV enregistré. Le bouton ci-dessus le note, pour le rapport « Depuis le RDV ».";
+  const list = el.querySelector("#rdv-list");
+  list.innerHTML = appts.length ? appts.map((a) => `<button type="button" class="entry" data-rdv-id="${a.id}">
+      <span class="entry-main"><span class="entry-title">📅 ${shortDate(dayStart(a.held_on))}</span>
+      ${a.note ? `<span class="entry-sub">${escapeHtml(a.note)}</span>` : ""}</span></button>`).join("") : '<p class="muted">Aucun.</p>';
+  list.querySelectorAll("[data-rdv-id]").forEach((b) => b.addEventListener("click", () => {
+    appointmentSheet(store.appointments().find((a) => a.id === b.dataset.rdvId));
+  }));
   const all = store.questions().sort((a, b) => b.created_at.localeCompare(a.created_at));
   const row = (q) => `<div class="question ${q.done_at ? "done" : ""}">
       <label class="q-check"><input type="checkbox" data-tick="${q.id}" ${q.done_at ? "checked" : ""} aria-label="Posée"></label>
@@ -71,6 +88,35 @@ function questionEditor(q) {
       del.addEventListener("click", async () => {
         if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer la suppression"; return; }
         await store.deleteQuestion(q.id);
+        close();
+      });
+    },
+  });
+}
+
+// A paediatrician appointment: today by default, another day possible, note.
+function appointmentSheet(a = null) {
+  openSheet({
+    title: a ? "📅 Rendez-vous" : "📅 RDV pédiatre",
+    body: `<form class="form" novalidate>
+      <label class="field">Date<input name="held_on" type="date" required max="${dayKey()}" value="${a ? a.held_on : dayKey()}"></label>
+      <label class="field">Note (facultatif)<textarea name="note" rows="2" maxlength="2000" placeholder="ex. vaccins, prochain RDV…">${escapeHtml(a && a.note || "")}</textarea></label>
+      <div class="actions">${a ? '<button type="button" class="btn danger" data-delete>Supprimer</button>' : ""}<button type="submit" class="btn">Enregistrer</button></div>
+    </form>`,
+    onOpen(el, close) {
+      const form = el.querySelector("form");
+      form.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        if (!form.held_on.value) return;
+        const note = form.note.value.trim() || null;
+        if (a) await store.updateAppointment(a.id, { held_on: form.held_on.value, note });
+        else await store.addAppointment(form.held_on.value, note);
+        close();
+      });
+      const del = form.querySelector("[data-delete]");
+      if (del) del.addEventListener("click", async () => {
+        if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer la suppression"; return; }
+        await store.deleteAppointment(a.id);
         close();
       });
     },

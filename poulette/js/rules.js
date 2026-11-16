@@ -302,3 +302,86 @@ export const WEEK_METRICS = [
   { id: "dirty", label: "Couches sales", unit: "", get: (s) => s.dirty },
   { id: "gap", label: "Intervalle moyen entre repas", unit: "min", get: (s) => (s.gapAvgMs == null ? null : Math.round(s.gapAvgMs / 60000)) },
 ];
+
+
+// ---------------------------------------------------------------------
+// Paediatrician report (Phase 2)
+// ---------------------------------------------------------------------
+
+export const REPORT_PERIODS = [
+  { id: "24h", label: "24 h" },
+  { id: "7j", label: "7 jours" },
+  { id: "rdv", label: "Depuis le RDV" },
+  { id: "dates", label: "Dates" },
+];
+
+// "16 jours", "3 semaines et 2 jours", "2 mois et 1 semaine"
+export function babyAge(birthDate, at = new Date()) {
+  if (!birthDate) return "";
+  const birth = new Date(birthDate + "T00:00:00");
+  const days = Math.floor((at - birth) / 864e5);
+  if (days < 0) return "pas encore né";
+  if (days < 21) return `${days} jour${days > 1 ? "s" : ""}`;
+  if (days < 61) {
+    const w = Math.floor(days / 7), d = days % 7;
+    return `${w} semaines${d ? ` et ${d} jour${d > 1 ? "s" : ""}` : ""}`;
+  }
+  let months = (at.getFullYear() - birth.getFullYear()) * 12 + at.getMonth() - birth.getMonth();
+  if (at.getDate() < birth.getDate()) months -= 1;
+  const anchor = new Date(birth); anchor.setMonth(birth.getMonth() + months);
+  const w = Math.floor((at - anchor) / (7 * 864e5));
+  return `${months} mois${w ? ` et ${w} semaine${w > 1 ? "s" : ""}` : ""}`;
+}
+
+// Everything the report shows for [fromMs, toMs). `events` = not deleted.
+// Records and sums up; never interprets (no "normal" / "too little").
+export function reportSummary(events, fromMs, toMs) {
+  const inside = events.filter((e) => TYPES[e.type] && Date.parse(e.started_at) >= fromMs && Date.parse(e.started_at) < toMs);
+  const days = Math.max(1 / 24, (toMs - fromMs) / 864e5);
+  const s = daySummary(inside);
+  const perDay = (n) => n / days;
+  const of = (t) => inside.filter((e) => e.type === t).sort((a, b) => a.started_at.localeCompare(b.started_at));
+
+  const colors = {};
+  for (const d of of("diaper")) {
+    const c = d.data && d.data.poop && d.data.poop_color;
+    if (c) colors[c] = (colors[c] || 0) + 1;
+  }
+  const spitBySize = {};
+  for (const e of of("spit_up")) {
+    const key = `${SPIT_KINDS[e.data && e.data.kind] || "Régurgitation"} · ${(SPIT_SIZES[e.data && e.data.size] || "").toLowerCase()}`;
+    spitBySize[key] = (spitBySize[key] || 0) + 1;
+  }
+  const meds = new Map();
+  for (const m of of("medication")) {
+    const key = [m.data && m.data.name, m.data && m.data.dose].filter(Boolean).join(" · ");
+    const prev = meds.get(key) || { label: key, n: 0, last: null };
+    prev.n += 1;
+    prev.last = m.started_at;
+    meds.set(key, prev);
+  }
+  const sidesTotal = (s.sides.L || 0) + (s.sides.R || 0);
+  return {
+    days,
+    count: inside.length,
+    feeds: s.feeds,
+    feedsPerDay: perDay(s.feeds),
+    feedAvgMinutes: s.feedAvgMinutes,
+    sides: s.sides,
+    sidesPct: sidesTotal ? { L: (100 * (s.sides.L || 0)) / sidesTotal, R: (100 * (s.sides.R || 0)) / sidesTotal } : null,
+    bottles: s.bottles,
+    bottleMl: s.bottleMl,
+    bottleMlPerDay: perDay(s.bottleMl),
+    mealsPerDay: perDay(s.meals),
+    gapAvgMs: s.gapAvgMs,
+    gapMaxMs: s.gapMaxMs,
+    wet: s.wet, dirty: s.dirty,
+    wetPerDay: perDay(s.wet), dirtyPerDay: perDay(s.dirty),
+    poopColors: Object.entries(colors).map(([k, n]) => ({ label: POOP_COLORS[k] ? POOP_COLORS[k].label : k, hex: POOP_COLORS[k] && POOP_COLORS[k].hex, n })),
+    pumpMl: s.pumpMl, pumps: s.pumps,
+    spitUps: s.spitUps,
+    spitBySize: Object.entries(spitBySize).map(([label, n]) => ({ label, n })),
+    temperatures: of("temperature").map((e) => ({ at: e.started_at, celsius: Number(e.data && e.data.celsius) })),
+    meds: [...meds.values()],
+  };
+}

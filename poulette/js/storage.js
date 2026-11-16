@@ -190,12 +190,17 @@ const EVENT_FIELDS = "id, baby_id, type, started_at, ended_at, data, note, creat
 
 // Events of a baby that started in [fromIso, toIso), deleted ones included
 // (the app hides them; needed so a deletion made on the other phone shows).
+// Read 1000 at a time (the database answers at most 1000 rows per request).
 export async function fetchEvents(babyId, fromIso, toIso) {
-  let query = db.from("poulette_events").select(EVENT_FIELDS).eq("baby_id", babyId).gte("started_at", fromIso);
-  if (toIso) query = query.lt("started_at", toIso);
-  const { data, error } = await query.order("started_at", { ascending: false }).limit(2000);
-  if (error) throw error;
-  return data;
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    let query = db.from("poulette_events").select(EVENT_FIELDS).eq("baby_id", babyId).gte("started_at", fromIso);
+    if (toIso) query = query.lt("started_at", toIso);
+    const { data, error } = await query.order("started_at", { ascending: false }).range(from, from + 999);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) return out;
+  }
 }
 
 // Chronos still running, however old (a feed started before the window).
@@ -228,6 +233,19 @@ export async function fetchQuestions(householdId) {
     .select("id, household_id, baby_id, text, done_at, answer, created_by, created_at, updated_at")
     .eq("household_id", householdId).order("created_at", { ascending: false });
   if (error) throw error;
+  return data;
+}
+
+// Paediatrician appointments (Phase 2). Until the migration has run, the
+// table doesn't exist: answer "none" instead of breaking the app.
+export async function fetchAppointments(babyId) {
+  const { data, error } = await db.from("poulette_appointments")
+    .select("id, baby_id, held_on, note, created_by, created_at, updated_at")
+    .eq("baby_id", babyId).order("held_on", { ascending: false });
+  if (error) {
+    console.warn("Appointments not loaded (migration 20261116000001 not run yet?):", error.message);
+    return [];
+  }
   return data;
 }
 
@@ -278,6 +296,8 @@ export function subscribeChanges(babyId, householdId, onChange, onStatus) {
       (p) => onChange("poulette_measurements", p.eventType, p.new, p.old))
     .on("postgres_changes", { event: "*", schema: "public", table: "poulette_questions", filter: `household_id=eq.${householdId}` },
       (p) => onChange("poulette_questions", p.eventType, p.new, p.old))
+    .on("postgres_changes", { event: "*", schema: "public", table: "poulette_appointments", filter: `baby_id=eq.${babyId}` },
+      (p) => onChange("poulette_appointments", p.eventType, p.new, p.old))
     .subscribe((status) => onStatus && onStatus(status));
   return () => { db.removeChannel(channel); };
 }
