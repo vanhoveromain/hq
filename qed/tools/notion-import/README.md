@@ -3,6 +3,8 @@
 Re-runnable import of Romain's Notion "QED HQ" (projects, sales leads, open tasks) into QED HQ's own
 Supabase project. Decided 2026-11-08 (Build spec, "Import from Notion"); built in step 9.
 
+> **Retired: switch day was 2026-11-19.** QED HQ is the source of truth. Do not run this import again.
+
 ## How it works
 1. Claude reads Notion **read-only** and saves the raw data in `data/` (gitignored: client data never goes into
    this public repo):
