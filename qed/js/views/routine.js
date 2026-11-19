@@ -22,6 +22,7 @@ import {
 } from "../storage.js";
 import { PRIORITY_LISTS, compareDayTasks, countOneThreeFive, priorityScore, pushChanges, ROLLED_SHOW } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
+import { openProjectPanel } from "./projectPanel.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, icon, errorHtml } from "../utils/html.js";
@@ -213,6 +214,7 @@ export async function render(el, { params = [] } = {}) {
     wireTaskList(listEl, shown, {
       onOpen: (task) => openTaskSheet(task, { onChange: redraw, meetingNames }),
       onChange: redraw,
+      onOpenProject: (id) => openProjectPanel(id, { onClose: redraw }),
       rowOptions,
       meetingNames,
       onSaved: () => drawCounter(),

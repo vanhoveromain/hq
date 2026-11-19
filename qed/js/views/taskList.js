@@ -44,10 +44,16 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
   ].join("");
   // Project right after the task, before the due date (Romain, 2026-11-15).
   const cells = [];
+  // A set project: its name opens the project (side panel on Priorities and
+  // the routines, Romain 2026-11-19); moving the task elsewhere = "⋯" (task
+  // sheet). No project yet: a menu to pick one, as before.
   if (projects) {
-    cells.push(cell("project", selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
-      emptyLabel: "No project", clearLabel: "No project",
-    })));
+    const project = projects.find((p) => p.id === task.project_id);
+    cells.push(cell("project", project
+      ? `<button type="button" class="tchip tchip-project" data-open-project="${escapeHtml(project.id)}" title="Open ${escapeHtml(project.name)}"><span>${escapeHtml(project.name)}</span></button>`
+      : selectChip("project_id", "Project", projects.map((p) => ({ value: p.id, label: p.name })), task.project_id, {
+        emptyLabel: "No project", clearLabel: "No project",
+      })));
   }
   const due = cell("due", dateChip(task, today, hideDay));
   cells.push(
@@ -156,7 +162,8 @@ function dateChip(task, today, hideDay = null) {
 //   rowOptions     the options taskRowHtml was called with
 //   meetingNames   suggestions for "Which meeting?"
 //   onSaved(task)  after a field changed in place (e.g. update a counter)
-export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [], onSaved = () => {} }) {
+//   onOpenProject(id) a click on the project name (default: the project page)
+export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meetingNames = [], onSaved = () => {}, onOpenProject = null }) {
   markEmptySelects(listEl);
   listEl.querySelectorAll("[data-task]").forEach((row) => {
     if (expandedIds.has(row.dataset.task)) row.classList.add("show-all");
@@ -276,6 +283,12 @@ export function wireTaskList(listEl, tasks, { onOpen, onChange, rowOptions, meet
 
     if (event.target.closest("[data-open]")) {
       onOpen(task);
+      return;
+    }
+    const projectBtn = event.target.closest("[data-open-project]");
+    if (projectBtn) {
+      const id = projectBtn.dataset.openProject;
+      if (onOpenProject) onOpenProject(id); else window.location.hash = `#/project/${id}`;
       return;
     }
     if (event.target.closest("[data-push]")) {

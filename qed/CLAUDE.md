@@ -207,6 +207,13 @@ Coordination Team HQ, archived / passed projects.
    tasks, 3 left out) was built with --clean (app test data deleted, Tools links kept), tested on a local Postgres,
    run by Romain in the QED project (success, checked in the app). QED HQ is now the source of truth for projects,
    tasks and sales; Notion QED HQ databases are retired (read-only archive). The import is retired: never run it again
+7u. Project side panel (Romain, 2026-11-19; js/views/projectPanel.js): on Priorities and the routines, a task's
+   project name is a link (tchip-project, data-open-project) that opens the project in a side panel (laptop: from
+   the right, 560 px, page visible beside it; phone < 720: full screen): name, status / type / dates, "Full page"
+   link, close (cross / Esc / outside click), quick add (today by default, project set) and the open tasks, edited
+   in place (rows always stacked inside the panel, also >= 1100 px). Closing redraws the page underneath only if
+   something changed. Moving a task to another project = "⋯" (task sheet); a task with no project keeps the
+   project menu on the row. wireTaskList takes onOpenProject(id) (default: go to #/project/<id>)
 7t. Romain's feedback (2026-11-15): project statuses relabelled (codes unchanged, no migration): coming_up =
    "Scheduled" (hard deadline), ongoing = "Continuous" (no deadline: multi-event contracts, website maintenance);
    new Non-event project + Reopen of a non-event = Continuous. Task-list columns resizable on a laptop

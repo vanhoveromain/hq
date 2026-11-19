@@ -20,6 +20,7 @@ import {
 } from "../storage.js";
 import { PRIORITY_LISTS, compareDayTasks, compareAchieved, countOneThreeFive, priorityScore, pushChanges } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
+import { openProjectPanel } from "./projectPanel.js";
 import { routineDoneToday } from "./routine.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
 import { openDialog } from "../utils/dialog.js";
@@ -160,6 +161,7 @@ export async function render(el, { params = [] } = {}) {
     wireTaskList(ul, listTasks, {
       onOpen, onChange: redraw, rowOptions, meetingNames,
       onSaved: () => drawCounter(el.querySelector("#counter"), lists.today, d),
+      onOpenProject: (id) => openProjectPanel(id, { onClose: redraw }),
     });
   });
   // The Reset menu closes on a click elsewhere or Esc.
