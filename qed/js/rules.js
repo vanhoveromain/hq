@@ -77,7 +77,8 @@ export const HOME_TABS = [
   },
   {
     id: "bespoke", label: "Bespoke",
-    filter: (p) => p.type === "bespoke",
+    // Romain's own only: Paula's / Gabriella's live on Followed up (Romain, 2026-11-20).
+    filter: (p) => p.type === "bespoke" && p.owner === DEFAULT_OWNER,
     newProject: { type: "bespoke", status: "coming_up" },
     // Date, then status (Scheduled before Continuous…), then name.
     sort: ["date", "status", "name"],
