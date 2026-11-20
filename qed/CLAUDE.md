@@ -238,8 +238,8 @@ Coordination Team HQ, archived / passed projects.
    list, the other tabs (Own-initiated, Bespoke, Non-event, Followed up) = cards again (cardHtml, <a class="card">)
    Planner (Romain, 2026-11-16): column titles (day + date) stick under the top bar while scrolling a long column
    (.board-col-head sticky; >= 1100 px .board-columns overflow-x visible so sticky works; also on the phone agenda;
-   640-1099 px still scrolls sideways, so no sticky there) · Home Bespoke tab (Romain, 2026-11-20): Romain's own bespoke
-   projects only (owner = DEFAULT_OWNER); Paula / Gabriella ones show on Followed up only · 11. Phone / laptop check + polish
+   640-1099 px still scrolls sideways, so no sticky there) · Home Own-initiated / Bespoke / Non-event tabs (Romain, 2026-11-20):
+   Romain's own projects only (owner = DEFAULT_OWNER); Paula / Gabriella ones show on Followed up only · 11. Phone / laptop check + polish
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

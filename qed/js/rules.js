@@ -64,6 +64,8 @@ export function labelOf(list, value) {
 // Sales leads live in the Sales module, so Home never shows type "sales"
 // unless the lead was given a project status.
 const ACTIVE = (p) => p.status !== "archived";
+// Own-initiated, Bespoke and Non-event show Romain's own projects only; Paula's /
+// Gabriella's live on Followed up (Romain, 2026-11-20).
 export const HOME_TABS = [
   {
     id: "all", label: "All projects",
@@ -72,12 +74,11 @@ export const HOME_TABS = [
   },
   {
     id: "own", label: "Own-initiated",
-    filter: (p) => p.type === "own_initiated",
+    filter: (p) => p.type === "own_initiated" && p.owner === DEFAULT_OWNER,
     newProject: { type: "own_initiated", status: "coming_up" },
   },
   {
     id: "bespoke", label: "Bespoke",
-    // Romain's own only: Paula's / Gabriella's live on Followed up (Romain, 2026-11-20).
     filter: (p) => p.type === "bespoke" && p.owner === DEFAULT_OWNER,
     newProject: { type: "bespoke", status: "coming_up" },
     // Date, then status (Scheduled before Continuous…), then name.
@@ -85,7 +86,7 @@ export const HOME_TABS = [
   },
   {
     id: "nonevent", label: "Non-event",
-    filter: (p) => p.type === "non_event",
+    filter: (p) => p.type === "non_event" && p.owner === DEFAULT_OWNER,
     newProject: { type: "non_event", status: "ongoing" }, // no deadline: Continuous
     sort: ["date", "name"],
   },
