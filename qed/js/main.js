@@ -10,6 +10,7 @@ import * as homeView from "./views/home.js";
 import * as projectView from "./views/project.js";
 import * as prioritiesView from "./views/priorities.js";
 import * as focusView from "./views/focus.js";
+import { mountMiniTimer, refreshMiniTimer } from "./views/miniTimer.js";
 import * as plannerView from "./views/planner.js";
 import * as salesView from "./views/sales.js";
 import * as unlockView from "./views/unlock.js";
@@ -88,10 +89,13 @@ function render() {
   // Leaving a screen: let it clean up (Focus mode stops its timer).
   if (current && current.view.leave) current.view.leave();
   current = routes[name];
-  document.body.classList.toggle("is-focus", name === "focus" || name === "routine");
+  // Full screen, no tabs: the routines. Focus mode keeps the tabs since
+  // 2026-11-20, so you can move around while its timer runs (Romain).
+  document.body.classList.toggle("is-focus", name === "routine");
   // Full screen width on a laptop: the planner board and Priorities (Romain, 2026-11-15).
   document.body.classList.toggle("is-wide", name === "planner" || name === "priorities");
   routes[name].view.render(viewEl, { user: currentUser, params });
+  refreshMiniTimer();
 }
 
 // Safety net for the nightly rollover, every time the app opens (or unlocks).
@@ -135,6 +139,7 @@ async function start() {
   render();
   window.addEventListener("hashchange", render);
   wireSearch();
+  mountMiniTimer();
   // Keyboard shortcuts (UX review #7): not on the Unlock screen or in Focus mode.
   wireShortcuts(viewEl, () => !locked && !document.body.classList.contains("is-focus"));
   wireColumnResize();

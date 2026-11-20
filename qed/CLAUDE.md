@@ -90,7 +90,7 @@ Coordination Team HQ, archived / passed projects.
    (auto-save), Mark as done, Details (task sheet; timer keeps running). Timer: presets 25/50/90 + own minutes,
    Pause/Resume, +10 min, Stop; counts against an end time (right even in a background tab); tab title shows the
    time left; at the end a soft Web Audio chime + Done / +10 min / Stop; Screen Wake Lock while running; main.js
-   calls view.leave() on navigation, so leaving stops the timer. Done -> Priorities with Undo
+   calls view.leave() on navigation, so leaving stops the timer (changed 2026-11-20, see 7v). Done -> Priorities with Undo
 7. Task planner — built 2026-11-09: #/planner/<board> (js/views/planner.js, boards in PLANNER_BOARDS in rules.js):
    This week (Mon-Sun columns, opens first, today marked), This week's scope, Today's scope (1-3-5 room per column,
    Pending / Delegated left out), Today's priority, Tomorrow's priority. Open tasks only. Drag a card to another
@@ -214,6 +214,17 @@ Coordination Team HQ, archived / passed projects.
    in place (rows always stacked inside the panel, also >= 1100 px). Closing redraws the page underneath only if
    something changed. Moving a task to another project = "⋯" (task sheet); a task with no project keeps the
    project menu on the row. wireTaskList takes onOpenProject(id) (default: go to #/project/<id>)
+7v. Focus timer everywhere (Romain, 2026-11-20): the timer lives in js/utils/focusTimer.js (one timer, tied to a task
+   id + title; end-time based; localStorage qedhq.focusTimer so a refresh keeps it; other tabs follow via the storage
+   event; chime, Wake Lock and the "⏱ 24:58 · task" tab title on every screen). Leaving Focus no longer stops it.
+   Focus mode keeps the tabs now (body.is-focus = routines only; search + shortcuts work there too); its project name
+   opens the project side panel. js/views/miniTimer.js: floating timer (laptop bottom right 320 px; phone full width
+   above the bottom bar; body.has-mini-timer adds room under the page + lifts toasts) on every screen except that
+   task's own Focus screen and Unlock: time + task (tap = back to Focus), Pause / Resume, Pop out, Stop (Undo,
+   restoreTimer); time's up = Done (ticks the task, Undo, qedhq:refresh) / +10 / Stop. Pop out = Document
+   Picture-in-Picture (Chrome / Edge desktop only; button hidden elsewhere): same widget in an always-on-top window
+   (app stylesheets + data-hq copied), corner timer hidden while it's open, closes when the timer stops. Focus on
+   another task while one runs: "Starting here replaces it"
 7t. Romain's feedback (2026-11-15): project statuses relabelled (codes unchanged, no migration): coming_up =
    "Scheduled" (hard deadline), ongoing = "Continuous" (no deadline: multi-event contracts, website maintenance);
    new Non-event project + Reopen of a non-event = Continuous. Task-list columns resizable on a laptop

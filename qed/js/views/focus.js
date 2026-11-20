@@ -1,39 +1,42 @@
 // focus.js: Focus mode (#/focus/<task id>), from To do today.
 //
-// One task, full screen (no tabs): its project, title and fields, a
-// countdown timer you set yourself, and its notes. Decided 2026-11-08:
+// One task: its project, title and fields, a countdown timer you set
+// yourself, and its notes. Decided 2026-11-08:
 //   - presets 25 / 50 / 90 minutes, or your own number of minutes;
 //   - Pause / Resume, +10 min, Stop;
 //   - at the end: a soft sound, then Done (ticks the task) / +10 min / Stop;
-//   - the screen stays on while the timer runs (where the device allows it);
-//   - leaving Focus mode stops the timer.
-// The timer counts against the clock (an end time), not by adding up seconds,
-// so it stays right even when the browser slows down a background tab.
+//   - the screen stays on while the timer runs (where the device allows it).
+// Since 2026-11-20 (Romain): the timer lives in utils/focusTimer.js, so it
+// keeps running when you leave this screen (tabs stay on show); a small
+// timer floats in the corner of every other screen (views/miniTimer.js) and
+// can pop out into an always-on-top window (Chrome / Edge on a laptop). The
+// project name opens the project side panel (notes, related tasks).
 
 import { getTask, getProject, updateTask } from "../storage.js";
 import { PRIORITIES, SCOPES, STATES, labelOf } from "../rules.js";
 import { openTaskSheet } from "./taskSheet.js";
+import { openProjectPanel } from "./projectPanel.js";
+import { canPopOut, popOut } from "./miniTimer.js";
+import * as Timer from "../utils/focusTimer.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, icon, errorHtml } from "../utils/html.js";
 
 const PRESETS = [25, 50, 90];
 
-// The one running timer (only one Focus screen at a time).
-// phase: "idle" | "running" | "paused" | "over"
-let timer = null;
-let tick = null;
-let wakeLock = null;
 let rootEl = null;
 let focusTask = null;
+let pickedMinutes = 25;
+let unsubscribe = null;
 
-// Called by main.js when you leave this screen: the timer stops.
+// Called by main.js when you leave this screen: the timer keeps running.
 export function leave() {
-  stopTimer();
+  if (unsubscribe) unsubscribe();
+  unsubscribe = null;
   rootEl = null;
 }
 
 export async function render(el, { params }) {
-  stopTimer();
+  leave();
   rootEl = el;
   el.innerHTML = `<p class="muted">Loading…</p>`;
 
@@ -57,7 +60,9 @@ export async function render(el, { params }) {
         <a class="back" href="#/priorities">${icon("back")} Priorities</a>
         <button type="button" class="btn secondary small" id="open-sheet">${icon("more")} Details</button>
       </div>
-      <p class="focus-project">${project ? escapeHtml(project.name) : "No project"}</p>
+      <p class="focus-project">${project
+        ? `<button type="button" class="link-btn" id="open-project" title="Open the project beside this screen">${escapeHtml(project.name)}</button>`
+        : "No project"}</p>
       <h1 class="focus-title" id="focus-title"></h1>
       <div class="focus-tags" id="focus-tags"></div>
 
@@ -73,27 +78,40 @@ export async function render(el, { params }) {
     </div>`;
 
   drawHeader();
-  timer = { phase: "idle", minutes: 25 };
+  if (mine()) pickedMinutes = Timer.getTimer().minutes || pickedMinutes;
   drawTimer();
+  unsubscribe = Timer.subscribe((_, { tickOnly }) => (tickOnly ? updateTime() : drawTimer()));
+  if (project) {
+    el.querySelector("#open-project").addEventListener("click", () => openProjectPanel(project.id, {
+      onClose: refreshTask,
+    }));
+  }
   wireNotes(el.querySelector("#notes"), el.querySelector("#notes-state"), task);
 
   el.querySelector("#done").addEventListener("click", markDone);
   el.querySelector("#open-sheet").addEventListener("click", () => {
     // The sheet can change anything; the timer keeps running.
     openTaskSheet(focusTask, {
-      onChange: async () => {
-        const fresh = await getTask(focusTask.id).catch(() => null);
-        if (!fresh || fresh.done) {
-          window.location.hash = "#/priorities";
-          return;
-        }
-        focusTask = fresh;
-        drawHeader();
-        const notes = rootEl && rootEl.querySelector("#notes");
-        if (notes && document.activeElement !== notes) notes.value = fresh.notes || "";
-      },
+      onChange: refreshTask,
     });
   });
+}
+
+// The task may have changed elsewhere (task sheet, project panel).
+async function refreshTask() {
+  if (!focusTask) return;
+  const fresh = await getTask(focusTask.id).catch(() => null);
+  if (!rootEl) return;
+  if (!fresh || fresh.done) {
+    if (mine()) Timer.stopTimer();
+    window.location.hash = "#/priorities";
+    return;
+  }
+  focusTask = fresh;
+  Timer.renameTask(fresh.id, fresh.title);
+  drawHeader();
+  const notes = rootEl.querySelector("#notes");
+  if (notes && document.activeElement !== notes) notes.value = fresh.notes || "";
 }
 
 function drawHeader() {
@@ -110,32 +128,37 @@ function drawHeader() {
 
 
 // ---------------------------------------------------------------------
-// The timer
+// The timer (it lives in utils/focusTimer.js; this screen only draws it)
 // ---------------------------------------------------------------------
+
+const mine = () => Timer.getTimer().taskId === focusTask?.id;
 
 function drawTimer() {
   const box = rootEl && rootEl.querySelector("#timer");
   if (!box) return;
-  box.className = "timer" + (timer.phase === "paused" ? " is-paused" : "") + (timer.phase === "over" ? " is-over" : "");
+  const t = mine() ? Timer.getTimer() : { phase: "idle" };
+  box.className = "timer" + (t.phase === "paused" ? " is-paused" : "") + (t.phase === "over" ? " is-over" : "");
 
-  if (timer.phase === "idle") {
+  if (t.phase === "idle") {
+    const other = Timer.isActive() && !mine() ? Timer.getTimer() : null;
     box.innerHTML = `
       <p class="timer-label">How long do you want to focus?</p>
       <div class="timer-presets">
-        ${PRESETS.map((m) => `<button type="button" class="chip${m === timer.minutes ? " active" : ""}" data-preset="${m}" aria-pressed="${m === timer.minutes}">${m} min</button>`).join("")}
+        ${PRESETS.map((m) => `<button type="button" class="chip${m === pickedMinutes ? " active" : ""}" data-preset="${m}" aria-pressed="${m === pickedMinutes}">${m} min</button>`).join("")}
         <label class="timer-custom"><span class="sr-only">Your own number of minutes</span>
-          <input type="number" id="custom-minutes" min="1" max="240" inputmode="numeric" placeholder="min" value="${PRESETS.includes(timer.minutes) ? "" : timer.minutes}"> min</label>
+          <input type="number" id="custom-minutes" min="1" max="240" inputmode="numeric" placeholder="min" value="${PRESETS.includes(pickedMinutes) ? "" : pickedMinutes}"> min</label>
       </div>
-      <button type="button" class="btn" id="start">${icon("play")} Start ${timer.minutes} min</button>`;
+      <button type="button" class="btn" id="start">${icon("play")} Start ${pickedMinutes} min</button>
+      ${other ? `<p class="timer-note muted">A timer is running for “${escapeHtml(other.taskTitle)}”. Starting here replaces it.</p>` : ""}`;
     box.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
-      timer.minutes = Number(b.dataset.preset);
+      pickedMinutes = Number(b.dataset.preset);
       drawTimer();
     }));
     const custom = box.querySelector("#custom-minutes");
     custom.addEventListener("input", () => {
       const m = Math.round(Number(custom.value));
       if (m >= 1 && m <= 240) {
-        timer.minutes = m;
+        pickedMinutes = m;
         box.querySelectorAll("[data-preset]").forEach((b) => {
           const on = Number(b.dataset.preset) === m;
           b.classList.toggle("active", on);
@@ -144,124 +167,44 @@ function drawTimer() {
         box.querySelector("#start").innerHTML = `${icon("play")} Start ${m} min`;
       }
     });
-    box.querySelector("#start").addEventListener("click", () => startTimer(timer.minutes));
+    box.querySelector("#start").addEventListener("click", () => Timer.startTimer(focusTask, pickedMinutes));
     return;
   }
 
-  const over = timer.phase === "over";
+  const over = t.phase === "over";
   box.innerHTML = `
-    <p class="timer-label">${over ? "Time's up. Done, or a little longer?" : timer.phase === "paused" ? "Paused" : "Focus"}</p>
-    <div class="timer-time" id="timer-time">${format(over ? 0 : remainingMs())}</div>
+    <p class="timer-label">${over ? "Time's up. Done, or a little longer?" : t.phase === "paused" ? "Paused" : "Focus"}</p>
+    <div class="timer-time" id="timer-time">${Timer.format(Timer.remainingMs())}</div>
     <div class="timer-bar" aria-hidden="true"><span id="timer-bar"></span></div>
     <div class="timer-controls">
       ${over
         ? `<button type="button" class="btn" data-act="done">${icon("check")} Done</button>
            <button type="button" class="btn secondary" data-act="plus">+10 min</button>
            <button type="button" class="btn secondary" data-act="stop">Stop</button>`
-        : `<button type="button" class="btn secondary" data-act="${timer.phase === "paused" ? "resume" : "pause"}">${timer.phase === "paused" ? `${icon("play")} Resume` : `${icon("pause")} Pause`}</button>
+        : `<button type="button" class="btn secondary" data-act="${t.phase === "paused" ? "resume" : "pause"}">${t.phase === "paused" ? `${icon("play")} Resume` : `${icon("pause")} Pause`}</button>
            <button type="button" class="btn secondary" data-act="plus">+10 min</button>
            <button type="button" class="btn secondary" data-act="stop">${icon("stop")} Stop</button>`}
-    </div>`;
+      ${canPopOut() ? `<button type="button" class="btn secondary" data-act="popout" title="A small window that stays on top of your other apps">${icon("popout")} Pop out</button>` : ""}
+    </div>
+    <p class="timer-note muted">You can leave this screen: the timer keeps running in the corner.</p>`;
   updateTime();
   box.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => {
     const act = b.dataset.act;
-    if (act === "pause") pauseTimer();
-    if (act === "resume") resumeTimer();
-    if (act === "plus") addMinutes(10);
-    if (act === "stop") { stopTimer(); timer = { phase: "idle", minutes: timer.minutes }; drawTimer(); }
+    if (act === "pause") Timer.pauseTimer();
+    if (act === "resume") Timer.resumeTimer();
+    if (act === "plus") Timer.addMinutes(10);
+    if (act === "stop") Timer.stopTimer();
     if (act === "done") markDone();
+    if (act === "popout") popOut();
   }));
 }
 
-function startTimer(minutes) {
-  unlockSound(); // browsers only allow sound that a tap started
-  const total = minutes * 60000;
-  timer = { phase: "running", minutes, totalMs: total, endAt: Date.now() + total };
-  runTicks();
-  keepScreenOn(true);
-  drawTimer();
-}
-
-function pauseTimer() {
-  timer.leftMs = remainingMs();
-  timer.phase = "paused";
-  clearInterval(tick);
-  keepScreenOn(false);
-  drawTimer();
-}
-
-function resumeTimer() {
-  timer.endAt = Date.now() + timer.leftMs;
-  timer.phase = "running";
-  runTicks();
-  keepScreenOn(true);
-  drawTimer();
-}
-
-// +10 min: while running, paused, or after the end (starts again for 10).
-function addMinutes(n) {
-  const extra = n * 60000;
-  if (timer.phase === "over") {
-    timer = { phase: "running", minutes: timer.minutes, totalMs: extra, endAt: Date.now() + extra };
-    runTicks();
-    keepScreenOn(true);
-  } else if (timer.phase === "paused") {
-    timer.leftMs += extra;
-    timer.totalMs += extra;
-  } else {
-    timer.endAt += extra;
-    timer.totalMs += extra;
-  }
-  drawTimer();
-}
-
-function stopTimer() {
-  clearInterval(tick);
-  tick = null;
-  keepScreenOn(false);
-  document.title = "QED HQ";
-}
-
-function runTicks() {
-  clearInterval(tick);
-  tick = setInterval(() => {
-    if (remainingMs() <= 0) {
-      clearInterval(tick);
-      timer.phase = "over";
-      keepScreenOn(false);
-      chime();
-      document.title = `Time's up · ${focusTask.title}`;
-      drawTimer();
-      return;
-    }
-    updateTime();
-  }, 250);
-}
-
-function remainingMs() {
-  if (!timer || timer.phase === "idle") return 0;
-  if (timer.phase === "paused") return timer.leftMs;
-  return Math.max(0, timer.endAt - Date.now());
-}
-
 function updateTime() {
-  if (!rootEl) return;
-  const left = timer.phase === "over" ? 0 : remainingMs();
+  if (!rootEl || !mine()) return;
   const timeEl = rootEl.querySelector("#timer-time");
   const bar = rootEl.querySelector("#timer-bar");
-  if (timeEl) timeEl.textContent = format(left);
-  if (bar && timer.totalMs) bar.style.width = `${Math.min(100, 100 * (1 - left / timer.totalMs))}%`;
-  if (timer.phase === "running") document.title = `${format(left)} · ${focusTask.title}`;
-}
-
-// 1499000 -> "24:59"; an hour or more -> "1:05:00"
-function format(ms) {
-  const total = Math.ceil(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const two = (n) => String(n).padStart(2, "0");
-  return h ? `${h}:${two(m)}:${two(s)}` : `${two(m)}:${two(s)}`;
+  if (timeEl) timeEl.textContent = Timer.format(Timer.remainingMs());
+  if (bar) bar.style.width = `${100 * Timer.progress()}%`;
 }
 
 
@@ -277,7 +220,7 @@ async function markDone() {
     showToast("Could not save: " + error.message);
     return;
   }
-  stopTimer();
+  if (mine()) Timer.stopTimer();
   showToast(`Done: "${task.title}"`, {
     actionLabel: "Undo",
     onAction: async () => {
@@ -313,52 +256,3 @@ function wireNotes(textarea, stateEl, task) {
   });
   textarea.addEventListener("blur", save);
 }
-
-// A soft two-note chime, made by the browser (no sound file to load).
-let audio = null;
-function unlockSound() {
-  try {
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    if (audio.state === "suspended") audio.resume();
-  } catch {
-    audio = null;
-  }
-}
-function chime() {
-  if (!audio) return;
-  const now = audio.currentTime;
-  [[660, 0], [880, 0.35], [660, 0.9], [880, 1.25]].forEach(([freq, at]) => {
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0, now + at);
-    gain.gain.linearRampToValueAtTime(0.18, now + at + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + at + 0.6);
-    osc.connect(gain).connect(audio.destination);
-    osc.start(now + at);
-    osc.stop(now + at + 0.65);
-  });
-}
-
-// Keep the screen on while the timer runs (Screen Wake Lock, where the
-// browser offers it; elsewhere nothing happens). The lock drops when the tab
-// is hidden, so it's asked again when you come back.
-async function keepScreenOn(on) {
-  if (!on) {
-    if (wakeLock) wakeLock.release().catch(() => {});
-    wakeLock = null;
-    return;
-  }
-  try {
-    if ("wakeLock" in navigator && !wakeLock) {
-      wakeLock = await navigator.wakeLock.request("screen");
-      wakeLock.addEventListener("release", () => { wakeLock = null; });
-    }
-  } catch {
-    wakeLock = null;
-  }
-}
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && timer && timer.phase === "running") keepScreenOn(true);
-});

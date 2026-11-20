@@ -743,3 +743,35 @@ body.is-locked .tabbar-add{visibility:hidden}
 .tchip-project{cursor:pointer}
 .tchip-project>span{overflow:hidden;text-overflow:ellipsis}
 .tchip-project:hover{color:var(--hq-accent-text);text-decoration:underline;text-underline-offset:2px}
+
+/* Focus timer everywhere (Romain, 2026-11-20): Focus mode keeps the tabs; the
+   project name opens the side panel; a small timer floats on every other
+   screen (views/miniTimer.js) and can pop out (Document Picture-in-Picture). */
+.focus-project .link-btn{padding:0;border:0;background:none;font:inherit;color:var(--hq-accent-text);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.focus-project .link-btn:hover{color:var(--hq-primary-text)}
+.timer-note{margin:0;font-size:13px;text-align:center}
+.mini-timer{position:fixed;right:12px;left:12px;bottom:calc(68px + env(safe-area-inset-bottom));z-index:40;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px;padding:8px 8px 10px 12px;background:var(--hq-surface);color:var(--hq-primary-text);border:1px solid var(--hq-border);border-radius:12px;box-shadow:var(--hq-shadow-pop);overflow:hidden}
+.mini-timer[hidden]{display:none}
+@media (min-width:720px){.mini-timer{left:auto;right:24px;bottom:24px;width:320px}}
+.mini-timer.is-over{border-color:var(--hq-accent);background:var(--hq-accent-light)}
+.mt-open{display:grid;gap:1px;min-width:0;padding:2px 0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.mt-time{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.mini-timer.is-paused .mt-time{color:var(--hq-secondary-text)}
+.mt-task{font-size:12px;color:var(--hq-secondary-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt-open:hover .mt-task{color:var(--hq-primary-text);text-decoration:underline}
+.mt-actions{display:flex;align-items:center;gap:2px}
+.mt-btn{width:36px;height:36px}
+.mt-btn svg{width:18px;height:18px}
+.mt-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--hq-subtle)}
+.mt-bar span{display:block;height:100%;background:var(--hq-accent);transition:width .9s linear}
+/* The pop-out window: the timer fills it. */
+.pip-body{margin:0;min-height:100vh;display:grid;background:var(--hq-surface)}
+.mini-timer.is-pip{position:static;width:auto;border:0;border-radius:0;box-shadow:none;padding:12px 12px 16px 16px}
+.mini-timer.is-pip .mt-time{font-size:34px}
+.mini-timer.is-pip .mt-task{font-size:13px}
+/* Toasts sit above the floating timer on a phone. */
+@media (max-width:719px){body.has-mini-timer .toasts{bottom:calc(140px + env(safe-area-inset-bottom))}}
+@media (min-width:720px){body.has-mini-timer .toasts{bottom:24px;left:calc(50% - 170px)}}
+/* Room at the bottom so the floating timer never hides the last row. */
+body.has-mini-timer .main{padding-bottom:calc(160px + env(safe-area-inset-bottom))}
+@media (min-width:720px){body.has-mini-timer .main{padding-bottom:120px}}
