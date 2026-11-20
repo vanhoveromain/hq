@@ -207,6 +207,9 @@ Coordination Team HQ, archived / passed projects.
    tasks, 3 left out) was built with --clean (app test data deleted, Tools links kept), tested on a local Postgres,
    run by Romain in the QED project (success, checked in the app). QED HQ is now the source of truth for projects,
    tasks and sales; Notion QED HQ databases are retired (read-only archive). The import is retired: never run it again
+   2026-11-20: Notion page comments (Romain uses them as notes) added to the END of the project notes under
+   "## Notion comments", text only (no date / name): tools/notion-import/build-comments-sql.mjs, 13 projects /
+   25 comments, append only, skips projects already done; run by Romain (success). Task comments: not moved
 7u. Project side panel (Romain, 2026-11-19; js/views/projectPanel.js): on Priorities and the routines, a task's
    project name is a link (tchip-project, data-open-project) that opens the project in a side panel (laptop: from
    the right, 560 px, page visible beside it; phone < 720: full screen): name, status / type / dates, "Full page"
