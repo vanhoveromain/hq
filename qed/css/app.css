@@ -738,23 +738,32 @@ body.is-locked .tabbar-add{visibility:hidden}
 .panel-actions{display:flex;align-items:center;gap:4px;flex:none}
 .panel-body{flex:1;overflow-y:auto;padding:16px 20px calc(20px + env(safe-area-inset-bottom))}
 .panel-subtitle{margin:16px 0 8px;font-size:14px;font-weight:600}
-/* The panel is narrow: task rows always stacked, also on a wide screen. */
+/* The panel is narrow, and Plan my day shows cards (.as-cards): task rows always
+   stacked, also on a wide screen. */
 @media (min-width:1100px){
-  .panel .task-list{overflow-x:visible}
-  .panel .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:start;column-gap:4px;min-height:0;padding:8px 6px 10px 4px}
-  .panel .task-body,.panel .cell,.panel .cell-add{display:contents}
+  :is(.panel,.as-cards) .task-list{overflow-x:visible}
+  :is(.panel,.as-cards) .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:start;column-gap:4px;min-height:0;padding:8px 6px 10px 4px}
+  :is(.panel,.as-cards) .task-body,:is(.panel,.as-cards) .cell,:is(.panel,.as-cards) .cell-add{display:contents}
   /* stacked inside the panel: empty fields with "+" only, like on a phone */
-  .panel .task-list .task .cell .tchip.is-empty{display:none}
-  .panel .task-list .task.show-all .cell .tchip.is-empty,.panel .task-list .task.is-picking .cell .tchip.is-empty{display:inline-flex}
-  .panel .task-list .tchip-add-inline{display:none}
-  .panel .task>.tick{grid-row:1;margin:4px 10px 0 10px}
-  .panel .task-title{grid-row:1;grid-column:2;align-self:center}
-  .panel .task-chips{display:flex;grid-row:2;grid-column:1 / -1;padding:6px 0 0 10px}
-  .panel .task>.slot-push,.panel .task>.task-delete,.panel .task>.task-more{grid-row:1}
-  .panel .slot-push:empty{display:none}
-  .panel .task-delete{margin-top:-4px}
-  .panel .task.is-done .task-delete{display:none}
+  :is(.panel,.as-cards) .task-list .task .cell .tchip.is-empty{display:none}
+  :is(.panel,.as-cards) .task-list .task.show-all .cell .tchip.is-empty,:is(.panel,.as-cards) .task-list .task.is-picking .cell .tchip.is-empty{display:inline-flex}
+  :is(.panel,.as-cards) .task-list .tchip-add-inline{display:none}
+  :is(.panel,.as-cards) .task>.tick{grid-row:1;margin:4px 10px 0 10px}
+  :is(.panel,.as-cards) .task-title{grid-row:1;grid-column:2;align-self:center}
+  :is(.panel,.as-cards) .task-chips{display:flex;grid-row:2;grid-column:1 / -1;padding:6px 0 0 10px}
+  :is(.panel,.as-cards) .task>.slot-push,:is(.panel,.as-cards) .task>.task-delete,:is(.panel,.as-cards) .task>.task-more{grid-row:1}
+  :is(.panel,.as-cards) .slot-push:empty{display:none}
+  :is(.panel,.as-cards) .task-delete{margin-top:-4px}
+  :is(.panel,.as-cards) .task.is-done .task-delete{display:none}
 }
+/* Plan my day as cards (Romain, 2026-11-25): the same rows (chips, tick, push,
+   Undo, shortcuts), drawn as cards in a grid that fills the screen. */
+.as-cards .task-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px;background:none;border:0;border-radius:0;overflow:visible}
+.as-cards .task-head{display:none}
+.as-cards .task,.as-cards .task+.task{align-content:start;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);padding:12px 6px 12px 4px;transition:border-color var(--hq-ease)}
+.as-cards .task:hover{background:var(--hq-surface);border-color:var(--hq-border-strong)}
+.as-cards .task.is-selected{background:var(--hq-accent-light);border-color:var(--hq-accent)}
+.as-cards .task-chips{padding-top:10px}
 /* The project name on a task row: opens the project (panel or page). */
 .tchip-project{cursor:pointer}
 .tchip-project>span{overflow:hidden;text-overflow:ellipsis}

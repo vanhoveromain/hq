@@ -245,7 +245,9 @@ Coordination Team HQ, archived / passed projects.
    on hover. Stacked rows: empty fields only with "+". Laptop table: an empty Due / AM-PM / Priority / Project and the
    State tag keep their place in the column (visibility:hidden) and only fade in on hover; "Delegated to" + "Meeting"
    via a "+" at the end of the Status cell (.tchip-add-inline, a click). Full screen width (body.is-wide) on the project
-   page and the routines too. Next: batch 2 = Plan my day with cards, batch 3 = Priorities board (cards, drag and drop),
+   page and the routines too. Batch 2 (2026-11-25): Plan my day shows its tasks as cards (ROUTINES.plan.cards; list
+   wrapped in .as-cards: the same task rows, stacked like the side panel, in a grid of 320 px+ cards; no column
+   titles); Close the day keeps rows. Next: batch 3 = Priorities board (cards, drag and drop),
    batch 4 = Monday reset (migration 20261125000001, add-only, written + tested locally, RUN in the QED
    project 2026-11-25, cron job id 2): qed_monday_reset() + pg_cron 'qed-monday-reset' (Sun 23:05 UTC = Monday 00:05 / 01:05 Brussels): every
    OPEN task -> state active, delegated_to / priority / scope / period / meeting_name cleared, is_meeting off (Romain:
