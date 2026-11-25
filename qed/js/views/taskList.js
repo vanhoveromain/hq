@@ -41,6 +41,8 @@ export function taskRowHtml(task, { today, projects = null, showPush = false, sh
     task.is_meeting && !(task.meeting_name && task.meeting_name === inMeeting)
       ? `<button type="button" class="tchip${task.meeting_name ? "" : " is-empty"}" data-edit-text="meeting_name">${escapeHtml(task.meeting_name || "Which meeting?")}</button>`
       : "",
+    // laptop table: "+" at the end of the Status cell (the phone one is its own cell)
+    `<button type="button" class="tchip-add tchip-add-inline" data-expand aria-label="Show all fields of ${escapeHtml(task.title)}" title="Show all fields">${icon("plus")}</button>`,
   ].join("");
   // Project right after the task, before the due date (Romain, 2026-11-15).
   const cells = [];

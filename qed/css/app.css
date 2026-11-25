@@ -282,7 +282,10 @@ a.card{text-decoration:none}
 .task-delete.is-armed,.task-delete.is-armed:hover{background:var(--hq-danger-light);color:var(--hq-danger)}
 @media (hover:hover){.task-delete{opacity:0}.task:hover .task-delete,.task:focus-within .task-delete,.task-delete.is-armed{opacity:1}}
 .task.is-done .task-delete{display:none}
-@media (hover:hover){.task:hover .tchip.is-empty,.task:focus-within .tchip.is-empty{display:inline-flex}}
+/* No reveal on hover any more (Romain, 2026-11-25): a row never changes size
+   under the mouse. Empty fields show with "+" (stacked rows) or, in the laptop
+   table, sit in their column invisibly and only fade in (see below). */
+.tchip-add-inline{display:none}
 .tchip-add{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;border:1px dashed var(--hq-border-strong);border-radius:var(--hq-radius-sm);background:none;color:var(--hq-secondary-text);cursor:pointer}
 .tchip-add svg{width:12px;height:12px}
 .tchip-add:hover{color:var(--hq-primary-text);border-color:var(--hq-secondary-text)}
@@ -339,6 +342,14 @@ a.card{text-decoration:none}
   .slot-push,.slot-push:empty{display:flex;justify-content:flex-end}
   .task-push,.task-more,.score{margin-top:0}
   .cell-add{display:none}
+  /* Table: an empty single field (Due, AM/PM, Priority, Project) and the State
+     tag keep their place in the column, invisible until you hover the row, so
+     the row never grows. "Delegated to" + "Meeting" only with the "+" at the
+     end of the Status cell (a click, never a hover). */
+  .task-list .cell:not(.cell-status)>.tchip.is-empty,
+  .task-list .cell-status>.tchip-select.is-empty:has(select[data-field="state"]){display:inline-flex;visibility:hidden}
+  .task-list .tchip-add-inline{display:inline-grid;visibility:hidden}
+  .task-list .task:is(:hover,:focus-within,.is-picking,.show-all) .cell :is(.tchip.tchip.is-empty,.tchip-add-inline.tchip-add-inline){visibility:visible}
   .task-head{padding:0 4px 0 0;min-height:34px;border-bottom:1px solid var(--hq-border);font-size:12px;font-weight:500;color:var(--hq-secondary-text)}
   .task-head+.task{border-top:0}
 }
@@ -627,6 +638,7 @@ kbd{display:inline-block;min-width:22px;padding:2px 6px;border:1px solid var(--h
 
 /* Plan my day / Close the day (UX review #11) */
 .routine{max-width:1160px;margin:0 auto}
+body.is-wide .routine{max-width:none}
 .routine-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-8px 0 16px}
 .routine-step{font-size:13px;color:var(--hq-secondary-text)}
 .routine-kind{margin:0 0 10px;font-size:14px;color:var(--hq-secondary-text)}
@@ -731,6 +743,10 @@ body.is-locked .tabbar-add{visibility:hidden}
   .panel .task-list{overflow-x:visible}
   .panel .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:start;column-gap:4px;min-height:0;padding:8px 6px 10px 4px}
   .panel .task-body,.panel .cell,.panel .cell-add{display:contents}
+  /* stacked inside the panel: empty fields with "+" only, like on a phone */
+  .panel .task-list .task .cell .tchip.is-empty{display:none}
+  .panel .task-list .task.show-all .cell .tchip.is-empty,.panel .task-list .task.is-picking .cell .tchip.is-empty{display:inline-flex}
+  .panel .task-list .tchip-add-inline{display:none}
   .panel .task>.tick{grid-row:1;margin:4px 10px 0 10px}
   .panel .task-title{grid-row:1;grid-column:2;align-self:center}
   .panel .task-chips{display:flex;grid-row:2;grid-column:1 / -1;padding:6px 0 0 10px}

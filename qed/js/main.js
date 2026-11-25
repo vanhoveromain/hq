@@ -92,8 +92,9 @@ function render() {
   // Full screen, no tabs: the routines. Focus mode keeps the tabs since
   // 2026-11-20, so you can move around while its timer runs (Romain).
   document.body.classList.toggle("is-focus", name === "routine");
-  // Full screen width on a laptop: the planner board and Priorities (Romain, 2026-11-15).
-  document.body.classList.toggle("is-wide", name === "planner" || name === "priorities");
+  // Full screen width on a laptop on every screen that lists tasks (Romain,
+  // 2026-11-15: planner + Priorities; 2026-11-25: project page + routines too).
+  document.body.classList.toggle("is-wide", ["planner", "priorities", "project", "routine"].includes(name));
   routes[name].view.render(viewEl, { user: currentUser, params });
   refreshMiniTimer();
 }

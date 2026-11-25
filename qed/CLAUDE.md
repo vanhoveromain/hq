@@ -241,6 +241,13 @@ Coordination Team HQ, archived / passed projects.
    640-1099 px still scrolls sideways, so no sticky there) · Home Own-initiated / Bespoke / Non-event tabs (Romain, 2026-11-20):
    Romain's own projects only (owner = DEFAULT_OWNER); Paula / Gabriella ones show on Followed up only · 11. Phone / laptop check + polish
 
+7w. Romain's feedback batch 1 (2026-11-25): rows never change size under the mouse: empty fields no longer appear
+   on hover. Stacked rows: empty fields only with "+". Laptop table: an empty Due / AM-PM / Priority / Project and the
+   State tag keep their place in the column (visibility:hidden) and only fade in on hover; "Delegated to" + "Meeting"
+   via a "+" at the end of the Status cell (.tchip-add-inline, a click). Full screen width (body.is-wide) on the project
+   page and the routines too. Next: batch 2 = Plan my day with cards, batch 3 = Priorities board (cards, drag and drop),
+   batch 4 = Monday reset: Delegated + Pending -> Active every Monday (rollover unchanged; needs a migration)
+
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed
   project) and https://hq-preview.ownhq.app (hq-home project), both domains assigned to the branch, previews not
