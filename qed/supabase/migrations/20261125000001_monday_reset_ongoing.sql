@@ -2,12 +2,12 @@
 -- QED HQ — Monday reset + "Ongoing" on the Priorities board (Romain, 2026-11-25)
 --
 -- 1. Monday reset. Every Monday (just after midnight, Brussels time), every
---    OPEN task:
---      - State Pending, Pending today or Delegated -> Active, so it goes back
---        into your normal day / week lists;
+--    OPEN task gets a clean slate (Romain: "everything reset"):
+--      - State (Pending, Pending today, To delegate, Delegated) -> Active,
+--        so it goes back into your normal day / week lists;
+--      - "Delegated to" -> cleared;
 --      - Priority (Critical, High, Medium, Low, Nice to do) -> cleared.
---    Left as they are: To delegate, "Delegated to" (the name stays, as a
---    trace), due dates, scope, AM/PM, meetings, done tasks.
+--    Left as they are: due dates, scope, AM/PM, meeting points, done tasks.
 --    The nightly rollover doesn't change: open tasks due before today still
 --    move to today every night.
 --
@@ -44,13 +44,11 @@ declare
   changed integer;
 begin
   update public.qed_tasks
-     set state = case
-                   when state in ('pending', 'pending_today', 'delegated') then 'active'
-                   else state
-                 end,
+     set state = 'active',
+         delegated_to = null,
          priority = null
    where not done
-     and (state in ('pending', 'pending_today', 'delegated') or priority is not null);
+     and (state <> 'active' or delegated_to is not null or priority is not null);
   get diagnostics changed = row_count;
   return changed;
 end;
