@@ -58,7 +58,6 @@ const ROUTINES = {
     title: "Plan my day",
     sun: true,
     finish: "Day planned",
-    cards: true, // tasks shown as cards (Romain, 2026-11-25)
     steps: [
       {
         id: "catch-up", title: "Catch up",
@@ -195,9 +194,7 @@ export async function render(el, { params = [] } = {}) {
       ${step.quickAddDay ? quickAddHtml({ today: quickDay, projects, placeholder: step.quickAddDay === "tomorrow" ? "Add a task for tomorrow…" : "Add a task for today…" }) : ""}
       ${step.pushAll && shown.some((t) => !t.done) ? `<button type="button" class="btn secondary small routine-push-all" id="push-all">${icon("forward")} Push all ${shown.length} to tomorrow</button>` : ""}
       ${shown.length
-        ? (routine.cards
-          ? `<div class="as-cards"><ul class="task-list with-project" id="routine-list"></ul></div>`
-          : `<ul class="task-list with-project" id="routine-list"></ul>`)
+        ? `<ul class="task-list with-project" id="routine-list"></ul>`
         : `<p class="list-empty">${step.id === "one-three-five" ? "Nothing on today yet. Add your tasks above." : "Nothing here any more."}</p>`}
       <div class="routine-nav">
         ${index > 0 ? `<button type="button" class="btn secondary" id="prev">${icon("back")} Back</button>` : "<span></span>"}
@@ -212,8 +209,7 @@ export async function render(el, { params = [] } = {}) {
   const listEl = el.querySelector("#routine-list");
   if (listEl) {
     // The list's own day isn't written on the date chips (Romain, 2026-11-15).
-    // Plan my day: cards, so no column titles (Romain, 2026-11-25).
-    const rowOptions = { today, projects: projectChoices, showPush: Boolean(step.showPush), hideDay: quickDay, noHead: Boolean(routine.cards) };
+    const rowOptions = { today, projects: projectChoices, showPush: Boolean(step.showPush), hideDay: quickDay };
     listEl.innerHTML = taskListInnerHtml(shown, rowOptions);
     wireTaskList(listEl, shown, {
       onOpen: (task) => openTaskSheet(task, { onChange: redraw, meetingNames }),
