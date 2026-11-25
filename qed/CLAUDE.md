@@ -257,7 +257,7 @@ Coordination Team HQ, archived / passed projects.
    OPEN task -> state active, delegated_to / priority / scope / period / meeting_name cleared, is_meeting off (Romain:
    "everything reset"); due date, project, notes kept; rollover unchanged. Same migration adds qed_tasks.ongoing
    (boolean, default false): the Ongoing column of the Priorities board (To do · Ongoing · Done), board only.
-   Migration 20261125000002 (replaces qed_monday_reset only; to run in the QED project): Monday also clears ongoing
+   Migration 20261125000002 (replaces qed_monday_reset only; RUN in the QED project 2026-11-25): Monday also clears ongoing
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed
