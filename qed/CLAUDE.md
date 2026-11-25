@@ -246,7 +246,11 @@ Coordination Team HQ, archived / passed projects.
    State tag keep their place in the column (visibility:hidden) and only fade in on hover; "Delegated to" + "Meeting"
    via a "+" at the end of the Status cell (.tchip-add-inline, a click). Full screen width (body.is-wide) on the project
    page and the routines too. Next: batch 2 = Plan my day with cards, batch 3 = Priorities board (cards, drag and drop),
-   batch 4 = Monday reset: Delegated + Pending -> Active every Monday (rollover unchanged; needs a migration)
+   batch 4 = Monday reset (migration 20261125000001, add-only, written + tested locally 2026-11-25, to run in the QED
+   project): qed_monday_reset() + pg_cron 'qed-monday-reset' (Sun 23:05 UTC = Monday 00:05 / 01:05 Brussels): every
+   OPEN task -> state active, delegated_to / priority / scope / period / meeting_name cleared, is_meeting off (Romain:
+   "everything reset"); due date, project, notes kept; rollover unchanged. Same migration adds qed_tasks.ongoing
+   (boolean, default false): the Ongoing column of the Priorities board (To do · Ongoing · Done), board only
 
 ## Test address (since 2026-11-08)
 - Romain can't run serve.py easily: Vercel publishes the working branch at https://qed-preview.ownhq.app (qed

@@ -6,8 +6,10 @@
 --      - State (Pending, Pending today, To delegate, Delegated) -> Active,
 --        so it goes back into your normal day / week lists;
 --      - "Delegated to" -> cleared;
---      - Priority (Critical, High, Medium, Low, Nice to do) -> cleared.
---    Left as they are: due dates, scope, AM/PM, meeting points, done tasks.
+--      - Priority (Critical, High, Medium, Low, Nice to do) -> cleared;
+--      - Scope (Major, Medium, Small) and AM/PM -> cleared;
+--      - Meeting point -> off (and its meeting name cleared).
+--    Left as they are: title, project, due date, notes, done tasks.
 --    The nightly rollover doesn't change: open tasks due before today still
 --    move to today every night.
 --
@@ -46,9 +48,14 @@ begin
   update public.qed_tasks
      set state = 'active',
          delegated_to = null,
-         priority = null
+         priority = null,
+         scope = null,
+         period = null,
+         is_meeting = false,
+         meeting_name = null
    where not done
-     and (state <> 'active' or delegated_to is not null or priority is not null);
+     and (state <> 'active' or delegated_to is not null or priority is not null
+          or scope is not null or period is not null or is_meeting or meeting_name is not null);
   get diagnostics changed = row_count;
   return changed;
 end;
