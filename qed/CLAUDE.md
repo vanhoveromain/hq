@@ -246,7 +246,12 @@ Coordination Team HQ, archived / passed projects.
    State tag keep their place in the column (visibility:hidden) and only fade in on hover; "Delegated to" + "Meeting"
    via a "+" at the end of the Status cell (.tchip-add-inline, a click). Full screen width (body.is-wide) on the project
    page and the routines too. Plan my day with cards: tried (rows drawn as cards), not what Romain meant, reverted;
-   parked until the end. Next: batch 3 = Priorities board (cards, drag and drop),
+   parked until the end. Batch 3 (2026-11-25, js/views/priorityBoard.js): Priorities "List / Board" switch (Today
+   only; localStorage qedhq.prioritiesView, this device). Board = sprint board (idea: developers' PM tools): To do
+   (To do today + Overdue, ongoing off) · Ongoing (same, qed_tasks.ongoing on) · Done (ticked today, no meeting
+   points). Planner ticket cards (cardHtml exported from planner.js) + drag.js; drop / ← → / tick set done + ongoing,
+   Undo; tap / double-click = task sheet; T push, 1-5 priority. To delegate, Delegated, Pending, meetings: List only.
+   priorities.js: watchCounter uses stopCounterWatch (leave() also disposes the board's drag). Was planned as:
    batch 4 = Monday reset (migration 20261125000001, add-only, written + tested locally, RUN in the QED
    project 2026-11-25, cron job id 2): qed_monday_reset() + pg_cron 'qed-monday-reset' (Sun 23:05 UTC = Monday 00:05 / 01:05 Brussels): every
    OPEN task -> state active, delegated_to / priority / scope / period / meeting_name cleared, is_meeting off (Romain:

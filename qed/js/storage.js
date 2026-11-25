@@ -67,9 +67,9 @@ function sameEmail(a, b) {
 
 const TASK_COLUMNS = [
   "title", "project_id", "done", "due_date", "period", "scope", "priority",
-  "state", "is_meeting", "meeting_name", "delegated_to", "notes", "rolled_over",
+  "state", "is_meeting", "meeting_name", "delegated_to", "notes", "rolled_over", "ongoing",
 ];
-const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, meeting_name, delegated_to, notes, rolled_over, created_at";
+const TASK_FIELDS = "id, title, project_id, done, done_at, due_date, period, scope, priority, state, is_meeting, meeting_name, delegated_to, notes, rolled_over, ongoing, created_at";
 
 // One task (Focus mode). null if it doesn't exist (or isn't yours).
 export async function getTask(id) {

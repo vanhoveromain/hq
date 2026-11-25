@@ -379,9 +379,25 @@ a.card{text-decoration:none}
 .day-switch{display:inline-flex;padding:3px;margin:0 0 16px;background:var(--hq-subtle);border-radius:var(--hq-radius)}
 .day-switch a{display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border-radius:var(--hq-radius-sm);font-size:14px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none}
 .day-switch a:hover{color:var(--hq-primary-text)}
-.day-switch a.active{background:var(--hq-surface);color:var(--hq-primary-text);box-shadow:0 1px 2px rgba(23,24,25,.08)}
+.day-switch :is(a,button).active{background:var(--hq-surface);color:var(--hq-primary-text);box-shadow:0 1px 2px rgba(23,24,25,.08)}
+/* List / Board switch (Priorities, Romain 2026-11-25) */
+.day-switch button{display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border:0;border-radius:var(--hq-radius-sm);background:none;font:500 14px var(--hq-font);color:var(--hq-secondary-text);cursor:pointer}
+.day-switch button:hover{color:var(--hq-primary-text)}
+.day-head .view-switch{margin-left:8px}
+/* Priorities board (sprint board): To do · Ongoing · Done */
+.prio-board{margin-top:4px}
+.prio-board .board-col{min-height:360px}
+@media (max-width:639px){
+  .day-head:has(.view-switch){flex-wrap:wrap}
+  .day-head:has(.view-switch) .day-line{flex-basis:100%}
+  .day-head .view-switch{margin-left:auto}
+  .prio-board .board-col{min-height:0}
+}
+.prio-board .board-col.is-ongoing{background:var(--hq-accent-light)}
+.prio-board .board-col.is-done .kcard{opacity:.7}
+.prio-board .board-col.is-done .kcard-title{text-decoration:line-through;color:var(--hq-secondary-text)}
 .day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-16px 0 16px}
-.day-line{margin:0;font-size:15px;color:var(--hq-secondary-text)}
+.day-line{flex:1;margin:0;font-size:15px;color:var(--hq-secondary-text)}
 .counter{margin:0 0 20px;padding:14px 16px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius)}
 .counter-boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .counter-box{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:var(--hq-radius-sm);background:var(--hq-subtle)}

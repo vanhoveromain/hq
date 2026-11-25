@@ -23,6 +23,7 @@ import { openTaskSheet } from "./taskSheet.js";
 import { openProjectPanel } from "./projectPanel.js";
 import { routineDoneToday } from "./routine.js";
 import { taskListInnerHtml, wireTaskList, quickAddHtml, wireQuickAdd } from "./taskList.js";
+import { boardHtml, wireBoard, prioritiesView, setPrioritiesView } from "./priorityBoard.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { escapeHtml, icon, errorHtml } from "../utils/html.js";
@@ -34,9 +35,16 @@ const unfolded = new Set();
 // Laptop: a thin copy of the 1-3-5 counter stays under the top bar once the
 // big one has scrolled away (UX review #9, 2026-11-13).
 let counterWatch = null;
-export function leave() {
+// Board view: removes its drag listeners before the next draw / on leaving.
+let disposeBoard = null;
+function stopCounterWatch() {
   if (counterWatch) counterWatch.disconnect();
   counterWatch = null;
+}
+export function leave() {
+  stopCounterWatch();
+  if (disposeBoard) disposeBoard();
+  disposeBoard = null;
 }
 
 export async function render(el, { params = [] } = {}) {
@@ -97,6 +105,14 @@ export async function render(el, { params = [] } = {}) {
     }).sort((a, b) => compareAchieved(a, b, today, projectName)),
   };
 
+  // List or Board (sprint board: To do · Ongoing · Done; Romain, 2026-11-25). Today only.
+  const asBoard = !isTomorrow && prioritiesView() === "board";
+  const boardCols = asBoard ? {
+    todo: [...lists.today, ...lists.overdue].filter((t) => !t.ongoing),
+    ongoing: [...lists.today, ...lists.overdue].filter((t) => t.ongoing),
+    done: lists.achievedToday.filter((t) => !t.is_meeting),
+  } : null;
+
   document.title = `Priorities ${isTomorrow ? "for tomorrow" : "of the day"} · QED HQ`;
   el.innerHTML = `
     <div class="day-head">
@@ -105,6 +121,11 @@ export async function render(el, { params = [] } = {}) {
         <a href="#/priorities"${isTomorrow ? "" : ' class="active" aria-current="page"'}>Today</a>
         <a href="#/priorities/tomorrow"${isTomorrow ? ' class="active" aria-current="page"' : ""}>Tomorrow</a>
       </nav>
+      ${isTomorrow ? "" : `
+      <nav class="day-switch view-switch" aria-label="View">
+        <button type="button" data-view="list"${asBoard ? "" : ' class="active" aria-pressed="true"'}>List</button>
+        <button type="button" data-view="board"${asBoard ? ' class="active" aria-pressed="true"' : ""}>Board</button>
+      </nav>`}
     </div>
     <div class="counter" id="counter" aria-live="polite"></div>
     <div class="counter-mini" id="counter-mini" aria-hidden="true"></div>
@@ -129,6 +150,7 @@ export async function render(el, { params = [] } = {}) {
     </div>`}
     ${quickAddHtml({ today: day, placeholder: isTomorrow ? "Add a task for tomorrow…" : "Add a task for today…", projects })}
 
+    ${asBoard ? boardHtml(boardCols, d, projectName) : `
     ${listSection("today", isTomorrow ? "To do tomorrow" : "To do today", lists.today,
       isTomorrow ? "Nothing planned for tomorrow yet." : "Nothing planned for today. Add a task above.")}
     ${!isTomorrow && lists.overdue.length ? listSection("overdue", "Overdue", lists.overdue, "", "is-warning") : ""}
@@ -141,7 +163,20 @@ export async function render(el, { params = [] } = {}) {
 
     ${isTomorrow ? "" : foldedSection("achievedToday", "Achieved today", lists.achievedToday)}
     ${isTomorrow ? "" : foldedSection("achievedWeek", "Achieved this week", lists.achievedWeek)}
+    `}
   `;
+
+  el.querySelectorAll("[data-view]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setPrioritiesView(button.dataset.view);
+      redraw();
+    });
+  });
+  if (disposeBoard) disposeBoard();
+  disposeBoard = null;
+  if (asBoard) {
+    disposeBoard = wireBoard(el.querySelector(".prio-board"), { tasks, d: { today, tomorrow }, redraw, meetingNames });
+  }
 
   // Rows: each list gets the same behaviour; To do today, Overdue and To
   // delegate also get a "Push to tomorrow" button.
@@ -264,7 +299,7 @@ function drawCounter(counterEl, todayTasks, d) {
 
 // Shows the thin counter while the big one is out of sight (laptop only, CSS).
 function watchCounter(counterEl, miniEl) {
-  leave();
+  stopCounterWatch();
   if (!counterEl || !miniEl || !("IntersectionObserver" in window)) return;
   counterWatch = new IntersectionObserver(([entry]) => {
     miniEl.classList.toggle("is-shown", !entry.isIntersecting && entry.boundingClientRect.top < 0);

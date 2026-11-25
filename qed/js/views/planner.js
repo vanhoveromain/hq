@@ -250,7 +250,8 @@ function columnHtml(col, tasks, board, d, projectName) {
     </section>`;
 }
 
-function cardHtml(t, board, d, projectName) {
+// Also used by the Priorities board (priorityBoard.js).
+export function cardHtml(t, board, d, projectName) {
   const tags = [];
   if (board.field !== "priority" && t.priority) tags.push(`<span class="pill prio-${t.priority}" title="Priority">${icon("flag")}${escapeHtml(labelOf(PRIORITIES, t.priority))}</span>`);
   if (board.field !== "scope" && t.scope) tags.push(`<span class="pill pill-scope" title="Scope">${escapeHtml(labelOf(SCOPES, t.scope))}</span>`);
