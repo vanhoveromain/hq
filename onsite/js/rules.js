@@ -119,7 +119,9 @@ export function programmeEnd(line, programme) {
 //   "18:05 Networking drinks", Excel rows (tabs): start, [end], title, owner,
 //   room, notes. A line with no time at the start goes into the notes of the
 //   line above (a speaker list, a description). Returns { lines, skipped }.
-const TIME = String.raw`(\d{1,2})[:.hH](\d{2})`;
+// A time: "08:00", "8.00", "8h00", or four digits "0800" (Romain, 2026-11-26).
+// Four digits only when exactly four (so "100 chairs" is not a time).
+const TIME = String.raw`(\d{1,2}[:.hH]\d{2}|\d{4}(?!\d))`;
 const LINE_RE = new RegExp(String.raw`^${TIME}(?:\s*(?:-|–|—|to)\s*${TIME})?\s*[-–—:|]?\s*(.*)$`);
 export function parsePastedLines(text) {
   const lines = [];
@@ -140,11 +142,11 @@ export function parsePastedLines(text) {
       }
     }
     const m = row.match(LINE_RE);
-    if (m && validTime(m[1], m[2]) && m[5].trim()) {
+    if (m && toTime(m[1]) && m[3].trim()) {
       lines.push({
-        start: pad(m[1], m[2]),
-        end: m[3] && validTime(m[3], m[4]) ? pad(m[3], m[4]) : null,
-        title: m[5].trim().slice(0, 300), owner: null, room: null, notes: null,
+        start: toTime(m[1]),
+        end: m[2] ? toTime(m[2]) : null,
+        title: m[3].trim().slice(0, 300), owner: null, room: null, notes: null,
       });
     } else if (lines.length) {
       const last = lines[lines.length - 1];
@@ -156,8 +158,10 @@ export function parsePastedLines(text) {
   return { lines, skipped };
 }
 function toTime(value) {
-  const m = String(value || "").trim().match(/^(\d{1,2})[:.hH](\d{2})(?::\d{2})?$/);
-  return m && validTime(m[1], m[2]) ? pad(m[1], m[2]) : null;
+  const m = String(value || "").trim().match(/^(?:(\d{1,2})[:.hH](\d{2})(?::\d{2})?|(\d{2})(\d{2}))$/);
+  if (!m) return null;
+  const [h, min] = m[1] ? [m[1], m[2]] : [m[3], m[4]];
+  return validTime(h, min) ? pad(h, min) : null;
 }
 function validTime(h, m) {
   return Number(h) < 24 && Number(m) < 60;

@@ -67,6 +67,8 @@
    header, tabs, quick add. Tested in Chromium with the fake database
    4b. Paste lines: Owner choice (Romain's request, 2026-11-26): applies to lines without an owner column;
    defaults to Romain for tasks, nobody for programme (follows the kind), "— nobody" possible
+   4d. Paste lines also reads four-digit times "0800" / "0800 - 0920" (Romain, 2026-11-26), Excel columns too;
+   exactly four digits only ("100 chairs" stays text)
    4c. Import from link (Romain, 2026-11-26; option "AI reads the page" chosen over plain text parsing):
    api/programme.js (Vercel Node function, @anthropic-ai/sdk 1.14.0 in onsite/package.json, maxDuration 120 in
    vercel.json, needs ANTHROPIC_API_KEY in Vercel env). Checks the caller's QED Supabase token (/auth/v1/user), SSRF

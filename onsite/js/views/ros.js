@@ -343,7 +343,7 @@ function openPaste(event, day, redraw) {
     title: `Paste lines · ${day.tabLabel}`,
     submitLabel: "Add lines",
     body: `
-      <p class="muted small">One line each: <code>09:00 - 09:20 Keynote</code> or <code>09:00 Open the doors</code>.
+      <p class="muted small">One line each: <code>09:00 - 09:20 Keynote</code>, <code>0900 Open the doors</code> or <code>9.00 …</code>.
         From Excel: columns start · end · title · owner · room · notes. A line without a time is added to the notes of the line above.</p>
       <label class="field"><span>Lines</span><textarea name="text" rows="10" placeholder="09:00 - 09:20 Keynote&#10;09:20 - 10:05 Panel: MiCA is here"></textarea></label>
       <div class="field-row">
