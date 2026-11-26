@@ -322,6 +322,7 @@ function openLineForm(event, day, line, redraw) {
 
 function openPaste(event, day, redraw) {
   const rooms = event.rooms || [];
+  const owners = OWNERS;
   openDialog({
     title: `Paste lines · ${day.tabLabel}`,
     submitLabel: "Add lines",
@@ -332,9 +333,16 @@ function openPaste(event, day, redraw) {
       <div class="field-row">
         <label class="field"><span>Add as</span><select name="kind"><option value="programme">Programme (on stage)</option><option value="task">Tasks (ticked)</option></select></label>
         <label class="field"><span>Room <small class="muted">(if not in the text)</small></span><select name="room"><option value="">—</option>${rooms.map((r) => `<option>${escapeHtml(r)}</option>`).join("")}</select></label>
+        <label class="field"><span>Owner <small class="muted">(if not in the text)</small></span><select name="owner">${owners.map((o) => `<option ${o === DEFAULT_OWNER ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}<option value="">— nobody</option></select></label>
       </div>
       <p class="paste-preview muted small" aria-live="polite"></p>`,
     onOpen(form) {
+      // Programme lines usually have no owner: switching the kind picks
+      // "nobody" / you again (still changeable).
+      form.kind.addEventListener("change", () => {
+        form.owner.value = form.kind.value === "task" ? DEFAULT_OWNER : "";
+      });
+      form.owner.value = form.kind.value === "task" ? DEFAULT_OWNER : "";
       const preview = form.querySelector(".paste-preview");
       form.text.addEventListener("input", () => {
         const { lines, skipped } = parsePastedLines(form.text.value);
@@ -348,7 +356,7 @@ function openPaste(event, day, redraw) {
       store.batch(() => lines.forEach((l, i) => store.create("ros", {
         event_id: event.id, day_id: day.id, kind,
         start_time: l.start, end_time: l.end, title: l.title,
-        owner: l.owner || (kind === "task" ? DEFAULT_OWNER : null),
+        owner: l.owner || form.owner.value || null,
         room: l.room || form.room.value || null,
         notes: l.notes, position: i,
       })));

@@ -65,6 +65,8 @@
    (parsePastedLines: "09:00 - 09:20 Title", "9.30 Title", Excel tabs start/end/title/owner/room/notes; a line
    without a time goes into the notes of the line above). "Live view" (body.is-live) hides the top bar, event
    header, tabs, quick add. Tested in Chromium with the fake database
+   4b. Paste lines: Owner choice (Romain's request, 2026-11-26): applies to lines without an owner column;
+   defaults to Romain for tasks, nobody for programme (follows the kind), "— nobody" possible
 5. After the event: templates, link to QED HQ projects, HQ switcher entry
 
 ## Test address
