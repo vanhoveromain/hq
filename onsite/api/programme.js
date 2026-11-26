@@ -199,12 +199,19 @@ function readableStrings(payload) {
   const out = [];
   for (const m of payload.matchAll(/"((?:[^"\\]|\\.){2,600})"/g)) {
     const s = m[1];
-    if (/^[\w-]+$/.test(s) && !/^\d{1,2}[:.]\d{2}$/.test(s)) continue; // single tokens (ids, classes)
+    // Times ("09:00 - 09:30", "18:05", "13:20 – 14:45 CET") are always kept:
+    // they look like CSS class lists to the filters below (bug found
+    // 2026-11-26: Day 2 of a programme lost all its times).
+    if (/\b\d{1,2}[:.h]\d{2}\b/.test(s)) { out.push(s); continue; }
+    // Single tokens: keep words like "Break", "Lunch"; drop ids / classes.
+    if (/^[\w-]+$/.test(s) && !/^[A-Z][a-z]+$/.test(s)) continue;
     if (/^(\$|_next|\/|https?:|[a-z-]+:[a-z])/.test(s)) continue;
     if (/^[\w:/\[\].-]+( [\w:/\[\].#%-]+)+$/.test(s) && !/[A-Z]/.test(s)) continue; // class lists
-    out.push(s);
+    // Repeated strings are kept (two breaks on the same day); only a string
+    // repeated right after itself is dropped.
+    if (out[out.length - 1] !== s) out.push(s);
   }
-  return [...new Set(out)].join("\n");
+  return out.join("\n");
 }
 
 function decode(text) {

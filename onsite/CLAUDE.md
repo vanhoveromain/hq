@@ -79,7 +79,11 @@
    boxes; duplicates = same day + time + title unticked; "no room" -> chosen main room; new rooms join the event);
    adds programme lines, Undo. sw.js skips /api/. Quick add keeps typed values when switching Task / Programme.
    Tested: URL guard + page reading on the real blockchain4eu page (Day 2 + breakouts found); review flow with a
-   stand-in server. Real Claude call NOT tested (no key in the sandbox): test on the preview
+   stand-in server. Real Claude call tested by Romain on the preview, then pushed to main 2026-11-26.
+   Fix 2026-11-26 (Romain: only Day 1 + Day 2 breakouts imported): readableStrings dropped time strings
+   ("09:00 - 09:30" looked like a CSS class list) and one-word titles ("Break"), and de-duplicated repeated
+   strings, so Day 2 (only in the page code) had titles without times -> skipped. Now: anything with a time is
+   kept, capitalised single words kept, only immediate repeats dropped (19/19 Day 2 times found)
 LIVE 2026-11-26: merged to main (fast-forward), onsite.ownhq.app serves it. ownhq.app portal card (hq-home/index.html,
    data-hq="onsite", icon hq-home/onsite-hq.svg); hq_access row 'onsite' added in own-hq by Romain 2026-11-26
 5. After the event: templates, link to QED HQ projects, HQ switcher entry (hq-home/switcher.js)
