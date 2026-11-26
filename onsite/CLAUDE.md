@@ -51,5 +51,7 @@
 
 ## Test address
 - Local: `python3 serve.py` in onsite/ -> http://localhost:8002 (login at /_hq/).
-- Preview (to set up): onsite-preview.ownhq.app on the working branch; js/hqBase.js then loads the login file
-  from hq-preview.ownhq.app.
+- Preview: Vercel project "onsite" (created 2026-11-26; Root Directory typed in Settings because the import
+  picker only lists folders on main), onsite-preview.ownhq.app assigned to the working branch, Vercel
+  Authentication off. js/hqBase.js then loads the login file from hq-preview.ownhq.app. A branch only gets a
+  deployment when a push touches onsite/ (ignoreCommand), so a new project needs one such push first.
