@@ -31,6 +31,11 @@ One database serves local testing and the live app, so every migration is flagge
 | `qed_projects` | Events, non-event projects and sales leads (`type = 'sales'`) |
 | `qed_tasks` | Tasks, linked or not to a project |
 | `qed_links` | The Tools panel links on Home |
+| `onsite_events` | Onsite HQ (onsite.ownhq.app, separate app, same database): an event on site (venue, rooms) |
+| `onsite_days` | Onsite HQ: an event's days (setup, event, teardown) |
+| `onsite_ros_items` | Onsite HQ: run of show; `programme` lines (no tick) and `task` lines (`done_at`) |
+| `onsite_materials` | Onsite HQ: QED's master material list |
+| `onsite_pack_items` | Onsite HQ: an event's packing list (`packed_at`, `returned_at`) |
 
 - `qed_rollover_tasks()`: moves every open task due before today (Brussels time) to today, and adds 1 to its
   `rolled_over` count (since migration 20261113000001). Run by the
