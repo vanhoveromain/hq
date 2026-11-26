@@ -88,8 +88,8 @@
    strings, so Day 2 (only in the page code) had titles without times -> skipped. Now: anything with a time is
    kept, capitalised single words kept, only immediate repeats dropped (19/19 Day 2 times found)
    4e. Speakers + programme ticks (Romain, 2026-11-26; migration 20261126000002, add-only: speakers 0-50 +
-   moderators 0-10 columns, drops onsite_ros_items_programme_not_ticked; tested on a local Postgres; MUST run
-   before this app version is used: it writes the counts). stageLabel (rules.js): "3 + 1 mod · 4 on stage" /
+   moderators 0-10 columns, drops onsite_ros_items_programme_not_ticked; tested on a local Postgres; RUN in the
+   QED project by Romain 2026-11-26, tested on the preview, pushed to main). stageLabel (rules.js): "3 + 1 mod · 4 on stage" /
    "2 speakers" / "1 mod", pill on the timeline, Now / Next cards; edit form fields. stageState (rules.js): per room
    (no room = the room most sessions use), the first unticked started programme line is on stage (overBy = minutes
    past programmeEnd -> red "Running late · n min over"), started ones behind it are "waiting" at the top of Next;
