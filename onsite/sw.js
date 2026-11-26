@@ -11,7 +11,7 @@
 //
 // Change VERSION when the list of files below changes.
 
-const VERSION = "onsite-v3";
+const VERSION = "onsite-v4";
 const SHELL = [
   "./",
   "index.html",
@@ -36,6 +36,7 @@ const SHELL = [
   "js/views/eventForm.js",
   "js/views/packing.js",
   "js/views/ros.js",
+  "js/views/importProgramme.js",
   "js/views/materials.js",
   "js/views/unlock.js",
 ];
@@ -78,7 +79,7 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
-  if (url.hostname.endsWith("supabase.co")) return;
+  if (url.hostname.endsWith("supabase.co") || url.pathname.includes("/api/")) return;
 
   if (url.hostname === "cdn.jsdelivr.net") {
     event.respondWith(cacheFirst(request));

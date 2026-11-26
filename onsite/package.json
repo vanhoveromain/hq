@@ -1,0 +1,9 @@
+{
+  "name": "onsite-hq",
+  "private": true,
+  "type": "module",
+  "description": "Onsite HQ. Static app; the only dependency is for the Vercel function api/programme.js.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.14.0"
+  }
+}

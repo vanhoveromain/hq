@@ -13,3 +13,6 @@ sporthq3/tools/notion-import/data/
 
 # QED HQ Notion import: client-confidential data, never in git
 qed/tools/notion-import/data/
+
+# Dependencies (Vercel installs them)
+node_modules/

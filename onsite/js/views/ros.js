@@ -12,6 +12,7 @@
 //   - Tap a line = edit / move to another day / delete (Undo). Quick add at the
 //     bottom (Enter adds, the field stays ready for the next one). "Paste lines"
 //     turns a pasted list (from the programme, Excel, Word) into lines.
+//     "Import from link" reads a programme page / PDF (views/importProgramme.js).
 //   - Filters: kind, owner, room. "Live view" hides everything else (iPad).
 
 import * as store from "../storage.js";
@@ -19,6 +20,7 @@ import { escapeHtml, icon } from "../utils/html.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { brusselsToday, formatDay } from "../utils/dates.js";
+import { openImport } from "./importProgramme.js";
 import { OWNERS, DEFAULT_OWNER, orderedDays, hhmm, brusselsNow, minutesBetween, sortLines, programmeEnd, parsePastedLines } from "../rules.js";
 
 const ui = { kind: "all", owner: "", room: "", previewAt: null, scrolledFor: null, quickKind: "task" };
@@ -77,13 +79,16 @@ export function render(el, event, dayParam) {
         ${owners.length ? `<select class="chip-select" data-filter-owner aria-label="Owner"><option value="">Everyone</option>${owners.map((o) => `<option ${o === ui.owner ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select>` : ""}
         ${rooms.length ? `<select class="chip-select" data-filter-room aria-label="Room"><option value="">All rooms</option>${rooms.map((r) => `<option ${r === ui.room ? "selected" : ""}>${escapeHtml(r)}</option>`).join("")}</select>` : ""}
       </div>
-      <button type="button" class="btn secondary small" data-paste>Paste lines</button>
+      <div class="btn-row">
+        <button type="button" class="btn secondary small" data-import>Import from link</button>
+        <button type="button" class="btn secondary small" data-paste>Paste lines</button>
+      </div>
     </div>
     <ol class="timeline">
       ${timelineHtml(lines, live ? now : null)}
     </ol>
     ${all.length && !lines.length ? `<p class="empty">Nothing matches these filters.</p>` : ""}
-    ${all.length ? "" : `<p class="empty">No lines yet for ${escapeHtml(day.tabLabel)}. Add them below, or use “Paste lines”.</p>`}
+    ${all.length ? "" : `<p class="empty">No lines yet for ${escapeHtml(day.tabLabel)}. Import the programme from its link, add lines below, or use “Paste lines”.</p>`}
     <form class="quick-add" autocomplete="off">
       <div class="seg" role="group" aria-label="Kind">
         <button type="button" data-qkind="task" aria-pressed="${ui.quickKind === "task"}">Task</button>
@@ -208,7 +213,17 @@ function wire(el, event, day, all) {
     const t = e.target.closest("button");
     if (!t || t.type === "submit") return;
     if (t.dataset.kind) { ui.kind = t.dataset.kind; return redraw(); }
-    if (t.dataset.qkind) { ui.quickKind = t.dataset.qkind; redraw(); el.querySelector(".quick-add input[name=title]").focus(); return; }
+    if (t.dataset.qkind) {
+      // Switching Task / Programme keeps what was already typed.
+      const f = el.querySelector(".quick-add");
+      const typed = { start: f.start.value, end: f.end.value, title: f.title.value };
+      ui.quickKind = t.dataset.qkind;
+      redraw();
+      const g = el.querySelector(".quick-add");
+      Object.assign(g.start, { value: typed.start }); g.end.value = typed.end; g.title.value = typed.title;
+      g.title.focus();
+      return;
+    }
     if (t.dataset.tick) {
       const line = store.get("ros", t.dataset.tick);
       const doneAt = line.done_at ? null : new Date().toISOString();
@@ -218,6 +233,7 @@ function wire(el, event, day, all) {
     }
     if (t.dataset.edit) return openLineForm(event, day, store.get("ros", t.dataset.edit), redraw);
     if ("paste" in t.dataset) return openPaste(event, day, redraw);
+    if ("import" in t.dataset) return openImport(event, redraw);
     if ("live" in t.dataset) {
       document.body.classList.toggle("is-live");
       window.scrollTo(0, 0);

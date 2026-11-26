@@ -261,3 +261,13 @@ code{font-family:var(--hq-font-mono);font-size:12px;background:var(--hq-subtle);
 body.is-live .top,body.is-live .event-head,body.is-live .tabs,body.is-live .footer,body.is-live .quick-add,body.is-live .ros-tools .btn{display:none}
 body.is-live .main{padding-top:calc(16px + env(safe-area-inset-top))}
 body.is-live .line-open b{font-size:17px}
+
+/* Programme import review */
+.import-warn{padding:10px 12px;border-radius:var(--hq-radius);background:var(--hq-warning-light);color:var(--hq-warning);font-size:13px}
+.import-warn p{margin:0}
+.import-warn p+p{margin-top:4px}
+.import-group{border-top:1px solid var(--hq-border);padding-top:8px}
+.import-day{margin:4px 0 6px}
+.import-row{align-items:flex-start;padding:6px 4px;min-height:40px}
+.import-row input{margin-top:2px}
+.import-time{flex:none;width:96px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}

@@ -401,3 +401,30 @@ function writeJson(key, value) {
 function withTimeout(promise, ms) {
   return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new TypeError("timeout")), ms))]);
 }
+
+
+// ---------------------------------------------------------------------
+// Programme import (api/programme.js on this site)
+// ---------------------------------------------------------------------
+
+// Sends a programme link to our server, which reads it with Claude and
+// returns the sessions found (nothing is saved). Needs a connection.
+export async function importProgramme(url) {
+  if (navigator.onLine === false) throw new Error("The import needs a connection.");
+  const { data } = await db.auth.getSession();
+  const token = data && data.session ? data.session.access_token : null;
+  if (!token) throw new Error("Please unlock Onsite HQ again (log in) to import.");
+  let response;
+  try {
+    response = await fetch("api/programme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ url }),
+    });
+  } catch {
+    throw new Error("No connection to the server. Try again.");
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `Import failed (${response.status}).`);
+  return body;
+}

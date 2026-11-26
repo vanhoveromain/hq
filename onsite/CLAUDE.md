@@ -67,6 +67,19 @@
    header, tabs, quick add. Tested in Chromium with the fake database
    4b. Paste lines: Owner choice (Romain's request, 2026-11-26): applies to lines without an owner column;
    defaults to Romain for tasks, nobody for programme (follows the kind), "— nobody" possible
+   4c. Import from link (Romain, 2026-11-26; option "AI reads the page" chosen over plain text parsing):
+   api/programme.js (Vercel Node function, @anthropic-ai/sdk 1.14.0 in onsite/package.json, maxDuration 120 in
+   vercel.json, needs ANTHROPIC_API_KEY in Vercel env). Checks the caller's QED Supabase token (/auth/v1/user), SSRF
+   guard (https, port 443, no credentials, DNS -> no private / local IPs, every redirect re-checked), 15 s / 4 MB,
+   HTML -> visible text + Next.js flight strings + JSON scripts; PDF -> document block. Claude: claude-opus-5-5,
+   effort medium, structured output (json_schema: event_name, sessions[date, day_label, start, end, title, room,
+   format, notes], warnings), fallbacks "default" (beta server-side-fallback-2026-07-01), refusal / max_tokens
+   handled. Prompt: only what the page says, no speaker names (GDPR), leave out off-site side events. App:
+   views/importProgramme.js: link -> review (groups per programme day -> event day by date else in order; tick
+   boxes; duplicates = same day + time + title unticked; "no room" -> chosen main room; new rooms join the event);
+   adds programme lines, Undo. sw.js skips /api/. Quick add keeps typed values when switching Task / Programme.
+   Tested: URL guard + page reading on the real blockchain4eu page (Day 2 + breakouts found); review flow with a
+   stand-in server. Real Claude call NOT tested (no key in the sandbox): test on the preview
 LIVE 2026-11-26: merged to main (fast-forward), onsite.ownhq.app serves it. ownhq.app portal card (hq-home/index.html,
    data-hq="onsite", icon hq-home/onsite-hq.svg); hq_access row 'onsite' added in own-hq by Romain 2026-11-26
 5. After the event: templates, link to QED HQ projects, HQ switcher entry (hq-home/switcher.js)
