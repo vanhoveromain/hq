@@ -3,17 +3,20 @@
 //   #/events               your events (Home)
 //   #/event/<id>/ros       an event's run of show
 //   #/event/<id>/pack      an event's packing list
+//   #/materials            QED's master material list
 
 import { IS_PREVIEW } from "./hqBase.js";
 import * as store from "./storage.js";
 import * as eventsView from "./views/events.js";
 import * as eventView from "./views/event.js";
+import * as materialsView from "./views/materials.js";
 import * as unlockView from "./views/unlock.js";
 import { escapeHtml } from "./utils/html.js";
 
 const routes = {
   events: { title: "Events", view: eventsView },
   event:  { title: "", view: eventView },
+  materials: { title: "Material list", view: materialsView },
 };
 const DEFAULT_ROUTE = "events";
 
@@ -47,9 +50,15 @@ function render({ keepScroll = false } = {}) {
   const route = routes[name];
   if (current !== route && current && current.view.leave) current.view.leave();
   current = route;
+  for (const link of document.querySelectorAll("[data-route]")) {
+    const active = link.dataset.route === (name === "event" ? "events" : name);
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+  }
   titleEl.textContent = route.title;
   document.title = route.title ? `${route.title} · Onsite HQ` : "Onsite HQ";
   if (!keepScroll) window.scrollTo(0, 0);
+  viewEl.onclick = null; // a screen's tap handler never outlives it
   route.view.render(viewEl, { user: currentUser, params });
 }
 

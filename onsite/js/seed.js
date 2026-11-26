@@ -1,0 +1,57 @@
+// seed.js: QED's starting master material list, from Romain's 2025 "To bring
+// list" (Excel, 2026-11-26). Loaded once with "Load QED's standard list" on the
+// Material list screen when it's empty; after that the list lives in the
+// database and is edited in the app. Internal equipment only, no client data.
+//
+// [category, name, quantity or null, note or null]. Order = packing order.
+// Typos of the Excel fixed (Mabook -> MacBook, coth -> cloth, Mouses -> Mice).
+
+export const STANDARD_MATERIALS = [
+  ["Box 1", "MacBook Pro", 2, "Coordination, Zoom"],
+  ["Box 1", "MacBook Air", 2, "Beamer, Confidence screen"],
+  ["Box 1", "PC", 2, "Stream, Cam"],
+  ["Box 1", "iPad", 2, null],
+  ["Box 1", "Cooler", 2, null],
+  ["Box 2", "Blackmagic Web Presenter", 1, null],
+  ["Box 2", "Focusrite", 2, null],
+  ["Box 2", "EVO4", 1, null],
+  ["Box 2", "HDMI to USB", 3, null],
+  ["Box 2", "HDMI splitter", 3, null],
+  ["Box 2", "SDI to HDMI Decimator", 2, null],
+  ["Box 2", "Phone charger", 2, null],
+  ["Box 2", "Headset", 3, null],
+  ["Box 2", "Mice", 6, null],
+  ["Box 2", "Keyboard", 1, null],
+  ["Box 2", "Stream Deck XL", 2, null],
+  ["Box 2", "Stream Deck S", 2, null],
+  ["Box 2", "iPad holder", 1, null],
+  ["Box 2", "USB hub", 1, null],
+  ["Box 2", "USB extender", 1, null],
+  ["Box 2", "USB-C to USB adapter", 3, null],
+  ["Box 2", "Clicker (with batteries)", 1, null],
+  ["Box 2", "Tape", 2, null],
+  ["Box 2", "Black table cloth", 2, null],
+  ["Sound pocket", "XLR female to minijack", 2, null],
+  ["Sound pocket", "XLR male to minijack", 2, null],
+  ["Box 3", "RJ45 box", null, null],
+  ["Box 4", "HDMI box", null, null],
+  ["Box 5", "Energy box", null, null],
+  ["Box 6", "SDI roll", 1, null],
+  ["Box 6", "RJ45 roll", 1, null],
+  ["Switch board", "Switch 10 Gb", 1, null],
+  ["Switch board", "Switch PoE", 1, null],
+  ["Onsite box", "Lanyards", null, null],
+  ["Onsite box", "Badge paper", null, null],
+  ["Onsite box", "Paper bin", null, null],
+  ["Onsite box", "QR code holder", null, null],
+  ["Onsite box", "Recycling sign", null, null],
+  ["Outside of the box", "Tripods", 4, null],
+  ["Outside of the box", "Monitor", 4, null],
+  ["Outside of the box", "NDI camera", 4, null],
+  ["Outside of the box", "Cache-régie", 1, null],
+  ["Outside of the box", "Badge printer", 2, null],
+  ["Outside of the box", "Roll-ups", 3, null],
+  ["Outside of the box", "Beach flags", 2, null],
+  ["To print", "Run of show", 5, null],
+  ["To print", "Agenda with speaker pictures", 5, null],
+];

@@ -11,7 +11,7 @@
 //
 // Change VERSION when the list of files below changes.
 
-const VERSION = "onsite-v1";
+const VERSION = "onsite-v2";
 const SHELL = [
   "./",
   "index.html",
@@ -26,6 +26,7 @@ const SHELL = [
   "js/hqBase.js",
   "js/storage.js",
   "js/rules.js",
+  "js/seed.js",
   "js/utils/html.js",
   "js/utils/dates.js",
   "js/utils/dialog.js",
@@ -33,6 +34,8 @@ const SHELL = [
   "js/views/events.js",
   "js/views/event.js",
   "js/views/eventForm.js",
+  "js/views/packing.js",
+  "js/views/materials.js",
   "js/views/unlock.js",
 ];
 

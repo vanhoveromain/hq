@@ -135,3 +135,51 @@ body.is-locked .sync{visibility:hidden}
 .toasts:empty{display:none}
 .toast{display:flex;align-items:center;gap:16px;max-width:100%;padding:10px 12px 10px 16px;border-radius:var(--hq-radius);background:var(--hq-ink);color:var(--hq-canvas);font-size:14px;box-shadow:var(--hq-shadow-pop);pointer-events:auto}
 .toast button{flex:none;border:0;background:none;color:inherit;font:600 14px/1 var(--hq-font);text-decoration:underline;cursor:pointer;min-height:36px}
+
+/* Top nav (Events · Material list) */
+.top-nav{display:flex;gap:4px;margin-right:auto;margin-left:8px}
+.top-nav a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;font-size:14px;font-weight:500;color:var(--hq-secondary-text);text-decoration:none;border-radius:var(--hq-radius-sm)}
+.top-nav a:hover{color:var(--hq-primary-text);background:var(--hq-subtle)}
+.top-nav a.active{color:var(--hq-accent-text);background:var(--hq-accent-light)}
+@media (max-width:559px){.top-nav{margin-left:0}.top-nav a{padding:0 8px;font-size:13px}.brand span{display:none}}
+body.is-locked .top-nav{visibility:hidden}
+
+/* Rows of buttons, chips, switches */
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:40px;padding:0 14px;border:1px solid var(--hq-border-strong);border-radius:999px;background:var(--hq-surface);color:var(--hq-primary-text);font:500 14px/1 var(--hq-font);cursor:pointer}
+.chip:hover{background:var(--hq-subtle)}
+.chip.active{background:var(--hq-accent-light);border-color:var(--hq-accent);color:var(--hq-accent-text)}
+.switch{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;min-height:40px}
+.switch input{width:20px;height:20px;accent-color:var(--hq-accent);margin:0}
+
+/* Packing list */
+.pack-empty{display:grid;gap:12px;justify-items:center}
+.pack-empty p{margin:0}
+.pack-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0 0 16px}
+.meter{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px 14px;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius);font-size:14px}
+.meter strong{font-variant-numeric:tabular-nums}
+.meter i{grid-column:1 / -1;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--hq-success) var(--p),var(--hq-subtle) var(--p))}
+.pack-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
+.pack-group{margin:0 0 20px}
+.pack-head{display:grid;grid-template-columns:auto 1fr 64px 64px;align-items:baseline;gap:8px;padding:0 4px 6px}
+.pack-head h3{margin:0;font-size:15px;font-weight:600}
+.pack-col{font-size:12px;font-weight:500;color:var(--hq-secondary-text);text-align:center}
+.pack-list{margin:0;padding:0;list-style:none;background:var(--hq-surface);border:1px solid var(--hq-border);border-radius:var(--hq-radius)}
+.pack-row{display:grid;grid-template-columns:1fr 64px 64px;align-items:center}
+.pack-row:not(:has(.tick)){grid-template-columns:1fr}
+.pack-row+.pack-row{border-top:1px solid var(--hq-border)}
+.pack-name{display:grid;gap:2px;min-height:52px;padding:8px 14px;border:0;background:none;color:inherit;font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.pack-name small{font-size:13px;color:var(--hq-secondary-text)}
+.pack-name .qty{font-weight:600;color:var(--hq-secondary-text);font-variant-numeric:tabular-nums}
+.pack-row.is-packed .pack-name>span{color:var(--hq-secondary-text)}
+.pack-row.is-packed.is-back .pack-name>span{text-decoration:line-through}
+.tick{justify-self:center;display:grid;place-items:center;width:44px;height:44px;border:2px solid var(--hq-border-strong);border-radius:10px;background:var(--hq-surface);color:transparent;cursor:pointer;transition:background-color var(--hq-ease),border-color var(--hq-ease)}
+.tick svg{width:22px;height:22px;stroke-width:3}
+.tick[aria-pressed="true"]{background:var(--hq-success);border-color:var(--hq-success);color:#fff}
+.tick.back[aria-pressed="true"]{background:var(--hq-accent);border-color:var(--hq-accent)}
+.pick-group{margin:0;padding:0;border:0;display:grid;gap:2px}
+.pick-group legend{font-size:13px;font-weight:600;color:var(--hq-secondary-text);padding:8px 0 4px}
+.pick-row{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 4px;font-size:15px;cursor:pointer}
+.pick-row input{width:20px;height:20px;accent-color:var(--hq-accent);margin:0;flex:none}
+.pick-row.is-added{opacity:.5}

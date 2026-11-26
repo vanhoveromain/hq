@@ -45,7 +45,15 @@
    rooms, notes; removing a day with lines warns first), event page with Run of show / Packing list tabs
    (placeholders), delete with Undo. Tested in Chromium with a fake database (create, offline edit, offline
    reload, sync back, delete + Undo)
-3. Packing list + master material list — next
+3. Packing list + master material list — built 2026-11-26: #/materials (top nav "Material list"): grouped by
+   box / category in packing order (categoryOrder: smallest position per category; seed positions spaced by 100,
+   nextPosition = last of the category + 1), empty -> "Load QED's standard list" (js/seed.js: 47 items from the
+   2025 to-bring list, typos fixed, laptop labels = note), edit / remove (archived, Undo). Event tab "Packing list"
+   (views/packing.js): empty -> add the whole material list / pick / type an item; meters Packed n/N + Back at the
+   office n/N; filters All · To pack · Not back yet; per item two 44 px ticks Packed (packed_at) + Back
+   (returned_at); tap the name = edit / delete (Undo); "+ Item" can also add to the material list (ticked by
+   default). Event items are copies (material changes don't touch existing lists). main.js resets
+   viewEl.onclick on every screen change (a screen's handler leaked into the next one: double pop-ups)
 4. Run of show editor + Now / Next screen
 5. After the event: templates, link to QED HQ projects, HQ switcher entry
 

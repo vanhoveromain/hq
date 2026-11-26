@@ -1,6 +1,6 @@
 // event.js: one event. Header (name, dates, venue, Edit) and two tabs:
 //   #/event/<id>/ros    Run of show (per day)      -> build step 4
-//   #/event/<id>/pack   Packing list               -> build step 3
+//   #/event/<id>/pack   Packing list (views/packing.js)
 
 import * as store from "../storage.js";
 import { escapeHtml, icon } from "../utils/html.js";
@@ -8,6 +8,7 @@ import { formatRange } from "../utils/dates.js";
 import { eventSpan, orderedDays } from "../rules.js";
 import { openEventForm } from "./eventForm.js";
 import { showToast } from "../utils/toast.js";
+import * as packing from "./packing.js";
 
 export function render(el, { params }) {
   const [id, tab = "ros"] = params;
@@ -39,7 +40,7 @@ export function render(el, { params }) {
 
   const body = el.querySelector("#event-body");
   if (tab === "pack") {
-    body.innerHTML = `<p class="placeholder">Packing list: coming in build step 3.</p>`;
+    packing.render(body, event);
   } else {
     body.innerHTML = `
       <p class="placeholder">Run of show: coming in build step 4.</p>

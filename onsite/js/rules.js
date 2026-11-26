@@ -49,3 +49,24 @@ export function parseRooms(text) {
   }
   return out;
 }
+
+// Packing order of the categories (boxes): the smallest position found in
+// each one (master list first, then the event's items).
+export function categoryOrder(rows) {
+  const order = new Map();
+  for (const r of rows) {
+    const key = r.category || "Other";
+    const pos = r.position ?? 0;
+    if (!order.has(key) || pos < order.get(key)) order.set(key, pos);
+  }
+  return order;
+}
+
+// Position for a new item: right after the last one of its category, or after
+// everything if the category is new. Positions are spaced by 100 (seed), so
+// there is room in between.
+export function nextPosition(rows, category) {
+  const same = rows.filter((r) => (r.category || null) === (category || null));
+  const pool = same.length ? same : rows;
+  return pool.length ? Math.max(...pool.map((r) => r.position ?? 0)) + 1 : 0;
+}
