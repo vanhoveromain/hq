@@ -9,9 +9,10 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 | `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (cards to QED HQ and Sport HQ) + the shared HQ switcher (`switcher.js`) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED HQ: work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
+| `onsite.ownhq.app` | `onsite/` | Onsite HQ: run of show + packing list for QED events on site (iPad, works offline), same login, data in the QED Supabase project (tables `onsite_*`), see `onsite/CLAUDE.md` |
 | `poulette.ownhq.app` | `poulette/` | PouletteHQ: newborn tracker for Rom + Léa (French UI), data in the shared `own-hq` Supabase project (tables `poulette_*`), see `poulette/CLAUDE.md` |
 
-Build only when the app's own folder changed: `qed/vercel.json`, `hq-home/vercel.json` and `poulette/vercel.json` set
+Build only when the app's own folder changed: `qed/vercel.json`, `hq-home/vercel.json`, `poulette/vercel.json` and `onsite/vercel.json` set
 `"ignoreCommand": "git diff HEAD^ HEAD --quiet -- ."` (runs in the project root; exit 0 = skip). Every push used to
 rebuild every project on every branch and hit Vercel's daily build limit (2026-11-15). Note: only the LAST commit of a
 push is checked, so a push whose last commit doesn't touch the folder is skipped (redeploy by hand if needed).
