@@ -67,7 +67,9 @@
    header, tabs, quick add. Tested in Chromium with the fake database
    4b. Paste lines: Owner choice (Romain's request, 2026-11-26): applies to lines without an owner column;
    defaults to Romain for tasks, nobody for programme (follows the kind), "— nobody" possible
-5. After the event: templates, link to QED HQ projects, HQ switcher entry
+LIVE 2026-11-26: merged to main (fast-forward), onsite.ownhq.app serves it. ownhq.app portal card (hq-home/index.html,
+   data-hq="onsite", icon hq-home/onsite-hq.svg); hq_access row 'onsite' added in own-hq by Romain 2026-11-26
+5. After the event: templates, link to QED HQ projects, HQ switcher entry (hq-home/switcher.js)
 
 ## Test address
 - Local: `python3 serve.py` in onsite/ -> http://localhost:8002 (login at /_hq/).
