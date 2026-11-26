@@ -11,7 +11,7 @@
 //
 // Change VERSION when the list of files below changes.
 
-const VERSION = "onsite-v4";
+const VERSION = "onsite-v5";
 const SHELL = [
   "./",
   "index.html",

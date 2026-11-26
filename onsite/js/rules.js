@@ -169,3 +169,49 @@ function validTime(h, m) {
 function pad(h, m) {
   return `${String(h).padStart(2, "0")}:${m}`;
 }
+
+
+// People on stage (counts only, never names): "3 + 1 mod · 4 on stage",
+// "2 speakers", "1 speaker", "1 mod". "" when nothing is known.
+export function stageLabel(line) {
+  const sp = Number.isInteger(line.speakers) ? line.speakers : null;
+  const mod = Number.isInteger(line.moderators) ? line.moderators : null;
+  if (sp === null && mod === null) return "";
+  if (sp && mod) return `${sp} + ${mod} mod · ${sp + mod} on stage`;
+  if (sp) return `${sp} speaker${sp > 1 ? "s" : ""}`;
+  if (mod) return `${mod} mod`;
+  return "";
+}
+
+
+// What is on stage now, per room (Romain, 2026-11-26: sessions run late, so a
+// session stays on stage until it is ticked, whatever the clock says):
+//   onStage: per room, the first unticked programme line that has started,
+//            with overBy = minutes past its end (0 when on time);
+//   waiting: unticked programme lines whose start has passed but that are
+//            queued behind the one on stage in their room.
+export function stageState(lines, now) {
+  const programme = sortLines(lines.filter((r) => r.kind === "programme"));
+  // A session with no room is on the main stage: the room most sessions use.
+  const counts = new Map();
+  for (const p of programme) if (p.room) counts.set(p.room, (counts.get(p.room) || 0) + 1);
+  const mainRoom = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  const rooms = new Map();
+  for (const p of programme) {
+    if (p.done_at) continue;
+    const key = p.room || mainRoom;
+    if (!rooms.has(key)) rooms.set(key, []);
+    rooms.get(key).push(p);
+  }
+  const onStage = [];
+  const waiting = [];
+  for (const queue of rooms.values()) {
+    const started = queue.filter((p) => hhmm(p.start_time) <= now);
+    if (!started.length) continue;
+    const [current, ...behind] = started;
+    const end = programmeEnd(current, programme);
+    onStage.push({ line: current, end, overBy: end < now ? minutesBetween(end, now) : 0 });
+    waiting.push(...behind);
+  }
+  return { onStage, waiting };
+}

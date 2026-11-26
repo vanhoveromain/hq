@@ -6,14 +6,15 @@
 // 3. Review: sessions grouped per day of the programme, each group sent to one
 //    of the event's days (matched by date, else in order); tick what to keep.
 //    Sessions already in the run of show (same day, time and title) start
-//    unticked. Sessions with no room go to the room you pick ("main room").
+//    unticked (their speaker / moderator counts are still filled in when they
+//    have none). Sessions with no room go to the room you pick ("main room").
 // 4. "Add" creates them as programme lines (never ticked). Undo available.
 
 import * as store from "../storage.js";
 import { escapeHtml } from "../utils/html.js";
 import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
-import { orderedDays, hhmm } from "../rules.js";
+import { orderedDays, hhmm, stageLabel } from "../rules.js";
 import { formatDay } from "../utils/dates.js";
 
 export function openImport(event, onDone) {
@@ -63,9 +64,10 @@ function openReview(event, result, onDone) {
     g.dayId = (byDate || eventDays[i] || eventDays[eventDays.length - 1] || days[0]).id;
   });
 
-  const existing = new Set(store.list("ros", (r) => r.event_id === event.id)
-    .map((r) => `${r.day_id}|${hhmm(r.start_time)}|${r.title.trim().toLowerCase()}`));
-  const isDup = (g, s) => existing.has(`${g.dayId}|${s.start}|${s.title.trim().toLowerCase()}`);
+  const keyOf = (dayId, start, title) => `${dayId}|${start}|${title.trim().toLowerCase()}`;
+  const existing = new Map(store.list("ros", (r) => r.event_id === event.id)
+    .map((r) => [keyOf(r.day_id, hhmm(r.start_time), r.title), r]));
+  const isDup = (g, s) => existing.has(keyOf(g.dayId, s.start, s.title));
 
   openDialog({
     title: `Programme found · ${result.sessions.length} sessions`,
@@ -85,12 +87,13 @@ function openReview(event, result, onDone) {
             <label class="pick-row import-row">
               <input type="checkbox" name="s" value="${gi}:${si}" ${isDup(g, s) ? "" : "checked"}>
               <span class="import-time">${escapeHtml(s.start)}${s.end ? `–${escapeHtml(s.end)}` : ""}</span>
-              <span>${escapeHtml(s.title)}${s.room ? ` <small class="muted">· ${escapeHtml(s.room)}</small>` : ""}${isDup(g, s) ? ` <small class="muted">· already in the run of show</small>` : ""}</span>
+              <span>${escapeHtml(s.title)}${s.room ? ` <small class="muted">· ${escapeHtml(s.room)}</small>` : ""}${stageLabel(s) ? ` <small class="people-note">· ${escapeHtml(stageLabel(s))}</small>` : ""}${isDup(g, s) ? ` <small class="muted">· already in the run of show</small>` : ""}</span>
             </label>`).join("")}
         </fieldset>`).join("")}`,
     async onSubmit(form) {
       const picked = [...form.querySelectorAll("input[name=s]:checked")].map((b) => b.value.split(":").map(Number));
-      if (!picked.length) throw new Error("Tick at least one session.");
+      const anyCounts = result.sessions.some((s) => s.speakers != null || s.moderators != null);
+      if (!picked.length && !anyCounts) throw new Error("Tick at least one session.");
       const mainRoom = form.mainRoom.value || null;
       const newRooms = [];
       const created = store.batch(() => picked.map(([gi, si], i) => {
@@ -102,11 +105,22 @@ function openReview(event, result, onDone) {
           event_id: event.id, day_id: form[`day-${gi}`].value, kind: "programme",
           start_time: s.start, end_time: s.end || null, title: s.title.slice(0, 300),
           room: known || s.room || mainRoom, notes: s.notes || null, owner: null, position: i,
+          speakers: s.speakers ?? null, moderators: s.moderators ?? null,
         });
       }));
+      // Sessions already in the run of show (left unticked): fill in their
+      // speaker / moderator counts if they have none yet.
+      let counted = 0;
+      store.batch(() => groups.forEach((g, gi) => g.sessions.forEach((s) => {
+        const line = existing.get(keyOf(form[`day-${gi}`].value, s.start, s.title));
+        if (!line || (s.speakers == null && s.moderators == null)) return;
+        if (line.speakers != null || line.moderators != null) return;
+        store.update("ros", line.id, { speakers: s.speakers ?? null, moderators: s.moderators ?? null });
+        counted++;
+      })));
       // New rooms from the programme join the event's room list.
       if (newRooms.length) store.update("events", event.id, { rooms: [...rooms, ...newRooms] });
-      showToast(`${created.length} sessions added`, {
+      showToast(`${created.length} sessions added${counted ? ` · speakers counted on ${counted} existing` : ""}`, {
         actionLabel: "Undo",
         onAction: () => { store.batch(() => created.forEach((r) => store.remove("ros", r.id))); onDone(); },
         duration: 10000,

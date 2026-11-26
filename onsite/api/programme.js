@@ -1,7 +1,7 @@
 // api/programme.js: Vercel function behind "Import from a programme link".
 //
 //   POST /api/programme   { url }   (header Authorization: Bearer <QED session token>)
-//   -> { event_name, sessions: [{ date, day_label, start, end, title, room, format, notes }], warnings }
+//   -> { event_name, sessions: [{ date, day_label, start, end, title, room, format, notes, speakers, moderators }], warnings }
 //
 // 1. Only a logged-in Onsite HQ user may call it (the QED Supabase session is
 //    checked with Supabase), so strangers can't spend our API credits.
@@ -38,7 +38,7 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["date", "day_label", "start", "end", "title", "room", "format", "notes"],
+        required: ["date", "day_label", "start", "end", "title", "room", "format", "notes", "speakers", "moderators"],
         properties: {
           date: { type: ["string", "null"], description: "YYYY-MM-DD if the page gives it, else null" },
           day_label: { type: ["string", "null"], description: "How the page names the day, e.g. 'Day 1', 'Tuesday 1 December'" },
@@ -48,6 +48,8 @@ const SCHEMA = {
           room: { type: ["string", "null"], description: "Room / stage / track as written on the page, null if not stated" },
           format: { type: "string", enum: FORMATS },
           notes: { type: ["string", "null"], description: "Short extra info (e.g. 'separate sign-up'), never speaker names" },
+          speakers: { type: ["integer", "null"], description: "How many speakers are listed for the session (count only), null if none listed" },
+          moderators: { type: ["integer", "null"], description: "How many moderators are listed (count only), null if none listed" },
         },
       },
     },
@@ -64,6 +66,7 @@ Rules:
 - Parallel tracks / breakout rooms: put the room or track in "room". Main-stage items with no room stated: room null.
 - Title: the session title as written, prefixed with its format only when the page states it (e.g. "Keynote: ...", "Fireside chat: ..."). Breaks: "Break", "Lunch break", etc.
 - Do NOT include speaker or moderator names anywhere (data protection): the agency adds people itself.
+- Count the people listed per session instead: "speakers" = people listed as speakers / panellists / keynote speaker / guest of a fireside chat; "moderators" = people listed as moderator / chair / host / interviewer. null when the source lists nobody (breaks, lunch, "to be announced").
 - Leave out side events that take place at another venue, and say so in a warning.
 - Put anything uncertain (unclear dates, items you skipped, "programme to be announced") in warnings, in plain short English.`;
 
@@ -247,7 +250,13 @@ async function extract(url, page) {
   // Keep only well-formed items.
   const time = /^([01]\d|2[0-3]):[0-5]\d$/;
   data.sessions = (data.sessions || []).filter((s) => time.test(s.start) && s.title && s.title.trim())
-    .map((s) => ({ ...s, end: s.end && time.test(s.end) ? s.end : null, date: /^\d{4}-\d{2}-\d{2}$/.test(s.date || "") ? s.date : null }));
+    .map((s) => ({
+      ...s,
+      end: s.end && time.test(s.end) ? s.end : null,
+      date: /^\d{4}-\d{2}-\d{2}$/.test(s.date || "") ? s.date : null,
+      speakers: Number.isInteger(s.speakers) && s.speakers >= 0 && s.speakers <= 50 ? s.speakers : null,
+      moderators: Number.isInteger(s.moderators) && s.moderators >= 0 && s.moderators <= 10 ? s.moderators : null,
+    }));
   return data;
 }
 

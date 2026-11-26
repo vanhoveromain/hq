@@ -271,3 +271,17 @@ body.is-live .line-open b{font-size:17px}
 .import-row{align-items:flex-start;padding:6px 4px;min-height:40px}
 .import-row input{margin-top:2px}
 .import-time{flex:none;width:96px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* People on stage */
+.pill.people{background:var(--hq-accent-light);color:var(--hq-accent-text)}
+.stage-people{font-size:15px;font-weight:600;color:var(--hq-accent-text)}
+
+/* Programme ticks + running late */
+.tick.prog[aria-pressed="true"]{background:var(--hq-accent);border-color:var(--hq-accent)}
+.stage-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.stage.is-over{background:var(--hq-danger-light)}
+.stage-over{font-size:14px;font-weight:600;color:var(--hq-danger)}
+.live-next li.is-waiting .in{color:var(--hq-warning)}
+.pill.on-stage{background:var(--hq-accent);color:var(--hq-on-accent)}
+.line.programme.is-done{opacity:.6}
+.people-note{color:var(--hq-accent-text);font-weight:500}

@@ -12,8 +12,9 @@
   project (EU), tables `onsite_*` (migration `qed/supabase/migrations/20261126000001_onsite_hq.sql`, RUN
   2026-11-26). One migrations folder for that database: `qed/supabase/migrations/`.
 - Single user now, owner on every run-of-show line so the team can join later.
-- Run-of-show line: start time (+ optional end), title, owner, room, notes. Two kinds: `programme` (on
-  stage, never ticked) and `task` (ticked, `done_at`).
+- Run-of-show line: start time (+ optional end), title, owner, room, notes, speakers + moderators on stage
+  (counts only). Two kinds: `programme` (on stage) and `task`; both ticked (`done_at`). Since 2026-11-26
+  (Romain: sessions run late) a programme session stays "on stage" until ticked, whatever the clock says.
 - Main screen (iPad): big Now / Next cards on top, the day's full timeline below; unticked tasks past their
   time in red.
 - Packing list: categories (= boxes) + quantities, Packed + Returned ticks, master material list to pick from
@@ -86,6 +87,16 @@
    ("09:00 - 09:30" looked like a CSS class list) and one-word titles ("Break"), and de-duplicated repeated
    strings, so Day 2 (only in the page code) had titles without times -> skipped. Now: anything with a time is
    kept, capitalised single words kept, only immediate repeats dropped (19/19 Day 2 times found)
+   4e. Speakers + programme ticks (Romain, 2026-11-26; migration 20261126000002, add-only: speakers 0-50 +
+   moderators 0-10 columns, drops onsite_ros_items_programme_not_ticked; tested on a local Postgres; MUST run
+   before this app version is used: it writes the counts). stageLabel (rules.js): "3 + 1 mod · 4 on stage" /
+   "2 speakers" / "1 mod", pill on the timeline, Now / Next cards; edit form fields. stageState (rules.js): per room
+   (no room = the room most sessions use), the first unticked started programme line is on stage (overBy = minutes
+   past programmeEnd -> red "Running late · n min over"), started ones behind it are "waiting" at the top of Next;
+   tick on programme lines too (timeline, Now card, Next card; blue tick, toast "Finished"); "On stage" pill.
+   Import: schema + prompt count speakers / moderators (numbers only, never names); review shows them; sessions
+   already in the run of show get their counts filled in when they have none (works with nothing else ticked).
+   Tested in Chromium (stand-in server): counts, late keynote stays on stage, panel waiting, tick moves it on
 LIVE 2026-11-26: merged to main (fast-forward), onsite.ownhq.app serves it. ownhq.app portal card (hq-home/index.html,
    data-hq="onsite", icon hq-home/onsite-hq.svg); hq_access row 'onsite' added in own-hq by Romain 2026-11-26
    HQ switcher (Romain, 2026-11-26): hq-home/switcher.js lists Onsite HQ (id "onsite", symbol = onsite-hq.svg, after

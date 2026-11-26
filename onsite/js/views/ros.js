@@ -7,8 +7,8 @@
 //     time: big NOW and NEXT cards on top (what's on stage, what you have to
 //     do, what comes next and in how long), a "now" line in the timeline, the
 //     screen stays on (Wake Lock), refresh every 30 s.
-//   - Timeline: programme lines (on stage, never ticked, shaded) and tasks
-//     (ticked). Unticked tasks past their time are red.
+//   - Timeline: programme lines (on stage, shaded; ticked when the session is
+//     finished, so a late session stays "on stage") and tasks (ticked). Unticked tasks past their time are red.
 //   - Tap a line = edit / move to another day / delete (Undo). Quick add at the
 //     bottom (Enter adds, the field stays ready for the next one). "Paste lines"
 //     turns a pasted list (from the programme, Excel, Word) into lines.
@@ -21,7 +21,7 @@ import { openDialog } from "../utils/dialog.js";
 import { showToast } from "../utils/toast.js";
 import { brusselsToday, formatDay } from "../utils/dates.js";
 import { openImport } from "./importProgramme.js";
-import { OWNERS, DEFAULT_OWNER, orderedDays, hhmm, brusselsNow, minutesBetween, sortLines, programmeEnd, parsePastedLines } from "../rules.js";
+import { OWNERS, DEFAULT_OWNER, orderedDays, hhmm, brusselsNow, minutesBetween, sortLines, programmeEnd, parsePastedLines, stageLabel, stageState } from "../rules.js";
 
 const ui = { kind: "all", owner: "", room: "", previewAt: null, scrolledFor: null, quickKind: "task" };
 let clock = null;
@@ -85,7 +85,7 @@ export function render(el, event, dayParam) {
       </div>
     </div>
     <ol class="timeline">
-      ${timelineHtml(lines, live ? now : null)}
+      ${timelineHtml(lines, live ? now : null, all)}
     </ol>
     ${all.length && !lines.length ? `<p class="empty">Nothing matches these filters.</p>` : ""}
     ${all.length ? "" : `<p class="empty">No lines yet for ${escapeHtml(day.tabLabel)}. Import the programme from its link, add lines below, or use “Paste lines”.</p>`}
@@ -123,18 +123,26 @@ export function render(el, event, dayParam) {
 // ---------------------------------------------------------------------
 
 function liveCardsHtml(all, now) {
-  const programme = all.filter((r) => r.kind === "programme");
-  const onStage = programme.filter((p) => hhmm(p.start_time) <= now && now < programmeEnd(p, programme));
+  const { onStage, waiting } = stageState(all, now);
   const toDo = all.filter((r) => r.kind === "task" && !r.done_at && hhmm(r.start_time) <= now);
-  const upcoming = all.filter((r) => hhmm(r.start_time) > now && !(r.kind === "task" && r.done_at)).slice(0, 4);
+  const waitingIds = new Set(waiting.map((w) => w.id));
+  const upcoming = [
+    ...waiting,
+    ...all.filter((r) => hhmm(r.start_time) > now && !r.done_at && !waitingIds.has(r.id)),
+  ].slice(0, 4);
 
   return `<div class="live-cards">
     <section class="live-card now">
       <header><span class="live-label">Now</span><span class="live-clock">${escapeHtml(now)}</span></header>
-      ${onStage.length ? onStage.map((p) => `
-        <div class="stage">
-          <span class="stage-title">${escapeHtml(p.title)}</span>
-          <span class="muted">${escapeHtml([p.room, `until ${programmeEnd(p, programme)}`].filter(Boolean).join(" · "))}</span>
+      ${onStage.length ? onStage.map(({ line: p, end, overBy }) => `
+        <div class="stage${overBy ? " is-over" : ""}">
+          <div class="stage-row">
+            <span class="stage-title">${escapeHtml(p.title)}</span>
+            ${tickHtml(p, "Session finished")}
+          </div>
+          <span class="muted">${escapeHtml([p.room, overBy ? `planned until ${end}` : `until ${end}`].filter(Boolean).join(" · "))}</span>
+          ${overBy ? `<span class="stage-over">Running late · ${escapeHtml(overText(overBy))} over</span>` : ""}
+          ${stageLabel(p) ? `<span class="stage-people">${escapeHtml(stageLabel(p))}</span>` : ""}
         </div>`).join("") : `<p class="muted">Nothing on stage.</p>`}
       ${toDo.length ? `<h4>To do now · ${toDo.length}</h4><ul class="live-tasks">${toDo.slice(0, 5).map((t) => liveTaskHtml(t, now)).join("")}</ul>
         ${toDo.length > 5 ? `<p class="muted small">+ ${toDo.length - 5} more in the timeline</p>` : ""}`
@@ -143,14 +151,18 @@ function liveCardsHtml(all, now) {
     <section class="live-card next">
       <header><span class="live-label">Next</span></header>
       ${upcoming.length ? `<ul class="live-next">${upcoming.map((r) => `
-        <li class="${r.kind}">
-          <span class="in">${escapeHtml(inMinutes(now, hhmm(r.start_time)))}</span>
+        <li class="${r.kind}${waitingIds.has(r.id) ? " is-waiting" : ""}">
+          <span class="in">${waitingIds.has(r.id) ? "waiting" : escapeHtml(inMinutes(now, hhmm(r.start_time)))}</span>
           <span class="next-text"><b>${escapeHtml(r.title)}</b>
-            <small>${escapeHtml([timeRange(r), r.kind === "task" ? r.owner : null, r.room].filter(Boolean).join(" · "))}</small></span>
-          ${r.kind === "task" ? tickHtml(r) : ""}
+            <small>${escapeHtml([timeRange(r), r.kind === "task" ? r.owner : null, r.room, stageLabel(r)].filter(Boolean).join(" · "))}</small></span>
+          ${tickHtml(r)}
         </li>`).join("")}</ul>` : `<p class="muted">Nothing more today.</p>`}
     </section>
   </div>`;
+}
+
+function overText(min) {
+  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")}`;
 }
 
 function liveTaskHtml(t, now) {
@@ -169,7 +181,9 @@ function liveTaskHtml(t, now) {
 // Timeline
 // ---------------------------------------------------------------------
 
-function timelineHtml(lines, now) {
+function timelineHtml(lines, now, all) {
+  const stage = now ? stageState(all, now) : { onStage: [], waiting: [] };
+  const onStageIds = new Map(stage.onStage.map((s) => [s.line.id, s.overBy]));
   let markerDone = !now;
   const out = [];
   for (const r of lines) {
@@ -187,18 +201,23 @@ function timelineHtml(lines, now) {
           ${r.kind === "programme" ? `<span class="pill">Programme</span>` : ""}
           ${r.owner ? `<span class="pill owner">${escapeHtml(r.owner)}</span>` : ""}
           ${r.room ? `<span class="pill">${escapeHtml(r.room)}</span>` : ""}
+          ${stageLabel(r) ? `<span class="pill people">${escapeHtml(stageLabel(r))}</span>` : ""}
           ${late ? `<span class="pill late">Late</span>` : ""}
+          ${onStageIds.has(r.id) ? `<span class="pill on-stage">On stage${onStageIds.get(r.id) ? ` · ${escapeHtml(overText(onStageIds.get(r.id)))} over` : ""}</span>` : ""}
         </span>
       </button>
-      ${r.kind === "task" ? tickHtml(r) : `<span class="tick-slot"></span>`}
+      ${tickHtml(r)}
     </li>`);
   }
   if (!markerDone && lines.length) out.push(`<li class="now-line"><span>${escapeHtml(now)}</span></li>`);
   return out.join("");
 }
 
-function tickHtml(r) {
-  return `<button type="button" class="tick" data-tick="${r.id}" aria-pressed="${Boolean(r.done_at)}" aria-label="Done: ${escapeHtml(r.title)}">${icon("check")}</button>`;
+// Tasks: done. Programme sessions: finished on stage (the next one in the
+// room then moves to "Now").
+function tickHtml(r, label) {
+  const what = label || (r.kind === "programme" ? "Session finished" : "Done");
+  return `<button type="button" class="tick${r.kind === "programme" ? " prog" : ""}" data-tick="${r.id}" aria-pressed="${Boolean(r.done_at)}" aria-label="${escapeHtml(what)}: ${escapeHtml(r.title)}" title="${escapeHtml(what)}">${icon("check")}</button>`;
 }
 
 
@@ -228,7 +247,7 @@ function wire(el, event, day, all) {
       const line = store.get("ros", t.dataset.tick);
       const doneAt = line.done_at ? null : new Date().toISOString();
       store.update("ros", line.id, { done_at: doneAt });
-      if (doneAt) showToast(`Done: ${line.title}`, { actionLabel: "Undo", onAction: () => { store.update("ros", line.id, { done_at: null }); redraw(); } });
+      if (doneAt) showToast(`${line.kind === "programme" ? "Finished" : "Done"}: ${line.title}`, { actionLabel: "Undo", onAction: () => { store.update("ros", line.id, { done_at: null }); redraw(); } });
       return redraw();
     }
     if (t.dataset.edit) return openLineForm(event, day, store.get("ros", t.dataset.edit), redraw);
@@ -310,6 +329,10 @@ function openLineForm(event, day, line, redraw) {
         <label class="field"><span>Owner</span><select name="owner"><option value="">—</option>${owners.map((o) => `<option ${o === line.owner ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select></label>
         <label class="field"><span>Room</span><select name="room"><option value="">—</option>${rooms.map((r) => `<option ${r === line.room ? "selected" : ""}>${escapeHtml(r)}</option>`).join("")}</select></label>
       </div>
+      <div class="field-row">
+        <label class="field"><span>Speakers on stage</span><input name="speakers" type="number" min="0" max="50" inputmode="numeric" value="${escapeHtml(line.speakers ?? "")}"></label>
+        <label class="field"><span>Moderators</span><input name="moderators" type="number" min="0" max="10" inputmode="numeric" value="${escapeHtml(line.moderators ?? "")}"></label>
+      </div>
       <label class="field"><span>Notes / contact</span><textarea name="notes" rows="3" maxlength="5000">${escapeHtml(line.notes)}</textarea></label>
       ${line.done_at ? `<p class="muted small">Ticked at ${escapeHtml(new Date(line.done_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Brussels" }))}.</p>` : ""}`,
     async onSubmit(form) {
@@ -317,11 +340,19 @@ function openLineForm(event, day, line, redraw) {
       if (!title) throw new Error("Give the line a title.");
       if (!form.start.value) throw new Error("Pick a start time.");
       const kind = form.kind.value;
+      const count = (input, max) => {
+        if (input.value === "") return null;
+        const n = Number(input.value);
+        if (!Number.isInteger(n) || n < 0 || n > max) throw new Error(`${input.name === "speakers" ? "Speakers" : "Moderators"}: a whole number from 0 to ${max}, or empty.`);
+        return n;
+      };
+      const speakers = count(form.speakers, 50);
+      const moderators = count(form.moderators, 10);
       store.update("ros", line.id, {
+        speakers, moderators,
         kind, title, start_time: form.start.value, end_time: form.end.value || null,
         day_id: form.day.value, owner: form.owner.value || null, room: form.room.value || null,
         notes: form.notes.value.trim() || null,
-        ...(kind === "programme" ? { done_at: null } : {}),
       });
       redraw();
     },

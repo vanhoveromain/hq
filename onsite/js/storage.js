@@ -27,7 +27,7 @@ const db = hq.getQedSupabase();
 export const TABLES = {
   events:    { table: "onsite_events",     cols: ["name", "venue", "address", "rooms", "project_id", "is_template", "notes", "archived_at"] },
   days:      { table: "onsite_days",       cols: ["event_id", "day", "kind", "label"] },
-  ros:       { table: "onsite_ros_items",  cols: ["event_id", "day_id", "kind", "start_time", "end_time", "title", "owner", "room", "notes", "position", "done_at"] },
+  ros:       { table: "onsite_ros_items",  cols: ["event_id", "day_id", "kind", "start_time", "end_time", "title", "owner", "room", "notes", "position", "done_at", "speakers", "moderators"] },
   materials: { table: "onsite_materials",  cols: ["name", "category", "default_qty", "note", "position", "archived_at"] },
   pack:      { table: "onsite_pack_items", cols: ["event_id", "material_id", "name", "category", "qty", "note", "position", "packed_at", "returned_at"] },
 };
