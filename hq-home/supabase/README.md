@@ -5,7 +5,7 @@ Ce dossier n'est pas publié sur ownhq.app (`.vercelignore`).
 
 ## hq_access (migration 20261115000002)
 Qui voit quel HQ sur le portail et dans le sélecteur. Une ligne = une personne + un HQ (`qed`, `sport`, `work`,
-`personal`, `poulette`…). Ça cache des cartes, ça ne protège pas les données (ce sont les verrous RLS de chaque HQ).
+`personal`, `poulette`, `onsite`…). Ça cache des cartes, ça ne protège pas les données (ce sont les verrous RLS de chaque HQ).
 
 - L'app ne peut que lire ses propres lignes. Ajouts / retraits à la main dans le SQL Editor :
   ```sql
