@@ -54,7 +54,17 @@
    (returned_at); tap the name = edit / delete (Undo); "+ Item" can also add to the material list (ticked by
    default). Event items are copies (material changes don't touch existing lists). main.js resets
    viewEl.onclick on every screen change (a screen's handler leaked into the next one: double pop-ups)
-4. Run of show editor + Now / Next screen
+4. Run of show + Now / Next — built 2026-11-26 (views/ros.js, rules in rules.js): #/event/<id>/ros/<day id>, day
+   tabs (opens today's day, else the next one). Live (the day itself, Brussels time, or "Preview live" at a chosen
+   time): NOW card (programme on stage: start <= now < programmeEnd = its end, else next programme start in the same
+   room; "To do now" = unticked tasks started, late in red) + NEXT card (next 4 lines, "in 35 min", tick on tasks),
+   red "now" line in the timeline, refresh every 30 s (not while typing / pop-up), Wake Lock while live. Timeline:
+   sortLines (time, programme first, position), programme shaded / no tick, late tasks red (end passed, or start
+   passed if no end). Filters: kind, owner, room. Tap a line = edit (kind, title, start, end, day, owner, room,
+   notes) / delete (Undo). Quick add (Task / Programme, Enter adds, focus stays, same time kept). "Paste lines"
+   (parsePastedLines: "09:00 - 09:20 Title", "9.30 Title", Excel tabs start/end/title/owner/room/notes; a line
+   without a time goes into the notes of the line above). "Live view" (body.is-live) hides the top bar, event
+   header, tabs, quick add. Tested in Chromium with the fake database
 5. After the event: templates, link to QED HQ projects, HQ switcher entry
 
 ## Test address

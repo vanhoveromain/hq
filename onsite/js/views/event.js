@@ -1,5 +1,5 @@
 // event.js: one event. Header (name, dates, venue, Edit) and two tabs:
-//   #/event/<id>/ros    Run of show (per day)      -> build step 4
+//   #/event/<id>/ros/<day id>  Run of show (views/ros.js)
 //   #/event/<id>/pack   Packing list (views/packing.js)
 
 import * as store from "../storage.js";
@@ -9,6 +9,7 @@ import { eventSpan, orderedDays } from "../rules.js";
 import { openEventForm } from "./eventForm.js";
 import { showToast } from "../utils/toast.js";
 import * as packing from "./packing.js";
+import * as ros from "./ros.js";
 
 export function render(el, { params }) {
   const [id, tab = "ros"] = params;
@@ -40,11 +41,10 @@ export function render(el, { params }) {
 
   const body = el.querySelector("#event-body");
   if (tab === "pack") {
+    ros.leave();
     packing.render(body, event);
   } else {
-    body.innerHTML = `
-      <p class="placeholder">Run of show: coming in build step 4.</p>
-      <p class="muted small">Days: ${days.map((d) => `${escapeHtml(d.tabLabel)} (${escapeHtml(d.day)})`).join(" · ") || "none"}</p>`;
+    ros.render(body, event, params[2]);
   }
 
   el.querySelector("#edit-event").addEventListener("click", () => {
@@ -57,4 +57,10 @@ export function render(el, { params }) {
       },
     });
   });
+}
+
+// Leaving the event page: the run of show stops its clock and lets the
+// screen sleep again.
+export function leave() {
+  ros.leave();
 }
