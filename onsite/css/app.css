@@ -23,7 +23,7 @@ a{color:var(--hq-accent-text)}
 .brand{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:16px;color:var(--hq-primary-text);text-decoration:none}
 .brand img{border-radius:6px}
 body.is-preview .top{box-shadow:inset 0 3px 0 var(--hq-warning)}
-body.is-preview .brand::after{content:"Test version";padding:2px 8px;border-radius:var(--hq-radius-sm);background:var(--hq-warning-light);color:var(--hq-warning);font-size:12px;font-weight:600}
+body.is-preview .top-row::after{order:1;content:"Test version";padding:2px 8px;border-radius:var(--hq-radius-sm);background:var(--hq-warning-light);color:var(--hq-warning);font-size:12px;font-weight:600}
 
 /* Sync pill */
 .sync{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:1px solid var(--hq-border);border-radius:999px;background:var(--hq-surface);color:var(--hq-secondary-text);font:500 13px/1 var(--hq-font);cursor:pointer}

@@ -86,7 +86,10 @@
    kept, capitalised single words kept, only immediate repeats dropped (19/19 Day 2 times found)
 LIVE 2026-11-26: merged to main (fast-forward), onsite.ownhq.app serves it. ownhq.app portal card (hq-home/index.html,
    data-hq="onsite", icon hq-home/onsite-hq.svg); hq_access row 'onsite' added in own-hq by Romain 2026-11-26
-5. After the event: templates, link to QED HQ projects, HQ switcher entry (hq-home/switcher.js)
+   HQ switcher (Romain, 2026-11-26): hq-home/switcher.js lists Onsite HQ (id "onsite", symbol = onsite-hq.svg, after
+   QED HQ; shown when hq_access has 'onsite'); Onsite HQ's top bar uses <hq-switcher current="onsite"> (loaded from
+   HQ_BASE in main.js; offline the plain "Onsite HQ" link stays); "Test version" label moved to .top-row::after
+5. After the event: templates, link to QED HQ projects
 
 ## Test address
 - Local: `python3 serve.py` in onsite/ -> http://localhost:8002 (login at /_hq/).

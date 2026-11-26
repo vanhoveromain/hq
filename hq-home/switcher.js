@@ -21,6 +21,8 @@ const SYMBOLS = {
   qed: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#547B91"/><g fill="#FFFFFF"><path d="M48 46L34 32L40 26L54 40Z"/><path d="M54 44L70 29L76 35L60 50Z"/><path d="M50 58L50 75L59 75L59 58Z"/><rect x="17" y="14" width="25" height="25" rx="5"/><rect x="65" y="14" width="25" height="25" rx="5"/><rect x="42" y="69" width="25" height="22" rx="5"/><path d="M54 34L70 50L54 66L38 50Z"/></g></svg>`,
   // Poulette HQ (egg, teal), chosen 2026-11-15: brand/logos/poulette-hq.svg.
   poulette: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#3D7D78"/><g fill="#FFFFFF"><path fill-rule="evenodd" d="M50 13C67 13 80 40 80 59C80 76 67 87 50 87C33 87 20 76 20 59C20 40 33 13 50 13ZM50 24C61 24 70 44 70 59C70 70 62 77 50 77C38 77 30 70 30 59C30 44 39 24 50 24Z"/><circle cx="50" cy="59" r="9"/></g></svg>`,
+  // Onsite HQ (location pin + check, QED steel blue), 2026-11-26: onsite/assets/onsite-hq.svg.
+  onsite: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#547B91"/><g fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M50 86s-26-24-26-44a26 26 0 0 1 52 0c0 20-26 44-26 44Z"/><path d="m39 42 8 8 15-15"/></g></svg>`,
   // Parent HQ mark (provisional redraw, brand/export.mjs), in the text colour.
   hq: `<svg viewBox="4.6 10.2 82.5 80" aria-hidden="true" focusable="false"><g fill="currentColor" transform="translate(.6 .7)"><path d="M59 12.42A40 40 0 0 0 20 81.5L20 70.67A32 32 0 0 1 59 21.23Z"/><path d="M68 17.5A40 40 0 0 1 78.95 68.95L73.01 63.01A32 32 0 0 0 68 28.33Z"/><path d="M29 86.58A40 40 0 0 0 73.5 76.5L67.84 70.84A32 32 0 0 1 29 77.77Z"/><path d="M67.84 70.84L86.5 89.5L75.5 89.5L62.34 76.34Z"/><path d="M29 32L37 28L37 85L29 85Z"/><path d="M51 15L59 15L59 67L51 71Z"/><path d="M36.5 46H51.5V53H36.5Z"/></g></svg>`,
 };
@@ -32,6 +34,7 @@ const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
 const SPACES = [
   { id: "hq", name: "All HQs", url: ON_OWNHQ ? "https://ownhq.app/" : "/_hq/" },
   { id: "qed", name: "QED HQ", url: "https://qed.ownhq.app/" },
+  { id: "onsite", name: "Onsite HQ", url: "https://onsite.ownhq.app/" },
   { id: "sport", name: "Sport HQ", url: ON_OWNHQ ? "https://sport.ownhq.app/" : "/" },
   { id: "poulette", name: "Poulette HQ", url: "https://poulette.ownhq.app/" },
 ];

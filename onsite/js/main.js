@@ -5,13 +5,17 @@
 //   #/event/<id>/pack      an event's packing list
 //   #/materials            QED's master material list
 
-import { IS_PREVIEW } from "./hqBase.js";
+import { IS_PREVIEW, HQ_BASE } from "./hqBase.js";
 import * as store from "./storage.js";
 import * as eventsView from "./views/events.js";
 import * as eventView from "./views/event.js";
 import * as materialsView from "./views/materials.js";
 import * as unlockView from "./views/unlock.js";
 import { escapeHtml } from "./utils/html.js";
+
+// The shared HQ switcher in the top bar (served by ownhq.app). Loaded on the
+// side: offline or if it fails, "Onsite HQ" stays a plain link.
+import(HQ_BASE + "switcher.js").catch(() => {});
 
 const routes = {
   events: { title: "Events", view: eventsView },
