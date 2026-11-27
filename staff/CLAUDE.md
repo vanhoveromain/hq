@@ -37,7 +37,9 @@
 
 ## Test address
 - Local: `python3 serve.py` in staff/ -> http://localhost:8003 (login at /_hq/).
-- Preview: Vercel project "staff", staff-preview.ownhq.app on the working branch (loads the login from hq-preview).
+- Preview: Vercel project "staff" (created 2026-11-27, Root Directory typed by hand), staff-preview.ownhq.app on
+  the working branch (loads the login from hq-preview), Vercel Authentication off. A branch only gets a
+  deployment when a push touches staff/ (ignoreCommand), so a new project needs one such push first.
 
 ## Build steps
 1. Database (migration 20261127000001) — RUN 2026-11-27, Romain only editor
