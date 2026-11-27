@@ -56,6 +56,24 @@ async function isEditor() {
   }
 }
 
+// Editor only (Romain, 2026-11-27): the shared HQ switcher replaces the QED
+// logo + title in the page's top bar. The team (no login) keeps the page as
+// it was. Coloured with the page's own tokens so it fits light + dark.
+function showSwitcher() {
+  const brand = document.querySelector("header.top .brand");
+  if (!brand) return;
+  const sw = document.createElement("hq-switcher");
+  sw.setAttribute("current", "staff");
+  sw.style.cssText = "--hq-font:var(--font);--hq-primary-text:var(--text);--hq-secondary-text:var(--muted);"
+    + "--hq-surface:var(--surface);--hq-border:var(--line);--hq-subtle:var(--chip);--hq-accent:var(--text);--hq-accent-text:var(--text);--hq-shadow-pop:var(--shadow)";
+  import(HQ_BASE + "switcher.js")
+    .then(() => {
+      for (const el of brand.children) el.style.display = "none";
+      brand.prepend(sw);
+    })
+    .catch(() => { /* switcher unavailable: keep the page's own header */ });
+}
+
 // A message in the page's grey status bar, the page itself stays empty.
 function stop(html) {
   const el = document.getElementById("status");
@@ -68,7 +86,10 @@ export async function connect() {
   if (fromAddress) rememberKey(fromAddress);
   const key = fromAddress || storedKey();
 
-  if (await isEditor()) return makeDb({ mode: "editor" });
+  if (await isEditor()) {
+    showSwitcher();
+    return makeDb({ mode: "editor" });
+  }
   if (key) return makeDb({ mode: "team", key });
 
   // No key and not an editor: Romain on a fresh device, or someone without

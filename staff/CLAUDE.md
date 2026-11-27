@@ -11,7 +11,10 @@
 - Romain edits, logged in (hq login + QED session) and listed in `staff_editors` (writes enforced by RLS).
 - The team views WITHOUT a login via a secret link `staff.ownhq.app/#k=<key>`; the key opens the schedule
   only (`staff_read(key)`), nothing else in the app. Leaked link = change the key (see qed/supabase/README.md).
-  The key is in the "#" part, so it is never sent to the server or in a referrer. Not in the HQ switcher.
+  The key is in the "#" part, so it is never sent to the server or in a referrer.
+- HQ switcher (Romain, 2026-11-27): Staff HQ is in the switcher list (hq-home/switcher.js, id "staff", shown
+  when hq_access has 'staff' = Romain only). On Staff HQ itself the switcher replaces the QED logo + title for
+  the editor only (showSwitcher() in js/data.js, page tokens mapped to --hq-*); the team keeps the page's header.
 - Page kept as is (QED brand, Poppins), not the HQ tokens.
 
 ## Files
@@ -49,4 +52,6 @@
    Tested by Romain on staff-preview 2026-11-27 (editor: drag + reload + Undo; team link in a private window: view only)
 4. LIVE 2026-11-27: merged to main (fast-forward), staff.ownhq.app. ownhq.app portal card (hq-home/index.html,
    data-hq="staff", icon hq-home/staff-hq.svg), shown when own-hq hq_access has 'staff' for the account.
-   Not in the HQ switcher (the team has no login). Team link: staff.ownhq.app/#k=<key> (qed/supabase/README.md)
+   Team link: staff.ownhq.app/#k=<key> (qed/supabase/README.md)
+5. HQ switcher for Romain (2026-11-27): Staff HQ in the switcher list + switcher in the Staff HQ top bar (editor only).
+   Tested in Chromium with the stand-in (editor light + dark, team unchanged)
