@@ -16,3 +16,6 @@ qed/tools/notion-import/data/
 
 # Dependencies (Vercel installs them)
 node_modules/
+
+# Staff HQ import: client-confidential data, never in git
+qed/tools/staff-import/data/
