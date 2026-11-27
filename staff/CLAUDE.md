@@ -55,3 +55,9 @@
    Team link: staff.ownhq.app/#k=<key> (qed/supabase/README.md)
 5. HQ switcher for Romain (2026-11-27): Staff HQ in the switcher list + switcher in the Staff HQ top bar (editor only).
    Tested in Chromium with the stand-in (editor light + dark, team unchanged)
+
+## Changes
+- 2026-11-27: short cards in the calendar (time grid). "mini" (card too short for the compact view) now shows the
+  title on one line (ellipsis) + a second line with the time and the people chips (the manager drop zone is hidden;
+  the whole card is tinted). New "micro" level (e.g. 30 min): title and time on one line, people only on click.
+  Was: title wrapped on 2 lines and the time + people were cut off. fitCards() tries compact > mini > micro.

@@ -318,6 +318,24 @@ input[type=text],input[type=date],textarea,.panel select{width:100%;border:1px s
 .evc.mini .grp,.evc.mini .strip,.evc.mini .enotes,.evc.mini .none,.evc.mini .sum,.evc.mini .meta2,.evc.mini .tags{display:none}
 .evc.mini .eh{padding:.3em .6em}
 .evc.mini .eh::after{content:attr(data-t);display:block;font-size:.8em;color:var(--muted)}
+.evc.mini .ttl{flex-wrap:nowrap;min-width:0}
+.evc.mini .mgr,.evc.mini .mgr.dz{display:none}
+.evc.mini{background:var(--tint-b)}
+.evc.mini.own{background:var(--tint-o)}
+.evc.mini.su{background:var(--row)}
+.evc.mini h3{flex:1;min-width:0;font-size:.95em;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evc.mini h3 .open{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evc.mini .eh{padding:.25em .6em .1em}
+.evc.mini .eh::after{display:none}
+.evc.mini .sum{display:flex;flex-wrap:nowrap;align-items:center;gap:.4em;overflow:hidden;padding:.15em .6em .25em}
+.evc.mini .sum::before{content:attr(data-t);flex:none;font-size:.8em;color:var(--muted);white-space:nowrap}
+.evc.mini .sum .ppl{flex-wrap:nowrap;min-width:0}
+.evc.mini .sum .pc,.evc.mini .sum .sc{font-size:.75em;line-height:1.45}
+.evc.mini .sum .hint{font-size:.75em;white-space:nowrap}
+.evc.micro .eh{display:flex;align-items:baseline;gap:.5em;padding-top:.2em;padding-bottom:.2em}
+.evc.micro .ttl{flex:1}
+.evc.micro .eh::after{display:block;flex:none;line-height:1.3}
+.evc.micro .sum{display:none}
 .dayjump{background:none;border:0;padding:0;font:inherit;color:inherit;display:flex;align-items:baseline;gap:6px;cursor:pointer;text-align:left}
 .dayjump:hover .dd{text-decoration:underline}
 #dayPick{width:auto;margin-left:8px;border:1px solid var(--line-strong);border-radius:6px;padding:5px 8px;background:var(--surface)}
@@ -604,8 +622,8 @@ function eventCard(it,sameDaySetups,edBase){
 function summaryEl(ev,days,ed){const seen=new Map();days.forEach(d=>Object.entries(d.roles||{}).forEach(([rid,v])=>{if(!Array.isArray(v))return;v.forEach(n=>{n=String(n);if(!seen.has(n))seen.set(n,{d,rid})})}));
   const box=h('div',{class:'sum'});if(!seen.size){box.append(h('span',{class:'hint'},'Team not assigned yet'));return box}
   const ppl=h('div',{class:'ppl'});seen.forEach((x,n)=>ppl.append(ed?dragChip(n,ev.id,x.d.id,x.rid,ed.cells.has(ev.id+'|'+x.d.id+'|'+x.rid+'|'+n)):personChip(n)));box.append(ppl);return box}
-function fitCards(root){requestAnimationFrame(()=>{root.querySelectorAll('.tslot>.evc').forEach(c=>{c.classList.remove('compact','mini');if(c.scrollHeight>c.clientHeight+1){c.classList.add('compact');if(c.scrollHeight>c.clientHeight+1){c.classList.remove('compact');c.classList.add('mini')}}})})}
-function tcard(it,strips,ed,edit){const card=eventCard(it,strips,ed);card.tabIndex=0;card.title=(edit?'Click to edit ':'Click for details: ')+it.ev.name;
+function fitCards(root){requestAnimationFrame(()=>{root.querySelectorAll('.tslot>.evc').forEach(c=>{c.classList.remove('compact','mini','micro');if(c.scrollHeight>c.clientHeight+1){c.classList.add('compact');if(c.scrollHeight>c.clientHeight+1){c.classList.remove('compact');c.classList.add('mini');if(c.scrollHeight>c.clientHeight+1)c.classList.add('micro')}}})})}
+function tcard(it,strips,ed,edit){const card=eventCard(it,strips,ed);const sm=card.querySelector('.sum');if(sm)sm.dataset.t=timeLabel(it.day);card.tabIndex=0;card.title=(edit?'Click to edit ':'Click for details: ')+it.ev.name;
   const open=()=>{if(edit)openEventPanel(it.ev.id);else openDetails(it,strips)};
   card.addEventListener('click',e=>{if(e.target.closest('button,.rr.edit,[data-drag],.dz'))return;open()});
   card.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target===card){e.preventDefault();open()}});return card}
