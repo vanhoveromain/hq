@@ -65,7 +65,7 @@ export async function render(el, { params = [] } = {}) {
     "score-project": (a, b) => priorityScore(b, today) - priorityScore(a, today) || projectName(a).localeCompare(projectName(b), "en", { sensitivity: "base" }),
   }[board.sort];
 
-  document.title = `${board.label} · Task planner · QED HQ`;
+  document.title = `${board.label} · Task planner · Tasks HQ`;
   el.innerHTML = `
     <nav class="tabs" aria-label="Boards">
       ${PLANNER_BOARDS.map((b) => `<a href="#/planner/${b.id}${b.weekly && offset ? "/" + offset : ""}" class="${b === board ? "active" : ""}"${b === board ? ' aria-current="page"' : ""}>${escapeHtml(b.label)}</a>`).join("")}

@@ -40,7 +40,7 @@ function show(user) {
 // Shows only the cards of the HQs this account may open (table hq_access).
 // list = null means unknown (no network, nothing remembered): show them all,
 // the data stays protected by each HQ's own locks.
-// The QED HQ folder (Tasks, Onsite HQ, Staff HQ, view #qed) shows when at
+// The QED HQ folder (Tasks HQ, Onsite HQ, Staff HQ, view #qed) shows when at
 // least one of its HQs is open; with just one, the folder opens it directly.
 // Exactly one HQ you can open -> go straight there (Léa -> PouletteHQ).
 const lists = [cards, folderCards];

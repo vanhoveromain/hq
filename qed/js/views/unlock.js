@@ -9,8 +9,8 @@ export function render(el, { user, onUnlocked }) {
   el.innerHTML = `
     <section class="unlock">
       <span class="unlock-icon">${icon("lock")}</span>
-      <h1>Unlock QED HQ</h1>
-      <p class="muted">QED HQ keeps its data in its own secure space. Enter your hq password once to open it.</p>
+      <h1>Unlock Tasks HQ</h1>
+      <p class="muted">Tasks HQ keeps its data in its own secure space. Enter your hq password once to open it.</p>
       <form id="unlock-form" class="form" novalidate>
         <label class="field">
           <span>Email</span>
@@ -59,7 +59,7 @@ export function render(el, { user, onUnlocked }) {
 function friendlyError(error) {
   const text = (error.message || "").toLowerCase();
   if (text.includes("invalid login credentials")) {
-    return "Wrong password, or no QED HQ account for this email yet.";
+    return "Wrong password, or no Tasks HQ account for this email yet.";
   }
   if (text.includes("rate limit") || error.status === 429) {
     return "Too many attempts. Wait a few minutes and try again.";

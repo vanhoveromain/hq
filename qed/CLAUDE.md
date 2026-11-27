@@ -1,4 +1,8 @@
-# QED HQ — work planner (v1)
+# Tasks HQ (formerly QED HQ) — work planner (v1)
+
+> Renamed 2026-11-27: the app is shown as **Tasks HQ** (title, manifest, switcher, icon `assets/tasks-hq*`).
+> "QED HQ" is now the folder on ownhq.app (`#qed`) grouping Tasks HQ, Onsite HQ and Staff HQ.
+> Code, folder, `hq_access` id and Supabase project keep the name `qed`.
 
 ## Context
 - Owner: Romain, Account Manager & Team Leader at QED (event agency, Brussels).

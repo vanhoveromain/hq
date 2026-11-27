@@ -113,7 +113,7 @@ export async function render(el, { params = [] } = {}) {
     done: lists.achievedToday.filter((t) => !t.is_meeting),
   } : null;
 
-  document.title = `Priorities ${isTomorrow ? "for tomorrow" : "of the day"} · QED HQ`;
+  document.title = `Priorities ${isTomorrow ? "for tomorrow" : "of the day"} · Tasks HQ`;
   el.innerHTML = `
     <div class="day-head">
       <p class="day-line">${escapeHtml(longDay(day))}</p>

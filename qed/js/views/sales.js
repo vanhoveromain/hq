@@ -55,7 +55,7 @@ export async function render(el, { params = [] } = {}) {
       ? (a, b) => a.reach_out.localeCompare(b.reach_out)
       : (a, b) => b.created_at.localeCompare(a.created_at));
 
-  document.title = "Sales · QED HQ";
+  document.title = "Sales · Tasks HQ";
   el.innerHTML = `
     <div class="sales">
       <div class="section-head">

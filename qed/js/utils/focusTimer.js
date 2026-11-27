@@ -20,7 +20,7 @@ const TITLE_MARK = "⏱ ";
 let state = { phase: "idle" };
 let tick = null;
 let wakeLock = null;
-let baseTitle = "QED HQ";
+let baseTitle = "Tasks HQ";
 const listeners = new Set();
 
 // --- reading -----------------------------------------------------------
