@@ -18,7 +18,9 @@
 const SYMBOLS = {
   // Product symbols from brand/logos/ (guidelines-v1.0/02_Logos/Products), unchanged.
   sport: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#75638F"/><g fill="#FFFFFF"><path d="M50 14A36 36 0 0 1 86 50H72A22 22 0 0 0 50 28Z"/><path d="M86 50A36 36 0 0 1 50 86V72A22 22 0 0 0 72 50Z"/><path d="M50 86A36 36 0 0 1 14 50H28A22 22 0 0 0 50 72Z"/><path d="M14 50A36 36 0 0 1 50 14V28A22 22 0 0 0 28 50Z"/><circle cx="50" cy="50" r="9"/></g></svg>`,
-  qed: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#547B91"/><g fill="#FFFFFF"><path d="M48 46L34 32L40 26L54 40Z"/><path d="M54 44L70 29L76 35L60 50Z"/><path d="M50 58L50 75L59 75L59 58Z"/><rect x="17" y="14" width="25" height="25" rx="5"/><rect x="65" y="14" width="25" height="25" rx="5"/><rect x="42" y="69" width="25" height="22" rx="5"/><path d="M54 34L70 50L54 66L38 50Z"/></g></svg>`,
+  // Tasks HQ (checklist, QED steel blue), 2026-11-27: hq-home/tasks-hq.svg.
+  // The QED HQ symbol (hq-home/qed-hq.svg) is now the QED folder icon on ownhq.app.
+  qed: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#547B91"/><g fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="m20 29 6 6 11-12"/><path d="M49 30h31"/><path d="m20 53 6 6 11-12"/><path d="M49 54h31"/><path d="M24 77h9"/><path d="M49 77h31"/></g></svg>`,
   // Poulette HQ (egg, teal), chosen 2026-11-15: brand/logos/poulette-hq.svg.
   poulette: `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><rect width="100" height="100" rx="8" fill="#3D7D78"/><g fill="#FFFFFF"><path fill-rule="evenodd" d="M50 13C67 13 80 40 80 59C80 76 67 87 50 87C33 87 20 76 20 59C20 40 33 13 50 13ZM50 24C61 24 70 44 70 59C70 70 62 77 50 77C38 77 30 70 30 59C30 44 39 24 50 24Z"/><circle cx="50" cy="59" r="9"/></g></svg>`,
   // Onsite HQ (location pin + check, QED steel blue), 2026-11-26: onsite/assets/onsite-hq.svg.
@@ -31,13 +33,14 @@ const SYMBOLS = {
 
 const ON_OWNHQ = /(^|\.)ownhq\.app$/.test(window.location.hostname);
 
-// The HQ portal first, then each HQ. Work HQ and Personal HQ are planned: they
+// The HQ portal first, then each HQ. group "qed" = the QED HQ folder on
+// ownhq.app (#qed): listed under a "QED HQ" heading. Work HQ and Personal HQ are planned: they
 // join this list when they exist (guidelines §02: no invented URLs).
 const SPACES = [
   { id: "hq", name: "All HQs", url: ON_OWNHQ ? "https://ownhq.app/" : "/_hq/" },
-  { id: "qed", name: "QED HQ", url: "https://qed.ownhq.app/" },
-  { id: "onsite", name: "Onsite HQ", url: "https://onsite.ownhq.app/" },
-  { id: "staff", name: "Staff HQ", url: "https://staff.ownhq.app/" },
+  { id: "qed", name: "Tasks HQ", group: "qed", url: "https://qed.ownhq.app/" },
+  { id: "onsite", name: "Onsite HQ", group: "qed", url: "https://onsite.ownhq.app/" },
+  { id: "staff", name: "Staff HQ", group: "qed", url: "https://staff.ownhq.app/" },
   { id: "sport", name: "Sport HQ", url: ON_OWNHQ ? "https://sport.ownhq.app/" : "/" },
   { id: "poulette", name: "Poulette HQ", url: "https://poulette.ownhq.app/" },
 ];
@@ -109,6 +112,9 @@ class HqSwitcher extends HTMLElement {
       <span class="hqsw-sym ${s.id === "hq" ? "is-hq" : ""}">${SYMBOLS[s.id]}</span>
       <span>${s.name}</span>${s.id === current.id ? CHECK : ""}</a></li>`;
 
+    const section = (title, list) => list.length
+      ? `<li role="presentation" class="hqsw-label">${title}</li>${list.map(item).join("")}` : "";
+
     if (alone) {
       // Nothing to switch to: just the HQ's symbol + name.
       this.close = () => {};
@@ -120,8 +126,8 @@ class HqSwitcher extends HTMLElement {
         <span class="hqsw-sym">${SYMBOLS[current.id]}</span><span class="hqsw-name">${label}</span>${CARET}</button>
       <ul class="hqsw-menu" id="${menuId}" role="menu" aria-label="Switch HQ" hidden>
         ${item(SPACES[0])}<li role="separator" class="hqsw-sep"></li>
-        <li role="presentation" class="hqsw-label">Your HQs</li>
-        ${spaces.map(item).join("")}
+        ${section("QED HQ", spaces.filter((s) => s.group === "qed"))}
+        ${section("Your HQs", spaces.filter((s) => !s.group))}
       </ul>`;
 
     const button = this.querySelector(".hqsw-btn");

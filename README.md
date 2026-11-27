@@ -6,9 +6,9 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 
 | Domain | Vercel project root | What |
 |---|---|---|
-| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (cards to QED HQ and Sport HQ) + the shared HQ switcher (`switcher.js`) |
+| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (a card per HQ; the QED HQ card is a folder, `ownhq.app/#qed`, with Tasks HQ = `qed.ownhq.app`, Onsite HQ and Staff HQ; the switcher groups the same three under "QED HQ") + the shared HQ switcher (`switcher.js`) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
-| `qed.ownhq.app` | `qed/` | QED HQ: work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
+| `qed.ownhq.app` | `qed/` | Tasks HQ (was "QED HQ" until 2026-11-27; code, folder, hq_access id and Supabase keep the name `qed`): work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
 | `onsite.ownhq.app` | `onsite/` | Onsite HQ: run of show + packing list for QED events on site (iPad, works offline), same login, data in the QED Supabase project (tables `onsite_*`), see `onsite/CLAUDE.md` |
 | `staff.ownhq.app` | `staff/` | Staff HQ: QED staff schedule (who works on which event). Romain edits (hq login); the team views through a secret link without a login. Data in the QED Supabase project (`staff_*`), see `staff/CLAUDE.md` |
 | `poulette.ownhq.app` | `poulette/` | PouletteHQ: newborn tracker for Rom + Léa (French UI), data in the shared `own-hq` Supabase project (tables `poulette_*`), see `poulette/CLAUDE.md` |

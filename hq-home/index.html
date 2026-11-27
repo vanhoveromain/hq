@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-auth="loading">
+<html lang="en" data-auth="loading" data-view="all">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HQ</title>
-<meta name="description" content="HQ: one home for your own tools. QED HQ and Sport HQ.">
+<meta name="description" content="HQ: one home for your own tools. QED HQ, Sport HQ and more.">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#171819" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -68,6 +68,14 @@ a.card:hover img{transform:translateY(-3px);box-shadow:0 12px 24px -10px rgba(36
 .cards[data-access="pending"]{visibility:hidden}
 .cards li[hidden]{display:none}
 @media (prefers-reduced-motion: reduce){a.card:hover img{transform:none}}
+
+/* Folder view (ownhq.app/#qed): the home shows either all HQs or one folder. */
+[data-view="all"] .view-qed,[data-view="qed"] .view-all{display:none!important}
+.back{display:inline-block;color:var(--hq-secondary-text);text-decoration:none;border-radius:var(--hq-radius-sm)}
+.back:hover{color:var(--hq-primary-text)}
+[data-view="qed"] .view-qed{animation:hq-open .18s ease-out}
+@keyframes hq-open{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){[data-view="qed"] .view-qed{animation:none}}
 
 /* Logged out: centred login panel */
 .auth{flex:1;display:flex;align-items:center;justify-content:center;padding-top:32px;padding-bottom:64px}
@@ -138,28 +146,16 @@ main{padding-bottom:env(safe-area-inset-bottom)}
     </div>
   </section>
 
-  <section class="home wrap when-in" aria-labelledby="greeting">
+  <section class="home wrap when-in view-all" aria-labelledby="greeting">
     <p id="today" class="eyebrow"></p>
     <h1 id="greeting">Welcome back</h1>
     <p class="lede">Pick up where you left off.</p>
 
     <ul class="cards" id="cards" data-access="pending" aria-label="Your HQs">
-      <li>
-        <a class="card" data-hq="qed" href="https://qed.ownhq.app">
+      <li data-folder="qed">
+        <a class="card" href="#qed" aria-label="QED HQ: Tasks HQ, Onsite HQ, Staff HQ">
           <img src="qed-hq.svg" alt="" width="80" height="80">
           <h2>QED HQ</h2>
-        </a>
-      </li>
-      <li>
-        <a class="card" data-hq="onsite" href="https://onsite.ownhq.app">
-          <img src="onsite-hq.svg" alt="" width="80" height="80">
-          <h2>Onsite HQ</h2>
-        </a>
-      </li>
-      <li>
-        <a class="card" data-hq="staff" href="https://staff.ownhq.app">
-          <img src="staff-hq.svg" alt="" width="80" height="80">
-          <h2>Staff HQ</h2>
         </a>
       </li>
       <li>
@@ -188,6 +184,34 @@ main{padding-bottom:env(safe-area-inset-bottom)}
       </li>
     </ul>
     <p id="no-hq" class="lede" hidden>No HQ is open for this account yet.</p>
+  </section>
+
+  <!-- QED HQ folder (ownhq.app/#qed): every QED tool in one place. -->
+  <section class="home wrap when-in view-qed" aria-labelledby="qed-title">
+    <a class="eyebrow back" href="#">← All HQs</a>
+    <h1 id="qed-title">QED HQ</h1>
+    <p class="lede">Everything for QED.</p>
+
+    <ul class="cards" id="cards-qed" data-access="pending" aria-label="QED HQ">
+      <li>
+        <a class="card" data-hq="qed" href="https://qed.ownhq.app">
+          <img src="tasks-hq.svg" alt="" width="80" height="80">
+          <h2>Tasks HQ</h2>
+        </a>
+      </li>
+      <li>
+        <a class="card" data-hq="onsite" href="https://onsite.ownhq.app">
+          <img src="onsite-hq.svg" alt="" width="80" height="80">
+          <h2>Onsite HQ</h2>
+        </a>
+      </li>
+      <li>
+        <a class="card" data-hq="staff" href="https://staff.ownhq.app">
+          <img src="staff-hq.svg" alt="" width="80" height="80">
+          <h2>Staff HQ</h2>
+        </a>
+      </li>
+    </ul>
   </section>
 </main>
 

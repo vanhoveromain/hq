@@ -21,7 +21,7 @@ import { openCapture } from "./views/capture.js";
 import { wireColumnResize } from "./utils/colResize.js";
 
 // The shared HQ switcher in the top bar (served by ownhq.app; localhost:
-// serve.py's /_hq/). Loaded on the side: if it fails, "QED HQ" stays a link.
+// serve.py's /_hq/). Loaded on the side: if it fails, "Tasks HQ" stays a link.
 import(HQ_BASE + "switcher.js").catch(() => {});
 
 // The four tabs. Their order here = their order in the bars.
@@ -78,7 +78,7 @@ function render() {
   }
   const title = typeof routes[name].title === "function" ? routes[name].title(params) : routes[name].title;
   titleEl.textContent = title;
-  document.title = name === DEFAULT_ROUTE ? "QED HQ" : `${title} · QED HQ`;
+  document.title = name === DEFAULT_ROUTE ? "Tasks HQ" : `${title} · Tasks HQ`;
   for (const link of navLinks) {
     const active = link.dataset.route === (routes[name].tab || name);
     link.classList.toggle("active", active);
@@ -182,6 +182,6 @@ function refreshCurrent() {
 
 start().catch((error) => {
   document.documentElement.dataset.ready = "true";
-  viewEl.innerHTML = `<p class="error">QED HQ could not start: ${String(error.message || error)
+  viewEl.innerHTML = `<p class="error">Tasks HQ could not start: ${String(error.message || error)
     .replaceAll("<", "&lt;")}</p>`;
 });

@@ -179,7 +179,7 @@ export async function render(el, { params = [] } = {}) {
     .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
   const quickDay = step.quickAddDay === "tomorrow" ? tomorrow : today;
 
-  document.title = `${routine.title} · QED HQ`;
+  document.title = `${routine.title} · Tasks HQ`;
   el.innerHTML = `
     <div class="routine">
       <div class="routine-top">

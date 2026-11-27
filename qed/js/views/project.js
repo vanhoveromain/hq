@@ -56,7 +56,7 @@ export async function render(el, { params }) {
     if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
   });
 
-  document.title = `${project.name} · QED HQ`;
+  document.title = `${project.name} · Tasks HQ`;
   rememberOpened({ kind: "project", id: project.id, label: project.name, sub: isSales ? "Lead" : projectStatusLabel(project) });
   el.innerHTML = `
     <a class="back" href="${backHref}">${icon("back")} ${isSales ? "Sales" : "Projects"}</a>
