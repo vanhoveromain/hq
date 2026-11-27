@@ -36,9 +36,20 @@ One database serves local testing and the live app, so every migration is flagge
 | `onsite_ros_items` | Onsite HQ: run of show; `programme` lines (no tick) and `task` lines (`done_at`) |
 | `onsite_materials` | Onsite HQ: QED's master material list |
 | `onsite_pack_items` | Onsite HQ: an event's packing list (`packed_at`, `returned_at`) |
+| `staff_docs` | Staff HQ (staff.ownhq.app, same database): the staff schedule, one row per document (`config/main`, `events/<id>`, `notes/<date>`) |
+| `staff_editors` | Staff HQ: who may change the schedule (Romain) |
+| `staff_link` | Staff HQ: the key of the team's secret link (one row) |
 
 - `qed_rollover_tasks()`: moves every open task due before today (Brussels time) to today, and adds 1 to its
   `rolled_over` count (since migration 20261113000001). Run by the
   scheduler at 5 past every hour, and by the app when it opens. Safe to run any number of times.
 - Every table: Row Level Security, one policy "you only see and change your own rows"; no access for
   visitors who are not logged in.
+
+## Staff HQ (migration 20261127000001)
+
+- Editors (`staff_editors`) read and write `staff_docs`; nobody else can read any `staff_*` table.
+- The team reads without a login through `staff_read(key)`: right key = the whole schedule, wrong key = nothing.
+- Team link: `select 'https://staff.ownhq.app/#k=' || key from public.staff_link;`
+- Link leaked? Change the key (old link stops at once):
+  `update public.staff_link set key = replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');`
