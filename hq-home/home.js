@@ -20,6 +20,7 @@ const loginButton = form.querySelector('button[type="submit"]');
 const linkButton = document.getElementById("send-link");
 const status = document.getElementById("login-status");
 const cards = document.getElementById("cards");
+const folderCards = document.getElementById("cards-qed");
 
 function show(user) {
   if (user && next) {
@@ -27,7 +28,7 @@ function show(user) {
     return;
   }
   root.dataset.auth = user ? "in" : "out";
-  if (!user) cards.dataset.access = "pending";
+  if (!user) for (const ul of [cards, folderCards]) ul.dataset.access = "pending";
   if (user) {
     greet(user);
     // What this device remembers first (no flash), then the fresh answer.
@@ -39,27 +40,45 @@ function show(user) {
 // Shows only the cards of the HQs this account may open (table hq_access).
 // list = null means unknown (no network, nothing remembered): show them all,
 // the data stays protected by each HQ's own locks.
+// The QED HQ folder (Tasks, Onsite HQ, Staff HQ, view #qed) shows when at
+// least one of its HQs is open; with just one, the folder opens it directly.
 // Exactly one HQ you can open -> go straight there (Léa -> PouletteHQ).
+const lists = [cards, folderCards];
+const folder = cards.querySelector('[data-folder="qed"]');
+const folderLink = folder.querySelector("a");
+
 function applyAccess(list, final) {
-  if (!list) {
-    if (!final) return; // keep waiting for the real answer
-    for (const li of cards.children) li.hidden = false;
-    cards.dataset.access = "ready";
-    return;
+  if (!list && !final) return; // keep waiting for the real answer
+  for (const ul of lists) {
+    for (const li of ul.children) {
+      const card = li.querySelector("[data-hq]");
+      if (card) li.hidden = list ? !list.includes(card.dataset.hq) : false;
+    }
   }
-  for (const li of cards.children) {
-    const card = li.querySelector("[data-hq]");
-    li.hidden = !card || !list.includes(card.dataset.hq);
-  }
+  const inFolder = [...folderCards.children].filter((li) => !li.hidden);
+  folder.hidden = inFolder.length === 0;
+  folderLink.href = inFolder.length === 1 ? inFolder[0].querySelector("a").href : "#qed";
+
   const visible = [...cards.children].filter((li) => !li.hidden);
-  const live = visible.map((li) => li.querySelector("a.card")).filter(Boolean);
+  const live = [...cards.querySelectorAll("a.card[data-hq]"), ...folderCards.querySelectorAll("a.card")]
+    .filter((a) => !a.closest("li").hidden);
   document.getElementById("no-hq").hidden = visible.length > 0;
-  if (final && visible.length === 1 && live.length === 1) {
+  if (final && list && live.length === 1) {
     window.location.replace(live[0].href);
     return;
   }
-  cards.dataset.access = "ready";
+  for (const ul of lists) ul.dataset.access = "ready";
+  route();
 }
+
+// ownhq.app/#qed shows the QED HQ folder, anything else all HQs. The browser's
+// back button closes the folder. A folder you can't open falls back to all.
+function route() {
+  const open = window.location.hash === "#qed" && !folder.hidden;
+  root.dataset.view = open ? "qed" : "all";
+  if (window.location.href.endsWith("#")) history.replaceState(null, "", window.location.pathname);
+}
+window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
 
 // Logged-in header: today's date, a greeting for the time of day, and who
 // is logged in (top bar).

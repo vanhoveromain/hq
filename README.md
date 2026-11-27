@@ -6,7 +6,7 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 
 | Domain | Vercel project root | What |
 |---|---|---|
-| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (cards to QED HQ and Sport HQ) + the shared HQ switcher (`switcher.js`) |
+| `ownhq.app` (+ `www` redirects to it) | `hq-home/` | HQ portal + the shared HQ login (a card per HQ; the QED HQ card is a folder, `ownhq.app/#qed`, with Tasks = `qed.ownhq.app`, Onsite HQ and Staff HQ) + the shared HQ switcher (`switcher.js`) |
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED HQ: work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
 | `onsite.ownhq.app` | `onsite/` | Onsite HQ: run of show + packing list for QED events on site (iPad, works offline), same login, data in the QED Supabase project (tables `onsite_*`), see `onsite/CLAUDE.md` |
