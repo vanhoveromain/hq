@@ -46,3 +46,7 @@
 2. Import of the artifact export (`qed/tools/staff-import/`) — RUN 2026-11-27 (config 1, events 16, notes 1)
 3. App — built 2026-11-27, tested in Chromium with a stand-in database (team key, wrong key, no key,
    locked QED session, other account, editor edit + Undo + reload, phone, dark)
+   Tested by Romain on staff-preview 2026-11-27 (editor: drag + reload + Undo; team link in a private window: view only)
+4. LIVE 2026-11-27: merged to main (fast-forward), staff.ownhq.app. ownhq.app portal card (hq-home/index.html,
+   data-hq="staff", icon hq-home/staff-hq.svg), shown when own-hq hq_access has 'staff' for the account.
+   Not in the HQ switcher (the team has no login). Team link: staff.ownhq.app/#k=<key> (qed/supabase/README.md)
