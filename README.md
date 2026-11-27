@@ -10,6 +10,7 @@ One Vercel project per app, all from this repo (Settings → Build and Deploymen
 | `sport.ownhq.app` | `sporthq3/` | SportHQ3 |
 | `qed.ownhq.app` | `qed/` | QED HQ: work planner (projects, tasks, sales) behind the HQ login, data in its own Supabase project (EU), see `qed/CLAUDE.md`; + onboarding plan (`qed/onboarding/<code>/`: public, no login, hard-to-guess address) |
 | `onsite.ownhq.app` | `onsite/` | Onsite HQ: run of show + packing list for QED events on site (iPad, works offline), same login, data in the QED Supabase project (tables `onsite_*`), see `onsite/CLAUDE.md` |
+| `staff.ownhq.app` | `staff/` | Staff HQ: QED staff schedule (who works on which event). Romain edits (hq login); the team views through a secret link without a login. Data in the QED Supabase project (`staff_*`), see `staff/CLAUDE.md` |
 | `poulette.ownhq.app` | `poulette/` | PouletteHQ: newborn tracker for Rom + Léa (French UI), data in the shared `own-hq` Supabase project (tables `poulette_*`), see `poulette/CLAUDE.md` |
 
 Build only when the app's own folder changed: `qed/vercel.json`, `hq-home/vercel.json`, `poulette/vercel.json` and `onsite/vercel.json` set
